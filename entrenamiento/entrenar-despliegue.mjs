@@ -20,7 +20,7 @@ import { despliegueAleatorio, PESOS_BASE } from "../src/motor/bot.js";
 import { configuracion, generador, repartoDeTablas } from "./arena.mjs";
 import { nuevaPartida, aplicar, reclutar, recogerLaBandera, renunciarARecoger } from "../src/motor/motor.js";
 import { accionDeBot, decisionDeRecogida } from "../src/motor/bot.js";
-import { rasgosDeDespliegue, TAMANO, nombreDeRasgo } from "../src/motor/rasgos-despliegue.js";
+import { rasgosDeDespliegue, TAMANO, FIRMA, nombreDeRasgo } from "../src/motor/rasgos-despliegue.js";
 import { despliegueGuiado } from "../src/motor/bot-red.js";
 export { despliegueGuiado };
 import { fuenteDeDespliegues } from "./aperturas.mjs";
@@ -220,7 +220,7 @@ async function main() {
   fs.writeFileSync(
     salida,
     JSON.stringify(
-      { creado: new Date().toISOString(), opciones: o, perdidaValidacion: mejorValidacion, victoriasEnJuego: medida.tasa, curva, red: mejorPesos },
+      { firmaRasgos: FIRMA, creado: new Date().toISOString(), opciones: o, perdidaValidacion: mejorValidacion, victoriasEnJuego: medida.tasa, curva, red: mejorPesos },
       null,
       2
     )

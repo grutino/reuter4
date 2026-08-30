@@ -18,8 +18,8 @@ import { fileURLToPath } from "node:url";
 import { evaluar, desdeObjeto } from "./red.js";
 import { despliegueAleatorio, puntuarAcciones, PESOS_BASE, DISTANCIA } from "./bot.js";
 import { analizarTurno } from "./analisis.js";
-import { rasgosDeDespliegue, TAMANO as TAMANO_DESPLIEGUE } from "./rasgos-despliegue.js";
-import { rasgosDeJugada, contextoDeTurno, TAMANO as TAMANO_JUGADA } from "./rasgos-jugada.js";
+import { rasgosDeDespliegue, TAMANO as TAMANO_DESPLIEGUE, FIRMA as FIRMA_DESPLIEGUE } from "./rasgos-despliegue.js";
+import { rasgosDeJugada, contextoDeTurno, TAMANO as TAMANO_JUGADA, FIRMA as FIRMA_JUGADA } from "./rasgos-jugada.js";
 
 const AQUI = path.dirname(fileURLToPath(import.meta.url));
 export const CARPETA_MODELOS = path.join(AQUI, "modelos");
@@ -99,7 +99,7 @@ export function accionConRed(estado, color, red, { candidatas = 12, azar = Math.
 // null, y el juego tiene que funcionar igual: los bots caen a la heurística.
 export function cargarModelos(carpeta = CARPETA_MODELOS) {
   const notas = [];
-  const uno = (fichero, tamano, etiqueta) => {
+  const uno = (fichero, tamano, firma, etiqueta) => {
     const ruta = path.join(carpeta, fichero);
     if (!fs.existsSync(ruta)) {
       notas.push(`${etiqueta}: no hay modelo publicado, se juega con la heurística`);
@@ -125,6 +125,17 @@ export function cargarModelos(carpeta = CARPETA_MODELOS) {
       );
       return null;
     }
+    // Y el tamaño no basta. `juntoALago` pasó a ser `cubiertoPorLago` sin cambiar
+    // cuántas entradas hay: un modelo viejo habría pasado la comprobación de
+    // arriba y habría seguido jugando, con un peso entrenado sobre un cero
+    // constante recibiendo de pronto valores que varían.
+    if (guardado.firmaRasgos !== firma) {
+      notas.push(
+        `${etiqueta}: el modelo se entrenó con otros rasgos (firma ${guardado.firmaRasgos || "ninguna"}, ahora ${firma}). ` +
+          `Mismo número de entradas pero distinto significado: hay que reentrenar. Se juega con la heurística.`
+      );
+      return null;
+    }
     notas.push(
       `${etiqueta}: modelo cargado` +
         (guardado.victoriasEnJuego !== undefined ? ` (${Math.round(guardado.victoriasEnJuego * 100)}% contra el panel)` : "") +
@@ -134,8 +145,8 @@ export function cargarModelos(carpeta = CARPETA_MODELOS) {
   };
 
   return {
-    despliegue: uno("red-despliegue.json", TAMANO_DESPLIEGUE, "despliegue"),
-    jugada: uno("red-jugada.json", TAMANO_JUGADA, "jugada"),
+    despliegue: uno("red-despliegue.json", TAMANO_DESPLIEGUE, FIRMA_DESPLIEGUE, "despliegue"),
+    jugada: uno("red-jugada.json", TAMANO_JUGADA, FIRMA_JUGADA, "jugada"),
     notas,
   };
 }

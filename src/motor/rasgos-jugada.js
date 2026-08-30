@@ -21,6 +21,7 @@ import { resolverDuelo, MARISCAL, ESPIA, CANON, EXPLORADOR, CAPITAN } from "./mo
 import { DISTANCIA, bolsaOculta, valorEsperado, amenazasDesde } from "./bot.js";
 import { peligroEn } from "./analisis.js";
 import { rasgosDePosicion, TAMANO as TAMANO_POSICION, NOMBRES as NOMBRES_POSICION } from "./rasgos-posicion.js";
+import { firmaDeRasgos } from "./firma.js";
 
 export const NOMBRES_JUGADA = [
   "esMovimiento",
@@ -65,6 +66,9 @@ export const NOMBRES_JUGADA = [
 
 export const TAMANO = TAMANO_POSICION + NOMBRES_JUGADA.length;
 export const NOMBRES = [...NOMBRES_POSICION.map((n) => `posición · ${n}`), ...NOMBRES_JUGADA.map((n) => `jugada · ${n}`)];
+
+// Cambia si cambia cualquier rasgo, aunque el número de entradas siga igual.
+export const FIRMA = firmaDeRasgos(NOMBRES);
 
 const recorta = (v) => (v < 0 ? 0 : v > 1 ? 1 : v);
 

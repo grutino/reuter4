@@ -12,8 +12,8 @@
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { TAMANO as TAMANO_DESPLIEGUE } from "../src/motor/rasgos-despliegue.js";
-import { TAMANO as TAMANO_JUGADA } from "../src/motor/rasgos-jugada.js";
+import { TAMANO as TAMANO_DESPLIEGUE, FIRMA as FIRMA_DESPLIEGUE } from "../src/motor/rasgos-despliegue.js";
+import { TAMANO as TAMANO_JUGADA, FIRMA as FIRMA_JUGADA } from "../src/motor/rasgos-jugada.js";
 
 const AQUI = path.dirname(fileURLToPath(import.meta.url));
 const ORIGEN = path.join(AQUI, "..", "entrenamiento", "modelos");
@@ -21,15 +21,15 @@ const DESTINO = path.join(AQUI, "..", "src", "motor", "modelos");
 const forzar = process.argv.includes("--forzar");
 
 const PIEZAS = [
-  { fichero: "red-despliegue.json", tamano: TAMANO_DESPLIEGUE, etiqueta: "despliegue" },
-  { fichero: "red-jugada.json", tamano: TAMANO_JUGADA, etiqueta: "jugada" },
+  { fichero: "red-despliegue.json", tamano: TAMANO_DESPLIEGUE, firma: FIRMA_DESPLIEGUE, etiqueta: "despliegue" },
+  { fichero: "red-jugada.json", tamano: TAMANO_JUGADA, firma: FIRMA_JUGADA, etiqueta: "jugada" },
 ];
 
 fs.mkdirSync(DESTINO, { recursive: true });
 let publicados = 0;
 let bloqueados = 0;
 
-for (const { fichero, tamano, etiqueta } of PIEZAS) {
+for (const { fichero, tamano, firma, etiqueta } of PIEZAS) {
   const rutaO = path.join(ORIGEN, fichero);
   const rutaD = path.join(DESTINO, fichero);
   if (!fs.existsSync(rutaO)) {
@@ -42,6 +42,11 @@ for (const { fichero, tamano, etiqueta } of PIEZAS) {
   // cargaría sin dar error y jugaría con basura.
   if (!nuevo.red || nuevo.red.capas[0] !== tamano) {
     console.log(`  ${etiqueta.padEnd(11)} RECHAZADO: espera ${nuevo.red ? nuevo.red.capas[0] : "?"} entradas y los rasgos dan ${tamano}. Hay que reentrenar.`);
+    bloqueados++;
+    continue;
+  }
+  if (nuevo.firmaRasgos !== firma) {
+    console.log(`  ${etiqueta.padEnd(11)} RECHAZADO: entrenado con otros rasgos (firma ${nuevo.firmaRasgos || "ninguna"}, ahora ${firma}). Hay que reentrenar.`);
     bloqueados++;
     continue;
   }

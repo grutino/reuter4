@@ -43,8 +43,8 @@ import {
 } from "../src/motor/bot.js";
 import { analizarTurno } from "../src/motor/analisis.js";
 import { generador, repartoDeTablas } from "./arena.mjs";
-import { rasgosDeDespliegue, TAMANO as TAMANO_DESPLIEGUE } from "../src/motor/rasgos-despliegue.js";
-import { rasgosDeJugada, contextoDeTurno, TAMANO as TAMANO_JUGADA } from "../src/motor/rasgos-jugada.js";
+import { rasgosDeDespliegue, TAMANO as TAMANO_DESPLIEGUE, FIRMA as FIRMA_DESPLIEGUE } from "../src/motor/rasgos-despliegue.js";
+import { rasgosDeJugada, contextoDeTurno, TAMANO as TAMANO_JUGADA, FIRMA as FIRMA_JUGADA } from "../src/motor/rasgos-jugada.js";
 import { crearRed, entrenarLote, evaluar, aObjeto, desdeObjeto } from "./red.mjs";
 import { construirPanel, medirContraPanel, cargarAperturas } from "./panel.mjs";
 import { fuenteDeDespliegues, aColocacion, aTexto } from "./aperturas.mjs";
@@ -277,8 +277,9 @@ async function main() {
   const guardadoJ = leer("red-jugada.json");
   // Si los rasgos han cambiado de número, el modelo guardado ya no encaja.
   // Cargarlo daría basura sin dar ningún error.
-  let redD = guardadoD && guardadoD.red && guardadoD.red.capas[0] === TAMANO_DESPLIEGUE ? desdeObjeto(guardadoD.red) : null;
-  let redJ = guardadoJ && guardadoJ.red && guardadoJ.red.capas[0] === TAMANO_JUGADA ? desdeObjeto(guardadoJ.red) : null;
+  const sirve = (g, tamano, firma) => g && g.red && g.red.capas[0] === tamano && g.firmaRasgos === firma;
+  let redD = sirve(guardadoD, TAMANO_DESPLIEGUE, FIRMA_DESPLIEGUE) ? desdeObjeto(guardadoD.red) : null;
+  let redJ = sirve(guardadoJ, TAMANO_JUGADA, FIRMA_JUGADA) ? desdeObjeto(guardadoJ.red) : null;
 
   console.log("Coevolución: las dos redes juegan entre ellas\n");
   console.log(`  ${o.rondas} rondas · ${o.partidas} partidas por ronda · panel de ${panel.length} rivales`);
@@ -445,6 +446,7 @@ function guardar(nombre, previo, entrenada, o, medida) {
   const destino = path.join(MODELOS, nombre);
   fs.writeFileSync(destino, JSON.stringify({
     ...(previo || {}),
+    firmaRasgos: nombre.includes("despliegue") ? FIRMA_DESPLIEGUE : FIRMA_JUGADA,
     creado: new Date().toISOString(),
     origen: "coevolución",
     opciones: o,

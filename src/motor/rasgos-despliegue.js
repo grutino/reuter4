@@ -19,6 +19,7 @@
 
 import { ZONAS, ADYACENTES, LAGOS, ANILLO, CASILLAS, coord, casillasDeZona, rayo, DIRECCIONES } from "./tablero.js";
 import { RANGOS, EXPLORADOR, CAPITAN, ESPIA } from "./motor.js";
+import { firmaDeRasgos } from "./firma.js";
 import { DISTANCIA } from "./bot.js";
 
 export const RANGOS_ORDENADOS = Object.keys(RANGOS).map(Number).sort((a, b) => b - a); // 9..1
@@ -30,7 +31,7 @@ export const PROPIEDADES = [
   "enElBorde",
   // Añadidos a partir de recomendaciones humanas, pero como MEDIDAS y no como
   // reglas: describen la casilla, no dicen qué rango debe ocuparla.
-  "juntoALago",      // el lago cubre un flanco: nadie puede atacar desde ahí
+  "cubiertoPorLago", // el lago corta la línea de aproximación: no se puede venir por ahí
   "cercaDeTiro",     // a qué distancia está de poder batir el anillo con un cañón
   "prontoEnJuego",   // en cuántos turnos entra al medio juego, contando SU paso
 ];
@@ -63,6 +64,12 @@ export const GLOBALES = [
 ];
 
 export const TAMANO = RANGOS_ORDENADOS.length * PROPIEDADES.length + GLOBALES.length;
+
+// Cambia si cambia cualquier rasgo, aunque el número de entradas siga igual.
+export const FIRMA = firmaDeRasgos([
+  ...RANGOS_ORDENADOS.flatMap((r) => PROPIEDADES.map((p) => `${r}.${p}`)),
+  ...GLOBALES,
+]);
 
 // Casillas desde las que un cañón alcanza el anillo del castillo: hasta tres
 // pasos en línea, con la bala sobrevolando lagos. Se calcula sobre el tablero
@@ -103,6 +110,45 @@ function distanciaATiroDelAnillo(desde) {
 }
 
 // Geometría de cada zona, calculada una vez.
+// Cuánto cubre un lago la aproximación a esta casilla.
+//
+// La primera versión de esto preguntaba si la casilla era ADYACENTE a un lago, y
+// el diagnóstico la delató: los nueve rasgos salían exactamente cero en todos
+// los despliegues. No era que la red no los usara, es que no podían dispararse.
+// Los lagos forman cuatro bloques alrededor del castillo (G5-I5, G11-I11, E7-E9,
+// K7-K9) y ninguna de las 84 casillas de despliegue toca uno: están a 2, 3 o 4
+// pasos. El rasgo medía algo que no puede ocurrir.
+//
+// Lo que la recomendación quiere decir es otra cosa: que el lago CORTE LA LÍNEA
+// por la que vendría el enemigo. Ahí está la asimetría que hace buena la jugada
+// -la bala del cañón sobrevuela el lago y la pieza que quiere atacarte no puede
+// pasar-, y `rayo` la respeta: devuelve el lago como paso de tipo "lago" y
+// sigue, en vez de cortar.
+//
+// Se miran solo las direcciones que van HACIA el castillo, que es de donde
+// llegan los ataques; un lago a la espalda no cubre nada. Y se gradúa por
+// cercanía: un lago a un paso tapa mucho más que uno a cuatro, porque rodearlo
+// cuesta menos cuanto más lejos está.
+const ALCANCE_COBERTURA = 4;
+
+function coberturaDeLago(casilla) {
+  const propia = DISTANCIA[casilla];
+  if (propia === undefined) return 0;
+  let mejor = 0;
+  for (const direccion of Object.keys(DIRECCIONES)) {
+    const pasos = rayo(casilla, direccion, ALCANCE_COBERTURA);
+    if (!pasos.length) continue;
+    // ¿Va hacia el castillo? Si el primer paso no acerca, esa cara es la espalda.
+    const primero = pasos[0];
+    const dPrimero = primero.casilla === ANILLO ? -1 : DISTANCIA[primero.casilla];
+    if (dPrimero === undefined || dPrimero >= propia) continue;
+    const indice = pasos.findIndex((p) => p.tipo === "lago");
+    if (indice < 0) continue;
+    mejor = Math.max(mejor, 1 - indice / ALCANCE_COBERTURA);
+  }
+  return mejor;
+}
+
 const GEOMETRIA = (() => {
   const salida = {};
   for (const [color, zona] of Object.entries(ZONAS)) {
@@ -126,7 +172,9 @@ const GEOMETRIA = (() => {
       const [c, f] = coord(casilla);
       lateralMax = Math.max(lateralMax, Math.abs(anchaEnColumnas ? c - cBandera : f - fBandera));
     }
-    salida[color] = { anchaEnColumnas, cBandera, fBandera, dMin, dMax, vecinasBandera, vecinasReclutamiento, lateralMax, aTiro, tiroMax };
+    const cobertura = {};
+    for (const c of casillas) cobertura[c] = coberturaDeLago(c);
+    salida[color] = { anchaEnColumnas, cBandera, fBandera, dMin, dMax, vecinasBandera, vecinasReclutamiento, lateralMax, aTiro, tiroMax, cobertura };
   }
   return salida;
 })();
@@ -157,7 +205,7 @@ export function propiedadesDePieza(color, casilla, rango) {
     juntoAReclutamiento: g.vecinasReclutamiento.has(casilla) ? 1 : 0,
     // El borde de la zona: por ahí es por donde se entra y por donde se escapa.
     enElBorde: lateral > 0.99 ? 1 : 0,
-    juntoALago: (ADYACENTES[casilla] || []).some((v) => LAGOS.has(v)) ? 1 : 0,
+    cubiertoPorLago: g.cobertura[casilla] ?? 0,
     // 1 = ya está a tiro del anillo; 0 = lo más lejos de estarlo.
     cercaDeTiro: 1 - (g.aTiro[casilla] === undefined ? g.tiroMax : g.aTiro[casilla]) / g.tiroMax,
     // 1 = llega al castillo en seguida; 0 = tarda lo máximo posible. Es lo que

@@ -1,6 +1,7 @@
 import assert from "node:assert";
 import {
   CASILLAS,
+  COLORES,
   ADYACENTES,
   ACCESOS_CASTILLO,
   ANILLO,
@@ -29,6 +30,7 @@ import { accionDeBot, accionDeBotClasico, DISTANCIA } from "./bot.js";
 import { analizarTurno } from "./analisis.js";
 import { rasgosDeJugada, contextoDeTurno, NOMBRES as NOMBRES_RASGOS } from "./rasgos-jugada.js";
 import { cargarModelos } from "./bot-red.js";
+import { propiedadesDePieza, FIRMA as FIRMA_DESPLIEGUE } from "./rasgos-despliegue.js";
 
 let pasadas = 0;
 let fallidas = 0;
@@ -969,6 +971,59 @@ prueba("cargarModelos rechaza un modelo con otro número de entradas", () => {
     "y tiene que decir por qué, no fallar en silencio"
   );
   assert.strictEqual(cargado.despliegue, null, "sin fichero, null y a la heurística");
+  fs.rmSync(carpeta, { recursive: true, force: true });
+});
+
+
+prueba("cubiertoPorLago mide la línea de aproximación, no la adyacencia", () => {
+  // Este rasgo estuvo nueve veces muerto: preguntaba si la casilla era adyacente
+  // a un lago, y ninguna de las 84 casillas de despliegue lo es. Los lagos están
+  // a 2, 3 o 4 pasos, siempre. Lo que tiene que medir es si el lago CORTA la
+  // línea por la que vendría el enemigo.
+  let conCobertura = 0;
+  let sinCobertura = 0;
+  for (const color of COLORES) {
+    for (const casilla of casillasDeZona(color)) {
+      const v = propiedadesDePieza(color, casilla, 1).cubiertoPorLago;
+      assert.ok(v >= 0 && v <= 1, `${casilla}: ${v} fuera de [0,1]`);
+      if (v > 0) conCobertura++;
+      else sinCobertura++;
+    }
+  }
+  assert.ok(conCobertura > 0, "si nada tiene cobertura, el rasgo vuelve a estar muerto");
+  assert.ok(sinCobertura > 0, "si todo tiene cobertura, tampoco distingue nada");
+
+  // Y la geometría concreta: la columna H de la zona roja tiene enfrente el
+  // bloque de lago G5-I5, así que cubre más cuanto más cerca está de él.
+  const h3 = propiedadesDePieza("rojo", "H3", 1).cubiertoPorLago;
+  const h1 = propiedadesDePieza("rojo", "H1", 1).cubiertoPorLago;
+  assert.ok(h3 > h1, `H3 (${h3}) está más cerca del lago que H1 (${h1}) y debería cubrir más`);
+});
+
+prueba("un modelo con otra firma de rasgos se rechaza aunque el tamaño cuadre", () => {
+  // El tamaño no basta: `juntoALago` pasó a ser `cubiertoPorLago` sin cambiar
+  // cuántas entradas hay. Un modelo viejo habría pasado la comprobación de
+  // tamaño y habría seguido jugando, con un peso entrenado sobre un cero
+  // constante recibiendo de pronto valores que varían.
+  const carpeta = fs.mkdtempSync(path.join(os.tmpdir(), "reuter4-firma-"));
+  const capas = [83, 4, 1];
+  fs.writeFileSync(
+    path.join(carpeta, "red-despliegue.json"),
+    JSON.stringify({ firmaRasgos: "0badf00d", red: { capas, pesos: [], sesgos: [] } })
+  );
+  const malo = cargarModelos(carpeta);
+  assert.strictEqual(malo.despliegue, null, "otra firma: no se carga");
+  assert.ok(malo.notas.some((n) => n.includes("otros rasgos")), "y dice por qué");
+
+  // Con la firma correcta sí pasa la comprobación de firma; que la red esté
+  // vacía es otro problema, así que se comprueba solo que no la rechace POR la
+  // firma.
+  fs.writeFileSync(
+    path.join(carpeta, "red-despliegue.json"),
+    JSON.stringify({ firmaRasgos: FIRMA_DESPLIEGUE, red: { capas, pesos: [], sesgos: [] } })
+  );
+  const bueno = cargarModelos(carpeta);
+  assert.ok(!bueno.notas.some((n) => n.includes("otros rasgos")), "con la firma buena no debería quejarse de la firma");
   fs.rmSync(carpeta, { recursive: true, force: true });
 });
 
