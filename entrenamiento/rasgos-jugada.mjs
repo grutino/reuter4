@@ -1,0 +1,153 @@
+// Rasgos de UNA jugada concreta, para que la red pueda compararla con otra.
+//
+// El intento anterior fracasó por esto: se le daba a la red un resumen de la
+// posición resultante, y un resumen no cambia cuando mueves un sargento una
+// casilla. Medido en su momento: el 72% de las jugadas candidatas producía un
+// vector idéntico a otra. Así no hay nada que elegir.
+//
+// Aquí la red ve la jugada en sí: qué pieza, a dónde, contra quién, qué gana y
+// qué arriesga. Son las mismas magnitudes que calcula la heurística a mano,
+// pero en vez de multiplicarlas por veintiséis pesos que compiten entre sí,
+// entran como rasgos que comparten gradiente. Eso es lo que arregla el problema
+// del evolutivo: un rasgo que aparece poco aprende gracias a los que aparecen
+// mucho, en vez de quedarse donde lo dejó la deriva.
+//
+// La otra mitad de la entrada es el resumen de la posición, que da CONTEXTO: la
+// misma jugada no vale igual yendo por delante que por detrás, ni al principio
+// que al final. Eso la heurística no podía expresarlo de ninguna forma.
+
+import { ANILLO, TORRE, ADYACENTES } from "../src/motor/tablero.js";
+import { resolverDuelo, MARISCAL, ESPIA, CANON, EXPLORADOR, CAPITAN } from "../src/motor/motor.js";
+import { DISTANCIA, bolsaOculta, valorEsperado, amenazasDesde } from "../src/motor/bot.js";
+import { peligroEn } from "../src/motor/analisis.js";
+import { rasgosDePosicion, TAMANO as TAMANO_POSICION, NOMBRES as NOMBRES_POSICION } from "./rasgos-posicion.mjs";
+
+export const NOMBRES_JUGADA = [
+  "esMovimiento",
+  "esAtaque",
+  "esDisparo",
+  "miRango",
+  "soyElPortador",
+  "seAcerca",
+  "seAleja",
+  "vaAlCastillo",
+  "pisaBanderaSuelta",
+  "conGiro",
+  "meDelato",
+  "objetivoConocido",
+  "rangoDelObjetivo",
+  "dueloGanado",
+  "dueloEmpatado",
+  "dueloPerdido",
+  "espiaContraMariscal",
+  "valorEsperadoDelDuelo",
+  "objetivoConBandera",
+  "amenazasQueDejo",
+  "amenazaCombinada",
+  "contraAmenaza",
+  "peligroConocidoEnDestino",
+  "pierdoEnDestino",
+  "riesgoDeCanonEnDestino",
+  "salgoDePeligro",
+  "estorboEnLaTorre",
+];
+
+export const TAMANO = TAMANO_POSICION + NOMBRES_JUGADA.length;
+export const NOMBRES = [...NOMBRES_POSICION.map((n) => `posición · ${n}`), ...NOMBRES_JUGADA.map((n) => `jugada · ${n}`)];
+
+const recorta = (v) => (v < 0 ? 0 : v > 1 ? 1 : v);
+
+// `analisis` y `bolsas` se pasan calculados: son por turno, no por jugada, y
+// recalcularlos para cada candidata multiplicaría el coste por doce.
+export function rasgosDeJugada(estado, color, accion, { analisis, bolsas, resumen, memoria }) {
+  const v = new Float64Array(TAMANO);
+  v.set(resumen, 0);
+  let i = TAMANO_POSICION;
+  const pon = (x) => {
+    v[i++] = recorta(x);
+  };
+
+  const pieza = estado.piezas[accion.pieza];
+  const objetivo = accion.hasta ? estado.piezas[estado.tablero[accion.hasta]] : null;
+  const conocido = objetivo ? memoria[objetivo.id] : undefined;
+  const llevaBandera = Boolean(pieza && pieza.bandera);
+
+  pon(accion.tipo === "mover" ? 1 : 0);
+  pon(accion.tipo === "atacar" ? 1 : 0);
+  pon(accion.tipo === "disparar" ? 1 : 0);
+  pon(pieza ? pieza.rango / 9 : 0);
+  pon(llevaBandera ? 1 : 0);
+
+  const antes = DISTANCIA[accion.desde] ?? 30;
+  const despues = DISTANCIA[accion.hasta] ?? 30;
+  const delta = antes - despues;
+  pon(delta > 0 ? Math.min(1, delta / 4) : 0);
+  pon(delta < 0 ? Math.min(1, -delta / 4) : 0);
+  pon(accion.hasta === ANILLO || accion.hasta === TORRE ? 1 : 0);
+  pon(estado.banderasSueltas && estado.banderasSueltas[accion.hasta] ? 1 : 0);
+  pon(accion.via ? 1 : 0);
+  // Moverse más de una casilla en línea delata al explorador; con giro, al capitán.
+  const delata =
+    accion.tipo === "mover" &&
+    (accion.via || !(ADYACENTES[accion.desde] || []).includes(accion.hasta));
+  pon(delata ? 1 : 0);
+
+  pon(conocido !== undefined ? 1 : 0);
+  pon(conocido !== undefined ? conocido / 9 : 0);
+
+  let ganado = 0;
+  let empatado = 0;
+  let perdido = 0;
+  if (accion.tipo === "atacar" && pieza) {
+    if (conocido !== undefined) {
+      const res = resolverDuelo(pieza.rango, conocido);
+      ganado = res === "atacante" ? 1 : 0;
+      empatado = res === "empate" ? 1 : 0;
+      perdido = res === "defensor" ? 1 : 0;
+    }
+  }
+  pon(ganado);
+  pon(empatado);
+  pon(perdido);
+  pon(pieza && pieza.rango === ESPIA && conocido === MARISCAL ? 1 : 0);
+
+  let esperado = 0.5;
+  if (accion.tipo === "atacar" && objetivo && conocido === undefined && pieza) {
+    if (!bolsas[objetivo.color]) bolsas[objetivo.color] = bolsaOculta(estado, objetivo.color);
+    // valorEsperado va de -9 a +9; se lleva a [0,1] con 0,5 = neutro.
+    esperado = 0.5 + valorEsperado(pieza.rango, bolsas[objetivo.color]) / 18;
+  }
+  pon(esperado);
+  pon(objetivo && objetivo.bandera ? 1 : 0);
+
+  // Amenazas que la jugada deja planteadas.
+  const amenazo = pieza && accion.tipo === "mover"
+    ? amenazasDesde(estado, accion.hasta, pieza.rango, color, memoria)
+    : objetivo
+    ? [objetivo.id]
+    : [];
+  pon(Math.min(1, amenazo.length / 3));
+  pon(amenazo.some((id) => analisis.presionadasPorSocio.has(id)) ? 1 : 0);
+  pon(amenazo.some((id) => analisis.apuntanALosMios.has(id)) ? 1 : 0);
+
+  const riesgo = pieza ? peligroEn(analisis, accion.hasta, pieza.rango) : { peor: 0, pierde: false, riesgoCanon: 0 };
+  pon(riesgo.peor / 9);
+  pon(riesgo.pierde ? 1 : 0);
+  pon(riesgo.riesgoCanon);
+  pon(pieza && analisis.enPeligro.mias.has(pieza.id) && !riesgo.pierde ? 1 : 0);
+  pon(analisis.socio.aPuntoDeCoronar && (accion.hasta === TORRE || accion.hasta === ANILLO) ? 1 : 0);
+
+  return v;
+}
+
+// Prepara de una vez lo que comparten todas las jugadas de un mismo turno.
+export function contextoDeTurno(estado, color, analisis) {
+  return {
+    analisis,
+    bolsas: {},
+    resumen: rasgosDePosicion(estado, color),
+    memoria: estado.rangosRevelados || {},
+  };
+}
+
+export { TAMANO_POSICION };

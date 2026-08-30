@@ -104,7 +104,7 @@ function esEnemigo(color, otro) {
 // Qué rangos podría tener todavía escondidos un color: el inventario completo
 // menos los que ya se le han visto sobre el tablero. Es un prior, no un recuento
 // exacto: no descuenta bajas, porque las bajas ajenas no son información pública.
-function bolsaOculta(estado, color) {
+export function bolsaOculta(estado, color) {
   const restantes = {};
   for (const [rango, info] of Object.entries(RANGOS)) restantes[rango] = info.cantidad;
   for (const p of Object.values(estado.piezas)) {
@@ -127,7 +127,7 @@ function valorDuelo(miRango, suRango) {
 
 // Contra un desconocido no hay certeza, pero sí una media: se pondera el valor
 // del duelo por lo que aún puede quedarle escondido al rival.
-function valorEsperado(miRango, restantes) {
+export function valorEsperado(miRango, restantes) {
   let total = 0;
   let puntos = 0;
   for (const [rango, cuantas] of Object.entries(restantes)) {
@@ -141,7 +141,7 @@ function valorEsperado(miRango, restantes) {
 // Peor cosa que me puede pasar si me planto en esta casilla: el rango conocido
 // más alto entre los enemigos que la tocan y que me ganarían. Solo mira rangos
 // revelados, así que el bot teme a lo que ha visto, no a lo que hay.
-function amenazaConocida(estado, casilla, miRango, color) {
+export function amenazaConocida(estado, casilla, miRango, color) {
   const memoria = estado.rangosRevelados || {};
   let peor = 0;
   for (const vecina of ADYACENTES[casilla] || []) {
@@ -204,7 +204,7 @@ export const PESOS_BASE = {
 // A quién amenazaría esta pieza si acabase su jugada en `casilla`. Solo cuenta
 // cuerpo a cuerpo con rango ya visto: una amenaza que no se sabe ganada no es
 // una amenaza, es una apuesta.
-function amenazasDesde(estado, casilla, miRango, color, memoria) {
+export function amenazasDesde(estado, casilla, miRango, color, memoria) {
   const sobre = [];
   for (const vecina of ADYACENTES[casilla] || []) {
     const id = estado.tablero[vecina];
