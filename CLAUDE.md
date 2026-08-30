@@ -68,6 +68,26 @@ También se probó y se descartó: medir la aptitud solo contra el campeón vige
 se deteriora, porque ganar a un campeón malo no te hace bueno) y quedarse con el mejor de cada
 generación (con partidas tan ruidosas, el mejor lo es a menudo por suerte).
 
+### Cómo comparar dos genomas sin engañarse
+
+Esto costó cuatro conclusiones contradictorias, así que conviene leerlo antes de tocar el
+genoma:
+
+- **Un entrenamiento por configuración no vale.** Con el mismo genoma y distinta semilla, los
+  modelos salen entre el 19% y el 56% contra la misma referencia. La dispersión *dentro* de un
+  genoma (37 puntos) es diez veces el efecto que se quiere medir *entre* genomas (3 puntos).
+  Hacen falta varias semillas y compararlas en agregado.
+- **Hay no transitividad.** Un modelo puede ganar a otro en el cara a cara y perder contra él
+  midiendo los dos contra un tercero. Pasó con la semilla 33: el de 26 genes marca 19% contra
+  la heurística y el de 20 marca 52%, y sin embargo el de 26 le gana 56% cuando juegan entre
+  ellos. En juegos de información imperfecta esto es normal, no un error de medida: no existe
+  un único número que ordene la fuerza.
+- **La consecuencia práctica**: medir contra un PANEL de rivales (la heurística más varios
+  modelos guardados) y ordenar por media, en vez de contra un único adversario.
+- **La vara de medir tiene que ser inmutable.** Añadir pesos nuevos a `PESOS_BASE` cambió sin
+  querer la referencia contra la que mide el entrenamiento, y la curva subía en parte porque el
+  rival había empeorado. Hay que congelar una copia literal.
+
 `coronar` no se entrena: llevar la bandera a la torre es ganar, no una preferencia que
 convenga graduar. Las `ESCALAS` dicen en qué unidades vive cada peso, no qué valor es bueno.
 
