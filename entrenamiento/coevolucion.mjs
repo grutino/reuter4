@@ -80,6 +80,9 @@ function opciones(argv) {
     // La población de formaciones que evoluciona contra las redes. Su aptitud
     // sale de las propias partidas de liga, así que no cuesta partidas aparte.
     poblacion: 30, elite: 0.25, sangreNueva: 0.15, mutacion: 0.4,
+    // En seco no se escriben modelos ni formaciones: para probar el bucle sin
+    // que un ensayo de 50 partidas pise a un modelo de 4000.
+    seco: 0,
     // Cuántos errores estándar tiene que sacarle una ronda a la mejor marca
     // para adoptarla. Sin margen se adopta ruido: en una prueba con un solo
     // emparejamiento subió del 53% al 61% con +-6 de error en cada medida, y
@@ -282,17 +285,28 @@ async function main() {
   const historia = [];
   const arranque = Date.now();
 
-  const medir = (rd, rj) => {
+  // OJO CON ESTO, que costó doce rondas tiradas. `medirContraPanel` es
+  // determinista: con la misma semilla juega exactamente las mismas partidas. Si
+  // el titular conserva la nota con la que fue elegido, compite con una nota
+  // inflada -fue elegido justamente por haber tenido suerte en esas partidas-
+  // mientras los aspirantes traen notas honestas. El listón se vuelve
+  // inalcanzable por construcción: doce rondas seguidas descartadas contra un
+  // 86% que salía de un 84% que remedido en semillas frescas era 73%.
+  //
+  // Así que cada ronda se remide también al titular, en las MISMAS partidas que
+  // al aspirante. La comparación queda emparejada y el titular tiene que
+  // revalidar su puesto en vez de heredarlo.
+  const medir = (rd, rj, semillaBase = 31337) => {
     const aspirante = {
       desplegar: (color, az) => (rd ? despliegueGuiado(color, az, rd, o.candidatos, o.escalada) : despliegueAleatorio(color, az)),
       jugar: (estado, color, az) =>
         rj ? accionConRed(estado, color, rj, { candidatas: o.candidatas, azar: az }) : accionDeBot(estado, color, { azar: az }),
     };
-    return medirContraPanel(aspirante, panel, { parejas: o.parejasPanel });
+    return medirContraPanel(aspirante, panel, { parejas: o.parejasPanel, semillaBase });
   };
 
   const partida = medir(redD, redJ);
-  console.log(`  Punto de partida contra el panel: ${(partida.tasa * 100).toFixed(0)}% ±${Math.round(partida.error * 100)}\n`);
+  console.log(`  Punto de partida contra el panel: ${(partida.tasa * 100).toFixed(0)}% ±${Math.round(partida.error * 100)} (semilla de referencia)\n`);
   historia.push({ ronda: 0, panel: partida.tasa, error: partida.error, segundos: Math.round((Date.now() - arranque) / 1000) });
   await publicar(historia, o);
 
@@ -325,7 +339,10 @@ async function main() {
 
     const nuevaD = entrenar(todosD, TAMANO_DESPLIEGUE, o.ocultaDespliegue, oRonda, azar, redD);
     const nuevaJ = entrenar(todosJ, TAMANO_JUGADA, o.ocultaJugada, oRonda, azar, redJ);
-    const medida = medir(nuevaD.red, nuevaJ.red);
+    // Partidas nuevas cada ronda, y el titular las juega también.
+    const semillaMedida = 31337 + ronda * 15485863;
+    const medida = medir(nuevaD.red, nuevaJ.red, semillaMedida);
+    const titular = medir(redD, redJ, semillaMedida);
 
     // Las formaciones se reproducen con la aptitud que acaban de sacar contra
     // las redes de ESTA ronda, antes de decidir si las redes se adoptan.
@@ -339,13 +356,13 @@ async function main() {
     // adaptan la una a la otra y se alejan de jugar bien contra cualquier otra
     // cosa. Sin la segunda se adopta ruido, que es igual de malo porque cada
     // adopción mueve el punto de partida de la siguiente ronda.
-    const listón = historia[historia.length - 1].panel + o.margen * medida.error;
+    const listón = titular.tasa + o.margen * medida.error;
     const mejora = medida.tasa > listón;
     if (mejora) { redD = nuevaD.red; redJ = nuevaJ.red; }
 
     console.log(
       `  ronda ${ronda}  ${todosJ.length} jugadas (${tanda.deLiga}/${o.partidas} de liga, expl ${oRonda.exploracion.toFixed(2)}) · decididas ${tanda.decididas} · ` +
-        `panel ${(medida.tasa * 100).toFixed(0)}% ±${Math.round(medida.error * 100)} · ` +
+        `panel ${(medida.tasa * 100).toFixed(0)}% vs titular ${(titular.tasa * 100).toFixed(0)}% ±${Math.round(medida.error * 100)} · ` +
         `peor ${medida.peor.rival} (${(medida.peor.tasa * 100).toFixed(0)}%)` +
         (mejora ? "  <- adoptadas" : `  (descartadas, hacía falta ${(listón * 100).toFixed(0)}%)`) +
         `  ${Math.round((Date.now() - t0) / 1000)}s`
@@ -356,8 +373,8 @@ async function main() {
     );
 
     historia.push({
-      ronda, panel: mejora ? medida.tasa : historia[historia.length - 1].panel,
-      medida: medida.tasa, error: medida.error, adoptadas: mejora,
+      ronda, panel: mejora ? medida.tasa : titular.tasa,
+      medida: medida.tasa, titular: titular.tasa, error: medida.error, adoptadas: mejora,
       ejemplosDespliegue: todosD.length, ejemplosJugada: todosJ.length,
       decididas: tanda.decididas, deLiga: tanda.deLiga,
       exploracion: oRonda.exploracion, tasa: oRonda.tasa,
@@ -372,18 +389,31 @@ async function main() {
       segundos: Math.round((Date.now() - arranque) / 1000),
     });
 
-    if (mejora) {
+    if (mejora && !o.seco) {
       guardar("red-despliegue.json", guardadoD, nuevaD, o, medida);
       guardar("red-jugada.json", guardadoJ, nuevaJ, o, medida);
     }
     await publicar(historia, o);
   }
 
-  guardarDuras(archivo);
+  if (!o.seco) guardarDuras(archivo);
 
-  const mejorPanel = Math.max(...historia.map((h) => h.panel));
-  console.log(`\n  Mejor marca contra el panel: ${(mejorPanel * 100).toFixed(0)}%`);
+  // Veredicto final en semillas que no ha visto ninguna ronda. El máximo de las
+  // medidas por ronda no vale como resumen: elegir el máximo de una tanda de
+  // medidas ruidosas sesga al alza, que es exactamente cómo un 73% acabó
+  // anunciado como 84%.
+  console.log("\n  Veredicto en semillas frescas (ninguna ronda las ha usado):");
+  const finales = [];
+  for (const s of [77003, 91117, 20261]) {
+    const r = medir(redD, redJ, s);
+    finales.push(r.tasa);
+    console.log(`    semilla ${s}: ${(r.tasa * 100).toFixed(0)}% ±${Math.round(r.error * 100)} · peor ${r.peor.rival} (${(r.peor.tasa * 100).toFixed(0)}%)`);
+  }
+  const media = finales.reduce((a, b) => a + b, 0) / finales.length;
+  console.log(`\n  Media: ${(media * 100).toFixed(1)}%  ${o.seco ? "(en seco: no se ha guardado nada)" : ""}`);
   console.log(`  Informe: docs/index.html`);
+  historia.push({ ronda: "final", veredicto: media, semillas: finales });
+  await publicar(historia, o);
 }
 
 // Las formaciones duras van a `aperturas/duras/`, NO a `aperturas/campeonas/`.
