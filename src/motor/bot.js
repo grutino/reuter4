@@ -222,7 +222,14 @@ function amenazasDesde(estado, casilla, miRango, color, memoria) {
 // `contador` es opcional y solo lo usa la revisión de pesos: apunta cuántas
 // veces entra en juego cada término. Un peso que casi nunca se activa no lo
 // sujeta la selección, y deriva; sin este recuento no hay forma de saberlo.
-export function accionDeBot(estado, color, { pesos = PESOS_BASE, azar = Math.random, contador = null } = {}) {
+// Devuelve TODAS las acciones legales con su nota. `accionDeBot` se queda con
+// la mejor; el bot con red lo usa para quedarse con las mejores y volver a
+// juzgarlas, que sale mucho más barato que valorar las cien con la red.
+export function puntuarAcciones(estado, color, opciones = {}) {
+  return accionDeBot(estado, color, { ...opciones, devolverTodas: true }) || [];
+}
+
+export function accionDeBot(estado, color, { pesos = PESOS_BASE, azar = Math.random, contador = null, devolverTodas = false } = {}) {
   const apuntar = contador ? (k) => { contador[k] = (contador[k] || 0) + 1; } : () => {};
   const acciones = movimientosLegales(estado, color);
   if (!acciones.length) return null;
@@ -234,6 +241,7 @@ export function accionDeBot(estado, color, { pesos = PESOS_BASE, azar = Math.ran
 
   let mejor = null;
   let mejorNota = -Infinity;
+  const puntuadas = devolverTodas ? [] : null;
 
   for (const a of acciones) {
     const pieza = estado.piezas[a.pieza];
@@ -327,10 +335,15 @@ export function accionDeBot(estado, color, { pesos = PESOS_BASE, azar = Math.ran
       if (objetivo && analisis.apuntanALosMios.has(objetivo.id)) { nota += pesos.contraAmenaza; apuntar("contraAmenaza"); }
     }
 
+    if (devolverTodas) puntuadas.push({ accion: a, nota });
     if (nota > mejorNota) {
       mejorNota = nota;
       mejor = a;
     }
+  }
+  if (devolverTodas) {
+    puntuadas.sort((x, y) => y.nota - x.nota);
+    return puntuadas;
   }
   return mejor;
 }
