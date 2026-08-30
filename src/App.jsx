@@ -62,6 +62,7 @@ function describirEvento(ev) {
   if (ev.tipo === "bandera-capturada") return `${ev.color} se hace con la bandera de ${ev.bandera}.`;
   if (ev.tipo === "bandera-recogida") return `${ev.color} recoge del suelo la bandera de ${ev.bandera}.`;
   if (ev.tipo === "bandera-en-el-suelo") return `La bandera de ${ev.bandera} queda suelta en ${ev.casilla}.`;
+  if (ev.tipo === "bandera-rechazada") return `${ev.color} deja en el suelo la bandera de ${ev.bandera}, en ${ev.casilla}.`;
   if (ev.tipo === "reclutamiento") return `${ev.color} recupera una pieza en su casilla de reclutamiento.`;
   if (ev.tipo === "reclutamiento-fallido") return `${ev.color} pierde su reclutamiento: ${ev.razón}.`;
   if (ev.tipo === "victoria") return `¡${ev.color} corona su bandera en la torre!`;
@@ -144,6 +145,10 @@ function describirJugada(entrada) {
     textos.unshift(`${entrada.color} mueve de ${entrada.desde} a ${entrada.hasta}${via}.`);
   } else if (entrada.tipo === "renunciar") {
     textos.unshift(`${entrada.color} renuncia a reclutar.`);
+  } else if (entrada.tipo === "recoger" && !textos.length) {
+    textos.unshift(`${entrada.color} recoge la bandera.`);
+  } else if (entrada.tipo === "renunciar-recoger" && !textos.length) {
+    textos.unshift(`${entrada.color} no recoge la bandera.`);
   } else if (!textos.length && entrada.hasta) {
     textos.unshift(`${entrada.color} juega sobre ${entrada.hasta}.`);
   }
@@ -779,7 +784,23 @@ export default function App() {
 
               <Marcador marcador={estado.marcador} miColor={miColor} />
 
-              {estado.pendiente && (
+              {estado.pendiente && estado.pendiente.tipo === "recoger" && (
+                <div style={{ border: `1px solid ${LATON_CLARO}`, borderRadius: 4, padding: 12, marginTop: 12 }}>
+                  <Rotulo>Tienes una bandera a los pies</Rotulo>
+                  <p style={{ fontSize: 13.5, margin: "6px 0 10px", color: "#D9CFB6" }}>
+                    La bandera de {estado.pendiente.bandera} está en {estado.pendiente.casilla}. Si la cargas,
+                    esa pieza pasará a avanzar solo una casilla por turno.
+                  </p>
+                  <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                    <Boton onClick={() => enviar({ tipo: "recoger", sala: salaId, recoge: true })}>Recogerla</Boton>
+                    <Boton variante="secundario" onClick={() => enviar({ tipo: "recoger", sala: salaId, recoge: false })}>
+                      Dejarla en el suelo
+                    </Boton>
+                  </div>
+                </div>
+              )}
+
+              {estado.pendiente && estado.pendiente.tipo === "reclutar" && (
                 <div style={{ border: `1px solid ${LATON_CLARO}`, borderRadius: 4, padding: 12, marginTop: 12 }}>
                   <Rotulo>Reclutas una pieza</Rotulo>
                   <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>

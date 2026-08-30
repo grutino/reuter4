@@ -67,6 +67,39 @@ function sonAliados(estado, a, b) {
 function asegurarRegistros(estado) {
   if (!estado.rangosRevelados) estado.rangosRevelados = {};
   if (!estado.historia) estado.historia = [];
+  if (!estado.colaPendientes) estado.colaPendientes = [];
+}
+
+// --- Cola de decisiones pendientes -------------------------------------------
+// Una sola jugada puede abrir dos decisiones: recoger una bandera del suelo y,
+// además, reclutar. `estado.pendiente` sigue siendo la que toca resolver ahora
+// —es lo que ven el servidor y el cliente— y el resto espera turno en la cola.
+
+function encolarPendiente(estado, pendiente, { alFrente = false } = {}) {
+  if (!estado.pendiente) {
+    estado.pendiente = pendiente;
+    return;
+  }
+  if (alFrente) {
+    estado.colaPendientes.unshift(estado.pendiente);
+    estado.pendiente = pendiente;
+    return;
+  }
+  estado.colaPendientes.push(pendiente);
+}
+
+// Se mantiene la regla de siempre: una jugada abre como mucho un reclutamiento.
+function hayReclutamiento(estado) {
+  if (estado.pendiente && estado.pendiente.tipo === "reclutar") return true;
+  return estado.colaPendientes.some((p) => p.tipo === "reclutar");
+}
+
+// El llamante pone `pendiente` a null al resolver la suya y luego llama aquí.
+// Si resolverla ha abierto otra decisión, esa manda; si no, se saca la siguiente
+// de la cola; y si no queda ninguna, pasa turno.
+function cerrarPendiente(estado) {
+  if (!estado.pendiente) estado.pendiente = estado.colaPendientes.shift() || null;
+  if (!estado.fin && !estado.pendiente) pasarTurno(estado);
 }
 
 function revelar(estado, id, rango) {
@@ -143,6 +176,7 @@ export function nuevaPartida(despliegues, opciones = {}) {
     marcador: {},
     bajas: {},
     pendiente: null,
+    colaPendientes: [],
     fin: null,
     eventos: [],
     // Rangos que han quedado a la vista de todos: los de quien sobrevive a un duelo
@@ -340,7 +374,40 @@ function abrirReclutamiento(estado, color, motivo) {
     estado.eventos.push({ tipo: "reclutamiento-fallido", color, motivo, razón: "sin bajas que recuperar" });
     return;
   }
-  estado.pendiente = { tipo: "reclutar", color, motivo, opciones: [...new Set(estado.bajas[color])].sort((a, b) => b - a) };
+  encolarPendiente(estado, {
+    tipo: "reclutar",
+    color,
+    motivo,
+    opciones: [...new Set(estado.bajas[color])].sort((a, b) => b - a),
+  });
+}
+
+// --- Recogida de bandera ------------------------------------------------------
+// Recoger es una opción, no una obligación: quien cae sobre una bandera suelta
+// decide. La decisión se ofrece antes que un reclutamiento abierto en la misma
+// jugada, porque recoger puede a su vez cambiar lo que se recluta.
+
+function ofrecerRecogida(estado, pieza) {
+  const bandera = estado.banderasSueltas[pieza.casilla];
+  if (!bandera || llevaBandera(pieza)) return false;
+  encolarPendiente(
+    estado,
+    { tipo: "recoger", color: pieza.color, pieza: pieza.id, casilla: pieza.casilla, bandera },
+    { alFrente: true }
+  );
+  return true;
+}
+
+// Lo que cuelga de recoger de verdad: la promoción y, si es en la torre, la victoria.
+function consumarRecogida(estado, pieza) {
+  const recogida = recogerBandera(estado, pieza);
+  if (!recogida) return;
+  const eraDeSuDueño = estado.banderas[recogida].ultimoDueño === recogida;
+  const daPromocion = !sonAliados(estado, recogida, pieza.color) && eraDeSuDueño;
+  estado.banderas[recogida].ultimoDueño = pieza.color;
+  estado.eventos.push({ tipo: "bandera-recogida", color: pieza.color, bandera: recogida, casilla: pieza.casilla });
+  if (daPromocion && !hayReclutamiento(estado)) abrirReclutamiento(estado, pieza.color, "bandera");
+  comprobarVictoria(estado, pieza);
 }
 
 function comprobarVictoria(estado, pieza) {
@@ -365,7 +432,7 @@ export function resolverDuelo(rangoAtacante, rangoDefensor) {
 
 export function aplicar(estadoPrevio, accion) {
   if (estadoPrevio.fin) throw new Error("La partida ya ha terminado.");
-  if (estadoPrevio.pendiente) throw new Error("Hay un reclutamiento pendiente de resolver.");
+  if (estadoPrevio.pendiente) throw new Error("Hay una decisión pendiente de resolver.");
 
   const legales = movimientosLegales(estadoPrevio);
   const encaja = legales.find(
@@ -383,15 +450,8 @@ export function aplicar(estadoPrevio, accion) {
     revelarPorMovimiento(estado, pieza, encaja);
     registrarTramo(pieza, pieza.casilla, accion.hasta);
     mover(estado, pieza, accion.hasta);
-    const recogida = recogerBandera(estado, pieza);
-    if (recogida) {
-      estado.eventos.push({ tipo: "bandera-recogida", color: pieza.color, bandera: recogida });
-      const daPromocion =
-        !sonAliados(estado, recogida, pieza.color) && estado.banderas[recogida].ultimoDueño === recogida;
-      estado.banderas[recogida].ultimoDueño = pieza.color;
-      if (daPromocion) abrirReclutamiento(estado, pieza.color, "bandera");
-    }
-    comprobarVictoria(estado, pieza);
+    // Si hay bandera que recoger se pregunta; si no, la jugada ya puede coronar.
+    if (!ofrecerRecogida(estado, pieza)) comprobarVictoria(estado, pieza);
   }
 
   if (accion.tipo === "disparar") {
@@ -433,18 +493,11 @@ export function aplicar(estadoPrevio, accion) {
       const color = pieza.color;
       mover(estado, pieza, destino);
       sumarVictoria(estado, color);
-      const recogida = recogerBandera(estado, pieza);
-      if (recogida) {
-        const eraDeSuDueño = estado.banderas[recogida].ultimoDueño === recogida;
-        estado.banderas[recogida].ultimoDueño = color;
-        estado.eventos.push({ tipo: "bandera-capturada", color, bandera: recogida });
-        if (!sonAliados(estado, recogida, color) && eraDeSuDueño && !estado.pendiente) {
-          abrirReclutamiento(estado, color, "bandera");
-        }
-      } else if (banderaCaida) {
-        estado.eventos.push({ tipo: "bandera-en-el-suelo", bandera: banderaCaida, casilla: destino });
+      if (!ofrecerRecogida(estado, pieza)) {
+        // El atacante ya llevaba bandera, así que la del caído se queda en el suelo.
+        if (banderaCaida) estado.eventos.push({ tipo: "bandera-en-el-suelo", bandera: banderaCaida, casilla: destino });
+        comprobarVictoria(estado, pieza);
       }
-      comprobarVictoria(estado, pieza);
     } else {
       const color = defensor.color;
       retirar(estado, pieza);
@@ -465,6 +518,33 @@ export function aplicar(estadoPrevio, accion) {
   return estado;
 }
 
+export function recogerLaBandera(estado) {
+  if (!estado.pendiente || estado.pendiente.tipo !== "recoger") throw new Error("No hay ninguna bandera que recoger.");
+  const siguiente = clonar(estado);
+  asegurarRegistros(siguiente);
+  const { color, pieza: idPieza } = siguiente.pendiente;
+  siguiente.eventos = [];
+  siguiente.pendiente = null;
+  const pieza = siguiente.piezas[idPieza];
+  if (pieza) consumarRecogida(siguiente, pieza);
+  cerrarPendiente(siguiente);
+  anotarEnHistoria(siguiente, { color, tipo: "recoger", eventos: [...siguiente.eventos] });
+  return siguiente;
+}
+
+export function renunciarARecoger(estado) {
+  if (!estado.pendiente || estado.pendiente.tipo !== "recoger") throw new Error("No hay ninguna bandera que recoger.");
+  const siguiente = clonar(estado);
+  asegurarRegistros(siguiente);
+  const { color, bandera, casilla } = siguiente.pendiente;
+  siguiente.pendiente = null;
+  // La bandera sigue donde estaba: quien la rechaza se queda encima de ella.
+  siguiente.eventos = [{ tipo: "bandera-rechazada", color, bandera, casilla }];
+  cerrarPendiente(siguiente);
+  anotarEnHistoria(siguiente, { color, tipo: "renunciar-recoger", eventos: [...siguiente.eventos] });
+  return siguiente;
+}
+
 export function reclutar(estado, rango) {
   if (!estado.pendiente || estado.pendiente.tipo !== "reclutar") throw new Error("No hay reclutamiento pendiente.");
   const siguiente = clonar(estado);
@@ -479,7 +559,7 @@ export function reclutar(estado, rango) {
   siguiente.tablero[casilla] = id;
   siguiente.pendiente = null;
   siguiente.eventos = [{ tipo: "reclutamiento", color }]; // el rango no se publica
-  pasarTurno(siguiente);
+  cerrarPendiente(siguiente);
   anotarEnHistoria(siguiente, { color, tipo: "reclutar", eventos: [...siguiente.eventos] });
   return siguiente;
 }
@@ -490,7 +570,7 @@ export function renunciarAlReclutamiento(estado) {
   const color = estado.pendiente.color;
   siguiente.pendiente = null;
   siguiente.eventos = [{ tipo: "reclutamiento-renunciado", color }];
-  pasarTurno(siguiente);
+  cerrarPendiente(siguiente);
   anotarEnHistoria(siguiente, { color, tipo: "renunciar", eventos: [...siguiente.eventos] });
   return siguiente;
 }

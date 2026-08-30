@@ -8,8 +8,15 @@ import { fileURLToPath } from "node:url";
 import { WebSocketServer } from "ws";
 
 import { COLORES, ZONAS } from "../src/motor/tablero.js";
-import { nuevaPartida, aplicar, reclutar, validarDespliegue } from "../src/motor/motor.js";
-import { accionDeBot, despliegueAleatorio } from "../src/motor/bot.js";
+import {
+  nuevaPartida,
+  aplicar,
+  reclutar,
+  recogerLaBandera,
+  renunciarARecoger,
+  validarDespliegue,
+} from "../src/motor/motor.js";
+import { accionDeBot, decisionDeRecogida, despliegueAleatorio } from "../src/motor/bot.js";
 
 const RAIZ = path.dirname(fileURLToPath(import.meta.url));
 const ESTATICO = path.join(RAIZ, "..", "dist");
@@ -119,6 +126,27 @@ function esAutomatico(sala, color) {
   return puesto.desconectadoDesde && Date.now() - puesto.desconectadoDesde > 60000;
 }
 
+// Resuelve en cadena las decisiones que le tocan a un puesto automático. Una
+// sola jugada puede encadenar dos: recoger una bandera y luego reclutar.
+function resolverPendientesDeBots(sala, estadoInicial) {
+  let estado = estadoInicial;
+  let vueltas = 0;
+  while (estado.pendiente && !estado.fin && esAutomatico(sala, estado.pendiente.color)) {
+    if (++vueltas > 8) break; // cinturón: nunca debería encadenar tanto
+    const pendiente = estado.pendiente;
+    if (pendiente.tipo === "recoger") {
+      estado = decisionDeRecogida(estado, pendiente.color)
+        ? recogerLaBandera(estado)
+        : renunciarARecoger(estado);
+    } else if (pendiente.tipo === "reclutar") {
+      estado = reclutar(estado, Math.max(...pendiente.opciones));
+    } else {
+      break;
+    }
+  }
+  return estado;
+}
+
 setInterval(() => {
   let cambios = false;
   for (const sala of Object.values(salas)) {
@@ -142,19 +170,19 @@ setInterval(() => {
     }
 
     if (sala.fase !== "jugando" || !sala.estado || sala.estado.fin) continue;
-    const turno = sala.estado.turno;
-    if (!esAutomatico(sala, turno)) continue;
     try {
-      if (sala.estado.pendiente && sala.estado.pendiente.color === turno) {
-        sala.estado = reclutar(sala.estado, Math.max(...sala.estado.pendiente.opciones));
+      // Una decisión pendiente congela la partida entera, así que va primero y
+      // sin mirar de quién es el turno: quien decide no siempre es quien acaba
+      // de jugar, porque el defensor que gana también asciende.
+      if (sala.estado.pendiente) {
+        if (!esAutomatico(sala, sala.estado.pendiente.color)) continue;
+        sala.estado = resolverPendientesDeBots(sala, sala.estado);
       } else {
+        const turno = sala.estado.turno;
+        if (!esAutomatico(sala, turno)) continue;
         const accion = accionDeBot(sala.estado, turno);
         if (!accion) continue;
-        sala.estado = aplicar(sala.estado, accion);
-        const pend = sala.estado.pendiente;
-        if (pend && esAutomatico(sala, pend.color)) {
-          sala.estado = reclutar(sala.estado, Math.max(...pend.opciones));
-        }
+        sala.estado = resolverPendientesDeBots(sala, aplicar(sala.estado, accion));
       }
       if (sala.estado.fin) sala.fase = "fin";
       sala.actualizada = Date.now();
@@ -331,6 +359,20 @@ wss.on("connection", (socket) => {
       if (!miColor || !sala.estado || sala.estado.turno !== miColor) return error(socket, "No es tu turno.");
       try {
         sala.estado = aplicar(sala.estado, mensaje.accion);
+        if (sala.estado.fin) sala.fase = "fin";
+        sala.actualizada = Date.now();
+        repartir();
+      } catch (e) {
+        error(socket, e.message);
+      }
+      return;
+    }
+
+    if (mensaje.tipo === "recoger") {
+      const pendiente = sala.estado && sala.estado.pendiente;
+      if (!miColor || !pendiente || pendiente.tipo !== "recoger" || pendiente.color !== miColor) return;
+      try {
+        sala.estado = mensaje.recoge ? recogerLaBandera(sala.estado) : renunciarARecoger(sala.estado);
         if (sala.estado.fin) sala.fase = "fin";
         sala.actualizada = Date.now();
         repartir();

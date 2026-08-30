@@ -14,6 +14,8 @@ import {
   movimientosLegales,
   aplicar,
   reclutar,
+  recogerLaBandera,
+  renunciarARecoger,
   inventarioInicial,
   vistaDe,
   MAX_ALTERNANCIAS,
@@ -334,7 +336,9 @@ prueba("la bandera queda suelta tras un empate y la recoge un tercero", () => {
   colocar(e2, "verde", 5, "H3");
   const recoge = accion(movimientosLegales(e2, "verde"), (a) => a.hasta === "H4");
   const tras2 = aplicar({ ...e2, turno: "verde" }, recoge);
-  const portador = Object.values(tras2.piezas).find((p) => p.bandera === "rojo");
+  assert.strictEqual(tras2.pendiente.tipo, "recoger", "pisar la bandera solo abre la decisión");
+  const tras3 = recogerLaBandera(tras2);
+  const portador = Object.values(tras3.piezas).find((p) => p.bandera === "rojo");
   assert.ok(portador, "alguien debe llevar ahora la bandera roja");
   assert.strictEqual(portador.color, "verde");
 });
@@ -344,8 +348,9 @@ prueba("capturar la bandera de su dueño abre reclutamiento", () => {
   colocar(e, "verde", 4, "G4", { bandera: true });
   colocar(e, "rojo", 9, "H4");
   e.bajas.rojo.push(5);
-  const tras = aplicar(e, accion(movimientosLegales(e), (a) => a.tipo === "atacar"));
+  const tras = recogerLaBandera(aplicar(e, accion(movimientosLegales(e), (a) => a.tipo === "atacar")));
   assert.ok(tras.pendiente, "debería abrirse un reclutamiento");
+  assert.strictEqual(tras.pendiente.tipo, "reclutar");
   assert.strictEqual(tras.pendiente.color, "rojo");
 });
 
@@ -442,7 +447,7 @@ prueba("recoger la bandera del compañero no da promoción", () => {
   e.banderasSueltas["G4"] = "azul";
   e.banderas.azul = { portador: null, casilla: "G4", ultimoDueño: "azul" };
   e.bajas.rojo.push(9);
-  const tras = aplicar(e, accion(movimientosLegales(e), (a) => a.hasta === "G4"));
+  const tras = recogerLaBandera(aplicar(e, accion(movimientosLegales(e), (a) => a.hasta === "G4")));
   const portador = Object.values(tras.piezas).find((p) => p.bandera === "azul");
   assert.ok(portador, "la bandera del compañero sí se puede recoger");
   assert.strictEqual(tras.pendiente, null, "pero no abre reclutamiento");
@@ -454,8 +459,9 @@ prueba("recoger del suelo la bandera enemiga sí da promoción", () => {
   e.banderasSueltas["G4"] = "verde";
   e.banderas.verde = { portador: null, casilla: "G4", ultimoDueño: "verde" };
   e.bajas.rojo.push(9);
-  const tras = aplicar(e, accion(movimientosLegales(e), (a) => a.hasta === "G4"));
+  const tras = recogerLaBandera(aplicar(e, accion(movimientosLegales(e), (a) => a.hasta === "G4")));
   assert.ok(tras.pendiente, "debería abrirse el reclutamiento");
+  assert.strictEqual(tras.pendiente.tipo, "reclutar");
   assert.strictEqual(tras.pendiente.color, "rojo");
 });
 
@@ -465,7 +471,7 @@ prueba("recuperar tu propia bandera no da promoción", () => {
   e.banderasSueltas["G4"] = "rojo";
   e.banderas.rojo = { portador: null, casilla: "G4", ultimoDueño: "rojo" };
   e.bajas.rojo.push(9);
-  const tras = aplicar(e, accion(movimientosLegales(e), (a) => a.hasta === "G4"));
+  const tras = recogerLaBandera(aplicar(e, accion(movimientosLegales(e), (a) => a.hasta === "G4")));
   assert.strictEqual(tras.pendiente, null);
 });
 
@@ -506,6 +512,111 @@ prueba("la promoción por victorias sí reinicia el contador", () => {
   colocar(e, "verde", 4, "G4");
   const tras = aplicar(e, accion(movimientosLegales(e), (a) => a.tipo === "atacar"));
   assert.strictEqual(tras.marcador.rojo, 0);
+});
+
+console.log("\nRECOGER BANDERA");
+
+prueba("caer sobre una bandera suelta solo abre la decisión", () => {
+  const e = estadoVacio();
+  colocar(e, "rojo", 4, "H4");
+  e.banderasSueltas["G4"] = "verde";
+  e.banderas.verde = { portador: null, casilla: "G4", ultimoDueño: "verde" };
+  const tras = aplicar(e, accion(movimientosLegales(e), (a) => a.hasta === "G4"));
+  assert.strictEqual(tras.pendiente.tipo, "recoger");
+  assert.strictEqual(tras.pendiente.color, "rojo");
+  assert.strictEqual(tras.pendiente.bandera, "verde");
+  assert.strictEqual(tras.banderasSueltas["G4"], "verde", "todavía no la ha cogido");
+  assert.strictEqual(tras.turno, "rojo", "el turno no pasa hasta decidir");
+});
+
+prueba("renunciar deja la bandera en el suelo y pasa turno", () => {
+  const e = estadoVacio();
+  colocar(e, "rojo", 4, "H4");
+  colocar(e, "verde", 4, "M8");
+  e.banderasSueltas["G4"] = "verde";
+  e.banderas.verde = { portador: null, casilla: "G4", ultimoDueño: "verde" };
+  const tras = renunciarARecoger(aplicar(e, accion(movimientosLegales(e), (a) => a.hasta === "G4")));
+  assert.strictEqual(tras.pendiente, null);
+  assert.strictEqual(tras.banderasSueltas["G4"], "verde");
+  assert.ok(Object.values(tras.piezas).every((p) => p.bandera === null), "nadie la lleva");
+  assert.notStrictEqual(tras.turno, "rojo", "tras decidir, el turno avanza");
+});
+
+prueba("renunciar a una bandera enemiga no da promoción", () => {
+  const e = estadoVacio();
+  colocar(e, "rojo", 4, "H4");
+  colocar(e, "verde", 4, "M8");
+  e.banderasSueltas["G4"] = "verde";
+  e.banderas.verde = { portador: null, casilla: "G4", ultimoDueño: "verde" };
+  e.bajas.rojo.push(9);
+  const tras = renunciarARecoger(aplicar(e, accion(movimientosLegales(e), (a) => a.hasta === "G4")));
+  assert.strictEqual(tras.pendiente, null, "sin recogida no hay promoción");
+  assert.strictEqual(tras.banderas.verde.ultimoDueño, "verde", "la bandera no cambia de mano");
+});
+
+prueba("recoger la bandera propia en la torre gana la partida", () => {
+  const e = estadoVacio();
+  colocar(e, "rojo", 4, ANILLO);
+  e.banderasSueltas[TORRE] = "rojo";
+  e.banderas.rojo = { portador: null, casilla: TORRE, ultimoDueño: "rojo" };
+  const tras = aplicar(e, accion(movimientosLegales(e), (a) => a.hasta === TORRE));
+  assert.strictEqual(tras.pendiente.tipo, "recoger");
+  assert.ok(!tras.fin, "coronar exige recogerla de verdad");
+  const fin = recogerLaBandera(tras);
+  assert.ok(fin.fin, "al recogerla en la torre, gana");
+  assert.strictEqual(fin.fin.ganador, "rojo");
+});
+
+prueba("renunciar en la torre no gana", () => {
+  const e = estadoVacio();
+  colocar(e, "rojo", 4, ANILLO);
+  colocar(e, "verde", 4, "M8");
+  e.banderasSueltas[TORRE] = "rojo";
+  e.banderas.rojo = { portador: null, casilla: TORRE, ultimoDueño: "rojo" };
+  const tras = renunciarARecoger(aplicar(e, accion(movimientosLegales(e), (a) => a.hasta === TORRE)));
+  assert.strictEqual(tras.fin, null);
+  assert.strictEqual(tras.banderasSueltas[TORRE], "rojo");
+});
+
+prueba("quien ya lleva bandera no recibe la oferta", () => {
+  const e = estadoVacio();
+  const rojo = colocar(e, "rojo", 9, "H4");
+  rojo.bandera = "rojo";
+  e.banderas.rojo = { portador: rojo.id, casilla: null, ultimoDueño: "rojo" };
+  colocar(e, "verde", 4, "G4", { bandera: true });
+  const tras = aplicar(e, accion(movimientosLegales(e), (a) => a.tipo === "atacar"));
+  assert.strictEqual(tras.pendiente, null, "no puede llevar dos banderas");
+  assert.strictEqual(tras.banderasSueltas["G4"], "verde", "la del caído se queda en el suelo");
+  assert.ok(tras.eventos.some((ev) => ev.tipo === "bandera-en-el-suelo"));
+});
+
+prueba("la recogida se decide antes que el reclutamiento por marcador", () => {
+  const e = estadoVacio();
+  colocar(e, "rojo", 9, "H4");
+  colocar(e, "verde", 4, "G4", { bandera: true });
+  colocar(e, "verde", 4, "M8"); // para que quede alguien a quien pasarle el turno
+  e.marcador.rojo = 5; // este duelo hace la sexta victoria
+  e.bajas.rojo.push(7);
+  const tras = aplicar(e, accion(movimientosLegales(e), (a) => a.tipo === "atacar"));
+  assert.strictEqual(tras.pendiente.tipo, "recoger", "primero se decide la bandera");
+  const luego = recogerLaBandera(tras);
+  assert.strictEqual(luego.pendiente.tipo, "reclutar", "y después llega el reclutamiento");
+  assert.strictEqual(luego.pendiente.color, "rojo");
+  assert.strictEqual(luego.pendiente.motivo, "marcador");
+  const fin = reclutar(luego, 7);
+  assert.strictEqual(fin.pendiente, null, "una jugada abre un solo reclutamiento");
+  assert.notStrictEqual(fin.turno, "rojo");
+});
+
+prueba("renunciar tampoco se salta el reclutamiento en cola", () => {
+  const e = estadoVacio();
+  colocar(e, "rojo", 9, "H4");
+  colocar(e, "verde", 4, "G4", { bandera: true });
+  e.marcador.rojo = 5;
+  e.bajas.rojo.push(7);
+  const tras = renunciarARecoger(aplicar(e, accion(movimientosLegales(e), (a) => a.tipo === "atacar")));
+  assert.strictEqual(tras.pendiente.tipo, "reclutar");
+  assert.strictEqual(tras.pendiente.color, "rojo");
 });
 
 console.log("\nVISIBILIDAD Y VAIVÉN");

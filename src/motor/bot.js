@@ -224,3 +224,27 @@ export function accionDeBot(estado, color) {
   }
   return mejor;
 }
+
+// --- Decidir si se recoge una bandera del suelo -------------------------------
+// Recoger dejó de ser automático, así que el bot necesita criterio. Cargar con
+// una bandera cuesta movilidad: el portador queda a un paso por turno.
+
+const GENERAL = 8;
+
+export function decisionDeRecogida(estado, color) {
+  const pendiente = estado.pendiente;
+  if (!pendiente || pendiente.tipo !== "recoger") return false;
+  const pieza = estado.piezas[pendiente.pieza];
+  if (!pieza) return false;
+
+  // La bandera del propio bando se recoge siempre: es la que corona, y dejarla
+  // en el suelo es servírsela al rival.
+  if (!esEnemigo(color, pendiente.bandera)) return true;
+
+  const bandera = estado.banderas[pendiente.bandera];
+  const daPromocion = Boolean(bandera) && bandera.ultimoDueño === pendiente.bandera;
+  // Una bandera enemiga sin promoción no compensa amarrar al mariscal ni al
+  // general, que valen mucho más sueltos. El resto de la tropa sí la carga.
+  if (!daPromocion && pieza.rango >= GENERAL) return false;
+  return true;
+}

@@ -11,8 +11,13 @@
 // Uso: node src/motor/simulacion.js [partidasDeSalud] [partidasDeDuelo]
 
 import { COLORES } from "./tablero.js";
-import { nuevaPartida, aplicar, reclutar, EQUIPOS } from "./motor.js";
-import { accionDeBot, accionDeBotClasico, despliegueAleatorio } from "./bot.js";
+import { nuevaPartida, aplicar, reclutar, recogerLaBandera, renunciarARecoger, EQUIPOS } from "./motor.js";
+import {
+  accionDeBot,
+  accionDeBotClasico,
+  decisionDeRecogida,
+  despliegueAleatorio,
+} from "./bot.js";
 
 const LIMITE_TURNOS = 4000;
 
@@ -29,9 +34,17 @@ function jugarPartida(estrategas) {
   let turnos = 0;
   while (!estado.fin && turnos < LIMITE_TURNOS) {
     if (estado.pendiente) {
-      // El reclutamiento se resuelve igual para todos, para que la comparación
-      // aísle la heurística de movimiento y no el criterio de recuperar piezas.
-      estado = reclutar(estado, Math.max(...estado.pendiente.opciones));
+      // Las dos decisiones se resuelven igual para los cuatro colores, para que
+      // la comparación aísle la heurística de movimiento y no el criterio de
+      // recuperar piezas ni el de cargar con banderas.
+      const pendiente = estado.pendiente;
+      if (pendiente.tipo === "recoger") {
+        estado = decisionDeRecogida(estado, pendiente.color)
+          ? recogerLaBandera(estado)
+          : renunciarARecoger(estado);
+      } else {
+        estado = reclutar(estado, Math.max(...pendiente.opciones));
+      }
       continue;
     }
     const accion = estrategas[estado.turno](estado, estado.turno);
