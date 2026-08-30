@@ -32,6 +32,10 @@ export const CANON = 1;
 export const VICTORIAS_PARA_RECLUTAR = 6;
 export const MAX_ALTERNANCIAS = 10; // 5 idas y 5 vueltas entre las mismas dos casillas
 
+// Cuántas jugadas se conservan en el hilo de historia. Es lo único del estado que
+// crece sin tope natural, y el estado entero se serializa y se guarda en disco.
+export const MAX_HISTORIA = 200;
+
 // Siempre se juega dos contra dos, con cada jugador enfrente de su compañero.
 export const SOCIO = { rojo: "azul", azul: "rojo", verde: "amarillo", amarillo: "verde" };
 export const EQUIPOS = [["rojo", "azul"], ["verde", "amarillo"]];
@@ -54,6 +58,46 @@ function clonar(estado) {
 
 function sonAliados(estado, a, b) {
   return a === b || SOCIO[a] === b;
+}
+
+// --- Registros públicos: rangos revelados e historia -------------------------
+// Los escenarios de prueba y las salas guardadas por versiones anteriores del
+// servidor no traen estos campos, así que se crean al vuelo cuando faltan.
+
+function asegurarRegistros(estado) {
+  if (!estado.rangosRevelados) estado.rangosRevelados = {};
+  if (!estado.historia) estado.historia = [];
+}
+
+function revelar(estado, id, rango) {
+  estado.rangosRevelados[id] = rango;
+}
+
+// Quien sobrevive a un duelo enseña su rango a toda la mesa. En el empate no
+// sobrevive nadie, y tras un cañonazo tampoco: se retiran los dos.
+function revelarSuperviviente(estado, atacante, defensor, resultado) {
+  if (resultado === "atacante") revelar(estado, atacante.id, atacante.rango);
+  else if (resultado === "defensor") revelar(estado, defensor.id, defensor.rango);
+}
+
+// El movimiento delata por sí solo a dos rangos: solo el explorador recorre más
+// de una casilla en línea, y solo el capitán encadena dos con giro.
+function revelarPorMovimiento(estado, pieza, accion) {
+  if (accion.tipo !== "mover") return;
+  if (accion.via) revelar(estado, pieza.id, CAPITAN);
+  else if (!ADYACENTES[accion.desde].includes(accion.hasta)) revelar(estado, pieza.id, EXPLORADOR);
+}
+
+// El hilo de historia guarda lo mismo que ya se emite en eventos, más la jugada
+// que lo provocó. Nada de rangos ocultos: solo lo que la mesa ha visto.
+function anotarEnHistoria(estado, entrada) {
+  // La numeración sale de la última entrada, no de la longitud: al recortar el
+  // hilo por arriba la longitud baja, pero las jugadas siguen contando.
+  const ultima = estado.historia[estado.historia.length - 1];
+  estado.historia.push({ n: (ultima ? ultima.n : 0) + 1, ...entrada });
+  if (estado.historia.length > MAX_HISTORIA) {
+    estado.historia.splice(0, estado.historia.length - MAX_HISTORIA);
+  }
 }
 
 // --- Despliegue -------------------------------------------------------------
@@ -101,6 +145,11 @@ export function nuevaPartida(despliegues, opciones = {}) {
     pendiente: null,
     fin: null,
     eventos: [],
+    // Rangos que han quedado a la vista de todos: los de quien sobrevive a un duelo
+    // y los que delata el propio movimiento. Es información pública, no un espejo
+    // del estado oculto: aquí solo entra lo que cualquiera sentado a la mesa vería.
+    rangosRevelados: {},
+    historia: [],
     contador: 0,
   };
 
@@ -262,6 +311,8 @@ function retirar(estado, pieza, { soltar = true } = {}) {
   delete estado.tablero[pieza.casilla];
   estado.bajas[pieza.color].push(pieza.rango);
   delete estado.piezas[pieza.id];
+  // Un rango revelado deja de interesar cuando la pieza ya no está en el tablero.
+  if (estado.rangosRevelados) delete estado.rangosRevelados[pieza.id];
 }
 
 function mover(estado, pieza, destino) {
@@ -304,10 +355,12 @@ function comprobarVictoria(estado, pieza) {
   estado.eventos.push({ tipo: "victoria", color: pieza.color });
 }
 
-function resolverDuelo(atacante, defensor) {
-  if (atacante.rango === ESPIA && defensor.rango === MARISCAL) return "atacante";
-  if (atacante.rango === defensor.rango) return "empate";
-  return atacante.rango > defensor.rango ? "atacante" : "defensor";
+// Se exporta porque los bots necesitan predecir el resultado de un ataque sin
+// reimplementar la regla. Trabaja con rangos sueltos, no con piezas.
+export function resolverDuelo(rangoAtacante, rangoDefensor) {
+  if (rangoAtacante === ESPIA && rangoDefensor === MARISCAL) return "atacante";
+  if (rangoAtacante === rangoDefensor) return "empate";
+  return rangoAtacante > rangoDefensor ? "atacante" : "defensor";
 }
 
 export function aplicar(estadoPrevio, accion) {
@@ -321,10 +374,13 @@ export function aplicar(estadoPrevio, accion) {
   if (!encaja) throw new Error("Acción ilegal.");
 
   const estado = clonar(estadoPrevio);
+  asegurarRegistros(estado);
   estado.eventos = [];
   const pieza = estado.piezas[accion.pieza];
+  const colorQueJuega = pieza.color; // la pieza puede desaparecer antes de anotar la historia
 
   if (accion.tipo === "mover") {
+    revelarPorMovimiento(estado, pieza, encaja);
     registrarTramo(pieza, pieza.casilla, accion.hasta);
     mover(estado, pieza, accion.hasta);
     const recogida = recogerBandera(estado, pieza);
@@ -343,7 +399,8 @@ export function aplicar(estadoPrevio, accion) {
     estado.eventos.push({
       tipo: "cañonazo",
       color: pieza.color,
-      objetivo: { color: objetivo.color, rango: objetivo.rango, casilla: objetivo.casilla },
+      desde: pieza.casilla,
+      objetivo: { id: objetivo.id, color: objetivo.color, rango: objetivo.rango, casilla: objetivo.casilla },
     });
     retirar(estado, objetivo);
     retirar(estado, pieza);
@@ -352,13 +409,15 @@ export function aplicar(estadoPrevio, accion) {
 
   if (accion.tipo === "atacar") {
     const defensor = piezaEn(estado, accion.hasta);
-    const resultado = resolverDuelo(pieza, defensor);
+    const resultado = resolverDuelo(pieza.rango, defensor.rango);
     estado.eventos.push({
       tipo: "duelo",
-      atacante: { color: pieza.color, rango: pieza.rango },
-      defensor: { color: defensor.color, rango: defensor.rango },
+      casilla: defensor.casilla,
+      atacante: { id: pieza.id, color: pieza.color, rango: pieza.rango, casilla: pieza.casilla },
+      defensor: { id: defensor.id, color: defensor.color, rango: defensor.rango, casilla: defensor.casilla },
       resultado,
     });
+    revelarSuperviviente(estado, pieza, defensor, resultado);
 
     if (accion.via) registrarTramo(pieza, pieza.casilla, accion.via);
 
@@ -394,12 +453,22 @@ export function aplicar(estadoPrevio, accion) {
   }
 
   if (!estado.fin && !estado.pendiente) pasarTurno(estado);
+
+  anotarEnHistoria(estado, {
+    color: colorQueJuega,
+    tipo: encaja.tipo,
+    desde: encaja.desde,
+    hasta: encaja.hasta,
+    via: encaja.via || null,
+    eventos: [...estado.eventos],
+  });
   return estado;
 }
 
 export function reclutar(estado, rango) {
   if (!estado.pendiente || estado.pendiente.tipo !== "reclutar") throw new Error("No hay reclutamiento pendiente.");
   const siguiente = clonar(estado);
+  asegurarRegistros(siguiente);
   const { color } = siguiente.pendiente;
   const indice = siguiente.bajas[color].indexOf(rango);
   if (indice === -1) throw new Error("Esa pieza no está entre tus bajas.");
@@ -411,14 +480,18 @@ export function reclutar(estado, rango) {
   siguiente.pendiente = null;
   siguiente.eventos = [{ tipo: "reclutamiento", color }]; // el rango no se publica
   pasarTurno(siguiente);
+  anotarEnHistoria(siguiente, { color, tipo: "reclutar", eventos: [...siguiente.eventos] });
   return siguiente;
 }
 
 export function renunciarAlReclutamiento(estado) {
   const siguiente = clonar(estado);
+  asegurarRegistros(siguiente);
+  const color = estado.pendiente.color;
   siguiente.pendiente = null;
-  siguiente.eventos = [{ tipo: "reclutamiento-renunciado", color: estado.pendiente.color }];
+  siguiente.eventos = [{ tipo: "reclutamiento-renunciado", color }];
   pasarTurno(siguiente);
+  anotarEnHistoria(siguiente, { color, tipo: "renunciar", eventos: [...siguiente.eventos] });
   return siguiente;
 }
 
@@ -458,6 +531,9 @@ export function vistaDe(estado, color) {
     fin: estado.fin,
     piezas,
     banderasSueltas: { ...estado.banderasSueltas },
+    // Público para todos: son rangos que ya se han visto sobre la mesa.
+    rangosRevelados: { ...(estado.rangosRevelados || {}) },
+    historia: [...(estado.historia || [])],
     marcador: { ...estado.marcador },
     misBajas: [...estado.bajas[color]],
     pendiente: estado.pendiente && estado.pendiente.color === color ? estado.pendiente : null,

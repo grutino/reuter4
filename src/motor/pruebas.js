@@ -17,7 +17,10 @@ import {
   inventarioInicial,
   vistaDe,
   MAX_ALTERNANCIAS,
+  MAX_HISTORIA,
+  resolverDuelo,
 } from "./motor.js";
+import { accionDeBot, accionDeBotClasico } from "./bot.js";
 
 let pasadas = 0;
 let fallidas = 0;
@@ -530,6 +533,219 @@ prueba("el vaivén se corta tras cinco idas y vueltas", () => {
   }
   const bloqueado = movimientosLegales(e).some((a) => a.pieza === pieza.id && a.hasta === otra);
   assert.strictEqual(bloqueado, false, "la décima alternancia debe estar prohibida");
+});
+
+console.log("\nMEMORIA DE RANGOS");
+
+prueba("quien gana un duelo enseña su rango a la mesa", () => {
+  let e = estadoVacio();
+  const fuerte = colocar(e, "rojo", 7, "D4");
+  const debil = colocar(e, "verde", 3, "E4");
+  const tras = aplicar(e, accion(movimientosLegales(e), (a) => a.tipo === "atacar" && a.pieza === fuerte.id));
+  assert.strictEqual(tras.rangosRevelados[fuerte.id], 7, "el vencedor queda a la vista");
+  assert.ok(!(debil.id in tras.rangosRevelados), "el caído no se guarda: ya no está en el tablero");
+});
+
+prueba("el defensor que resiste también queda a la vista", () => {
+  let e = estadoVacio();
+  const flojo = colocar(e, "rojo", 3, "D4");
+  const firme = colocar(e, "verde", 8, "E4");
+  const tras = aplicar(e, accion(movimientosLegales(e), (a) => a.tipo === "atacar" && a.pieza === flojo.id));
+  assert.strictEqual(tras.rangosRevelados[firme.id], 8);
+  assert.ok(!(flojo.id in tras.rangosRevelados));
+});
+
+prueba("del empate no sobrevive nadie, así que no se revela nada", () => {
+  let e = estadoVacio();
+  const uno = colocar(e, "rojo", 5, "D4");
+  const otro = colocar(e, "verde", 5, "E4");
+  const tras = aplicar(e, accion(movimientosLegales(e), (a) => a.tipo === "atacar" && a.pieza === uno.id));
+  assert.deepStrictEqual(tras.rangosRevelados, {});
+  assert.ok(!(otro.id in tras.rangosRevelados));
+});
+
+prueba("el explorador se delata al recorrer más de una casilla", () => {
+  let e = estadoVacio();
+  const ojeador = colocar(e, "rojo", 3, "H4");
+  const lejos = accion(movimientosLegales(e), (a) => a.tipo === "mover" && a.pieza === ojeador.id && a.hasta === "H1");
+  const tras = aplicar(e, lejos);
+  assert.strictEqual(tras.rangosRevelados[ojeador.id], 3);
+});
+
+prueba("el explorador que solo da un paso no se delata", () => {
+  let e = estadoVacio();
+  const ojeador = colocar(e, "rojo", 3, "H4");
+  const corto = accion(movimientosLegales(e), (a) => a.tipo === "mover" && a.pieza === ojeador.id && a.hasta === "H3");
+  const tras = aplicar(e, corto);
+  assert.deepStrictEqual(tras.rangosRevelados, {});
+});
+
+prueba("el capitán se delata al encadenar dos casillas con giro", () => {
+  let e = estadoVacio();
+  const capitan = colocar(e, "rojo", 6, "H4");
+  const conGiro = accion(movimientosLegales(e), (a) => a.tipo === "mover" && a.pieza === capitan.id && a.via);
+  const tras = aplicar(e, conGiro);
+  assert.strictEqual(tras.rangosRevelados[capitan.id], 6);
+});
+
+prueba("un rango revelado se olvida cuando la pieza cae después", () => {
+  let e = estadoVacio();
+  const medio = colocar(e, "rojo", 5, "D4");
+  colocar(e, "verde", 3, "E4");
+  let tras = aplicar(e, accion(movimientosLegales(e), (a) => a.tipo === "atacar" && a.pieza === medio.id));
+  assert.strictEqual(tras.rangosRevelados[medio.id], 5);
+  // Ahora cae ante alguien mayor: su rango deja de estar en la memoria.
+  const grande = colocar(tras, "verde", 9, "F4");
+  tras.turno = "verde";
+  const remate = aplicar(tras, accion(movimientosLegales(tras, "verde"), (a) => a.tipo === "atacar" && a.pieza === grande.id));
+  assert.ok(!(medio.id in remate.rangosRevelados));
+  assert.strictEqual(remate.rangosRevelados[grande.id], 9);
+});
+
+console.log("\nHILO DE HISTORIA");
+
+prueba("cada jugada deja una entrada numerada en el hilo", () => {
+  let e = estadoVacio();
+  const pieza = colocar(e, "rojo", 4, "H4");
+  const tras = aplicar(e, accion(movimientosLegales(e), (a) => a.tipo === "mover" && a.pieza === pieza.id && a.hasta === "H3"));
+  assert.strictEqual(tras.historia.length, 1);
+  assert.deepStrictEqual(
+    { n: tras.historia[0].n, color: tras.historia[0].color, tipo: tras.historia[0].tipo, hasta: tras.historia[0].hasta },
+    { n: 1, color: "rojo", tipo: "mover", hasta: "H3" }
+  );
+});
+
+prueba("el hilo recoge los eventos del duelo", () => {
+  let e = estadoVacio();
+  const fuerte = colocar(e, "rojo", 7, "D4");
+  colocar(e, "verde", 3, "E4");
+  const tras = aplicar(e, accion(movimientosLegales(e), (a) => a.tipo === "atacar" && a.pieza === fuerte.id));
+  const entrada = tras.historia[0];
+  assert.strictEqual(entrada.tipo, "atacar");
+  assert.ok(entrada.eventos.some((ev) => ev.tipo === "duelo" && ev.resultado === "atacante"));
+});
+
+prueba("el hilo no publica ningún rango oculto en un reclutamiento", () => {
+  let e = estadoVacio();
+  e.bajas.rojo.push(9);
+  e.marcador.rojo = 5;
+  const pieza = colocar(e, "rojo", 4, "D4");
+  colocar(e, "verde", 3, "E4");
+  const tras = aplicar(e, accion(movimientosLegales(e), (a) => a.tipo === "atacar" && a.pieza === pieza.id));
+  const conRecluta = reclutar(tras, 9);
+  const entrada = conRecluta.historia[conRecluta.historia.length - 1];
+  assert.strictEqual(entrada.tipo, "reclutar");
+  assert.ok(!JSON.stringify(entrada).includes('"rango"'), "el rango reclutado no puede aparecer en el hilo");
+});
+
+prueba("el hilo se recorta por arriba pero la numeración sigue subiendo", () => {
+  let e = estadoVacio();
+  const pieza = colocar(e, "rojo", 4, "D4");
+  // Se pasea en cuadrado por llanura abierta: un ir y venir entre dos casillas
+  // lo cortaría la regla del vaivén.
+  const ruta = ["E4", "E5", "D5", "D4"];
+  for (let i = 0; i < MAX_HISTORIA + 20; i++) {
+    const destino = ruta[i % ruta.length];
+    const posible = accion(
+      movimientosLegales(e),
+      (a) => a.tipo === "mover" && a.pieza === pieza.id && a.hasta === destino
+    );
+    e = aplicar(e, posible);
+  }
+  assert.strictEqual(e.historia.length, MAX_HISTORIA, "el hilo se queda en su tope");
+  const ultima = e.historia[e.historia.length - 1];
+  assert.strictEqual(ultima.n, MAX_HISTORIA + 20, "la numeración cuenta todas las jugadas");
+  assert.strictEqual(e.historia[0].n, ultima.n - MAX_HISTORIA + 1, "las entradas quedan consecutivas");
+});
+
+console.log("\nBOTS");
+
+prueba("el bot no ataca cuando la memoria dice que pierde", () => {
+  // Única opción de ataque: contra un mariscal ya revelado. Debe preferir moverse.
+  let e = estadoVacio();
+  const mio = colocar(e, "rojo", 4, "H4");
+  const mariscal = colocar(e, "verde", 9, "H3");
+  e.rangosRevelados = { [mariscal.id]: 9 };
+  for (let i = 0; i < 40; i++) {
+    const elegida = accionDeBot(e, "rojo");
+    assert.ok(elegida, "el bot debe encontrar alguna jugada");
+    assert.ok(
+      !(elegida.tipo === "atacar" && elegida.hasta === "H3"),
+      "sabe que el mariscal le gana: no debería atacarle"
+    );
+  }
+  assert.strictEqual(mio.rango, 4);
+});
+
+prueba("el bot ataca cuando la memoria dice que gana", () => {
+  let e = estadoVacio();
+  colocar(e, "rojo", 8, "H4");
+  const flojo = colocar(e, "verde", 2, "H3");
+  e.rangosRevelados = { [flojo.id]: 2 };
+  let ataques = 0;
+  for (let i = 0; i < 40; i++) {
+    const elegida = accionDeBot(e, "rojo");
+    if (elegida.tipo === "atacar" && elegida.hasta === "H3") ataques++;
+  }
+  assert.strictEqual(ataques, 40, "una captura segura debería elegirse siempre");
+});
+
+prueba("el espía va a por el mariscal que ya tiene fichado", () => {
+  let e = estadoVacio();
+  colocar(e, "rojo", 2, "H4");
+  const mariscal = colocar(e, "verde", 9, "H3");
+  e.rangosRevelados = { [mariscal.id]: 9 };
+  let ataques = 0;
+  for (let i = 0; i < 40; i++) {
+    const elegida = accionDeBot(e, "rojo");
+    if (elegida.tipo === "atacar" && elegida.hasta === "H3") ataques++;
+  }
+  assert.strictEqual(ataques, 40, "es justo el golpe para el que sirve el espía");
+});
+
+prueba("el bot clásico, sin memoria, sí se estrella contra el mariscal", () => {
+  // Sirve de contraste: es la diferencia que introduce la memoria.
+  let e = estadoVacio();
+  colocar(e, "rojo", 4, "H4");
+  const mariscal = colocar(e, "verde", 9, "H3");
+  e.rangosRevelados = { [mariscal.id]: 9 };
+  let ataques = 0;
+  for (let i = 0; i < 40; i++) {
+    const elegida = accionDeBotClasico(e, "rojo");
+    if (elegida.tipo === "atacar" && elegida.hasta === "H3") ataques++;
+  }
+  assert.ok(ataques > 0, "el clásico ignora la memoria y ataca igual");
+});
+
+prueba("los bots solo miran la memoria pública, nunca el rango oculto", () => {
+  // Dos estados idénticos salvo el rango escondido del defensor. Si el bot
+  // espiara el estado, cambiaría de idea; con solo memoria pública, no.
+  function escenario(rangoOculto) {
+    const e = estadoVacio();
+    colocar(e, "rojo", 5, "H4");
+    colocar(e, "verde", rangoOculto, "H3");
+    return e;
+  }
+  const conDebil = escenario(1);
+  const conFuerte = escenario(9);
+  let atacaAlDebil = 0;
+  let atacaAlFuerte = 0;
+  for (let i = 0; i < 300; i++) {
+    if (accionDeBot(conDebil, "rojo").tipo === "atacar") atacaAlDebil++;
+    if (accionDeBot(conFuerte, "rojo").tipo === "atacar") atacaAlFuerte++;
+  }
+  assert.strictEqual(
+    atacaAlDebil,
+    atacaAlFuerte,
+    "sin nada revelado, los dos casos son indistinguibles para el bot"
+  );
+});
+
+prueba("resolverDuelo trabaja con rangos sueltos", () => {
+  assert.strictEqual(resolverDuelo(2, 9), "atacante");
+  assert.strictEqual(resolverDuelo(9, 2), "atacante");
+  assert.strictEqual(resolverDuelo(5, 5), "empate");
+  assert.strictEqual(resolverDuelo(3, 7), "defensor");
 });
 
 console.log(`\n${pasadas} pruebas superadas, ${fallidas} fallidas\n`);

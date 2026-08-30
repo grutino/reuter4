@@ -1,77 +1,125 @@
-import { ANILLO, TORRE, ADYACENTES, ZONAS, COLORES, casillasDeZona } from "./tablero.js";
-import { nuevaPartida, movimientosLegales, aplicar, reclutar, inventarioInicial, SOCIO } from "./motor.js";
+// Banco de pruebas de los bots. Dos cosas distintas:
+//
+//   1. Salud: unas cuantas partidas completas para ver que nada se atasca ni revienta.
+//   2. Duelo: bots con memoria contra bots clásicos, para medir si la memoria sirve.
+//
+// El duelo juega cada emparejamiento en las dos direcciones. Los bandos no son
+// simétricos (rojo y azul entran por el norte y el sur, verde y amarillo por el
+// este y el oeste) y quien empieza se sortea, así que sin alternar los papeles se
+// estaría midiendo el tablero en vez de los bots.
+//
+// Uso: node src/motor/simulacion.js [partidasDeSalud] [partidasDeDuelo]
 
-const DIST = (() => {
-  const d = { [ANILLO]: 0, [TORRE]: 0 };
-  let frente = [ANILLO];
-  while (frente.length) {
-    const sig = [];
-    for (const c of frente) for (const v of ADYACENTES[c]) if (d[v] === undefined) { d[v] = d[c] + 1; sig.push(v); }
-    frente = sig;
-  }
-  return d;
-})();
+import { COLORES } from "./tablero.js";
+import { nuevaPartida, aplicar, reclutar, EQUIPOS } from "./motor.js";
+import { accionDeBot, accionDeBotClasico, despliegueAleatorio } from "./bot.js";
 
-function barajar(l) { for (let i = l.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [l[i], l[j]] = [l[j], l[i]]; } return l; }
+const LIMITE_TURNOS = 4000;
 
-function despliegueAleatorio(color) {
-  const zona = casillasDeZona(color).filter((c) => c !== ZONAS[color].reclutamiento);
-  const bandera = ZONAS[color].bandera;
-  const resto = barajar(zona.filter((c) => c !== bandera));
-  const usadas = [bandera, ...resto.slice(0, 19)];
-  const bolsa = barajar(inventarioInicial());
-  return usadas.map((casilla, i) => ({ casilla, rango: bolsa[i], bandera: casilla === bandera }));
-}
+const [, , argSalud, argDuelo] = process.argv;
+const PARTIDAS_SALUD = Number(argSalud) || 25;
+const PARTIDAS_DUELO = Number(argDuelo) || 40;
 
-function accionDeBot(estado, color) {
-  const acciones = movimientosLegales(estado, color);
-  if (!acciones.length) return null;
-  let mejor = null, mejorNota = -Infinity;
-  for (const a of acciones) {
-    const p = estado.piezas[a.pieza];
-    const propia = p.bandera && (p.bandera === color || SOCIO[color] === p.bandera);
-    let n = Math.random() * 2;
-    if (a.tipo === "mover") {
-      const antes = DIST[a.desde] ?? 30, despues = DIST[a.hasta] ?? 30;
-      if (a.hasta === TORRE && propia) n += 10000;
-      else if (propia) n += (antes - despues) * 14 + 6;
-      else n += (antes - despues) * 3;
-      if (estado.banderasSueltas[a.hasta]) n += 25;
-    }
-    if (a.tipo === "disparar") n += 55;
-    if (a.tipo === "atacar") {
-      n += 12 + p.rango * 2.5;
-      if (propia) n -= 60;
-      if (p.rango <= 2) n -= 15;
-      if (a.hasta === ANILLO || a.hasta === TORRE) n += 20;
-    }
-    if (n > mejorNota) { mejorNota = n; mejor = a; }
-  }
-  return mejor;
-}
-
-const resumen = { victorias: {}, turnos: [], sinGanador: 0, errores: 0 };
-for (let partida = 0; partida < 25; partida++) {
-  let estado = nuevaPartida(Object.fromEntries(COLORES.map((c) => [c, despliegueAleatorio(c)])),
-    { primero: COLORES[Math.floor(Math.random() * 4)] });
+// `estrategas` asocia cada color a la función que decide su jugada.
+function jugarPartida(estrategas) {
+  let estado = nuevaPartida(
+    Object.fromEntries(COLORES.map((c) => [c, despliegueAleatorio(c)])),
+    { primero: COLORES[Math.floor(Math.random() * 4)] }
+  );
   let turnos = 0;
-  try {
-    while (!estado.fin && turnos < 4000) {
-      if (estado.pendiente) { estado = reclutar(estado, Math.max(...estado.pendiente.opciones)); continue; }
-      const a = accionDeBot(estado, estado.turno);
-      if (!a) break;
-      estado = aplicar(estado, a);
-      turnos++;
+  while (!estado.fin && turnos < LIMITE_TURNOS) {
+    if (estado.pendiente) {
+      // El reclutamiento se resuelve igual para todos, para que la comparación
+      // aísle la heurística de movimiento y no el criterio de recuperar piezas.
+      estado = reclutar(estado, Math.max(...estado.pendiente.opciones));
+      continue;
     }
-  } catch (e) { resumen.errores++; console.log("  error:", e.message); continue; }
-  resumen.turnos.push(turnos);
-  if (estado.fin && estado.fin.ganador) {
-    const clave = estado.fin.equipo.join("+");
-    resumen.victorias[clave] = (resumen.victorias[clave] || 0) + 1;
-  } else resumen.sinGanador++;
+    const accion = estrategas[estado.turno](estado, estado.turno);
+    if (!accion) break;
+    estado = aplicar(estado, accion);
+    turnos++;
+  }
+  return { estado, turnos };
 }
-const media = Math.round(resumen.turnos.reduce((a, b) => a + b, 0) / resumen.turnos.length);
-console.log("\n25 partidas de bots");
-console.log("  victorias por bando:", resumen.victorias);
-console.log("  sin ganador:", resumen.sinGanador, "| errores:", resumen.errores);
-console.log("  turnos: media", media, "| mínimo", Math.min(...resumen.turnos), "| máximo", Math.max(...resumen.turnos));
+
+function mismoBot(fn) {
+  return Object.fromEntries(COLORES.map((c) => [c, fn]));
+}
+
+// --- 1. Salud ----------------------------------------------------------------
+
+function salud(partidas) {
+  const resumen = { victorias: {}, turnos: [], sinGanador: 0, errores: 0 };
+  for (let i = 0; i < partidas; i++) {
+    try {
+      const { estado, turnos } = jugarPartida(mismoBot(accionDeBot));
+      resumen.turnos.push(turnos);
+      if (estado.fin && estado.fin.ganador) {
+        const clave = estado.fin.equipo.join("+");
+        resumen.victorias[clave] = (resumen.victorias[clave] || 0) + 1;
+      } else resumen.sinGanador++;
+    } catch (e) {
+      resumen.errores++;
+      console.log("  error:", e.message);
+    }
+  }
+  const media = Math.round(resumen.turnos.reduce((a, b) => a + b, 0) / (resumen.turnos.length || 1));
+  console.log(`\n${partidas} partidas de bots con memoria`);
+  console.log("  victorias por bando:", resumen.victorias);
+  console.log("  sin ganador:", resumen.sinGanador, "| errores:", resumen.errores);
+  console.log("  turnos: media", media, "| mínimo", Math.min(...resumen.turnos), "| máximo", Math.max(...resumen.turnos));
+  return resumen.errores;
+}
+
+// --- 2. Duelo: memoria contra clásico ----------------------------------------
+
+const [EQUIPO_A, EQUIPO_B] = EQUIPOS; // [rojo, azul] y [verde, amarillo]
+
+function repartoDeBandos(memoriaEnA) {
+  const estrategas = {};
+  for (const c of EQUIPO_A) estrategas[c] = memoriaEnA ? accionDeBot : accionDeBotClasico;
+  for (const c of EQUIPO_B) estrategas[c] = memoriaEnA ? accionDeBotClasico : accionDeBot;
+  return estrategas;
+}
+
+function duelo(partidas) {
+  const marcador = { memoria: 0, clasico: 0, tablas: 0, errores: 0 };
+  const turnos = [];
+  for (let i = 0; i < partidas; i++) {
+    const memoriaEnA = i % 2 === 0; // se alternan los bandos partida sí, partida no
+    try {
+      const { estado, turnos: t } = jugarPartida(repartoDeBandos(memoriaEnA));
+      turnos.push(t);
+      if (!estado.fin || !estado.fin.ganador) {
+        marcador.tablas++;
+        continue;
+      }
+      const ganoA = EQUIPO_A.includes(estado.fin.ganador);
+      const ganoLaMemoria = ganoA === memoriaEnA;
+      marcador[ganoLaMemoria ? "memoria" : "clasico"]++;
+    } catch (e) {
+      marcador.errores++;
+      console.log("  error:", e.message);
+    }
+  }
+  const decididas = marcador.memoria + marcador.clasico;
+  const porcentaje = decididas ? Math.round((marcador.memoria / decididas) * 100) : 0;
+  const media = Math.round(turnos.reduce((a, b) => a + b, 0) / (turnos.length || 1));
+
+  console.log(`\n${partidas} partidas: memoria contra clásico (bandos alternados)`);
+  console.log("  gana la memoria:", marcador.memoria);
+  console.log("  gana el clásico:", marcador.clasico);
+  console.log("  tablas:", marcador.tablas, "| errores:", marcador.errores);
+  console.log(`  sobre las ${decididas} partidas decididas, la memoria gana el ${porcentaje}%`);
+  console.log("  turnos: media", media);
+  return { porcentaje, decididas, errores: marcador.errores };
+}
+
+const erroresSalud = salud(PARTIDAS_SALUD);
+const resultado = duelo(PARTIDAS_DUELO);
+
+if (erroresSalud || resultado.errores) {
+  console.log("\nHubo errores durante la simulación.\n");
+  process.exit(1);
+}
+console.log("");
