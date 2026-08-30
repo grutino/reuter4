@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from "react";
+import React, { useRef, useEffect, useState } from "react";
 import * as THREE from "three";
 import { CASILLAS, LAGOS, ANILLO, TORRE, ZONAS, coord, zonaDe, casillasDeZona } from "./motor/tablero.js";
 import { pintarFicha } from "./ficha.js";
@@ -16,6 +16,7 @@ export const NOMBRE_RANGO = {
 };
 
 export const LATON_CSS = "#C08A2E";
+const PERGAMINO = "#E8DCC2";
 
 // === Tablero 3D =============================================================
 
@@ -60,7 +61,18 @@ function posicion3D(casilla) {
   return [c - 7, 0.1, f - 8];
 }
 
-export default function Tablero3D({ piezas, banderasSueltas, resaltadas, zonaPropia, colorCamara, onCasilla }) {
+export default function Tablero3D({
+  piezas,
+  banderasSueltas,
+  resaltadas,
+  zonaPropia,
+  colorCamara,
+  onCasilla,
+  alto = 540,
+  ampliado = false,
+  onAlternarAmpliado,
+}) {
+  const [leyendaAbierta, setLeyendaAbierta] = useState(false);
   const contenedor = useRef(null);
   const ref = useRef(null);
   const manejador = useRef(onCasilla);
@@ -159,37 +171,94 @@ export default function Tablero3D({ piezas, banderasSueltas, resaltadas, zonaPro
     corona.position.y = 1.36;
     escena.add(corona);
 
-    const orbita = { radio: 21, theta: Math.PI, phi: 0.92 };
+    // La cámara orbita alrededor de `objetivo`, que además se puede desplazar:
+    // girar y acercar no bastan para mirar una esquina del tablero de cerca.
+    const INICIO = { radio: 21, theta: Math.PI, phi: 0.92 };
+    const orbita = { ...INICIO };
+    const objetivo = new THREE.Vector3(0, 0.4, 0);
+    const LIMITE_DESPLAZAMIENTO = 11;
+
     function situarCamara() {
       camara.position.set(
-        orbita.radio * Math.sin(orbita.phi) * Math.sin(orbita.theta),
-        orbita.radio * Math.cos(orbita.phi),
-        orbita.radio * Math.sin(orbita.phi) * Math.cos(orbita.theta)
+        objetivo.x + orbita.radio * Math.sin(orbita.phi) * Math.sin(orbita.theta),
+        objetivo.y + orbita.radio * Math.cos(orbita.phi),
+        objetivo.z + orbita.radio * Math.sin(orbita.phi) * Math.cos(orbita.theta)
       );
-      camara.lookAt(0, 0.4, 0);
+      camara.lookAt(objetivo);
     }
+
+    // Desplaza el objetivo por el plano del tablero, en las direcciones que el
+    // jugador ve como "derecha" y "hacia el fondo" desde donde está mirando.
+    function desplazar(dx, dy) {
+      const paso = orbita.radio * 0.0016;
+      const derecha = new THREE.Vector3(Math.cos(orbita.theta), 0, -Math.sin(orbita.theta));
+      const fondo = new THREE.Vector3(-Math.sin(orbita.theta), 0, -Math.cos(orbita.theta));
+      objetivo.addScaledVector(derecha, -dx * paso);
+      objetivo.addScaledVector(fondo, dy * paso);
+      objetivo.x = Math.max(-LIMITE_DESPLAZAMIENTO, Math.min(LIMITE_DESPLAZAMIENTO, objetivo.x));
+      objetivo.z = Math.max(-LIMITE_DESPLAZAMIENTO, Math.min(LIMITE_DESPLAZAMIENTO, objetivo.z));
+      situarCamara();
+    }
+
+    function centrarVista() {
+      orbita.radio = INICIO.radio;
+      orbita.phi = INICIO.phi;
+      objetivo.set(0, 0.4, 0);
+      situarCamara();
+    }
+
     situarCamara();
 
     let arrastrando = false;
+    let desplazando = false;
     let ultimo = { x: 0, y: 0 };
     let recorrido = 0;
+    // Botón derecho, botón central o Mayúsculas: desplazar. Lo demás: girar.
+    const esDesplazamiento = (e) => e.button === 1 || e.button === 2 || e.shiftKey;
     const alPulsar = (e) => {
       arrastrando = true;
+      desplazando = esDesplazamiento(e);
       recorrido = 0;
       ultimo = { x: e.clientX, y: e.clientY };
+      nodo.style.cursor = desplazando ? "move" : "grabbing";
     };
     const alMover = (e) => {
       if (!arrastrando) return;
       const dx = e.clientX - ultimo.x;
       const dy = e.clientY - ultimo.y;
       recorrido += Math.abs(dx) + Math.abs(dy);
-      orbita.theta -= dx * 0.006;
-      orbita.phi = Math.max(0.2, Math.min(1.45, orbita.phi - dy * 0.005));
+      // Mayúsculas se mira en cada movimiento y no solo al pulsar: hay entornos
+      // que no traen el modificador en el pointerdown, y así se puede además
+      // alternar entre girar y desplazar sin soltar el botón.
+      if (desplazando || e.shiftKey) {
+        desplazar(dx, dy);
+      } else {
+        orbita.theta -= dx * 0.006;
+        orbita.phi = Math.max(0.2, Math.min(1.45, orbita.phi - dy * 0.005));
+        situarCamara();
+      }
       ultimo = { x: e.clientX, y: e.clientY };
-      situarCamara();
+      nodo.style.cursor = desplazando || e.shiftKey ? "move" : "grabbing";
     };
     const alSoltar = () => {
       arrastrando = false;
+      desplazando = false;
+      nodo.style.cursor = "grab";
+    };
+    const alMenuContextual = (e) => e.preventDefault(); // el botón derecho desplaza
+
+    // Teclado: flechas para desplazar y C para volver a la vista de partida.
+    const alTeclear = (e) => {
+      const etiqueta = e.target && e.target.tagName;
+      if (etiqueta === "INPUT" || etiqueta === "TEXTAREA") return;
+      const PASO = 26;
+      if (e.key === "ArrowLeft") desplazar(PASO, 0);
+      else if (e.key === "ArrowRight") desplazar(-PASO, 0);
+      else if (e.key === "ArrowUp") desplazar(0, -PASO);
+      else if (e.key === "ArrowDown") desplazar(0, PASO);
+      else if (e.key === "c" || e.key === "C") centrarVista();
+      else return;
+      e.preventDefault();
     };
     const alRodar = (e) => {
       e.preventDefault();
@@ -213,6 +282,8 @@ export default function Tablero3D({ piezas, banderasSueltas, resaltadas, zonaPro
     window.addEventListener("pointerup", alSoltar);
     render.domElement.addEventListener("wheel", alRodar, { passive: false });
     render.domElement.addEventListener("click", alClicar);
+    render.domElement.addEventListener("contextmenu", alMenuContextual);
+    window.addEventListener("keydown", alTeclear);
 
     const grupoPiezas = new THREE.Group();
     escena.add(grupoPiezas);
@@ -227,24 +298,29 @@ export default function Tablero3D({ piezas, banderasSueltas, resaltadas, zonaPro
     };
     bucle();
 
+    // Se observa el contenedor y no la ventana: al maximizar la escena cambia
+    // de tamaño sin que la ventana se entere, y el lienzo se quedaría estirado.
     const alRedimensionar = () => {
-      if (!nodo.clientWidth) return;
+      if (!nodo.clientWidth || !nodo.clientHeight) return;
       camara.aspect = nodo.clientWidth / nodo.clientHeight;
       camara.updateProjectionMatrix();
       render.setSize(nodo.clientWidth, nodo.clientHeight);
     };
-    window.addEventListener("resize", alRedimensionar);
+    const observador = new ResizeObserver(alRedimensionar);
+    observador.observe(nodo);
 
-    ref.current = { escena, grupoPiezas, grupoMarcas, casillasMesh, orbita, situarCamara };
+    ref.current = { escena, grupoPiezas, grupoMarcas, casillasMesh, orbita, situarCamara, centrarVista };
 
     return () => {
       vivo = false;
-      window.removeEventListener("resize", alRedimensionar);
+      observador.disconnect();
+      window.removeEventListener("keydown", alTeclear);
       window.removeEventListener("pointermove", alMover);
       window.removeEventListener("pointerup", alSoltar);
       render.domElement.removeEventListener("pointerdown", alPulsar);
       render.domElement.removeEventListener("wheel", alRodar);
       render.domElement.removeEventListener("click", alClicar);
+      render.domElement.removeEventListener("contextmenu", alMenuContextual);
       render.dispose();
       if (render.domElement.parentNode) render.domElement.parentNode.removeChild(render.domElement);
     };
@@ -376,10 +452,82 @@ export default function Tablero3D({ piezas, banderasSueltas, resaltadas, zonaPro
     }
   }, [piezas, banderasSueltas]);
 
+  const botonEscena = {
+    background: "rgba(28,20,13,0.78)",
+    color: PERGAMINO,
+    border: `1px solid ${LATON_CSS}`,
+    borderRadius: 4,
+    padding: "4px 9px",
+    fontSize: 12,
+    fontFamily: "inherit",
+    cursor: "pointer",
+    lineHeight: 1.4,
+  };
+
   return (
     <div
-      ref={contenedor}
-      style={{ width: "100%", height: 540, borderRadius: 6, overflow: "hidden", border: `2px solid ${LATON_CSS}`, cursor: "grab" }}
-    />
+      style={{
+        position: "relative",
+        width: "100%",
+        // Ampliada, la escena se reparte el alto con el pie de ayuda en vez de
+        // pedir un 100% que se desbordaría.
+        ...(ampliado ? { flex: 1, minHeight: 0 } : { height: alto }),
+        borderRadius: 6,
+        overflow: "hidden",
+        border: `2px solid ${LATON_CSS}`,
+      }}
+    >
+      {/* El lienzo se cuelga aquí a mano, así que este nodo no lleva hijos de React. */}
+      <div ref={contenedor} style={{ position: "absolute", inset: 0, cursor: "grab" }} />
+
+      <div style={{ position: "absolute", top: 8, right: 8, display: "flex", gap: 6 }}>
+        <button
+          type="button"
+          style={botonEscena}
+          onClick={() => setLeyendaAbierta((v) => !v)}
+          title="Controles de la escena"
+        >
+          {leyendaAbierta ? "Ocultar controles" : "Controles"}
+        </button>
+        {onAlternarAmpliado && (
+          <button type="button" style={botonEscena} onClick={onAlternarAmpliado} title="Tecla M">
+            {ampliado ? "Reducir" : "Ampliar"}
+          </button>
+        )}
+      </div>
+
+      {leyendaAbierta && (
+        <div
+          style={{
+            position: "absolute",
+            top: 42,
+            right: 8,
+            background: "rgba(28,20,13,0.88)",
+            border: `1px solid ${LATON_CSS}`,
+            borderRadius: 4,
+            padding: "9px 11px",
+            fontSize: 12,
+            lineHeight: 1.75,
+            color: PERGAMINO,
+            maxWidth: 250,
+          }}
+        >
+          {[
+            ["Arrastrar", "girar la vista"],
+            ["Mayúsculas + arrastrar", "desplazar"],
+            ["Botón derecho o central", "desplazar"],
+            ["Flechas", "desplazar"],
+            ["Rueda", "acercar y alejar"],
+            ["C", "volver a la vista inicial"],
+            ["M", "ampliar o reducir la escena"],
+          ].map(([tecla, que]) => (
+            <div key={tecla} style={{ display: "flex", gap: 8, justifyContent: "space-between" }}>
+              <span style={{ color: LATON_CSS, whiteSpace: "nowrap" }}>{tecla}</span>
+              <span style={{ textAlign: "right" }}>{que}</span>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
   );
 }

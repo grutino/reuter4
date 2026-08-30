@@ -378,6 +378,7 @@ export default function App() {
   const [seleccion, setSeleccion] = useState(null);
   const [combates, setCombates] = useState([]);
   const combatesVistos = useRef({});
+  const [tableroAmpliado, setTableroAmpliado] = useState(false);
   const [confirmando, setConfirmando] = useState(null); // "parar" | "borrar", solo el anfitrión
   const socketRef = useRef(null);
   const yoRef = useRef(null);
@@ -494,6 +495,25 @@ export default function App() {
   useEffect(() => {
     setCombates([]);
   }, [salaId]);
+
+  // M amplía y reduce la escena; Escape siempre la reduce.
+  useEffect(() => {
+    const alTeclear = (e) => {
+      const etiqueta = e.target && e.target.tagName;
+      if (etiqueta === "INPUT" || etiqueta === "TEXTAREA") return;
+      if (e.key === "m" || e.key === "M") setTableroAmpliado((v) => !v);
+      else if (e.key === "Escape") setTableroAmpliado(false);
+    };
+    window.addEventListener("keydown", alTeclear);
+    return () => window.removeEventListener("keydown", alTeclear);
+  }, []);
+
+  // Con la escena ampliada el panel lateral queda debajo, así que una decisión
+  // pendiente sería imposible de contestar: se reduce sola para que se vea.
+  const hayDecision = Boolean(sala && sala.estado && sala.estado.pendiente);
+  useEffect(() => {
+    if (hayDecision) setTableroAmpliado(false);
+  }, [hayDecision]);
 
   const restantes = miColor
     ? Object.entries(RANGOS)
@@ -784,7 +804,13 @@ export default function App() {
         />
       )}
       <div style={{ display: "flex", gap: 16, alignItems: "flex-start", flexWrap: "wrap", maxWidth: 1120, margin: "0 auto" }}>
-        <div style={{ flex: "1 1 480px", minWidth: 320 }}>
+        <div
+          style={
+            tableroAmpliado
+              ? { position: "fixed", inset: 0, zIndex: 30, background: MADERA, padding: 10, display: "flex", flexDirection: "column" }
+              : { flex: "1 1 480px", minWidth: 320 }
+          }
+        >
           <Tablero3D
             piezas={piezasEnTablero}
             banderasSueltas={estado ? estado.banderasSueltas : null}
@@ -792,9 +818,12 @@ export default function App() {
             zonaPropia={sala.fase === "desplegando" ? miColor : null}
             colorCamara={miColor}
             onCasilla={sala.fase === "desplegando" ? alClicarDespliegue : alClicarPartida}
+            ampliado={tableroAmpliado}
+            onAlternarAmpliado={() => setTableroAmpliado((v) => !v)}
           />
-          <p style={{ color: "#C9BC9C", fontSize: 12, marginTop: 8 }}>
-            Arrastra para girar, rueda para acercar.{" "}
+          <p style={{ color: "#C9BC9C", fontSize: 12, marginTop: 8, flex: "0 0 auto" }}>
+            Arrastra para girar, Mayúsculas o botón derecho para desplazar, rueda para acercar. Tecla M
+            para ampliar la escena.{" "}
             {sala.fase === "desplegando"
               ? "Toca una casilla de tu zona para poner o quitar una pieza."
               : "Toca una pieza tuya y luego una casilla marcada."}

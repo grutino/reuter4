@@ -167,6 +167,25 @@ desincronizarse.
 
 `bot`, `librar`, `empezar`, `parar` y `borrar` exigen ser el anfitrión (`sala.anfitrion`).
 
+### Controles de la escena 3D
+
+La cámara orbita alrededor de `objetivo`, un punto que además se desplaza por el plano del
+tablero: girar y acercar no bastan para mirar de cerca una esquina. Arrastrar gira; arrastrar
+con Mayúsculas, con el botón derecho o con el central desplaza; las flechas desplazan, `C`
+vuelve a la vista inicial y `M` amplía o reduce la escena. La leyenda de la esquina lista todo
+eso, para no tener que adivinarlo.
+
+Dos detalles que se descubrieron probando y conviene no deshacer:
+
+- El tamaño del lienzo lo vigila un `ResizeObserver` sobre el contenedor, no el `resize` de la
+  ventana: al ampliar la escena cambia de tamaño sin que la ventana se entere, y el lienzo se
+  quedaba estirado.
+- `Mayúsculas` se comprueba en cada `pointermove`, no solo al pulsar: hay entornos que no traen
+  el modificador en el `pointerdown`.
+
+Ampliada, la escena tapa el panel lateral, así que una decisión pendiente sería imposible de
+contestar: cuando aparece una, la escena se reduce sola.
+
 ### El cliente (`src/`)
 
 `App.jsx` es un único componente grande que lleva conexión, lobby, despliegue y partida.
