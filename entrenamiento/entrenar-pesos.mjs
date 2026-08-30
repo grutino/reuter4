@@ -56,7 +56,14 @@ function mutar(genes, sigma, azar) {
   return genes.map((g) => g + normal(azar) * sigma);
 }
 
-const comoConfig = (genes, nombre) => configuracion({ pesos: pesosDesdeGenes(genes), nombre });
+// `congelados` deja pesos a cero y fuera del juego: sirve para quitar
+// variables del modelo y para comparar genomas a igualdad de todo lo demás.
+let CONGELADOS = new Set();
+const comoConfig = (genes, nombre) => {
+  const pesos = pesosDesdeGenes(genes);
+  for (const k of CONGELADOS) pesos[k] = 0;
+  return configuracion({ pesos, nombre });
+};
 
 function opciones(argv) {
   const o = {
@@ -67,6 +74,7 @@ function opciones(argv) {
     inicio: "aleatorio",
     paciencia: 12,
     limite: 400,
+    congelar: "",
     salida: path.join(AQUI, "modelos"),
     nucleos: NUCLEOS,
   };
@@ -74,7 +82,7 @@ function opciones(argv) {
     const clave = argv[i].replace(/^--/, "");
     const valor = argv[i + 1];
     if (!(clave in o)) throw new Error(`opción desconocida: ${argv[i]}`);
-    o[clave] = ["inicio", "salida"].includes(clave) ? valor : Number(valor);
+    o[clave] = ["inicio", "salida", "congelar"].includes(clave) ? valor : Number(valor);
   }
   return o;
 }
@@ -83,11 +91,17 @@ async function main() {
   const o = opciones(process.argv);
   const azar = generador(o.semilla);
   fs.mkdirSync(o.salida, { recursive: true });
+  CONGELADOS = new Set(o.congelar ? o.congelar.split(",").map((s) => s.trim()).filter(Boolean) : []);
+  for (const k of CONGELADOS) {
+    if (!GENES.includes(k)) throw new Error(`no existe el peso "${k}"`);
+  }
   const piscina = crearPiscina(o.nucleos);
 
   console.log(`Entrenamiento de pesos por autojuego`);
   console.log(`  población ${o.poblacion} · generaciones ${o.generaciones} · ${o.parejas} emparejamientos por combate`);
-  console.log(`  arranque: ${o.inicio} · semilla ${o.semilla} · ${piscina.nucleos} hilos · tope ${o.limite} turnos\n`);
+  console.log(`  arranque: ${o.inicio} · semilla ${o.semilla} · ${piscina.nucleos} hilos · tope ${o.limite} turnos`);
+  if (CONGELADOS.size) console.log(`  congelados a cero: ${[...CONGELADOS].join(", ")}`);
+  console.log();
 
   const semillaGenes = o.inicio === "base" ? genesDesdePesos({ ...PESOS_BASE }) : null;
   let media = semillaGenes || genesAlAzar(azar);
@@ -239,7 +253,8 @@ async function main() {
     pesos,
     historia,
   };
-  const destino = path.join(o.salida, `pesos-${o.inicio}-s${o.semilla}.json`);
+  const sufijo = CONGELADOS.size ? `-sin${CONGELADOS.size}` : "";
+  const destino = path.join(o.salida, `pesos-${o.inicio}-s${o.semilla}${sufijo}.json`);
   fs.writeFileSync(destino, JSON.stringify(resumen, null, 2));
   console.log(`\n  Mejor puntuación contra la heurística a mano: ${(mejorMarca * 100).toFixed(0)}%`);
   console.log(`  Victorias en la última medición: ${((ultima.contraBase || 0) * 100).toFixed(0)}%`);

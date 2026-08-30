@@ -194,6 +194,23 @@ memoria ganan el 65% de las partidas decididas frente a los antiguos.
   dibujo interior se graba; los valores por defecto se eligieron mirando las nueve fichas a
   tamaño real. Si cambias de foto, míralas a 46 px antes de dar nada por bueno: a ese tamaño
   lo único que distingue un rango de otro es el contorno.
+- **Meter todos los genes que se pueda**: la lista táctica completa —atacar por zonas donde la
+  bolsa de rangos ocultos nos favorece, línea de tiro despejada a la torre, asegurar cañones
+  contra la coronación rival, el señuelo del espía, explorador a distancia para revelar, bloquear
+  los laterales, tapar cañones tras los lagos, sacrificio para promocionar con el marcador alto,
+  defender la bandera propia, cuidar los rangos altos, controlar el anillo— y cada uno con su
+  pareja defensiva. Cuantos más rasgos, mejor, **pero** ver el aviso de abajo: el evolutivo no
+  escala con el número de pesos, y esto probablemente hay que hacerlo ya con la red neuronal.
+- **El evolutivo se diluye al crecer el genoma**: con 26 genes rinde peor que con 20 a igualdad
+  de presupuesto. Cada peso nuevo reparte la misma presión selectiva entre más candidatos, y
+  `npm run revisar` enseña el desequilibrio: `avanceNormal` se activa 26.000 veces por cada mil
+  jugadas y `espiaAMariscal` ninguna. En una red los rasgos son entradas que comparten gradiente
+  en vez de pesos que compiten, que es la salida natural a esto.
+- **La vara de medir tiene que ser inmutable**: al añadir pesos nuevos a `PESOS_BASE` se cambió
+  sin querer la referencia contra la que mide el entrenamiento, y la curva subía en parte porque
+  el rival había empeorado. Hay que congelar una copia literal de los pesos de referencia.
+- **Mejora visual del tablero 3D**: texturas de verdad, materiales, iluminación. Hoy todo son
+  colores planos con `MeshLambertMaterial` y las fichas son discos con una silueta pegada.
 - Reconexión: si te caes en mitad de una partida, la máquina juega por ti al minuto. Al volver
   con el mismo navegador recuperas tu puesto, porque el identificador vive en `localStorage`.
 - No hay reloj de turno ni límite de tiempo.
