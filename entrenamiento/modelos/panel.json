@@ -1,0 +1,368 @@
+{
+  "creado": "2026-08-30T16:29:42.482Z",
+  "parejas": 10,
+  "panel": [
+    {
+      "nombre": "ejemplo",
+      "clase": "humana"
+    },
+    {
+      "nombre": "ejemplo~1",
+      "clase": "variante"
+    },
+    {
+      "nombre": "ejemplo~2",
+      "clase": "variante"
+    },
+    {
+      "nombre": "guiada1",
+      "clase": "guiada"
+    },
+    {
+      "nombre": "guiada2",
+      "clase": "guiada"
+    },
+    {
+      "nombre": "guiada3",
+      "clase": "guiada"
+    },
+    {
+      "nombre": "guiada4",
+      "clase": "guiada"
+    },
+    {
+      "nombre": "azar",
+      "clase": "azar"
+    }
+  ],
+  "resultados": [
+    {
+      "nombre": "heurística sola",
+      "tasa": 0.6226415094339622,
+      "error": 0.03965257928590721,
+      "gana": 99,
+      "pierde": 60,
+      "tablas": 1,
+      "porRival": [
+        {
+          "rival": "ejemplo",
+          "clase": "humana",
+          "gana": 14,
+          "pierde": 6,
+          "tablas": 0,
+          "tasa": 0.7,
+          "error": 0.11180339887498948
+        },
+        {
+          "rival": "ejemplo~1",
+          "clase": "variante",
+          "gana": 12,
+          "pierde": 8,
+          "tablas": 0,
+          "tasa": 0.6,
+          "error": 0.11180339887498948
+        },
+        {
+          "rival": "ejemplo~2",
+          "clase": "variante",
+          "gana": 11,
+          "pierde": 9,
+          "tablas": 0,
+          "tasa": 0.55,
+          "error": 0.11180339887498948
+        },
+        {
+          "rival": "guiada1",
+          "clase": "guiada",
+          "gana": 10,
+          "pierde": 9,
+          "tablas": 1,
+          "tasa": 0.5263157894736842,
+          "error": 0.11470786693528089
+        },
+        {
+          "rival": "guiada2",
+          "clase": "guiada",
+          "gana": 11,
+          "pierde": 9,
+          "tablas": 0,
+          "tasa": 0.55,
+          "error": 0.11180339887498948
+        },
+        {
+          "rival": "guiada3",
+          "clase": "guiada",
+          "gana": 11,
+          "pierde": 9,
+          "tablas": 0,
+          "tasa": 0.55,
+          "error": 0.11180339887498948
+        },
+        {
+          "rival": "guiada4",
+          "clase": "guiada",
+          "gana": 20,
+          "pierde": 0,
+          "tablas": 0,
+          "tasa": 1,
+          "error": 0.11180339887498948
+        },
+        {
+          "rival": "azar",
+          "clase": "azar",
+          "gana": 10,
+          "pierde": 10,
+          "tablas": 0,
+          "tasa": 0.5,
+          "error": 0.11180339887498948
+        }
+      ]
+    },
+    {
+      "nombre": "red de despliegue",
+      "tasa": 0.9161290322580645,
+      "error": 0.04016096644512494,
+      "gana": 142,
+      "pierde": 13,
+      "tablas": 5,
+      "porRival": [
+        {
+          "rival": "ejemplo",
+          "clase": "humana",
+          "gana": 18,
+          "pierde": 1,
+          "tablas": 1,
+          "tasa": 0.9473684210526315,
+          "error": 0.11470786693528089
+        },
+        {
+          "rival": "ejemplo~1",
+          "clase": "variante",
+          "gana": 19,
+          "pierde": 1,
+          "tablas": 0,
+          "tasa": 0.95,
+          "error": 0.11180339887498948
+        },
+        {
+          "rival": "ejemplo~2",
+          "clase": "variante",
+          "gana": 18,
+          "pierde": 1,
+          "tablas": 1,
+          "tasa": 0.9473684210526315,
+          "error": 0.11470786693528089
+        },
+        {
+          "rival": "guiada1",
+          "clase": "guiada",
+          "gana": 18,
+          "pierde": 1,
+          "tablas": 1,
+          "tasa": 0.9473684210526315,
+          "error": 0.11470786693528089
+        },
+        {
+          "rival": "guiada2",
+          "clase": "guiada",
+          "gana": 18,
+          "pierde": 2,
+          "tablas": 0,
+          "tasa": 0.9,
+          "error": 0.11180339887498948
+        },
+        {
+          "rival": "guiada3",
+          "clase": "guiada",
+          "gana": 16,
+          "pierde": 3,
+          "tablas": 1,
+          "tasa": 0.8421052631578947,
+          "error": 0.11470786693528089
+        },
+        {
+          "rival": "guiada4",
+          "clase": "guiada",
+          "gana": 19,
+          "pierde": 0,
+          "tablas": 1,
+          "tasa": 1,
+          "error": 0.11470786693528089
+        },
+        {
+          "rival": "azar",
+          "clase": "azar",
+          "gana": 16,
+          "pierde": 4,
+          "tablas": 0,
+          "tasa": 0.8,
+          "error": 0.11180339887498948
+        }
+      ]
+    },
+    {
+      "nombre": "red de jugada",
+      "tasa": 0.7415730337078652,
+      "error": 0.052999894000318,
+      "gana": 66,
+      "pierde": 23,
+      "tablas": 71,
+      "porRival": [
+        {
+          "rival": "ejemplo",
+          "clase": "humana",
+          "gana": 8,
+          "pierde": 0,
+          "tablas": 12,
+          "tasa": 1,
+          "error": 0.1767766952966369
+        },
+        {
+          "rival": "ejemplo~1",
+          "clase": "variante",
+          "gana": 7,
+          "pierde": 1,
+          "tablas": 12,
+          "tasa": 0.875,
+          "error": 0.1767766952966369
+        },
+        {
+          "rival": "ejemplo~2",
+          "clase": "variante",
+          "gana": 7,
+          "pierde": 1,
+          "tablas": 12,
+          "tasa": 0.875,
+          "error": 0.1767766952966369
+        },
+        {
+          "rival": "guiada1",
+          "clase": "guiada",
+          "gana": 7,
+          "pierde": 5,
+          "tablas": 8,
+          "tasa": 0.5833333333333334,
+          "error": 0.14433756729740643
+        },
+        {
+          "rival": "guiada2",
+          "clase": "guiada",
+          "gana": 9,
+          "pierde": 4,
+          "tablas": 7,
+          "tasa": 0.6923076923076923,
+          "error": 0.1386750490563073
+        },
+        {
+          "rival": "guiada3",
+          "clase": "guiada",
+          "gana": 12,
+          "pierde": 2,
+          "tablas": 6,
+          "tasa": 0.8571428571428571,
+          "error": 0.1336306209562122
+        },
+        {
+          "rival": "guiada4",
+          "clase": "guiada",
+          "gana": 12,
+          "pierde": 2,
+          "tablas": 6,
+          "tasa": 0.8571428571428571,
+          "error": 0.1336306209562122
+        },
+        {
+          "rival": "azar",
+          "clase": "azar",
+          "gana": 4,
+          "pierde": 8,
+          "tablas": 8,
+          "tasa": 0.3333333333333333,
+          "error": 0.14433756729740643
+        }
+      ]
+    },
+    {
+      "nombre": "las dos redes",
+      "tasa": 0.8837209302325582,
+      "error": 0.04402254531628119,
+      "gana": 114,
+      "pierde": 15,
+      "tablas": 31,
+      "porRival": [
+        {
+          "rival": "ejemplo",
+          "clase": "humana",
+          "gana": 12,
+          "pierde": 0,
+          "tablas": 8,
+          "tasa": 1,
+          "error": 0.14433756729740643
+        },
+        {
+          "rival": "ejemplo~1",
+          "clase": "variante",
+          "gana": 13,
+          "pierde": 0,
+          "tablas": 7,
+          "tasa": 1,
+          "error": 0.1386750490563073
+        },
+        {
+          "rival": "ejemplo~2",
+          "clase": "variante",
+          "gana": 13,
+          "pierde": 0,
+          "tablas": 7,
+          "tasa": 1,
+          "error": 0.1386750490563073
+        },
+        {
+          "rival": "guiada1",
+          "clase": "guiada",
+          "gana": 14,
+          "pierde": 4,
+          "tablas": 2,
+          "tasa": 0.7777777777777778,
+          "error": 0.11785113019775792
+        },
+        {
+          "rival": "guiada2",
+          "clase": "guiada",
+          "gana": 14,
+          "pierde": 2,
+          "tablas": 4,
+          "tasa": 0.875,
+          "error": 0.125
+        },
+        {
+          "rival": "guiada3",
+          "clase": "guiada",
+          "gana": 14,
+          "pierde": 5,
+          "tablas": 1,
+          "tasa": 0.7368421052631579,
+          "error": 0.11470786693528089
+        },
+        {
+          "rival": "guiada4",
+          "clase": "guiada",
+          "gana": 19,
+          "pierde": 1,
+          "tablas": 0,
+          "tasa": 0.95,
+          "error": 0.11180339887498948
+        },
+        {
+          "rival": "azar",
+          "clase": "azar",
+          "gana": 15,
+          "pierde": 3,
+          "tablas": 2,
+          "tasa": 0.8333333333333334,
+          "error": 0.11785113019775792
+        }
+      ]
+    }
+  ]
+}

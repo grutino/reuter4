@@ -209,6 +209,9 @@ memoria ganan el 65% de las partidas decididas frente a los antiguos.
 - **La vara de medir tiene que ser inmutable**: al añadir pesos nuevos a `PESOS_BASE` se cambió
   sin querer la referencia contra la que mide el entrenamiento, y la curva subía en parte porque
   el rival había empeorado. Hay que congelar una copia literal de los pesos de referencia.
+- **Aperturas humanas en el panel**: `entrenamiento/aperturas/` está preparada y vacía. Cada
+  `.txt` con una rejilla de 3x7 entra sola en la batería de pruebas, junto con variantes suyas.
+  Ver `entrenamiento/aperturas/LEEME.md` para el formato.
 - **Informe de fin de partida**: al terminar, (1) destapar en el tablero 3D los rangos de los
   cuatro ejércitos, que hasta ese momento solo se han visto en la ventana de combate, y (2) un
   botón que saque un resumen en PDF con los despliegues iniciales y el hilo completo de
