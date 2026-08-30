@@ -178,11 +178,18 @@ memoria ganan el 65% de las partidas decididas frente a los antiguos.
 
 ## Qué falta por pulir
 
-- **Las siluetas son dibujos propios**: `src/siluetas.js` pinta los nueve rangos con trazados
-  de `canvas`, en oro sobre el color del ejército. No son las del tablero de Jumbo, que están
-  protegidas: son una versión propia con el mismo lenguaje. Si algún día quieres las de verdad,
-  mete las imágenes y respeta la firma `dibujarSilueta(ctx, rango, { hueco })`; el resto del
-  cliente no se entera.
+- **Las siluetas salen de una foto**: `herramientas/extraer-siluetas.py` convierte una foto de
+  la tarjeta de referencia en las máscaras de `src/siluetas-datos.js`. La foto no se versiona,
+  solo la silueta derivada. Para rehacerlas con otra foto mejor:
+
+  ```bash
+  python3 herramientas/extraer-siluetas.py TU_FOTO.png > src/siluetas-datos.js
+  ```
+
+  Los parámetros `--cierre` y `--umbral` gobiernan cuánto se macizan las figuras y cuánto
+  dibujo interior se graba; los valores por defecto se eligieron mirando las nueve fichas a
+  tamaño real. Si cambias de foto, míralas a 46 px antes de dar nada por bueno: a ese tamaño
+  lo único que distingue un rango de otro es el contorno.
 - Reconexión: si te caes en mitad de una partida, la máquina juega por ti al minuto. Al volver
   con el mismo navegador recuperas tu puesto, porque el identificador vive en `localStorage`.
 - No hay reloj de turno ni límite de tiempo.

@@ -41,7 +41,8 @@ cliente, y esa separación es lo que permite probar las reglas sin levantar nada
 ```
 src/motor/    reglas puras: estado y transiciones, sin E/S ni gráficos
 src/motor/bot.js  heurística de los bots, compartida por servidor y simulación
-src/siluetas.js   dibujos de los nueve rangos, en trazados de canvas
+src/siluetas.js   pinta las siluetas de rango; los datos vienen de siluetas-datos.js
+src/siluetas-datos.js  GENERADO por herramientas/extraer-siluetas.py; no editar a mano
 src/ficha.js      pinta una ficha (disco + silueta); lo comparten el 3D y la ventana de combate
 servidor/     autoridad: guarda el estado completo, reparte vistas recortadas, mueve bots
 src/          cliente React; Tablero3D.jsx pinta con three.js

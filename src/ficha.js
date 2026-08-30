@@ -6,11 +6,10 @@
 // El color de fondo llega como parámetro, no importado: así este módulo no
 // depende de `Tablero3D.jsx` y no se monta un ciclo de importaciones.
 
-import { dibujarSilueta } from "./siluetas.js";
+import { dibujarSilueta, ORO } from "./siluetas.js";
 
 export const LADO_FICHA = 128;
 
-const ORO = "#E9C979";
 const BORDE = "#1E1A14";
 
 export function pintarFicha(ctx, rango, fondoCss) {
@@ -32,8 +31,7 @@ export function pintarFicha(ctx, rango, fondoCss) {
   ctx.arc(c, c, c - 6, 0, Math.PI * 2);
   ctx.clip();
   ctx.fillStyle = ORO;
-  ctx.strokeStyle = ORO;
-  if (!dibujarSilueta(ctx, rango, { hueco: fondo })) {
+  if (!dibujarSilueta(ctx, rango, { color: ORO, hueco: fondo, lado: LADO_FICHA })) {
     // Sin dibujo para ese rango se cae al número, que siempre se puede pintar.
     ctx.font = "bold 66px Georgia, serif";
     ctx.textAlign = "center";
