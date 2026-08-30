@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
+import { abrirInforme } from "./informe-partida.js";
 import Tablero3D, { ESTILO, NOMBRE_RANGO, LATON_CSS } from "./Tablero3D.jsx";
 import { COLORES, ZONAS, casillasDeZona, zonaDe, coord } from "./motor/tablero.js";
 import { RANGOS, VICTORIAS_PARA_RECLUTAR, SOCIO, movimientosLegales, inventarioInicial } from "./motor/motor.js";
@@ -1045,6 +1046,22 @@ export default function App() {
                   {!estado.fin.ganador && estado.fin.motivo && (
                     <div style={{ fontSize: 13, color: "#C9BC9C", marginTop: 4 }}>{estado.fin.motivo}.</div>
                   )}
+                  {/* Al terminar, el servidor manda los rangos de los cuatro
+                      ejércitos y los despliegues iniciales, así que el tablero
+                      se destapa solo y el informe ya tiene todo lo que necesita. */}
+                  <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 10, flexWrap: "wrap" }}>
+                    <Boton
+                      variante="secundario"
+                      onClick={() => {
+                        if (!abrirInforme(sala)) setAviso("El navegador ha bloqueado la ventana del informe. Permite las ventanas emergentes de esta página.");
+                      }}
+                    >
+                      Informe de la partida
+                    </Boton>
+                    <span style={{ fontSize: 12, color: "#C9BC9C" }}>
+                      Los rangos ya están destapados en el tablero.
+                    </span>
+                  </div>
                 </div>
               ) : (
                 <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>

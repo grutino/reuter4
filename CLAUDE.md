@@ -315,6 +315,29 @@ El cliente saca los combates del propio hilo (`combatesDeEntrada`), no de `event
 pierde ninguno si llegan dos cambios seguidos. Al entrar en una sala se marca como visto todo
 lo ya jugado, para no soltar de golpe los combates de hace veinte turnos al reconectar.
 
+### Informe de fin de partida
+
+Al terminar —y **solo** al terminar— el servidor deja de censurar: manda los rangos de los
+cuatro ejércitos, el hilo completo y los despliegues iniciales. La condición mira `estado.fin`
+y no `sala.fase`, porque la fase puede quedarse en `"fin"` por otros caminos y lo que importa
+es que la partida ya no pueda continuar.
+
+El tablero 3D se destapa solo, sin tocar nada: ya pintaba `pieza.rango` cuando venía.
+
+`src/informe-partida.js` arma un documento imprimible que se abre en una pestaña nueva; el
+PDF lo hace el propio diálogo del navegador, que evita meter una biblioteca de PDF por algo
+que el sistema ya sabe hacer. Lleva los cuatro despliegues iniciales, un diagrama de flechas
+por bando —la opacidad crece con el turno, así que se lee como una secuencia y no como una
+maraña— y el hilo completo con sus combates.
+
+El fondo del tablero se define **una vez** como `<symbol>` y los ocho diagramas lo referencian
+con `<use>`: son 225 rectángulos por diagrama y el documento pasaba de 258 KB a 66 KB.
+
+**La censura del servidor vive ahora en `servidor/vista.mjs`.** Estaba dentro de
+`servidor.mjs`, que abre el puerto al importarse, así que la función que no puede fallar era la
+única sin prueba. Siguen siendo dos censuras paralelas —esta y `vistaDe`—, pero ahora las dos
+tienen prueba.
+
 ### Parar y borrar
 
 `parar` cierra la partida dejando la sala en pie (para repasar el hilo); `borrar` la elimina

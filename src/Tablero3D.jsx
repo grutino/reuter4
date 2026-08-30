@@ -3,18 +3,8 @@ import * as THREE from "three";
 import { CASILLAS, LAGOS, ANILLO, TORRE, ZONAS, coord, zonaDe, casillasDeZona } from "./motor/tablero.js";
 import { pintarFicha } from "./ficha.js";
 
-export const ESTILO = {
-  rojo: { hex: 0xa8322c, css: "#A8322C", lado: "Norte" },
-  verde: { hex: 0x3a7a4a, css: "#3A7A4A", lado: "Este" },
-  azul: { hex: 0x33589b, css: "#33589B", lado: "Sur" },
-  amarillo: { hex: 0xc89b24, css: "#C89B24", lado: "Oeste" },
-};
-
-export const NOMBRE_RANGO = {
-  9: "Mariscal", 8: "General", 7: "Comandante", 6: "Capitán", 5: "Teniente",
-  4: "Sargento", 3: "Explorador", 2: "Espía", 1: "Cañón",
-};
-
+import { ESTILO, NOMBRE_RANGO } from "./estilo.js";
+export { ESTILO, NOMBRE_RANGO };
 export const LATON_CSS = "#C08A2E";
 const PERGAMINO = "#E8DCC2";
 

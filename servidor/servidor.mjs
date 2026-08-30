@@ -8,6 +8,7 @@ import { fileURLToPath } from "node:url";
 import { WebSocketServer } from "ws";
 
 import { COLORES, ZONAS } from "../src/motor/tablero.js";
+import { colorDe, salaParaJugador, HISTORIA_ENVIADA } from "./vista.mjs";
 import {
   nuevaPartida,
   aplicar,
@@ -73,57 +74,6 @@ function huella(texto) {
   return String(h >>> 0);
 }
 
-function colorDe(sala, idJugador) {
-  return COLORES.find((c) => sala.puestos[c] && sala.puestos[c].id === idJugador) || null;
-}
-
-// Cuántas jugadas del hilo se mandan. `repartir` reenvía todas las salas a todos
-// los clientes en cada cambio, así que el historial completo de cada sala se
-// multiplicaría en cada mensaje. Se manda solo la cola, y solo a quien juega.
-const HISTORIA_ENVIADA = 80;
-
-// Lo que se manda a cada cliente: rangos propios, bajas propias, nada más.
-function salaParaJugador(sala, idJugador) {
-  const miColor = colorDe(sala, idJugador);
-  const base = {
-    id: sala.id,
-    nombre: sala.nombre,
-    anfitrion: sala.anfitrion,
-    privada: sala.privada,
-    fase: sala.fase,
-    puestos: sala.puestos,
-    creada: sala.creada,
-    desplegados: COLORES.filter((c) => sala.despliegues[c]),
-    miColor,
-  };
-  if (!sala.estado) return base;
-  const e = sala.estado;
-  return {
-    ...base,
-    estado: {
-      turno: e.turno,
-      fin: e.fin,
-      eventos: e.eventos,
-      // El hilo solo contiene lo que ya se emitió como evento: jugadas, duelos y
-      // banderas. Ningún rango oculto, así que se puede mandar tal cual.
-      historia: miColor ? (e.historia || []).slice(-HISTORIA_ENVIADA) : [],
-      // Rangos que ya ha visto toda la mesa. Es lo mismo que se deduce leyendo el
-      // hilo, así que enviarlo no destapa nada; de momento el cliente no lo pinta.
-      banderasSueltas: e.banderasSueltas,
-      marcador: e.marcador,
-      misBajas: miColor ? e.bajas[miColor] : [],
-      pendiente: e.pendiente && e.pendiente.color === miColor ? e.pendiente : null,
-      piezas: Object.fromEntries(
-        Object.entries(e.piezas).map(([id, p]) => [
-          id,
-          p.color === miColor
-            ? { id, color: p.color, casilla: p.casilla, bandera: p.bandera, rango: p.rango, ultimoTramo: p.ultimoTramo, alternancias: p.alternancias }
-            : { id, color: p.color, casilla: p.casilla, bandera: p.bandera, rango: null },
-        ])
-      ),
-    },
-  };
-}
 
 function repartir() {
   for (const [socket, sesion] of clientes) {

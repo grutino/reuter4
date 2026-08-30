@@ -32,6 +32,7 @@ import { rasgosDeJugada, contextoDeTurno, NOMBRES as NOMBRES_RASGOS, TAMANO as T
 import { cargarModelos, jugadaDeBot } from "./bot-red.js";
 import { NIVELES, nivelValido, ESCALA } from "./dificultad.js";
 import { BATEN_ANILLO, BATEN_LA_TORRE, PASOS_A_TIRO, ANILLO as ANILLO_T } from "./tablero.js";
+import { salaParaJugador } from "../../servidor/vista.mjs";
 import { propiedadesDePieza, FIRMA as FIRMA_DESPLIEGUE } from "./rasgos-despliegue.js";
 
 let pasadas = 0;
@@ -1284,6 +1285,58 @@ prueba("no se dispara a un aliado en la torre", () => {
   colocar(e, "azul", 5, TORRE);   // el compañero
   const tiros = movimientosLegales(e, "rojo").filter((a) => a.tipo === "disparar");
   assert.deepStrictEqual(tiros, [], "al compañero no se le dispara");
+});
+
+
+prueba("el servidor no manda un solo rango ajeno mientras la partida sigue", () => {
+  // La censura del servidor no se podía probar porque servidor.mjs abre el
+  // puerto al importarse; ahora vive en servidor/vista.mjs. Es LA función que no
+  // puede fallar: si se filtra un rango, el juego deja de tener sentido y no
+  // falla nada.
+  const estado = partidaCompleta();
+  const sala = {
+    id: "s1", nombre: "prueba", anfitrion: "u-rojo", privada: false, fase: "jugando",
+    creada: Date.now(), despliegues: { rojo: [{ casilla: "H2", rango: 9 }] },
+    puestos: { rojo: { tipo: "humano", id: "u-rojo" }, azul: null, verde: null, amarillo: null },
+    estado,
+  };
+
+  const vista = salaParaJugador(sala, "u-rojo");
+  const ajenas = Object.values(vista.estado.piezas).filter((p) => p.color !== "rojo");
+  assert.ok(ajenas.length > 0, "el escenario debería tener piezas ajenas");
+  assert.ok(ajenas.every((p) => p.rango === null), "se ha filtrado un rango ajeno");
+  assert.strictEqual(vista.despliegues, undefined, "los despliegues iniciales llevan los rangos de todos");
+
+  // Y a un espectador sin puesto tampoco.
+  const mirón = salaParaJugador(sala, "u-nadie");
+  assert.ok(Object.values(mirón.estado.piezas).every((p) => p.rango === null), "el espectador no ve ningún rango");
+});
+
+prueba("al terminar la partida el servidor destapa los cuatro ejércitos", () => {
+  // Es la única situación en la que salen los rangos ajenos, y la condición mira
+  // `estado.fin` -que la partida no pueda continuar- y no la fase de la sala,
+  // que puede quedarse en "fin" por otros caminos.
+  const estado = partidaCompleta();
+  const sala = {
+    id: "s1", nombre: "prueba", anfitrion: "u-rojo", privada: false, fase: "fin",
+    creada: Date.now(), despliegues: { rojo: [{ casilla: "H2", rango: 9 }] },
+    puestos: { rojo: { tipo: "humano", id: "u-rojo" }, azul: null, verde: null, amarillo: null },
+    estado,
+  };
+
+  // Con la fase ya en "fin" pero sin `estado.fin`, NO se destapa.
+  assert.ok(
+    Object.values(salaParaJugador(sala, "u-rojo").estado.piezas).some((p) => p.color !== "rojo" && p.rango === null),
+    "la fase por sí sola no debería destapar nada"
+  );
+
+  estado.fin = { ganador: "rojo", equipo: ["rojo", "azul"] };
+  const vista = salaParaJugador(sala, "u-rojo");
+  assert.ok(
+    Object.values(vista.estado.piezas).every((p) => p.rango !== null),
+    "terminada la partida deberían verse todos los rangos"
+  );
+  assert.ok(vista.despliegues, "y los despliegues iniciales, que el informe necesita");
 });
 
 console.log(`\n${pasadas} pruebas superadas, ${fallidas} fallidas\n`);
