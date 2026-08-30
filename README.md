@@ -209,6 +209,13 @@ memoria ganan el 65% de las partidas decididas frente a los antiguos.
 - **La vara de medir tiene que ser inmutable**: al añadir pesos nuevos a `PESOS_BASE` se cambió
   sin querer la referencia contra la que mide el entrenamiento, y la curva subía en parte porque
   el rival había empeorado. Hay que congelar una copia literal de los pesos de referencia.
+- **Informe de fin de partida**: al terminar, (1) destapar en el tablero 3D los rangos de los
+  cuatro ejércitos, que hasta ese momento solo se han visto en la ventana de combate, y (2) un
+  botón que saque un resumen en PDF con los despliegues iniciales y el hilo completo de
+  movimientos y acciones de cada jugador. Lo ideal sería incluir además cuatro diagramas, uno
+  por bando, con flechas que resuman los movimientos y la estrategia de cada uno. El hilo ya
+  guarda todo lo necesario (`estado.historia` lleva jugada y eventos), y los despliegues
+  iniciales están en `sala.despliegues`; lo que falta es la vista y el generador del documento.
 - **Mejora visual del tablero 3D**: texturas de verdad, materiales, iluminación. Hoy todo son
   colores planos con `MeshLambertMaterial` y las fichas son discos con una silueta pegada.
 - Reconexión: si te caes en mitad de una partida, la máquina juega por ti al minuto. Al volver

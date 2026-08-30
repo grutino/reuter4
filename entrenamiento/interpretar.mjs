@@ -22,7 +22,7 @@ import { COLORES } from "../src/motor/tablero.js";
 import { RANGOS } from "../src/motor/motor.js";
 import { despliegueAleatorio, PESOS_BASE } from "../src/motor/bot.js";
 import { generador } from "./arena.mjs";
-import { rasgosDeDespliegue, RANGOS_ORDENADOS, PROPIEDADES } from "./rasgos-despliegue.mjs";
+import { rasgosDeDespliegue, RANGOS_ORDENADOS, PROPIEDADES, GLOBALES } from "./rasgos-despliegue.mjs";
 import { desdeObjeto, evaluar } from "./red.mjs";
 import { ESCALAS, GENES } from "./genoma.mjs";
 import { revisar } from "./revisar-pesos.mjs";
@@ -51,15 +51,23 @@ export function sensibilidadDeLaRed(red, muestras = 400, paso = 0.15) {
       efecto[k] += arriba - abajo;
     }
   }
+  const corte = RANGOS_ORDENADOS.length * PROPIEDADES.length;
   return Array.from(efecto, (v, k) => ({
     indice: k,
-    rango: RANGOS_ORDENADOS[Math.floor(k / PROPIEDADES.length)],
-    propiedad: PROPIEDADES[k % PROPIEDADES.length],
+    esGlobal: k >= corte,
+    rango: k >= corte ? null : RANGOS_ORDENADOS[Math.floor(k / PROPIEDADES.length)],
+    propiedad: k >= corte ? GLOBALES[k - corte] : PROPIEDADES[k % PROPIEDADES.length],
     efecto: v / base.length,
   }));
 }
 
 const COMO_SE_LEE = {
+  prontoEnJuego: ["que entre pronto en juego", "que tarde en entrar"],
+  juntoALago: ["cubierta por un lago", "lejos de los lagos"],
+  cercaDeTiro: ["cerca de poder batir el anillo", "lejos del anillo"],
+  equilibrioLateral: ["la fuerza repartida entre los dos flancos", "la fuerza cargada en un flanco"],
+  rangoDeLaBandera: ["la bandera sobre una pieza alta", "la bandera sobre una pieza baja"],
+  fuerzaAdelantada: ["la fuerza adelantada", "la fuerza atrás"],
   avance: ["más adelantado", "más al fondo"],
   lateral: ["más abierto a los lados", "más al centro"],
   juntoABandera: ["pegado a la bandera", "lejos de la bandera"],
@@ -71,13 +79,12 @@ function contarDespliegue(filas, limite = 12) {
   const ordenadas = filas.slice().sort((a, b) => Math.abs(b.efecto) - Math.abs(a.efecto)).slice(0, limite);
   console.log("\n  Lo que la red prefiere, de más rotundo a menos:\n");
   for (const f of ordenadas) {
-    const [siSube, siBaja] = COMO_SE_LEE[f.propiedad];
+    const [siSube, siBaja] = COMO_SE_LEE[f.propiedad] || [f.propiedad + " alto", f.propiedad + " bajo"];
     const quiere = f.efecto > 0 ? siSube : siBaja;
     const fuerza = Math.abs(f.efecto);
     const barra = "#".repeat(Math.max(1, Math.round(fuerza * 300)));
-    console.log(
-      `    ${String(f.rango)} ${RANGOS[f.rango].nombre.padEnd(11)} ${quiere.padEnd(28)} ${(fuerza * 100).toFixed(2).padStart(5)}  ${barra}`
-    );
+    const quien = f.esGlobal ? "  conjunto   " : `    ${f.rango} ${RANGOS[f.rango].nombre.padEnd(11)}`;
+    console.log(`${quien} ${quiere.padEnd(42)} ${(fuerza * 100).toFixed(2).padStart(5)}  ${barra}`);
   }
 }
 
