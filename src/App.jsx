@@ -135,6 +135,120 @@ function Sello({ color, tamano = 30, activo }) {
   );
 }
 
+// Una entrada del hilo son los eventos que provocó la jugada, más una línea para
+// la propia jugada cuando no generó ninguno (un movimiento sin combate).
+function describirJugada(entrada) {
+  const textos = (entrada.eventos || []).map(describirEvento).filter(Boolean);
+  if (entrada.tipo === "mover") {
+    const via = entrada.via ? ` pasando por ${entrada.via}` : "";
+    textos.unshift(`${entrada.color} mueve de ${entrada.desde} a ${entrada.hasta}${via}.`);
+  } else if (entrada.tipo === "renunciar") {
+    textos.unshift(`${entrada.color} renuncia a reclutar.`);
+  } else if (!textos.length && entrada.hasta) {
+    textos.unshift(`${entrada.color} juega sobre ${entrada.hasta}.`);
+  }
+  return textos;
+}
+
+// Hilo de la partida: se puede subir a repasar lo que pasó en turnos anteriores.
+// Se mantiene pegado abajo salvo que el jugador haya subido a leer.
+function Historia({ historia }) {
+  const caja = useRef(null);
+  const pegadoAbajo = useRef(true);
+
+  useEffect(() => {
+    const nodo = caja.current;
+    if (nodo && pegadoAbajo.current) nodo.scrollTop = nodo.scrollHeight;
+  }, [historia]);
+
+  if (!historia || !historia.length) return null;
+
+  return (
+    <div style={{ marginTop: 12 }}>
+      <Rotulo>Hilo de la partida</Rotulo>
+      <div
+        ref={caja}
+        onScroll={(e) => {
+          const n = e.currentTarget;
+          pegadoAbajo.current = n.scrollHeight - n.scrollTop - n.clientHeight < 24;
+        }}
+        style={{
+          maxHeight: 200,
+          overflowY: "auto",
+          background: "rgba(0,0,0,0.28)",
+          borderRadius: 3,
+          padding: "8px 10px",
+          fontSize: 12.5,
+          lineHeight: 1.5,
+        }}
+      >
+        {historia.map((entrada) => (
+          <div key={entrada.n} style={{ display: "flex", gap: 8, marginBottom: 6 }}>
+            <span style={{ color: LATON_CLARO, flex: "0 0 auto", minWidth: 26, textAlign: "right" }}>{entrada.n}</span>
+            <span
+              style={{
+                flex: "0 0 auto",
+                width: 8,
+                height: 8,
+                marginTop: 5,
+                borderRadius: "50%",
+                background: ESTILO[entrada.color] ? ESTILO[entrada.color].css : "transparent",
+              }}
+            />
+            <span style={{ color: "#D9CFB6" }}>
+              {describirJugada(entrada).map((t, i) => (
+                <div key={i}>{t}</div>
+              ))}
+            </span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// Cuántas victorias lleva cada bando y cuánto le falta para poder reclutar.
+function Marcador({ marcador, miColor }) {
+  if (!marcador) return null;
+  return (
+    <div style={{ marginTop: 12 }}>
+      <Rotulo>Victorias para reclutar</Rotulo>
+      {COLORES.map((c) => {
+        const victorias = marcador[c] || 0;
+        const mio = miColor && (c === miColor || c === SOCIO[miColor]);
+        return (
+          <div key={c} style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 5 }}>
+            <Sello color={c} tamano={12} />
+            <div style={{ flex: 1, height: 8, background: "rgba(0,0,0,0.35)", borderRadius: 4, overflow: "hidden" }}>
+              <div
+                style={{
+                  width: `${(victorias / VICTORIAS_PARA_RECLUTAR) * 100}%`,
+                  height: "100%",
+                  background: ESTILO[c].css,
+                }}
+              />
+            </div>
+            <span
+              style={{
+                fontSize: 12,
+                minWidth: 58,
+                textAlign: "right",
+                color: mio ? PERGAMINO : "#9C917A",
+                fontWeight: mio ? 700 : 400,
+              }}
+            >
+              {victorias} de {VICTORIAS_PARA_RECLUTAR}
+            </span>
+          </div>
+        );
+      })}
+      <div style={{ fontSize: 11.5, color: "#9C917A", marginTop: 2 }}>
+        Al llegar a {VICTORIAS_PARA_RECLUTAR} se recupera una pieza y el contador vuelve a cero.
+      </div>
+    </div>
+  );
+}
+
 export default function App() {
   const [yo, setYo] = useState(null);
   const [nombreBorrador, setNombreBorrador] = useState("");
@@ -149,12 +263,18 @@ export default function App() {
   const [colocacion, setColocacion] = useState({});
   const [rangoActivo, setRangoActivo] = useState(9);
   const [seleccion, setSeleccion] = useState(null);
+  const [confirmando, setConfirmando] = useState(null); // "parar" | "borrar", solo el anfitrión
   const socketRef = useRef(null);
   const yoRef = useRef(null);
 
   useEffect(() => {
     yoRef.current = yo;
   }, [yo]);
+
+  // Al cambiar de sala no se arrastra una confirmación a medias de la anterior.
+  useEffect(() => {
+    setConfirmando(null);
+  }, [salaId]);
 
   useEffect(() => {
     let guardado = null;
@@ -518,6 +638,7 @@ export default function App() {
         <div style={{ flex: "1 1 480px", minWidth: 320 }}>
           <Tablero3D
             piezas={piezasEnTablero}
+            banderasSueltas={estado ? estado.banderasSueltas : null}
             resaltadas={sala.fase === "jugando" || sala.fase === "fin" ? resaltadas : {}}
             zonaPropia={sala.fase === "desplegando" ? miColor : null}
             colorCamara={miColor}
@@ -635,6 +756,9 @@ export default function App() {
                   <strong style={{ fontSize: 16 }}>
                     {estado.fin.ganador ? `Gana el bando ${estado.fin.equipo.join(" y ")}` : "Partida cerrada sin ganador"}
                   </strong>
+                  {!estado.fin.ganador && estado.fin.motivo && (
+                    <div style={{ fontSize: 13, color: "#C9BC9C", marginTop: 4 }}>{estado.fin.motivo}.</div>
+                  )}
                 </div>
               ) : (
                 <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
@@ -649,11 +773,11 @@ export default function App() {
                 <div style={{ fontSize: 13, color: "#C9BC9C", lineHeight: 1.6 }}>
                   Tu bando: {miColor} y {SOCIO[miColor]}
                   <br />
-                  Marcador de victorias: {estado.marcador[miColor]} de {VICTORIAS_PARA_RECLUTAR}
-                  <br />
                   Tus bajas: {estado.misBajas.length ? estado.misBajas.join(", ") : "ninguna"}
                 </div>
               )}
+
+              <Marcador marcador={estado.marcador} miColor={miColor} />
 
               {estado.pendiente && (
                 <div style={{ border: `1px solid ${LATON_CLARO}`, borderRadius: 4, padding: 12, marginTop: 12 }}>
@@ -679,9 +803,11 @@ export default function App() {
                 </div>
               )}
 
+              <Historia historia={estado.historia} />
+
               {aviso && <p style={{ color: "#E8A9A4", fontSize: 13 }}>{aviso}</p>}
 
-              <div style={{ marginTop: 12 }}>
+              <div style={{ marginTop: 12, display: "flex", gap: 6, flexWrap: "wrap" }}>
                 <Boton
                   variante="secundario"
                   onClick={() => {
@@ -691,7 +817,42 @@ export default function App() {
                 >
                   Dejar la partida
                 </Boton>
+                {soyAnfitrion && !estado.fin && (
+                  <Boton variante="peligro" onClick={() => setConfirmando("parar")}>
+                    Parar partida
+                  </Boton>
+                )}
+                {soyAnfitrion && (
+                  <Boton variante="peligro" onClick={() => setConfirmando("borrar")}>
+                    Borrar partida
+                  </Boton>
+                )}
               </div>
+
+              {confirmando && (
+                <div style={{ border: `1px solid #E8A9A4`, borderRadius: 4, padding: 12, marginTop: 10 }}>
+                  <p style={{ fontSize: 13, marginTop: 0 }}>
+                    {confirmando === "parar"
+                      ? "Se cierra la partida para los cuatro jugadores. La sala y el hilo se quedan para repasarlos."
+                      : "La sala desaparece para todos y no se puede recuperar."}
+                  </p>
+                  <div style={{ display: "flex", gap: 6 }}>
+                    <Boton
+                      variante="peligro"
+                      onClick={() => {
+                        enviar({ tipo: confirmando, sala: salaId });
+                        if (confirmando === "borrar") setSalaId(null);
+                        setConfirmando(null);
+                      }}
+                    >
+                      Sí, {confirmando === "parar" ? "parar" : "borrar"}
+                    </Boton>
+                    <Boton variante="secundario" onClick={() => setConfirmando(null)}>
+                      Cancelar
+                    </Boton>
+                  </div>
+                </div>
+              )}
             </div>
           )}
 

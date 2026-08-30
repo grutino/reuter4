@@ -15,6 +15,11 @@ servidor/       servidor Node con WebSocket: guarda el estado y mueve los bots
 El servidor es la autoridad. Los clientes solo reciben los rangos de sus propias piezas,
 así que ningún jugador puede espiar las del rival mirando el navegador.
 
+Durante la partida se ve el hilo de jugadas, para poder repasar lo que pasó en turnos
+anteriores, y el contador de victorias de cada bando camino del reclutamiento. Quien creó la
+partida, y solo esa persona, puede pararla (se cierra pero la sala queda para repasarla) o
+borrarla del todo.
+
 ## Requisitos
 
 Node 18 o superior.
@@ -23,9 +28,12 @@ Node 18 o superior.
 
 ```bash
 npm install
-npm test          # 43 pruebas del motor
-npm run simular   # 25 partidas de bots, para ver que nada se atasca
+npm test          # 60 pruebas del motor
+npm run simular   # salud de los bots y duelo entre los nuevos y los viejos
 ```
+
+`npm run simular` acepta dos números: partidas de salud y partidas de duelo.
+`node src/motor/simulacion.js 0 2000` se salta la salud y mide el duelo a lo grande.
 
 Durante el desarrollo hacen falta dos terminales:
 
@@ -150,10 +158,33 @@ git push -u origin main
 
 `node_modules/`, `dist/` y `servidor/salas.json` ya están en `.gitignore`.
 
+## Los bots
+
+Los bots recuerdan lo que han visto. Cuando alguien sobrevive a un duelo, su rango queda a la
+vista de toda la mesa; lo mismo ocurre cuando una pieza se delata sola, porque solo el
+explorador recorre más de una casilla en línea y solo el capitán encadena dos con giro. El
+motor lo va anotando en `rangosRevelados` y los bots deciden con eso: van a por la captura
+segura, no se estrellan contra un rango que ya saben mayor, y sueltan el espía sobre el
+mariscal en cuanto lo tienen fichado. Contra un desconocido no adivinan: calculan el valor
+esperado del duelo con lo que aún puede quedarle escondido al rival.
+
+Solo miran información pública. Corren dentro del servidor, con el estado completo delante,
+pero no leen el rango oculto de ninguna pieza ajena: hay una prueba que lo comprueba montando
+dos escenarios que solo se diferencian en ese rango escondido y exigiendo que el bot juegue
+igual en los dos.
+
+Medido con `npm run simular` sobre 2000 partidas con los bandos alternados, los bots con
+memoria ganan el 65% de las partidas decididas frente a los antiguos.
+
 ## Qué falta por pulir
 
+- **Rangos con dibujo en vez de número**: las fichas llevan hoy la cifra y el nombre pintados
+  en un `canvas` (`texturaRango` en `Tablero3D.jsx`). Las del juego real traen una silueta por
+  rango, la misma para los cuatro ejércitos, cambiando solo el color de fondo. Sustituir el
+  número por esa silueta es cosa de cambiar esa función.
+- **Rangos revelados sobre el tablero**: el servidor ya manda `rangosRevelados`, que es
+  información pública, pero el cliente todavía no la pinta. Ahora mismo el jugador humano
+  tiene que repasar el hilo para saber lo que el bot recuerda de memoria.
 - Reconexión: si te caes en mitad de una partida, la máquina juega por ti al minuto. Al volver
   con el mismo navegador recuperas tu puesto, porque el identificador vive en `localStorage`.
 - No hay reloj de turno ni límite de tiempo.
-- Los bots juegan de forma razonable pero no llevan memoria de los rangos ya revelados, que es
-  justo lo que más diferencia a un buen jugador humano.

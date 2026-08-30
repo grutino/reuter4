@@ -7,90 +7,17 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { WebSocketServer } from "ws";
 
-import { COLORES, ZONAS, ANILLO, TORRE, ADYACENTES, casillasDeZona } from "../src/motor/tablero.js";
-import {
-  nuevaPartida,
-  movimientosLegales,
-  aplicar,
-  reclutar,
-  validarDespliegue,
-  inventarioInicial,
-  SOCIO,
-} from "../src/motor/motor.js";
+import { COLORES, ZONAS } from "../src/motor/tablero.js";
+import { nuevaPartida, aplicar, reclutar, validarDespliegue } from "../src/motor/motor.js";
+import { accionDeBot, despliegueAleatorio } from "../src/motor/bot.js";
 
 const RAIZ = path.dirname(fileURLToPath(import.meta.url));
 const ESTATICO = path.join(RAIZ, "..", "dist");
 const PUERTO = process.env.PORT || 8080;
 const FICHERO_ESTADO = process.env.S4_ESTADO || path.join(RAIZ, "salas.json");
 
-// --- Bots -------------------------------------------------------------------
-
-const DISTANCIA = (() => {
-  const d = { [ANILLO]: 0, [TORRE]: 0 };
-  let frente = [ANILLO];
-  while (frente.length) {
-    const siguiente = [];
-    for (const c of frente) {
-      for (const v of ADYACENTES[c]) {
-        if (d[v] === undefined) {
-          d[v] = d[c] + 1;
-          siguiente.push(v);
-        }
-      }
-    }
-    frente = siguiente;
-  }
-  return d;
-})();
-
-function barajar(lista) {
-  for (let i = lista.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [lista[i], lista[j]] = [lista[j], lista[i]];
-  }
-  return lista;
-}
-
-export function despliegueAleatorio(color) {
-  const zona = casillasDeZona(color).filter((c) => c !== ZONAS[color].reclutamiento);
-  const casillaBandera = ZONAS[color].bandera;
-  const resto = barajar(zona.filter((c) => c !== casillaBandera));
-  const usadas = [casillaBandera, ...resto.slice(0, 19)];
-  const bolsa = barajar(inventarioInicial());
-  return usadas.map((casilla, i) => ({ casilla, rango: bolsa[i], bandera: casilla === casillaBandera }));
-}
-
-export function accionDeBot(estado, color) {
-  const acciones = movimientosLegales(estado, color);
-  if (!acciones.length) return null;
-  let mejor = null;
-  let mejorNota = -Infinity;
-  for (const a of acciones) {
-    const pieza = estado.piezas[a.pieza];
-    const propia = pieza.bandera && (pieza.bandera === color || SOCIO[color] === pieza.bandera);
-    let nota = Math.random() * 2;
-    if (a.tipo === "mover") {
-      const antes = DISTANCIA[a.desde] ?? 30;
-      const despues = DISTANCIA[a.hasta] ?? 30;
-      if (a.hasta === TORRE && propia) nota += 10000;
-      else if (propia) nota += (antes - despues) * 14 + 6;
-      else nota += (antes - despues) * 3;
-      if (estado.banderasSueltas[a.hasta]) nota += 25;
-    }
-    if (a.tipo === "disparar") nota += 55;
-    if (a.tipo === "atacar") {
-      nota += 12 + pieza.rango * 2.5;
-      if (propia) nota -= 60;
-      if (pieza.rango <= 2) nota -= 15;
-      if (a.hasta === ANILLO || a.hasta === TORRE) nota += 20;
-    }
-    if (nota > mejorNota) {
-      mejorNota = nota;
-      mejor = a;
-    }
-  }
-  return mejor;
-}
+// Los bots viven en src/motor/bot.js, compartidos con la simulación: así lo que
+// mide `npm run simular` es exactamente lo que juega este servidor.
 
 // --- Salas ------------------------------------------------------------------
 
@@ -122,6 +49,11 @@ function colorDe(sala, idJugador) {
   return COLORES.find((c) => sala.puestos[c] && sala.puestos[c].id === idJugador) || null;
 }
 
+// Cuántas jugadas del hilo se mandan. `repartir` reenvía todas las salas a todos
+// los clientes en cada cambio, así que el historial completo de cada sala se
+// multiplicaría en cada mensaje. Se manda solo la cola, y solo a quien juega.
+const HISTORIA_ENVIADA = 80;
+
 // Lo que se manda a cada cliente: rangos propios, bajas propias, nada más.
 function salaParaJugador(sala, idJugador) {
   const miColor = colorDe(sala, idJugador);
@@ -144,6 +76,12 @@ function salaParaJugador(sala, idJugador) {
       turno: e.turno,
       fin: e.fin,
       eventos: e.eventos,
+      // El hilo solo contiene lo que ya se emitió como evento: jugadas, duelos y
+      // banderas. Ningún rango oculto, así que se puede mandar tal cual.
+      historia: miColor ? (e.historia || []).slice(-HISTORIA_ENVIADA) : [],
+      // Rangos que ya ha visto toda la mesa. Es lo mismo que se deduce leyendo el
+      // hilo, así que enviarlo no destapa nada; de momento el cliente no lo pinta.
+      rangosRevelados: miColor ? e.rangosRevelados || {} : {},
       banderasSueltas: e.banderasSueltas,
       marcador: e.marcador,
       misBajas: miColor ? e.bajas[miColor] : [],
@@ -351,6 +289,26 @@ wss.on("connection", (socket) => {
         if (!COLORES.every((c) => sala.puestos[c])) return error(socket, "Faltan puestos por cubrir.");
         sala.fase = "desplegando";
       }
+      sala.actualizada = Date.now();
+      return repartir();
+    }
+
+    // Parar y borrar son cosas distintas: parar cierra la partida pero deja la
+    // sala en pie para poder repasar el hilo y el resultado; borrar la hace
+    // desaparecer para todos. Las dos son solo de quien creó la partida.
+    if (mensaje.tipo === "parar" || mensaje.tipo === "borrar") {
+      if (sala.anfitrion !== sesion.id) {
+        return error(socket, "Solo quien creó la partida puede pararla o borrarla.");
+      }
+      if (mensaje.tipo === "borrar") {
+        delete salas[sala.id];
+        return repartir();
+      }
+      if (sala.fase === "fin") return error(socket, "Esa partida ya está cerrada.");
+      if (sala.estado) {
+        sala.estado.fin = { ganador: null, motivo: "la ha parado quien la creó" };
+      }
+      sala.fase = "fin";
       sala.actualizada = Date.now();
       return repartir();
     }

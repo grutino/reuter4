@@ -29,6 +29,7 @@ function geometrias() {
   GEO.asta = new THREE.CylinderGeometry(0.025, 0.025, 0.9, 6);
   GEO.pano = new THREE.PlaneGeometry(0.42, 0.26);
   GEO.marca = new THREE.TorusGeometry(0.38, 0.045, 8, 20);
+  GEO.aroSuelta = new THREE.TorusGeometry(0.3, 0.05, 8, 20);
   GEO.listo = true;
   return GEO;
 }
@@ -66,7 +67,7 @@ function posicion3D(casilla) {
   return [c - 7, 0.1, f - 8];
 }
 
-export default function Tablero3D({ piezas, resaltadas, zonaPropia, colorCamara, onCasilla }) {
+export default function Tablero3D({ piezas, banderasSueltas, resaltadas, zonaPropia, colorCamara, onCasilla }) {
   const contenedor = useRef(null);
   const ref = useRef(null);
   const manejador = useRef(onCasilla);
@@ -350,7 +351,36 @@ export default function Tablero3D({ piezas, resaltadas, zonaPropia, colorCamara,
       grupo.position.set(x, y, z);
       r.grupoPiezas.add(grupo);
     }
-  }, [piezas]);
+
+    // Banderas caídas en el suelo: sin pieza que las lleve. Van inclinadas, como
+    // clavadas donde cayó su portador, y con un aro del color de la bandera para
+    // poder localizarlas desde arriba sin girar la cámara.
+    for (const [casilla, color] of Object.entries(banderasSueltas || {})) {
+      if (!ESTILO[color]) continue;
+      const grupo = new THREE.Group();
+
+      const aro = new THREE.Mesh(g.aroSuelta, new THREE.MeshLambertMaterial({ color: ESTILO[color].hex }));
+      aro.rotation.x = Math.PI / 2;
+      aro.position.y = 0.06;
+      grupo.add(aro);
+
+      const asta = new THREE.Mesh(g.asta, new THREE.MeshLambertMaterial({ color: 0x5b4229 }));
+      asta.rotation.z = Math.PI / 5;
+      asta.position.set(-0.12, 0.42, 0);
+      grupo.add(asta);
+
+      const pano = new THREE.Mesh(
+        g.pano,
+        new THREE.MeshLambertMaterial({ color: ESTILO[color].hex, side: THREE.DoubleSide })
+      );
+      pano.position.set(0.12, 0.76, 0);
+      grupo.add(pano);
+
+      const [x, y, z] = posicion3D(casilla);
+      grupo.position.set(x, y, z);
+      r.grupoPiezas.add(grupo);
+    }
+  }, [piezas, banderasSueltas]);
 
   return (
     <div
