@@ -9,6 +9,7 @@ import {
   DIRECCIONES,
   casillasDeZona,
   rayo,
+  BATEN_LA_TORRE,
 } from "./tablero.js";
 
 export const RANGOS = {
@@ -297,6 +298,22 @@ export function movimientosLegales(estado, color = estado.turno) {
           break; // solo se puede batir a la primera pieza de la línea
         }
       }
+
+      // La TORRE, que no sale por `rayo` porque el castillo corta la línea.
+      // Se bate desde el propio anillo, o desde las cuatro casillas alineadas
+      // con ella a dos pasos; las esquinas de fuera del anillo no valen.
+      //
+      // Si hay alguien en el anillo, la bala se lo lleva a él: es la primera
+      // pieza de la línea, igual que en cualquier otro tiro. Desde el anillo
+      // mismo no hay nada en medio.
+      const enElAnillo = pieza.casilla === ANILLO;
+      if (enElAnillo || BATEN_LA_TORRE.has(pieza.casilla)) {
+        const enTorre = piezaEn(estado, TORRE);
+        const anilloDespejado = enElAnillo || !estado.tablero[ANILLO];
+        if (enTorre && anilloDespejado && !sonAliados(estado, enTorre.color, color)) {
+          acciones.push({ tipo: "disparar", pieza: pieza.id, desde: pieza.casilla, hasta: TORRE });
+        }
+      }
     }
   }
 
@@ -412,13 +429,19 @@ function consumarRecogida(estado, pieza) {
 
 // ¿La bandera que lleva esta pieza le sirve para coronar?
 //
-// Se exporta y se usa en un solo sitio a propósito: los bots necesitan saber
-// quién está a un movimiento de ganar, y si duplicaran la regla aquí y allá,
-// cambiarla en el motor dejaría a los bots prediciendo un juego distinto del que
-// se juega. Hoy vale la del compañero además de la propia; si eso cambia, cambia
-// también a quién persiguen los bots, sin tocar nada más.
+// SOLO LA PROPIA. Una bandera de color X solo la corona una pieza del ejército
+// X. Si alguien se instala en la torre con la bandera de otro color, la partida
+// sigue: se queda ahí ocupando el sitio, que es un estorbo, no una victoria.
+//
+// Lo del equipo es aparte y no cambia: cuando el compañero corona SU bandera,
+// ganan los dos, y eso lo resuelve `equipoDe` más abajo. Antes esta función
+// aceptaba también la del compañero y era demasiado permisiva.
+//
+// Se usa en un solo sitio a propósito: los bots necesitan saber quién está a un
+// movimiento de ganar, y si duplicaran la regla, cambiarla aquí los dejaría
+// prediciendo un juego distinto del que se juega.
 export function banderaQueCorona(estado, pieza) {
-  return Boolean(pieza && pieza.bandera && sonAliados(estado, pieza.bandera, pieza.color));
+  return Boolean(pieza && pieza.bandera && pieza.bandera === pieza.color);
 }
 
 function comprobarVictoria(estado, pieza) {

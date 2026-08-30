@@ -31,7 +31,7 @@ import { analizarTurno } from "./analisis.js";
 import { rasgosDeJugada, contextoDeTurno, NOMBRES as NOMBRES_RASGOS, TAMANO as TAMANO_JUGADA } from "./rasgos-jugada.js";
 import { cargarModelos, jugadaDeBot } from "./bot-red.js";
 import { NIVELES, nivelValido, ESCALA } from "./dificultad.js";
-import { BATEN_ANILLO, PASOS_A_TIRO, ANILLO as ANILLO_T } from "./tablero.js";
+import { BATEN_ANILLO, BATEN_LA_TORRE, PASOS_A_TIRO, ANILLO as ANILLO_T } from "./tablero.js";
 import { propiedadesDePieza, FIRMA as FIRMA_DESPLIEGUE } from "./rasgos-despliegue.js";
 
 let pasadas = 0;
@@ -485,14 +485,29 @@ prueba("recuperar tu propia bandera no da promoción", () => {
   assert.strictEqual(tras.pendiente, null);
 });
 
-prueba("coronar con la bandera del compañero gana para los dos", () => {
+prueba("una bandera solo la corona una pieza de su propio color", () => {
+  // Con la bandera del compañero se puede subir a la torre, pero no se gana: la
+  // partida sigue y lo único que consigues es ocupar el sitio. Esta prueba
+  // afirmaba lo contrario, porque el motor aceptaba cualquier bandera aliada.
   const e = estadoVacio();
   const pieza = colocar(e, "rojo", 4, ANILLO);
   pieza.bandera = "azul";
   e.banderas.azul = { portador: pieza.id, casilla: null, ultimoDueño: "azul" };
   const tras = aplicar(e, accion(movimientosLegales(e), (a) => a.hasta === TORRE));
-  assert.ok(tras.fin);
-  assert.deepStrictEqual(tras.fin.equipo.sort(), ["azul", "rojo"]);
+  assert.strictEqual(tras.fin, null, "subir con la bandera de otro color no termina la partida");
+  assert.strictEqual(tras.piezas[pieza.id].casilla, TORRE, "pero sí se sube y se queda ahí");
+});
+
+prueba("coronar la propia bandera gana para los dos del equipo", () => {
+  const e = estadoVacio();
+  e.turno = "azul";
+  const pieza = colocar(e, "azul", 4, ANILLO);
+  pieza.bandera = "azul";
+  e.banderas.azul = { portador: pieza.id, casilla: null, ultimoDueño: "azul" };
+  const tras = aplicar(e, accion(movimientosLegales(e), (a) => a.hasta === TORRE));
+  assert.ok(tras.fin, "con su propia bandera sí corona");
+  assert.strictEqual(tras.fin.ganador, "azul");
+  assert.deepStrictEqual(tras.fin.equipo.sort(), ["azul", "rojo"], "y gana la pareja entera");
 });
 
 prueba("el compañero tampoco ve tus rangos", () => {
@@ -1216,6 +1231,44 @@ prueba("los rasgos del castillo caen en la casilla que dice su nombre", () => {
   const w = rasgosDeJugada(m, "rojo", acerca, ctxM);
   assert.ok(w[indice("canonHaciaElTiro")] > 0, "acercarse a una posición de tiro debería marcar");
   assert.strictEqual(w[indice("disparoAlCoronador")], 0, "no hay ningún coronador que parar");
+});
+
+
+prueba("la torre se bate desde el anillo y desde las cuatro casillas alineadas", () => {
+  // Las otras ocho que tocan el anillo son las esquinas: tocan, pero no están en
+  // línea con la torre. `rayo` no devuelve TORRE nunca -corta en el castillo-,
+  // así que este tiro lo genera el motor aparte y hay que vigilarlo.
+  const tiroALaTorre = (desde, anilloOcupado = false) => {
+    const e = estadoVacio();
+    colocar(e, "rojo", 1, desde);
+    colocar(e, "verde", 5, TORRE);
+    if (anilloOcupado) colocar(e, "verde", 4, ANILLO_T);
+    return movimientosLegales(e, "rojo").filter((a) => a.tipo === "disparar").map((a) => a.hasta);
+  };
+
+  for (const desde of ["F8", "H6", "H10", "J8"]) {
+    assert.ok(tiroALaTorre(desde).includes(TORRE), `desde ${desde} debería batirse la torre`);
+  }
+  for (const esquina of ["F7", "F9", "G6", "I6", "G10", "I10", "J7", "J9"]) {
+    assert.ok(!tiroALaTorre(esquina).includes(TORRE), `desde la esquina ${esquina} NO debería batirse la torre`);
+  }
+  assert.ok(tiroALaTorre(ANILLO_T).includes(TORRE), "desde el propio anillo sí");
+
+  // Con el anillo ocupado la bala se queda en el anillo: es la primera pieza de
+  // la línea, igual que en cualquier otro tiro.
+  const conEstorbo = tiroALaTorre("H6", true);
+  assert.ok(!conEstorbo.includes(TORRE), "con el anillo ocupado no se alcanza la torre");
+  assert.ok(conEstorbo.includes(ANILLO_T), "y en cambio sí se bate a quien está en el anillo");
+
+  assert.deepStrictEqual([...BATEN_LA_TORRE].sort(), ["F8", "H10", "H6", "J8"], "la lista derivada cambió");
+});
+
+prueba("no se dispara a un aliado en la torre", () => {
+  const e = estadoVacio();
+  colocar(e, "rojo", 1, "H6");
+  colocar(e, "azul", 5, TORRE);   // el compañero
+  const tiros = movimientosLegales(e, "rojo").filter((a) => a.tipo === "disparar");
+  assert.deepStrictEqual(tiros, [], "al compañero no se le dispara");
 });
 
 console.log(`\n${pasadas} pruebas superadas, ${fallidas} fallidas\n`);

@@ -185,9 +185,9 @@ export function rasgosDeJugada(estado, color, accion, { analisis, bolsas, resume
   pon(pieza && analisis.enPeligro.mias.has(pieza.id) && !riesgo.pierde ? 1 : 0);
   pon(analisis.socio.aPuntoDeCoronar && (accion.hasta === TORRE || accion.hasta === ANILLO) ? 1 : 0);
 
-  // Batir al que va a coronar. Se gana llegando a la TORRE, y la torre no se
-  // puede batir -`rayo` devuelve ANILLO al llegar al castillo y nunca TORRE-,
-  // así que la única ventana es mientras el rival está en el anillo.
+  // Batir al que va a coronar. Se gana llegando a la TORRE con la bandera del
+  // PROPIO color, así que la ventana es mientras el rival está en el anillo: si
+  // ya subió, o ha ganado, o lleva una bandera que no le sirve.
   pon(
     accion.tipo === "disparar" && accion.hasta === ANILLO &&
     analisis.coronadorRival && objetivo && analisis.coronadorRival.id === objetivo.id ? 1 : 0

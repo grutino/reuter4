@@ -183,7 +183,7 @@ export const PESOS_BASE = {
   // -a un movimiento de coronar- puntuaba igual que batirlo en mitad del campo.
   // Medido: cuando el tiro al anillo es legal el bot ya lo toma el 98% de las
   // veces, pero solo lo es en el 1% de los turnos en que hay un rival ahí.
-  disparoAlAnillo: 45,         // el objetivo controla el castillo
+  disparoAlCastillo: 45,       // el objetivo está en el castillo, anillo o torre
   disparoAlCoronador: 400,     // y además puede coronar en su turno: es la partida
   disparoCercaDelCentro: 14,   // factor por cercanía al castillo, aunque no lleve bandera
   // Llevar el cañón a donde sirve. Sin esto no va nunca: mueve una casilla por
@@ -380,9 +380,9 @@ export function accionDeBot(estado, color, { pesos = PESOS_BASE, azar = Math.ran
       if (objetivo && objetivo.bandera) { nota += pesos.disparoABandera; apuntar("disparoABandera"); }
 
       // Dónde está el que recibe el cañonazo, que es la mitad que faltaba.
-      if (a.hasta === ANILLO) {
-        nota += pesos.disparoAlAnillo;
-        apuntar("disparoAlAnillo");
+      if (a.hasta === ANILLO || a.hasta === TORRE) {
+        nota += pesos.disparoAlCastillo;
+        apuntar("disparoAlCastillo");
         if (analisis.coronadorRival && objetivo && analisis.coronadorRival.id === objetivo.id) {
           nota += pesos.disparoAlCoronador;
           apuntar("disparoAlCoronador");

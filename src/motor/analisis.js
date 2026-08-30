@@ -212,9 +212,11 @@ export function analizarTurno(estado, color, distancias, misAcciones = null) {
   // movimiento. Sin esto, un bot le disparaba con la misma gana que a cualquier
   // otra pieza, porque el disparo solo valía por el rango.
   //
-  // Y la torre no se puede batir: `rayo` devuelve ANILLO al llegar al castillo y
-  // nunca TORRE, así que quien ya subió es inalcanzable. La única ventana es
-  // mientras está en el anillo.
+  // La torre sí se bate, pero solo desde el anillo o desde las cuatro casillas
+  // alineadas con ella a dos pasos (`BATEN_LA_TORRE`); `rayo` no la devuelve
+  // nunca, así que el motor la trata aparte. Aun así el rival urgente sigue
+  // siendo el del anillo: quien ya está en la torre con SU bandera ha ganado, y
+  // quien está con la de otro color no gana nada, solo ocupa el sitio.
   const enElAnillo = estado.tablero[ANILLO] ? estado.piezas[estado.tablero[ANILLO]] : null;
   const coronadorRival =
     enElAnillo && esEnemigo(color, enElAnillo.color) && banderaQueCorona(estado, enElAnillo) ? enElAnillo : null;

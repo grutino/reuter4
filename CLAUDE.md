@@ -130,9 +130,15 @@ fuerte que comparar decisiones, que depende de los pesos que tenga la red ese d�
 
 Tres cosas que conviene tener claras antes de tocar nada de esto:
 
-- **La torre no se puede batir.** `rayo` devuelve `ANILLO` al llegar al castillo y nunca
-  `TORRE`, así que quien ya subió es inalcanzable para cualquier cañón. La única ventana es
-  mientras el rival está en el anillo. No es un fallo: es la regla.
+- **La torre se bate, pero solo desde cuatro sitios.** `rayo` corta al llegar al castillo y
+  devuelve `ANILLO`, así que la torre no sale por ahí y el motor la trata aparte: la baten un
+  cañón en el propio anillo, o uno en una de las cuatro casillas **alineadas** con ella a dos
+  pasos (`BATEN_LA_TORRE` = F8, H6, H10, J8). Las otras ocho que tocan el anillo —las
+  esquinas— no valen. Y si hay alguien en el anillo, la bala se lo lleva a él: es la primera
+  pieza de la línea, como en cualquier otro tiro.
+- **Una bandera solo la corona una pieza de su propio color.** Subir a la torre con la bandera
+  de otro color no termina la partida: te quedas ahí ocupando el sitio. Lo del equipo es aparte
+  y no cambia — cuando el compañero corona SU bandera, ganan los dos.
 - **La regla de coronación vive en un solo sitio**, `banderaQueCorona`. Los bots necesitan
   saber quién está a un movimiento de ganar, y si duplicaran la regla, cambiarla en el motor
   dejaría a los bots prediciendo un juego distinto del que se juega.

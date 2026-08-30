@@ -160,6 +160,30 @@ export function rayo(desde, direccion, pasosMax = Infinity) {
 // toma el 98% de las veces- es que un cañón mueve UNA casilla por turno y de
 // media empieza a 6,6 pasos, así que llegar cuesta siete turnos de caminar en
 // línea recta hacia el sitio exacto. Sin un peso que se lo pida, no va nunca.
+// Desde dónde se bate la TORRE.
+//
+// La torre no es alcanzable en línea recta como una casilla normal: `rayo` corta
+// al llegar al castillo y devuelve ANILLO. Se bate desde el propio anillo, o
+// desde las cuatro casillas que están EN LÍNEA con el centro del castillo a dos
+// pasos. Las otras ocho que tocan el anillo -las esquinas- no valen, porque no
+// están alineadas con la torre.
+//
+// Se deriva de la geometría en vez de escribir las cuatro a mano, para que
+// siga valiendo si algún día cambia el tablero.
+export const BATEN_LA_TORRE = (() => {
+  const huella = [...CASTILLO_HUELLA].map(coord);
+  const cx = (Math.min(...huella.map((p) => p[0])) + Math.max(...huella.map((p) => p[0]))) / 2;
+  const cf = (Math.min(...huella.map((p) => p[1])) + Math.max(...huella.map((p) => p[1]))) / 2;
+  const salida = new Set();
+  for (const casilla of ADYACENTES[ANILLO] || []) {
+    if (casilla === TORRE) continue;
+    const [c, f] = coord(casilla);
+    // Alineada: comparte columna o fila con el centro del castillo.
+    if (c === cx || f === cf) salida.add(casilla);
+  }
+  return salida;
+})();
+
 export const BATEN_ANILLO = (() => {
   const salida = new Set();
   for (const casilla of CASILLAS) {
