@@ -20,7 +20,8 @@
     "informe-redes": "node entrenamiento/informe-redes.mjs",
     "panel": "node entrenamiento/medir-panel.mjs",
     "coevolucion": "node entrenamiento/coevolucion.mjs",
-    "publicar-redes": "node herramientas/publicar-redes.mjs"
+    "publicar-redes": "node herramientas/publicar-redes.mjs",
+    "nocturno": "node entrenamiento/nocturno.mjs"
   },
   "dependencies": {
     "react": "^18.3.1",

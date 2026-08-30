@@ -83,6 +83,11 @@ function opciones(argv) {
     // En seco no se escriben modelos ni formaciones: para probar el bucle sin
     // que un ensayo de 50 partidas pise a un modelo de 4000.
     seco: 0,
+    // Desplazamiento de las semillas del veredicto. Lo usa el proceso nocturno
+    // para que cada sesión se mida en partidas distintas: si todas las sesiones
+    // se midieran en las mismas, elegir la mejor sesión de la noche volvería a
+    // ser el sesgo del máximo, que es el error que ya costó doce rondas.
+    veredictoBase: 0,
     // Cuántos errores estándar tiene que sacarle una ronda a la mejor marca
     // para adoptarla. Sin margen se adopta ruido: en una prueba con un solo
     // emparejamiento subió del 53% al 61% con +-6 de error en cada medida, y
@@ -405,7 +410,7 @@ async function main() {
   console.log("\n  Veredicto en semillas frescas (ninguna ronda las ha usado):");
   const finales = [];
   for (const s of [77003, 91117, 20261]) {
-    const r = medir(redD, redJ, s);
+    const r = medir(redD, redJ, s + o.veredictoBase);
     finales.push(r.tasa);
     console.log(`    semilla ${s}: ${(r.tasa * 100).toFixed(0)}% ±${Math.round(r.error * 100)} · peor ${r.peor.rival} (${(r.peor.tasa * 100).toFixed(0)}%)`);
   }

@@ -17,6 +17,9 @@ npm test              # 68 pruebas del motor; sale con código 1 si falla alguna
 npm run simular       # salud de los bots + duelo entre el bot con memoria y el clásico
 npm run entrenar      # autojuego evolutivo de los pesos; escribe el informe en cada generación
 npm run informe       # rehace la página de seguimiento desde los modelos guardados
+npm run coevolucion   # bucle red contra red + genético de formaciones
+npm run nocturno      # sesiones encadenadas hasta que deje de mejorar; deja diagnóstico
+npm run publicar-redes # lleva los modelos entrenados a los que usan los bots
 npm run build         # compila el cliente a dist/
 npm run servidor      # servidor en el 8080 (sirve dist/ y el WebSocket)
 npm run dev           # cliente Vite en el 5173, con /ws redirigido al 8080
@@ -90,6 +93,57 @@ genoma:
 
 `coronar` no se entrena: llevar la bandera a la torre es ganar, no una preferencia que
 convenga graduar. Las `ESCALAS` dicen en qué unidades vive cada peso, no qué valor es bueno.
+
+### Las redes en el juego (`src/motor/red.js`, `bot-red.js`, `modelos/`)
+
+La inferencia vive en el motor porque **el juego la ejecuta**: un bot que decide con
+la red tiene que evaluarla mientras se juega. Lo que se queda fuera es lo que solo sirve
+para aprender.
+
+```
+src/motor/red.js         paso adelante y serialización
+src/motor/rasgos-*.js    los tres extractores de rasgos
+src/motor/bot-red.js     accionConRed, despliegueGuiado, cargarModelos
+src/motor/modelos/       los modelos QUE JUEGAN
+entrenamiento/red.mjs    retropropagación con Adam; reexporta lo de arriba
+entrenamiento/modelos/   el taller: aquí escribe el entrenamiento
+```
+
+**Dos carpetas de modelos, y la separación es deliberada.** Entrenar sobrescribe
+`entrenamiento/modelos/` continuamente —una prueba de humo de 120 partidas ya pisó dos veces
+un modelo de 4000—, así que los modelos que juegan viven aparte y solo se sustituyen a mano
+con `npm run publicar-redes`. Un proceso nocturno desatendido no debería cambiar cómo juegan
+las partidas reales.
+
+`cargarModelos` rechaza un modelo cuyo número de entradas no coincida con los rasgos de esta
+versión. No es decorativo: al añadir rasgos, un modelo viejo se carga sin dar **ningún error**
+y juega con basura. Si no hay modelo, o está obsoleto, los bots juegan con la heurística y el
+servidor lo dice al arrancar.
+
+**La regla de información oculta vale también para la red.** El servidor mueve con
+`accionConRed`, que es otro camino que `accionDeBot`, y la prueba que vigilaba las fugas no lo
+cubría. Ahora hay una que compara los RASGOS entre dos escenarios que solo difieren en el rango
+escondido: si el vector de entrada es idéntico, ninguna red posible puede distinguirlos. Es más
+fuerte que comparar decisiones, que depende de los pesos que tenga la red ese día.
+
+### Medir sin engañarse (lo que ha costado tres veces)
+
+`medirContraPanel` es determinista: misma semilla, mismas partidas. De ahí salen tres errores
+que ya se han cometido y no conviene repetir:
+
+1. **El máximo de una tanda de medidas ruidosas está sesgado al alza.** Un 73% se anunció como
+   84% por quedarse con la mejor de ocho rondas medidas en las mismas partidas.
+2. **Un titular no puede conservar la nota con la que fue elegido.** Fue elegido justamente por
+   tener suerte en esas partidas; los aspirantes traen notas honestas y el listón se vuelve
+   inalcanzable. Doce rondas seguidas descartadas. Ahora el titular revalida cada ronda en las
+   mismas partidas que el aspirante.
+3. **Lo mismo una capa más arriba**: si todas las sesiones de una noche se miden en las mismas
+   partidas, quedarse con la mejor sesión es el mismo sesgo. Cada sesión mide con
+   `--veredictoBase` distinto y al final se confirma en partidas vírgenes.
+
+Y la distinción que sostiene todo lo demás: **el PANEL es la vara y no se mueve** (38 rivales,
+semilla 2024); **la LIGA es el gimnasio** y se endurece a propósito. Las formaciones duras van a
+`aperturas/duras/` y NO a `aperturas/campeonas/`, que sí la carga `construirPanel`.
 
 ## Arquitectura
 
