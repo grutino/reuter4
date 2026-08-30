@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from "react";
 import Tablero3D, { ESTILO, NOMBRE_RANGO, LATON_CSS } from "./Tablero3D.jsx";
 import { COLORES, ZONAS, casillasDeZona, zonaDe } from "./motor/tablero.js";
 import { RANGOS, VICTORIAS_PARA_RECLUTAR, SOCIO, movimientosLegales, inventarioInicial } from "./motor/motor.js";
+import { pintarFicha, LADO_FICHA } from "./ficha.js";
 
 const MADERA = "#3A2A1C";
 const MADERA_CLARA = "#5B4229";
@@ -254,6 +255,113 @@ function Marcador({ marcador, miColor }) {
   );
 }
 
+// Ficha plana, para la ventana de combate. Es el mismo dibujo que llevan las
+// piezas del tablero 3D, pintado en un canvas normal.
+function FichaPintada({ rango, color, tamano = 84 }) {
+  const lienzo = useRef(null);
+  useEffect(() => {
+    const nodo = lienzo.current;
+    if (!nodo) return;
+    pintarFicha(nodo.getContext("2d"), rango, ESTILO[color] ? ESTILO[color].css : null);
+  }, [rango, color]);
+  return (
+    <canvas
+      ref={lienzo}
+      width={LADO_FICHA}
+      height={LADO_FICHA}
+      style={{ width: tamano, height: tamano, display: "block" }}
+    />
+  );
+}
+
+// Un combate es lo único que destapa rangos ajenos, y solo mientras se mira. De
+// una entrada del hilo salen los duelos y los cañonazos que haya provocado.
+const RANGO_CANON = 1;
+
+function combatesDeEntrada(entrada) {
+  const lista = [];
+  for (const ev of entrada.eventos || []) {
+    if (ev.tipo === "duelo") {
+      lista.push({
+        clase: "duelo",
+        casilla: ev.casilla,
+        atacante: ev.atacante,
+        defensor: ev.defensor,
+        resultado: ev.resultado,
+      });
+    }
+    if (ev.tipo === "cañonazo") {
+      lista.push({
+        clase: "cañonazo",
+        casilla: ev.objetivo.casilla,
+        atacante: { color: ev.color, rango: RANGO_CANON },
+        defensor: ev.objetivo,
+        resultado: "cañonazo",
+      });
+    }
+  }
+  return lista;
+}
+
+function desenlaceDeCombate(combate) {
+  const a = `${NOMBRE_RANGO[combate.atacante.rango]} de ${combate.atacante.color}`;
+  const d = `${NOMBRE_RANGO[combate.defensor.rango]} de ${combate.defensor.color}`;
+  if (combate.clase === "cañonazo") return `El cañonazo revienta al ${d}. El cañón se retira tras disparar.`;
+  if (combate.resultado === "empate") return `Mismo grado: caen los dos y la casilla queda vacía.`;
+  if (combate.resultado === "atacante") return `Vence el ${a} y ocupa la casilla.`;
+  return `Resiste el ${d}. El ${a} se retira del tablero.`;
+}
+
+// Ventana de combate: sale sola cuando hay un choque y se queda hasta que se
+// cierra. Es el único momento en que se ven los rangos de las piezas ajenas;
+// después vuelven a estar tapadas y lo que quede es la memoria de cada uno.
+function VentanaCombate({ combate, quedan, onCerrar }) {
+  const perdedor = (lado) => {
+    if (combate.clase === "cañonazo") return true;
+    if (combate.resultado === "empate") return true;
+    return combate.resultado === "atacante" ? lado === "defensor" : lado === "atacante";
+  };
+  const caja = (lado, pieza, rotulo) => (
+    <div style={{ textAlign: "center", opacity: perdedor(lado) ? 0.45 : 1 }}>
+      <FichaPintada rango={pieza.rango} color={pieza.color} />
+      <div style={{ marginTop: 6, fontSize: 12, letterSpacing: ".06em", color: LATON_CLARO, textTransform: "uppercase" }}>
+        {rotulo}
+      </div>
+      <div style={{ fontSize: 14, color: PERGAMINO }}>
+        {pieza.rango} {NOMBRE_RANGO[pieza.rango]}
+      </div>
+      <div style={{ fontSize: 12.5, color: "#C9BC9C" }}>{pieza.color}</div>
+      {perdedor(lado) && <div style={{ fontSize: 12, color: "#C98A7A", marginTop: 2 }}>cae</div>}
+    </div>
+  );
+
+  return (
+    <div
+      style={{
+        position: "fixed",
+        inset: 0,
+        background: "rgba(10, 8, 5, 0.72)",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        zIndex: 50,
+        padding: 16,
+      }}
+    >
+      <div style={{ ...panelEstilo, maxWidth: 420, width: "100%", textAlign: "center" }}>
+        <Rotulo>{combate.clase === "cañonazo" ? "Cañonazo" : "Combate"} en {combate.casilla}</Rotulo>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 18, margin: "14px 0" }}>
+          {caja("atacante", combate.atacante, combate.clase === "cañonazo" ? "Dispara" : "Ataca")}
+          <div style={{ fontSize: 17, color: LATON_CLARO, fontStyle: "italic" }}>contra</div>
+          {caja("defensor", combate.defensor, "Defiende")}
+        </div>
+        <p style={{ fontSize: 14, color: PERGAMINO, margin: "0 0 14px" }}>{desenlaceDeCombate(combate)}</p>
+        <Boton onClick={onCerrar}>{quedan > 1 ? `Siguiente (quedan ${quedan - 1})` : "Cerrar"}</Boton>
+      </div>
+    </div>
+  );
+}
+
 export default function App() {
   const [yo, setYo] = useState(null);
   const [nombreBorrador, setNombreBorrador] = useState("");
@@ -268,6 +376,8 @@ export default function App() {
   const [colocacion, setColocacion] = useState({});
   const [rangoActivo, setRangoActivo] = useState(9);
   const [seleccion, setSeleccion] = useState(null);
+  const [combates, setCombates] = useState([]);
+  const combatesVistos = useRef({});
   const [confirmando, setConfirmando] = useState(null); // "parar" | "borrar", solo el anfitrión
   const socketRef = useRef(null);
   const yoRef = useRef(null);
@@ -357,6 +467,33 @@ export default function App() {
   useEffect(() => {
     if (sala && sala.fase === "desplegando" && sala.desplegados.includes(miColor)) setColocacion({});
   }, [sala && sala.fase, sala && sala.desplegados.length]);
+
+  // Cola de combates por enseñar. Al entrar en una sala se marca como visto todo
+  // lo ya jugado: al reconectar no tiene sentido soltar de golpe los combates de
+  // hace veinte turnos.
+  useEffect(() => {
+    if (!sala || !sala.estado || !sala.estado.historia) return;
+    const historia = sala.estado.historia;
+    const ultima = historia.length ? historia[historia.length - 1].n : 0;
+    const visto = combatesVistos.current[sala.id];
+    if (visto === undefined) {
+      combatesVistos.current[sala.id] = ultima;
+      return;
+    }
+    if (ultima <= visto) return;
+    combatesVistos.current[sala.id] = ultima;
+    const nuevos = [];
+    for (const entrada of historia) {
+      if (entrada.n <= visto) continue;
+      for (const combate of combatesDeEntrada(entrada)) nuevos.push({ ...combate, n: entrada.n });
+    }
+    if (nuevos.length) setCombates((previos) => [...previos, ...nuevos]);
+  }, [sala && sala.id, sala && sala.estado && sala.estado.historia]);
+
+  // Al cambiar de sala no se arrastran los combates de la anterior.
+  useEffect(() => {
+    setCombates([]);
+  }, [salaId]);
 
   const restantes = miColor
     ? Object.entries(RANGOS)
@@ -639,12 +776,18 @@ export default function App() {
 
   return (
     <div style={marco}>
+      {combates.length > 0 && (
+        <VentanaCombate
+          combate={combates[0]}
+          quedan={combates.length}
+          onCerrar={() => setCombates((previos) => previos.slice(1))}
+        />
+      )}
       <div style={{ display: "flex", gap: 16, alignItems: "flex-start", flexWrap: "wrap", maxWidth: 1120, margin: "0 auto" }}>
         <div style={{ flex: "1 1 480px", minWidth: 320 }}>
           <Tablero3D
             piezas={piezasEnTablero}
             banderasSueltas={estado ? estado.banderasSueltas : null}
-            rangosRevelados={estado ? estado.rangosRevelados : null}
             resaltadas={sala.fase === "jugando" || sala.fase === "fin" ? resaltadas : {}}
             zonaPropia={sala.fase === "desplegando" ? miColor : null}
             colorCamara={miColor}

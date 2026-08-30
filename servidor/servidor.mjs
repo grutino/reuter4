@@ -88,7 +88,6 @@ function salaParaJugador(sala, idJugador) {
       historia: miColor ? (e.historia || []).slice(-HISTORIA_ENVIADA) : [],
       // Rangos que ya ha visto toda la mesa. Es lo mismo que se deduce leyendo el
       // hilo, así que enviarlo no destapa nada; de momento el cliente no lo pinta.
-      rangosRevelados: miColor ? e.rangosRevelados || {} : {},
       banderasSueltas: e.banderasSueltas,
       marcador: e.marcador,
       misBajas: miColor ? e.bajas[miColor] : [],

@@ -42,6 +42,7 @@ cliente, y esa separación es lo que permite probar las reglas sin levantar nada
 src/motor/    reglas puras: estado y transiciones, sin E/S ni gráficos
 src/motor/bot.js  heurística de los bots, compartida por servidor y simulación
 src/siluetas.js   dibujos de los nueve rangos, en trazados de canvas
+src/ficha.js      pinta una ficha (disco + silueta); lo comparten el 3D y la ventana de combate
 servidor/     autoridad: guarda el estado completo, reparte vistas recortadas, mueve bots
 src/          cliente React; Tablero3D.jsx pinta con three.js
 ```
@@ -135,6 +136,18 @@ escenarios idénticos salvo el rango escondido del defensor y exige que el bot j
 
 El servidor manda la cola del hilo (`HISTORIA_ENVIADA`) y solo a quien ocupa un puesto, porque
 `repartir()` reenvía todas las salas a todos los clientes en cada cambio.
+
+**`rangosRevelados` no sale del servidor.** Es memoria de los bots y nada más. Sobre el tablero
+solo se marcan los rangos propios; los ajenos van tapados siempre, incluso después de haberse
+visto en un combate. Lo que el jugador humano ve es la **ventana de combate**: un modal que
+salta solo al haber un duelo o un cañonazo, enseña las dos piezas con su rango y se queda hasta
+que se cierra. A partir de ahí, recordarlo es cosa suya, igual que en la mesa de verdad. Si
+alguna vez se vuelve a mandar `rangosRevelados` al cliente, se rompe justo esa simetría entre
+lo que sabe el bot y lo que le cuesta saber al humano.
+
+El cliente saca los combates del propio hilo (`combatesDeEntrada`), no de `eventos`: así no se
+pierde ninguno si llegan dos cambios seguidos. Al entrar en una sala se marca como visto todo
+lo ya jugado, para no soltar de golpe los combates de hace veinte turnos al reconectar.
 
 ### Parar y borrar
 
