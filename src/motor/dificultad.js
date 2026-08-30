@@ -61,19 +61,39 @@ export const NIVELES = {
   3: {
     nombre: "Oficial",
     descripcion: "Usa la red entrenada y despliega con ella, aunque se equivoca la mitad de las veces.",
-    red: true, candidatas: CANDIDATAS_UTILES, ruido: 0.5, memoria: true, ...DESPLIEGUE_UTIL,
+    red: true, candidatas: CANDIDATAS_UTILES, ruido: 0.5, memoria: true, ruidoSinRed: 0.2, ...DESPLIEGUE_UTIL,
   },
   4: {
     nombre: "Coronel",
     descripcion: "La red entrenada con pocos despistes.",
-    red: true, candidatas: CANDIDATAS_UTILES, ruido: 0.28, memoria: true, ...DESPLIEGUE_UTIL,
+    red: true, candidatas: CANDIDATAS_UTILES, ruido: 0.28, memoria: true, ruidoSinRed: 0.08, ...DESPLIEGUE_UTIL,
   },
   5: {
     nombre: "Mariscal",
     descripcion: "Todo lo que sabe, sin un solo fallo deliberado.",
-    red: true, candidatas: CANDIDATAS_UTILES, ruido: 0, memoria: true, ...DESPLIEGUE_UTIL,
+    red: true, candidatas: CANDIDATAS_UTILES, ruido: 0, memoria: true, ruidoSinRed: 0, ...DESPLIEGUE_UTIL,
   },
 };
+
+// SIN MODELO PUBLICADO, los niveles altos caen a la heurística, y entonces sus
+// ruidos dejan de tener sentido: el nivel 3 lleva 0,5 porque compensa la ventaja
+// de la red, así que sin red quedaría por DEBAJO del nivel 2, que lleva 0,35. La
+// escalera se invertía justo en el tramo del medio.
+//
+// Pasa de verdad y no es una hipótesis: al cambiar los rasgos, los modelos
+// publicados quedan rechazados hasta que se reentrena y se vuelve a publicar, y
+// mientras tanto los cuatro bots juegan de heurística.
+//
+// Así que cada nivel con red trae también el ruido que le toca cuando no la hay,
+// escalonado sobre la curva medida de la heurística sola (0,00 -> 48%,
+// 0,30 -> 45%, 0,60 -> 28% contra el nivel 2).
+export function configuracionDeNivel(nivel, hayRed) {
+  const cfg = NIVELES[nivelValido(nivel)];
+  if (cfg.red && !hayRed && cfg.ruidoSinRed !== undefined) {
+    return { ...cfg, red: false, ruido: cfg.ruidoSinRed };
+  }
+  return cfg;
+}
 
 export const NIVEL_POR_DEFECTO = 4;
 

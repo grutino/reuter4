@@ -17,7 +17,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { evaluar, desdeObjeto } from "./red.js";
 import { despliegueAleatorio, puntuarAcciones, PESOS_BASE, DISTANCIA } from "./bot.js";
-import { NIVELES, nivelValido } from "./dificultad.js";
+import { NIVELES, nivelValido, configuracionDeNivel } from "./dificultad.js";
 import { analizarTurno } from "./analisis.js";
 import { rasgosDeDespliegue, TAMANO as TAMANO_DESPLIEGUE, FIRMA as FIRMA_DESPLIEGUE } from "./rasgos-despliegue.js";
 import { rasgosDeJugada, contextoDeTurno, TAMANO as TAMANO_JUGADA, FIRMA as FIRMA_JUGADA } from "./rasgos-jugada.js";
@@ -170,7 +170,7 @@ const POOL_DE_FALLO = 6;
 const vistaSegunNivel = (estado, cfg) => (cfg.memoria ? estado : { ...estado, rangosRevelados: {} });
 
 export function jugadaDeBot(estado, color, nivel, modelos = {}, azar = Math.random) {
-  const cfg = NIVELES[nivelValido(nivel)];
+  const cfg = configuracionDeNivel(nivel, Boolean(modelos.jugada));
   const visto = vistaSegunNivel(estado, cfg);
   const puntuadas = puntuarAcciones(visto, color, { azar });
   if (!puntuadas.length) return null;
@@ -194,7 +194,7 @@ export function jugadaDeBot(estado, color, nivel, modelos = {}, azar = Math.rand
 }
 
 export function despliegueDeBot(color, nivel, modelos = {}, azar = Math.random) {
-  const cfg = NIVELES[nivelValido(nivel)];
+  const cfg = configuracionDeNivel(nivel, Boolean(modelos.despliegue));
   if (!cfg.red || !modelos.despliegue || !cfg.candidatosDespliegue) return despliegueAleatorio(color, azar);
   return despliegueGuiado(color, azar, modelos.despliegue, cfg.candidatosDespliegue, cfg.escalada);
 }

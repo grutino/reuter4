@@ -30,7 +30,7 @@ import { accionDeBot, accionDeBotClasico, decisionDeRecogida, despliegueAleatori
 import { analizarTurno } from "./analisis.js";
 import { rasgosDeJugada, contextoDeTurno, NOMBRES as NOMBRES_RASGOS, TAMANO as TAMANO_JUGADA } from "./rasgos-jugada.js";
 import { cargarModelos, jugadaDeBot } from "./bot-red.js";
-import { NIVELES, nivelValido, ESCALA } from "./dificultad.js";
+import { NIVELES, nivelValido, ESCALA, configuracionDeNivel } from "./dificultad.js";
 import { BATEN_ANILLO, BATEN_LA_TORRE, PASOS_A_TIRO, ANILLO as ANILLO_T } from "./tablero.js";
 import { salaParaJugador } from "../../servidor/vista.mjs";
 import { centro as centroEnInforme, reconstruirRangos, CELDA, MARGEN, LADO } from "../informe-partida.js";
@@ -1071,6 +1071,20 @@ prueba("la escala de dificultad es monótona", () => {
     }
   }
   assert.strictEqual(niveles[4].ruido, 0, "el nivel máximo no debería fallar a propósito");
+
+  // Y SIN MODELO PUBLICADO. Los niveles altos caen a la heurística y entonces sus
+  // ruidos dejan de tener sentido: el 3 lleva 0,5 para compensar la ventaja de la
+  // red, así que sin red quedaría por debajo del 2, que lleva 0,35. La escalera
+  // se invertía justo en el tramo del medio, y pasa de verdad cada vez que se
+  // cambian los rasgos y los modelos publicados quedan rechazados.
+  const sinRed = [1, 2, 3, 4, 5].map((n) => configuracionDeNivel(n, false));
+  for (let i = 1; i < sinRed.length; i++) {
+    assert.ok(
+      sinRed[i].ruido <= sinRed[i - 1].ruido,
+      `sin modelo, el nivel ${i + 1} falla más (${sinRed[i].ruido}) que el ${i} (${sinRed[i - 1].ruido})`
+    );
+  }
+  assert.ok(sinRed.every((c) => !c.red), "sin modelo ningún nivel debería creerse que usa la red");
   assert.strictEqual(niveles[0].memoria, false, "el nivel mínimo se distingue por no recordar");
   assert.strictEqual(ESCALA.length, 5, "el cliente pinta cinco peldaños");
 });
