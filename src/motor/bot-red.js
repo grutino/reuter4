@@ -17,6 +17,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { evaluar, desdeObjeto } from "./red.js";
 import { despliegueAleatorio, puntuarAcciones, PESOS_BASE, DISTANCIA } from "./bot.js";
+import { NIVELES, nivelValido } from "./dificultad.js";
 import { analizarTurno } from "./analisis.js";
 import { rasgosDeDespliegue, TAMANO as TAMANO_DESPLIEGUE, FIRMA as FIRMA_DESPLIEGUE } from "./rasgos-despliegue.js";
 import { rasgosDeJugada, contextoDeTurno, TAMANO as TAMANO_JUGADA, FIRMA as FIRMA_JUGADA } from "./rasgos-jugada.js";
@@ -149,4 +150,51 @@ export function cargarModelos(carpeta = CARPETA_MODELOS) {
     jugada: uno("red-jugada.json", TAMANO_JUGADA, FIRMA_JUGADA, "jugada"),
     notas,
   };
+}
+
+// --- Un bot con nivel de dificultad ------------------------------------------
+
+// De entre cuántas jugadas razonables sale el fallo. Es aparte de `candidatas`,
+// que es cuántas evalúa la red: en los niveles bajos la red no interviene y
+// `candidatas` vale 1, así que si el ruido eligiera entre las candidatas no
+// haría nada nunca. Y el fallo se saca de entre las mejores, no de entre todas:
+// un bot que juega cualquier cosa no es más fácil, es otro juego.
+const POOL_DE_FALLO = 6;
+
+// Un bot sin memoria no ve `rangosRevelados`. Se le pasa una vista con la
+// memoria vacía en vez de usar `accionDeBotClasico`, que se conserva como vara
+// de medir del duelo de `npm run simular` y no debe acabar atada a esto: si un
+// día se cambia el nivel 1, no puede arrastrar consigo la referencia.
+// La copia es superficial a propósito: `piezas` y `tablero` van por referencia y
+// nadie los toca, así que no cuesta nada por jugada.
+const vistaSegunNivel = (estado, cfg) => (cfg.memoria ? estado : { ...estado, rangosRevelados: {} });
+
+export function jugadaDeBot(estado, color, nivel, modelos = {}, azar = Math.random) {
+  const cfg = NIVELES[nivelValido(nivel)];
+  const visto = vistaSegunNivel(estado, cfg);
+  const puntuadas = puntuarAcciones(visto, color, { azar });
+  if (!puntuadas.length) return null;
+
+  if (cfg.ruido > 0 && azar() < cfg.ruido) {
+    const pool = puntuadas.slice(0, Math.min(POOL_DE_FALLO, puntuadas.length));
+    return pool[Math.floor(azar() * pool.length)].accion;
+  }
+
+  const finalistas = puntuadas.slice(0, Math.max(1, Math.min(cfg.candidatas, puntuadas.length)));
+  if (!cfg.red || !modelos.jugada || finalistas.length === 1) return finalistas[0].accion;
+
+  const contexto = contextoDeTurno(visto, color, analizarTurno(visto, color, DISTANCIA));
+  let mejor = finalistas[0].accion;
+  let mejorValor = -Infinity;
+  for (const { accion } of finalistas) {
+    const valor = evaluar(modelos.jugada, rasgosDeJugada(visto, color, accion, contexto));
+    if (valor > mejorValor) { mejorValor = valor; mejor = accion; }
+  }
+  return mejor;
+}
+
+export function despliegueDeBot(color, nivel, modelos = {}, azar = Math.random) {
+  const cfg = NIVELES[nivelValido(nivel)];
+  if (!cfg.red || !modelos.despliegue || !cfg.candidatosDespliegue) return despliegueAleatorio(color, azar);
+  return despliegueGuiado(color, azar, modelos.despliegue, cfg.candidatosDespliegue, cfg.escalada);
 }

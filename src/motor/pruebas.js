@@ -29,7 +29,8 @@ import path from "node:path";
 import { accionDeBot, accionDeBotClasico, DISTANCIA } from "./bot.js";
 import { analizarTurno } from "./analisis.js";
 import { rasgosDeJugada, contextoDeTurno, NOMBRES as NOMBRES_RASGOS } from "./rasgos-jugada.js";
-import { cargarModelos } from "./bot-red.js";
+import { cargarModelos, jugadaDeBot } from "./bot-red.js";
+import { NIVELES, nivelValido, ESCALA } from "./dificultad.js";
 import { propiedadesDePieza, FIRMA as FIRMA_DESPLIEGUE } from "./rasgos-despliegue.js";
 
 let pasadas = 0;
@@ -1025,6 +1026,68 @@ prueba("un modelo con otra firma de rasgos se rechaza aunque el tamaño cuadre",
   const bueno = cargarModelos(carpeta);
   assert.ok(!bueno.notas.some((n) => n.includes("otros rasgos")), "con la firma buena no debería quejarse de la firma");
   fs.rmSync(carpeta, { recursive: true, force: true });
+});
+
+
+prueba("la escala de dificultad es monótona", () => {
+  // Medido, la escalera da 36-50-63-75-88 por ciento. Esto no vuelve a medirla
+  // -son minutos de partidas- sino que vigila que nadie rompa el orden editando
+  // la tabla: la primera versión graduaba por esfuerzo de búsqueda y salía al
+  // revés (78-75-72), porque más candidatas no compran fuerza.
+  // OJO con cómo se enuncia esto: el nivel 3 tiene MÁS ruido que el 2 (0,5
+  // contra 0,35) y aun así es más fuerte, porque usa la red. El ruido solo
+  // ordena DENTRO de la misma clase de motor; entre clases manda la red. La
+  // primera versión de esta prueba exigía ruido decreciente en toda la escala y
+  // falló contra una tabla que estaba bien.
+  const niveles = [1, 2, 3, 4, 5].map((n) => NIVELES[n]);
+  for (let i = 1; i < niveles.length; i++) {
+    const antes = niveles[i - 1];
+    const ahora = niveles[i];
+    assert.ok(!antes.red || ahora.red, `el nivel ${i + 1} no usa la red y el ${i} sí`);
+    assert.ok(!antes.memoria || ahora.memoria, `el nivel ${i + 1} pierde la memoria que tiene el ${i}`);
+    if (antes.red === ahora.red) {
+      assert.ok(
+        ahora.ruido <= antes.ruido,
+        `el nivel ${i + 1} y el ${i} usan el mismo motor, y el ${i + 1} falla más (${ahora.ruido} contra ${antes.ruido})`
+      );
+    }
+  }
+  assert.strictEqual(niveles[4].ruido, 0, "el nivel máximo no debería fallar a propósito");
+  assert.strictEqual(niveles[0].memoria, false, "el nivel mínimo se distingue por no recordar");
+  assert.strictEqual(ESCALA.length, 5, "el cliente pinta cinco peldaños");
+});
+
+prueba("un nivel inválido cae al de por defecto en vez de romper", () => {
+  // Llega del WebSocket, así que puede venir cualquier cosa.
+  for (const malo of [0, 6, -1, 2.5, NaN, "tres", null, undefined, {}]) {
+    const n = nivelValido(malo);
+    assert.ok(NIVELES[n], `${JSON.stringify(malo)} dio ${n}, que no es un nivel`);
+  }
+  assert.strictEqual(nivelValido(3), 3, "un nivel bueno se respeta");
+});
+
+prueba("el bot de nivel 1 no mira los rangos revelados", () => {
+  // El nivel 1 se define por no tener memoria. Si la vista sin memoria se
+  // rompiera, el nivel más fácil jugaría como los demás y nadie lo notaría.
+  const e = estadoVacio();
+  const mio = colocar(e, "rojo", 5, "H4");
+  const suyo = colocar(e, "verde", 9, "H3");
+  e.rangosRevelados = { [suyo.id]: 9 };
+  const sembrado = (semilla) => { let a = semilla >>> 0; return () => { a = (a + 0x6d2b79f5) >>> 0; let x = a; x = Math.imul(x ^ (x >>> 15), x | 1); x ^= x + Math.imul(x ^ (x >>> 7), x | 61); return ((x ^ (x >>> 14)) >>> 0) / 4294967296; }; };
+  // Con memoria sabe que H3 es el mariscal y no ataca; sin memoria, a veces sí.
+  let ataquesSinMemoria = 0;
+  let ataquesConMemoria = 0;
+  for (let i = 0; i < 200; i++) {
+    const a = jugadaDeBot(e, "rojo", 1, {}, sembrado(i + 1));
+    const b = jugadaDeBot(e, "rojo", 2, {}, sembrado(i + 1));
+    if (a && a.tipo === "atacar" && a.hasta === "H3") ataquesSinMemoria++;
+    if (b && b.tipo === "atacar" && b.hasta === "H3") ataquesConMemoria++;
+  }
+  assert.ok(
+    ataquesSinMemoria > ataquesConMemoria,
+    `sin memoria atacó ${ataquesSinMemoria} veces al mariscal fichado y con memoria ${ataquesConMemoria}: ` +
+      `el nivel 1 debería estrellarse más`
+  );
 });
 
 console.log(`\n${pasadas} pruebas superadas, ${fallidas} fallidas\n`);

@@ -392,6 +392,42 @@ function VentanaCombate({ combate, quedan, onCerrar }) {
   );
 }
 
+// La escala de dificultad. Se repite aquí en vez de importarla de
+// `src/motor/dificultad.js` porque ese módulo lo carga el servidor y no conviene
+// arrastrar sus dependencias al paquete del navegador; los nombres son texto de
+// presentación y el servidor valida el número igualmente.
+const ESCALA_DIFICULTAD = [
+  { nivel: 1, nombre: "Recluta", descripcion: "No recuerda lo que ha visto en combate y se despista mucho." },
+  { nivel: 2, nombre: "Veterano", descripcion: "Recuerda los rangos revelados, pero juega de heurística y falla a menudo." },
+  { nivel: 3, nombre: "Oficial", descripcion: "Usa la red entrenada y despliega con ella, aunque se equivoca la mitad de las veces." },
+  { nivel: 4, nombre: "Coronel", descripcion: "La red entrenada con pocos despistes." },
+  { nivel: 5, nombre: "Mariscal", descripcion: "Todo lo que sabe, sin un solo fallo deliberado." },
+];
+
+// Selector de dificultad de un bot. Se puede cambiar también en mitad de la
+// partida: sirve para bajarle los humos a uno que está arrasando.
+function SelectorDeNivel({ nivel, onCambio }) {
+  const actual = ESCALA_DIFICULTAD.find((n) => n.nivel === nivel) || ESCALA_DIFICULTAD[3];
+  return (
+    <label
+      title={`${actual.nombre}: ${actual.descripcion}`}
+      style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 11, color: LATON_CLARO }}
+    >
+      <input
+        type="range"
+        min={1}
+        max={5}
+        step={1}
+        value={nivel}
+        onChange={(e) => onCambio(Number(e.target.value))}
+        style={{ width: 76, accentColor: LATON_CLARO }}
+        aria-label="Dificultad del bot"
+      />
+      <span style={{ minWidth: 62, fontVariantNumeric: "tabular-nums" }}>{nivel} · {actual.nombre}</span>
+    </label>
+  );
+}
+
 export default function App() {
   const [yo, setYo] = useState(null);
   const [nombreBorrador, setNombreBorrador] = useState("");
@@ -882,6 +918,18 @@ export default function App() {
                       </span>
                       {soyAnfitrion && !sala.puestos[c] && (
                         <Boton variante="secundario" onClick={() => enviar({ tipo: "bot", sala: salaId, color: c })}>Bot</Boton>
+                      )}
+                      {sala.puestos[c] && sala.puestos[c].tipo === "bot" && (
+                        soyAnfitrion ? (
+                          <SelectorDeNivel
+                            nivel={sala.puestos[c].nivel || 4}
+                            onCambio={(n) => enviar({ tipo: "nivel", sala: salaId, color: c, nivel: n })}
+                          />
+                        ) : (
+                          <span style={{ fontSize: 11, color: LATON_CLARO }}>
+                            nivel {sala.puestos[c].nivel || 4}
+                          </span>
+                        )
                       )}
                       {soyAnfitrion && sala.puestos[c] && sala.puestos[c].tipo === "bot" && (
                         <Boton variante="peligro" onClick={() => enviar({ tipo: "librar", sala: salaId, color: c })}>Quitar</Boton>

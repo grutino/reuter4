@@ -17,7 +17,8 @@ import {
   validarDespliegue,
 } from "../src/motor/motor.js";
 import { accionDeBot, decisionDeRecogida, despliegueAleatorio } from "../src/motor/bot.js";
-import { accionConRed, despliegueGuiado, cargarModelos } from "../src/motor/bot-red.js";
+import { jugadaDeBot, despliegueDeBot, cargarModelos } from "../src/motor/bot-red.js";
+import { NIVEL_POR_DEFECTO, nivelValido, ESCALA } from "../src/motor/dificultad.js";
 
 const RAIZ = path.dirname(fileURLToPath(import.meta.url));
 
@@ -28,12 +29,17 @@ const RAIZ = path.dirname(fileURLToPath(import.meta.url));
 const MODELOS = cargarModelos();
 for (const nota of MODELOS.notas) console.log(`  red de ${nota}`);
 
+// El nivel de un puesto. Un humano que se desconecta y pasa a automático juega
+// al máximo: no tendría sentido que su ejército empeorara por ausentarse.
+function nivelDe(sala, color) {
+  const puesto = sala.puestos[color];
+  return puesto && puesto.tipo === "bot" ? nivelValido(puesto.nivel) : 5;
+}
+
 // Cómo despliega y cómo mueve un bot. Un solo sitio, para que la partida real y
 // lo que se mide en el entrenamiento sean lo mismo.
-const desplegarBot = (color) =>
-  MODELOS.despliegue ? despliegueGuiado(color, Math.random, MODELOS.despliegue, 30, 200) : despliegueAleatorio(color);
-const moverBot = (estado, color) =>
-  MODELOS.jugada ? accionConRed(estado, color, MODELOS.jugada, { candidatas: 12 }) : accionDeBot(estado, color);
+const desplegarBot = (sala, color) => despliegueDeBot(color, nivelDe(sala, color), MODELOS);
+const moverBot = (sala, estado, color) => jugadaDeBot(estado, color, nivelDe(sala, color), MODELOS);
 const ESTATICO = path.join(RAIZ, "..", "dist");
 const PUERTO = process.env.PORT || 8080;
 const FICHERO_ESTADO = process.env.R4_ESTADO || path.join(RAIZ, "salas.json");
@@ -167,7 +173,7 @@ setInterval(() => {
     if (sala.fase === "desplegando") {
       for (const color of COLORES) {
         if (esAutomatico(sala, color) && !sala.despliegues[color]) {
-          sala.despliegues[color] = desplegarBot(color);
+          sala.despliegues[color] = desplegarBot(sala, color);
           cambios = true;
         }
       }
@@ -194,7 +200,7 @@ setInterval(() => {
       } else {
         const turno = sala.estado.turno;
         if (!esAutomatico(sala, turno)) continue;
-        const accion = moverBot(sala.estado, turno);
+        const accion = moverBot(sala, sala.estado, turno);
         if (!accion) continue;
         sala.estado = resolverPendientesDeBots(sala, aplicar(sala.estado, accion));
       }
@@ -316,13 +322,24 @@ wss.on("connection", (socket) => {
       return repartir();
     }
 
+    if (mensaje.tipo === "nivel") {
+      if (sala.anfitrion !== sesion.id) return error(socket, "Solo el anfitrión puede hacer eso.");
+      const puesto = sala.puestos[mensaje.color];
+      if (!puesto || puesto.tipo !== "bot") return error(socket, "Ahí no hay ningún bot.");
+      // Se puede cambiar en cualquier momento, también en mitad de la partida:
+      // sirve para bajarle los humos a un bot que está arrasando.
+      puesto.nivel = nivelValido(mensaje.nivel);
+      sala.actualizada = Date.now();
+      return repartir();
+    }
+
     if (mensaje.tipo === "bot" || mensaje.tipo === "librar" || mensaje.tipo === "empezar") {
       if (sala.anfitrion !== sesion.id) return error(socket, "Solo el anfitrión puede hacer eso.");
       if (mensaje.tipo === "bot" && !sala.puestos[mensaje.color]) {
         const usados = COLORES.map((c) => sala.puestos[c]).filter(Boolean).map((p) => p.nombre);
         const nombres = ["Ney", "Davout", "Murat", "Soult", "Masséna", "Lannes"];
         const libre = nombres.find((n) => !usados.includes(`Mariscal ${n}`)) || "Bonaparte";
-        sala.puestos[mensaje.color] = { tipo: "bot", id: idAleatorio("b"), nombre: `Mariscal ${libre}` };
+        sala.puestos[mensaje.color] = { tipo: "bot", id: idAleatorio("b"), nombre: `Mariscal ${libre}`, nivel: nivelValido(mensaje.nivel ?? NIVEL_POR_DEFECTO) };
       }
       if (mensaje.tipo === "librar" && sala.puestos[mensaje.color] && sala.puestos[mensaje.color].tipo === "bot") {
         sala.puestos[mensaje.color] = null;
