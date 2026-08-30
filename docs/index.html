@@ -46,6 +46,22 @@
 Una elige la posición inicial y otra decide cada jugada. <b>La medida que manda es la última:
 victorias contra la heurística escrita a mano</b>; lo demás es diagnóstico.</p>
 <section>
+      <h2>Coevolución</h2>
+      <p class="sub">Las dos redes juegan entre ellas y se reentrenan con esas partidas. Se miden
+      contra el panel de aperturas humanas, que no cambia: las redes pueden derivar hacia
+      adaptarse la una a la otra, y la vara externa es lo que impide confundir eso con mejorar.
+      Una ronda solo se adopta si sube contra el panel.</p>
+      <dl class="fichas"><div class="ficha"><dt>mejor contra el panel</dt><dd>48%</dd></div><div class="ficha"><dt>rondas</dt><dd>1</dd></div><div class="ficha"><dt>adoptadas</dt><dd>0<small> de 1</small></dd></div><div class="ficha"><dt>partidas por ronda</dt><dd>40</dd></div><div class="ficha"><dt>tiempo</dt><dd>1 min</dd></div></dl>
+      <figure><figcaption>Verde: la mejor marca conservada. Azul: lo que midió cada ronda, adoptada o no.</figcaption><div class="lienzo"><svg viewBox="0 0 700 190" role="img"><g><line x1="50" y1="164" x2="686" y2="164" stroke="var(--filo)" opacity=".45"/>
+        <text x="43" y="167.5" fill="var(--tenue)" font-size="10" text-anchor="end" font-family="'IBM Plex Mono',monospace">0%</text><line x1="50" y1="126.5" x2="686" y2="126.5" stroke="var(--filo)" opacity=".45"/>
+        <text x="43" y="130" fill="var(--tenue)" font-size="10" text-anchor="end" font-family="'IBM Plex Mono',monospace">25%</text><line x1="50" y1="89" x2="686" y2="89" stroke="var(--filo)" opacity=".45"/>
+        <text x="43" y="92.5" fill="var(--tenue)" font-size="10" text-anchor="end" font-family="'IBM Plex Mono',monospace">50%</text><line x1="50" y1="51.5" x2="686" y2="51.5" stroke="var(--filo)" opacity=".45"/>
+        <text x="43" y="55" fill="var(--tenue)" font-size="10" text-anchor="end" font-family="'IBM Plex Mono',monospace">75%</text><line x1="50" y1="14" x2="686" y2="14" stroke="var(--filo)" opacity=".45"/>
+        <text x="43" y="17.5" fill="var(--tenue)" font-size="10" text-anchor="end" font-family="'IBM Plex Mono',monospace">100%</text></g><path d="M50.0,91.4 L686.0,91.4" fill="none" stroke="var(--bien)" stroke-width="2"  stroke-linejoin="round"/><rect x="56" y="14" width="10" height="3" fill="var(--bien)"/>
+      <text x="71" y="18" fill="var(--tenue)" font-size="11" font-family="'IBM Plex Mono',monospace">mejor contra el panel</text><rect x="204" y="14" width="10" height="3" fill="var(--dato)"/>
+      <text x="219" y="18" fill="var(--tenue)" font-size="11" font-family="'IBM Plex Mono',monospace">medido esta ronda</text>
+    <text x="686" y="184" fill="var(--tenue)" font-size="10" text-anchor="end" font-family="'IBM Plex Mono',monospace">ronda</text></svg></div></figure>
+    </section><section>
     <h2>Evaluador de jugadas</h2>
     <p class="sub">Decide qué jugada hacer. Ve la posición y la jugada en sí, y estima la probabilidad de acabar ganando. Cada ronda genera partidas nuevas jugando con la red de la ronda anterior y reentrena desde cero.</p>
     <dl class="fichas"><div class="ficha"><dt>victorias en juego</dt><dd>68% <small>±4</small></dd></div><div class="ficha"><dt>pérdida validación</dt><dd>0.6535</dd></div><div class="ficha"><dt>acierto</dt><dd>64%</dd></div><div class="ficha"><dt>entradas</dt><dd>61</dd></div></dl>
@@ -126,22 +142,22 @@ victorias contra la heurística escrita a mano</b>; lo demás es diagnóstico.</
         </svg></div></figure>
     <figure><figcaption>Qué mira: efecto de cada rasgo sobre la predicción.</figcaption><div class="lienzo"><svg viewBox="0 0 700 304" role="img"><text x="264" y="15" fill="var(--apagado)" font-size="11.5" text-anchor="end" font-family="'IBM Plex Mono',monospace">conjunto rangoDeLaBandera</text>
         <rect x="272" y="6" width="300.0" height="11" rx="1.5" fill="var(--bien)"/><text x="264" y="36" fill="var(--apagado)" font-size="11.5" text-anchor="end" font-family="'IBM Plex Mono',monospace">6 Capitán lateral</text>
-        <rect x="272" y="27" width="247.3" height="11" rx="1.5" fill="var(--mal)"/><text x="264" y="57" fill="var(--apagado)" font-size="11.5" text-anchor="end" font-family="'IBM Plex Mono',monospace">6 Capitán cercaDeTiro</text>
-        <rect x="272" y="48" width="240.2" height="11" rx="1.5" fill="var(--bien)"/><text x="264" y="78" fill="var(--apagado)" font-size="11.5" text-anchor="end" font-family="'IBM Plex Mono',monospace">5 Teniente enElBorde</text>
-        <rect x="272" y="69" width="198.8" height="11" rx="1.5" fill="var(--bien)"/><text x="264" y="99" fill="var(--apagado)" font-size="11.5" text-anchor="end" font-family="'IBM Plex Mono',monospace">5 Teniente lateral</text>
-        <rect x="272" y="90" width="157.4" height="11" rx="1.5" fill="var(--bien)"/><text x="264" y="120" fill="var(--apagado)" font-size="11.5" text-anchor="end" font-family="'IBM Plex Mono',monospace">6 Capitán juntoAReclutamiento</text>
-        <rect x="272" y="111" width="138.6" height="11" rx="1.5" fill="var(--bien)"/><text x="264" y="141" fill="var(--apagado)" font-size="11.5" text-anchor="end" font-family="'IBM Plex Mono',monospace">3 Explorador cercaDeTiro</text>
-        <rect x="272" y="132" width="130.9" height="11" rx="1.5" fill="var(--mal)"/><text x="264" y="162" fill="var(--apagado)" font-size="11.5" text-anchor="end" font-family="'IBM Plex Mono',monospace">1 Cañón cercaDeTiro</text>
-        <rect x="272" y="153" width="117.2" height="11" rx="1.5" fill="var(--bien)"/><text x="264" y="183" fill="var(--apagado)" font-size="11.5" text-anchor="end" font-family="'IBM Plex Mono',monospace">1 Cañón avance</text>
-        <rect x="272" y="174" width="113.0" height="11" rx="1.5" fill="var(--bien)"/><text x="264" y="204" fill="var(--apagado)" font-size="11.5" text-anchor="end" font-family="'IBM Plex Mono',monospace">8 General avance</text>
-        <rect x="272" y="195" width="109.2" height="11" rx="1.5" fill="var(--bien)"/><text x="264" y="225" fill="var(--apagado)" font-size="11.5" text-anchor="end" font-family="'IBM Plex Mono',monospace">1 Cañón enElBorde</text>
-        <rect x="272" y="216" width="106.6" height="11" rx="1.5" fill="var(--mal)"/><text x="264" y="246" fill="var(--apagado)" font-size="11.5" text-anchor="end" font-family="'IBM Plex Mono',monospace">7 Comandante enElBorde</text>
-        <rect x="272" y="237" width="103.1" height="11" rx="1.5" fill="var(--mal)"/><text x="264" y="267" fill="var(--apagado)" font-size="11.5" text-anchor="end" font-family="'IBM Plex Mono',monospace">1 Cañón juntoABandera</text>
-        <rect x="272" y="258" width="100.2" height="11" rx="1.5" fill="var(--mal)"/><text x="264" y="288" fill="var(--apagado)" font-size="11.5" text-anchor="end" font-family="'IBM Plex Mono',monospace">7 Comandante avance</text>
-        <rect x="272" y="279" width="100.0" height="11" rx="1.5" fill="var(--mal)"/></svg></div></figure>
+        <rect x="272" y="27" width="249.3" height="11" rx="1.5" fill="var(--mal)"/><text x="264" y="57" fill="var(--apagado)" font-size="11.5" text-anchor="end" font-family="'IBM Plex Mono',monospace">6 Capitán cercaDeTiro</text>
+        <rect x="272" y="48" width="240.7" height="11" rx="1.5" fill="var(--bien)"/><text x="264" y="78" fill="var(--apagado)" font-size="11.5" text-anchor="end" font-family="'IBM Plex Mono',monospace">5 Teniente enElBorde</text>
+        <rect x="272" y="69" width="199.4" height="11" rx="1.5" fill="var(--bien)"/><text x="264" y="99" fill="var(--apagado)" font-size="11.5" text-anchor="end" font-family="'IBM Plex Mono',monospace">5 Teniente lateral</text>
+        <rect x="272" y="90" width="157.7" height="11" rx="1.5" fill="var(--bien)"/><text x="264" y="120" fill="var(--apagado)" font-size="11.5" text-anchor="end" font-family="'IBM Plex Mono',monospace">6 Capitán juntoAReclutamiento</text>
+        <rect x="272" y="111" width="139.7" height="11" rx="1.5" fill="var(--bien)"/><text x="264" y="141" fill="var(--apagado)" font-size="11.5" text-anchor="end" font-family="'IBM Plex Mono',monospace">3 Explorador cercaDeTiro</text>
+        <rect x="272" y="132" width="131.2" height="11" rx="1.5" fill="var(--mal)"/><text x="264" y="162" fill="var(--apagado)" font-size="11.5" text-anchor="end" font-family="'IBM Plex Mono',monospace">1 Cañón cercaDeTiro</text>
+        <rect x="272" y="153" width="117.1" height="11" rx="1.5" fill="var(--bien)"/><text x="264" y="183" fill="var(--apagado)" font-size="11.5" text-anchor="end" font-family="'IBM Plex Mono',monospace">1 Cañón avance</text>
+        <rect x="272" y="174" width="113.2" height="11" rx="1.5" fill="var(--bien)"/><text x="264" y="204" fill="var(--apagado)" font-size="11.5" text-anchor="end" font-family="'IBM Plex Mono',monospace">8 General avance</text>
+        <rect x="272" y="195" width="109.4" height="11" rx="1.5" fill="var(--bien)"/><text x="264" y="225" fill="var(--apagado)" font-size="11.5" text-anchor="end" font-family="'IBM Plex Mono',monospace">1 Cañón enElBorde</text>
+        <rect x="272" y="216" width="106.5" height="11" rx="1.5" fill="var(--mal)"/><text x="264" y="246" fill="var(--apagado)" font-size="11.5" text-anchor="end" font-family="'IBM Plex Mono',monospace">7 Comandante enElBorde</text>
+        <rect x="272" y="237" width="104.9" height="11" rx="1.5" fill="var(--mal)"/><text x="264" y="267" fill="var(--apagado)" font-size="11.5" text-anchor="end" font-family="'IBM Plex Mono',monospace">7 Comandante avance</text>
+        <rect x="272" y="258" width="100.7" height="11" rx="1.5" fill="var(--mal)"/><text x="264" y="288" fill="var(--apagado)" font-size="11.5" text-anchor="end" font-family="'IBM Plex Mono',monospace">1 Cañón juntoABandera</text>
+        <rect x="272" y="279" width="99.8" height="11" rx="1.5" fill="var(--mal)"/></svg></div></figure>
     <div class="nota"><p><b>Un aviso sobre la pérdida:</b> apenas se despega de 0,693, que es adivinar a ciegas, y aun así en juego gana el 75%. No es contradictorio: el resultado de una partida depende de los cuatro despliegues y de todo lo jugado después, así que casi toda la varianza es irreducible. La red tiene una señal débil pero bien ordenada, y elegir el mejor de cuarenta candidatos la amplifica.</p></div>
   </section>
-<footer>Generado el 30/8/2026, 19:18:57 · <a href="https://github.com/grutino/reuter4">github.com/grutino/reuter4</a><br>
+<footer>Generado el 30/8/2026, 19:37:33 · <a href="https://github.com/grutino/reuter4">github.com/grutino/reuter4</a><br>
 Motor propio sin dependencias. La red se entrena y se ejecuta en JavaScript.</footer>
 </div>
 </body></html>

@@ -18,7 +18,8 @@
     "revisar": "node entrenamiento/revisar-pesos.mjs",
     "mirar": "node entrenamiento/mirar.mjs",
     "informe-redes": "node entrenamiento/informe-redes.mjs",
-    "panel": "node entrenamiento/medir-panel.mjs"
+    "panel": "node entrenamiento/medir-panel.mjs",
+    "coevolucion": "node entrenamiento/coevolucion.mjs"
   },
   "dependencies": {
     "react": "^18.3.1",

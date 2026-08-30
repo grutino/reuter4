@@ -184,8 +184,38 @@ function bloqueRed({ titulo, resumen, curva, calib, capas, victorias, error, per
   </section>`;
 }
 
-export function construir({ despliegue, jugada, sensibilidadDespliegue }) {
+export function construir({ despliegue, jugada, coevolucion, sensibilidadDespliegue }) {
   const bloques = [];
+
+  if (coevolucion && coevolucion.historia && coevolucion.historia.length > 1) {
+    const h = coevolucion.historia;
+    const ultima = h[h.length - 1];
+    const adoptadas = h.filter((r) => r.adoptadas).length;
+    const curva = lineas({
+      series: [
+        { nombre: "mejor contra el panel", color: "var(--bien)", puntos: h.map((r) => ({ x: r.ronda, y: r.panel })) },
+        { nombre: "medido esta ronda", color: "var(--dato)", grosor: 1.5, puntos: h.filter((r) => r.medida !== undefined).map((r) => ({ x: r.ronda, y: r.medida })) },
+      ],
+      min: 0, max: 1, formato: (v) => `${Math.round(v * 100)}%`, etiquetaX: "ronda", alto: 190,
+    });
+    const fichas = [
+      ["mejor contra el panel", pct(Math.max(...h.map((r) => r.panel)))],
+      ["rondas", h.length - 1],
+      ["adoptadas", `${adoptadas}<small> de ${h.length - 1}</small>`],
+      ["partidas por ronda", coevolucion.opciones ? coevolucion.opciones.partidas : "—"],
+      ["tiempo", ultima.segundos !== undefined ? `${Math.round(ultima.segundos / 60)} min` : "—"],
+    ].map(([k, v]) => `<div class="ficha"><dt>${esc(k)}</dt><dd>${v}</dd></div>`).join("");
+
+    bloques.push(`<section>
+      <h2>Coevolución</h2>
+      <p class="sub">Las dos redes juegan entre ellas y se reentrenan con esas partidas. Se miden
+      contra el panel de aperturas humanas, que no cambia: las redes pueden derivar hacia
+      adaptarse la una a la otra, y la vara externa es lo que impide confundir eso con mejorar.
+      Una ronda solo se adopta si sube contra el panel.</p>
+      <dl class="fichas">${fichas}</dl>
+      ${curva ? `<figure><figcaption>Verde: la mejor marca conservada. Azul: lo que midió cada ronda, adoptada o no.</figcaption><div class="lienzo">${curva}</div></figure>` : ""}
+    </section>`);
+  }
 
   if (jugada) {
     const rondas = jugada.rondas || [];
@@ -310,6 +340,31 @@ ${bloques.join("")}
 Motor propio sin dependencias. La red se entrena y se ejecuta en JavaScript.</footer>
 </div>
 </body></html>`;
+}
+
+// Rehace el informe leyendo lo que haya en modelos/. La llama tanto el guion
+// suelto como el bucle de coevolución después de cada ronda.
+export async function generarInforme() {
+  const despliegue = leer("red-despliegue.json");
+  const jugada = leer("red-jugada.json");
+  const coevolucion = leer("coevolucion.json");
+  let sensibilidad = null;
+  if (despliegue && despliegue.red) {
+    try {
+      const { sensibilidadDeLaRed } = await import("./interpretar.mjs");
+      const { desdeObjeto } = await import("./red.mjs");
+      const { nombreDeRasgo } = await import("./rasgos-despliegue.mjs");
+      sensibilidad = sensibilidadDeLaRed(desdeObjeto(despliegue.red), 200).map((s) => ({
+        nombre: nombreDeRasgo(s.indice).replace(" · ", " "),
+        efecto: s.efecto,
+      }));
+    } catch (e) {
+      sensibilidad = null; // la sensibilidad es accesoria; el informe sigue
+    }
+  }
+  fs.mkdirSync(path.dirname(DESTINO), { recursive: true });
+  fs.writeFileSync(DESTINO, construir({ despliegue, jugada, coevolucion, sensibilidadDespliegue: sensibilidad }));
+  return DESTINO;
 }
 
 if (process.argv[1] && process.argv[1].endsWith("informe-redes.mjs")) {
