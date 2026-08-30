@@ -130,12 +130,27 @@ fuerte que comparar decisiones, que depende de los pesos que tenga la red ese d�
 
 Tres cosas que conviene tener claras antes de tocar nada de esto:
 
-- **La torre se bate, pero solo desde cuatro sitios.** `rayo` corta al llegar al castillo y
-  devuelve `ANILLO`, así que la torre no sale por ahí y el motor la trata aparte: la baten un
-  cañón en el propio anillo, o uno en una de las cuatro casillas **alineadas** con ella a dos
-  pasos (`BATEN_LA_TORRE` = F8, H6, H10, J8). Las otras ocho que tocan el anillo —las
-  esquinas— no valen. Y si hay alguien en el anillo, la bala se lo lleva a él: es la primera
-  pieza de la línea, como en cualquier otro tiro.
+- **Cómo se ataca la torre.** Cuerpo a cuerpo, desde el anillo, y eso ya sale solo porque
+  `ADYACENTES[ANILLO]` incluye `TORRE`. Con cañón, desde las **doce** casillas que rodean el
+  castillo (`BATEN_LA_TORRE`), que es **adyacencia y no línea de tiro**: G6 está pegada al
+  castillo pero su recta hacia el sur solo encuentra G7, G8 y G9, que son celdas del anillo,
+  nunca la torre. La bala pasa por encima del anillo, así que da igual quién lo ocupe. Por eso
+  el motor genera este tiro aparte de `rayo`, que corta al llegar al castillo y no devuelve
+  `TORRE` nunca. Un cañón metido en el anillo no puede atacar la torre: no está en las doce y
+  tampoco combate cuerpo a cuerpo.
+- **El tiro a la torre es legal pero los bots no lo ejecutan nunca.** Medido: en 17.213 turnos,
+  un jugador tuvo un cañón en una de las doce casillas solo 2 veces, y ninguna con la torre
+  ocupada, aunque la torre lo está el 12,8% de los turnos. Es geometría: ninguna casilla de
+  despliegue está a menos de **tres** pasos de las doce (están a 3, 4 o 5), y un cañón es rango
+  1, mueve una casilla por turno y pierde todo cuerpo a cuerpo. Batir el anillo sí es
+  alcanzable —hay casillas de despliegue a un solo paso de una posición de tiro al anillo—;
+  batir la torre exige sobrevivir un paseo por la zona más disputada. Subir el peso general de
+  posicionamiento NO es la salida: eso ya costó bajar del 52% al 37%. La vía realista es que la
+  red de despliegue aprenda a nacer cerca y la de jugada aprenda el momento.
+- **Ojo con el modelo del castillo al leer las reglas.** Sobre el tablero de verdad el anillo
+  son ocho celdas (G7 H7 I7 G8 I8 G9 H9 I9) y la torre es H8; aquí el anillo es UNA
+  pseudocasilla. Una regla enunciada como "desde estas ocho casillas" se traduce a "desde
+  `ANILLO`".
 - **Una bandera solo la corona una pieza de su propio color.** Subir a la torre con la bandera
   de otro color no termina la partida: te quedas ahí ocupando el sitio. Lo del equipo es aparte
   y no cambia — cuando el compañero corona SU bandera, ganan los dos.

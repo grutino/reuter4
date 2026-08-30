@@ -255,8 +255,15 @@ export function analizarTurno(estado, color, distancias, misAcciones = null) {
   const tapanElAnillo = new Set();
   for (const linea of lineasAlAnillo) for (const c of linea.intermedias) tapanElAnillo.add(c);
 
+  // ¿Hay un enemigo instalado en la torre? Mientras esté, nadie del equipo puede
+  // coronar, y solo se le saca de ahí atacándole desde el anillo o con un cañón
+  // desde las doce casillas del castillo.
+  const enLaTorre = estado.tablero[TORRE] ? estado.piezas[estado.tablero[TORRE]] : null;
+  const blancoEnLaTorre = Boolean(enLaTorre && esEnemigo(color, enLaTorre.color));
+
   return {
     coronadorRival,
+    blancoEnLaTorre,
     lineasAlAnillo,
     // Casillas donde plantarse corta al menos una línea de tiro al anillo.
     tapanElAnillo,

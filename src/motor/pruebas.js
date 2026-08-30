@@ -1234,11 +1234,13 @@ prueba("los rasgos del castillo caen en la casilla que dice su nombre", () => {
 });
 
 
-prueba("la torre se bate desde el anillo y desde las cuatro casillas alineadas", () => {
-  // Las otras ocho que tocan el anillo son las esquinas: tocan, pero no están en
-  // línea con la torre. `rayo` no devuelve TORRE nunca -corta en el castillo-,
-  // así que este tiro lo genera el motor aparte y hay que vigilarlo.
-  const tiroALaTorre = (desde, anilloOcupado = false) => {
+prueba("un cañón bate la torre desde cualquiera de las doce casillas del castillo", () => {
+  // Es ADYACENCIA al castillo, no línea de tiro. Se ve con G6: pegada al
+  // castillo por arriba, pero en línea recta al sur solo encuentra G7, G8 y G9,
+  // que son celdas del anillo, nunca la torre. La bala pasa por encima.
+  // `rayo` no devuelve TORRE nunca, así que este tiro lo genera el motor aparte.
+  const DOCE = ["G6", "H6", "I6", "F7", "F8", "F9", "J7", "J8", "J9", "G10", "H10", "I10"];
+  const tiros = (desde, anilloOcupado = false) => {
     const e = estadoVacio();
     colocar(e, "rojo", 1, desde);
     colocar(e, "verde", 5, TORRE);
@@ -1246,21 +1248,34 @@ prueba("la torre se bate desde el anillo y desde las cuatro casillas alineadas",
     return movimientosLegales(e, "rojo").filter((a) => a.tipo === "disparar").map((a) => a.hasta);
   };
 
-  for (const desde of ["F8", "H6", "H10", "J8"]) {
-    assert.ok(tiroALaTorre(desde).includes(TORRE), `desde ${desde} debería batirse la torre`);
+  for (const desde of DOCE) {
+    assert.ok(tiros(desde).includes(TORRE), `desde ${desde} debería batirse la torre`);
   }
-  for (const esquina of ["F7", "F9", "G6", "I6", "G10", "I10", "J7", "J9"]) {
-    assert.ok(!tiroALaTorre(esquina).includes(TORRE), `desde la esquina ${esquina} NO debería batirse la torre`);
-  }
-  assert.ok(tiroALaTorre(ANILLO_T).includes(TORRE), "desde el propio anillo sí");
+  assert.deepStrictEqual([...BATEN_LA_TORRE].sort(), DOCE.slice().sort(), "la lista derivada cambió");
 
-  // Con el anillo ocupado la bala se queda en el anillo: es la primera pieza de
-  // la línea, igual que en cualquier otro tiro.
-  const conEstorbo = tiroALaTorre("H6", true);
-  assert.ok(!conEstorbo.includes(TORRE), "con el anillo ocupado no se alcanza la torre");
-  assert.ok(conEstorbo.includes(ANILLO_T), "y en cambio sí se bate a quien está en el anillo");
+  // El anillo ocupado no tapa: la bala pasa por encima, y batir al del anillo
+  // queda como una opción distinta que el bot puede preferir.
+  const conAlguienEnElAnillo = tiros("G6", true);
+  assert.ok(conAlguienEnElAnillo.includes(TORRE), "el anillo ocupado no tapa el tiro a la torre");
+  assert.ok(conAlguienEnElAnillo.includes(ANILLO_T), "y batir al del anillo sigue siendo posible");
 
-  assert.deepStrictEqual([...BATEN_LA_TORRE].sort(), ["F8", "H10", "H6", "J8"], "la lista derivada cambió");
+  // Un cañón metido en el anillo no tiene forma de atacar la torre: no bate
+  // desde ahí y no puede combatir cuerpo a cuerpo.
+  const e = estadoVacio();
+  colocar(e, "rojo", 1, ANILLO_T);
+  colocar(e, "verde", 5, TORRE);
+  const desdeElAnillo = movimientosLegales(e, "rojo").filter((a) => a.hasta === TORRE);
+  assert.deepStrictEqual(desdeElAnillo, [], "un cañón en el anillo no ataca la torre");
+});
+
+prueba("cualquier pieza ataca la torre desde el anillo, cuerpo a cuerpo", () => {
+  // Sobre el tablero de verdad el anillo son ocho celdas (G7 H7 I7 G8 I8 G9 H9
+  // I9) y la torre es H8; aquí el anillo es una sola pseudocasilla.
+  const e = estadoVacio();
+  colocar(e, "rojo", 5, ANILLO_T);
+  colocar(e, "verde", 4, TORRE);
+  const ataques = movimientosLegales(e, "rojo").filter((a) => a.tipo === "atacar" && a.hasta === TORRE);
+  assert.strictEqual(ataques.length, 1, "desde el anillo se ataca la torre");
 });
 
 prueba("no se dispara a un aliado en la torre", () => {

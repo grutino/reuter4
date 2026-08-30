@@ -160,29 +160,22 @@ export function rayo(desde, direccion, pasosMax = Infinity) {
 // toma el 98% de las veces- es que un cañón mueve UNA casilla por turno y de
 // media empieza a 6,6 pasos, así que llegar cuesta siete turnos de caminar en
 // línea recta hacia el sitio exacto. Sin un peso que se lo pida, no va nunca.
-// Desde dónde se bate la TORRE.
+// Desde dónde bate un cañón la TORRE: las doce casillas que rodean el castillo.
 //
-// La torre no es alcanzable en línea recta como una casilla normal: `rayo` corta
-// al llegar al castillo y devuelve ANILLO. Se bate desde el propio anillo, o
-// desde las cuatro casillas que están EN LÍNEA con el centro del castillo a dos
-// pasos. Las otras ocho que tocan el anillo -las esquinas- no valen, porque no
-// están alineadas con la torre.
+// NO es una regla de línea de tiro, es de adyacencia al castillo, y por eso hay
+// que tratarla aparte de `rayo`. Se ve claro con G6: está pegada al castillo por
+// arriba pero en línea recta hacia el sur solo encuentra G7, G8 y G9, que son
+// celdas del anillo — nunca la torre. Aun así bate la torre, porque la bala se
+// lanza por encima del anillo.
 //
-// Se deriva de la geometría en vez de escribir las cuatro a mano, para que
-// siga valiendo si algún día cambia el tablero.
-export const BATEN_LA_TORRE = (() => {
-  const huella = [...CASTILLO_HUELLA].map(coord);
-  const cx = (Math.min(...huella.map((p) => p[0])) + Math.max(...huella.map((p) => p[0]))) / 2;
-  const cf = (Math.min(...huella.map((p) => p[1])) + Math.max(...huella.map((p) => p[1]))) / 2;
-  const salida = new Set();
-  for (const casilla of ADYACENTES[ANILLO] || []) {
-    if (casilla === TORRE) continue;
-    const [c, f] = coord(casilla);
-    // Alineada: comparte columna o fila con el centro del castillo.
-    if (c === cx || f === cf) salida.add(casilla);
-  }
-  return salida;
-})();
+// El cuerpo a cuerpo es otra cosa y ya funciona solo: se ataca la torre desde el
+// anillo, y `ADYACENTES[ANILLO]` incluye `TORRE`. Un cañón no puede hacerlo
+// porque no combate cuerpo a cuerpo, así que un cañón metido en el anillo no
+// tiene forma de atacar la torre.
+//
+// Aquí el anillo es UNA pseudocasilla; sobre el tablero de verdad son las ocho
+// celdas G7 H7 I7 G8 I8 G9 H9 I9, y la torre es H8.
+export const BATEN_LA_TORRE = new Set((ADYACENTES[ANILLO] || []).filter((c) => c !== TORRE));
 
 export const BATEN_ANILLO = (() => {
   const salida = new Set();

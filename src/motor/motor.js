@@ -300,17 +300,18 @@ export function movimientosLegales(estado, color = estado.turno) {
       }
 
       // La TORRE, que no sale por `rayo` porque el castillo corta la línea.
-      // Se bate desde el propio anillo, o desde las cuatro casillas alineadas
-      // con ella a dos pasos; las esquinas de fuera del anillo no valen.
       //
-      // Si hay alguien en el anillo, la bala se lo lleva a él: es la primera
-      // pieza de la línea, igual que en cualquier otro tiro. Desde el anillo
-      // mismo no hay nada en medio.
-      const enElAnillo = pieza.casilla === ANILLO;
-      if (enElAnillo || BATEN_LA_TORRE.has(pieza.casilla)) {
+      // Es ADYACENCIA al castillo, no línea de tiro: la baten las doce casillas
+      // que lo rodean. Se ve con G6, pegada al castillo por arriba pero cuya
+      // recta hacia el sur solo encuentra G7, G8 y G9, que son celdas del
+      // anillo, nunca la torre. La bala pasa por encima del anillo, así que da
+      // igual quién lo ocupe, y batir al del anillo sigue siendo otra opción.
+      //
+      // Un cañón metido en el anillo no puede: no está en las doce y tampoco
+      // combate cuerpo a cuerpo.
+      if (BATEN_LA_TORRE.has(pieza.casilla)) {
         const enTorre = piezaEn(estado, TORRE);
-        const anilloDespejado = enElAnillo || !estado.tablero[ANILLO];
-        if (enTorre && anilloDespejado && !sonAliados(estado, enTorre.color, color)) {
+        if (enTorre && !sonAliados(estado, enTorre.color, color)) {
           acciones.push({ tipo: "disparar", pieza: pieza.id, desde: pieza.casilla, hasta: TORRE });
         }
       }

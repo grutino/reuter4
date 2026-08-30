@@ -211,6 +211,13 @@ export const PESOS_BASE = {
   canonEnPosicionDeTiro: 2.5,  // se planta en una de las 24 casillas que baten el anillo
   canonConLineaLibre: 2,       // y además la línea está despejada
   canonSeAcercaATiro: 0.5,     // factor por cada paso que se acerca a una de ellas
+  // Y cuando hay algo que batir, el cañón sí corre. Con los pesos de arriba, en
+  // 17.213 turnos medidos un cañón estuvo en una de las doce casillas que baten
+  // la torre solo 2 veces, y nunca con la torre ocupada: el tiro a la torre no
+  // llegó a ser legal ni una vez, aunque la torre está ocupada el 12,8% de los
+  // turnos. Subir el peso general no vale -eso es lo que costó la partida por
+  // tempo-, así que el empujón se condiciona a que haya blanco.
+  canonHaciaBlancoEnTorre: 9,  // factor por paso, solo con un enemigo en la torre
   // Tapar el tiro rival antes de que suba el compañero. Es la tarea defensiva
   // que faltaba entera: solo existía "no me metas TÚ en una línea de tiro".
   taparCanonAlAnillo: 40,
@@ -340,6 +347,12 @@ export function accionDeBot(estado, color, { pesos = PESOS_BASE, azar = Math.ran
         if (antes !== undefined && despues !== undefined && despues < antes) {
           nota += pesos.canonSeAcercaATiro * (antes - despues);
           apuntar("canonSeAcercaATiro");
+          // Con un enemigo instalado en la torre el viaje sí tiene premio, y
+          // además hay prisa: mientras siga ahí, nadie del equipo puede coronar.
+          if (analisis.blancoEnLaTorre) {
+            nota += pesos.canonHaciaBlancoEnTorre * (antes - despues);
+            apuntar("canonHaciaBlancoEnTorre");
+          }
         }
       }
 
