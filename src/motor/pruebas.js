@@ -514,6 +514,21 @@ prueba("la promoción por victorias sí reinicia el contador", () => {
   assert.strictEqual(tras.marcador.rojo, 0);
 });
 
+prueba("el cañón puede disparar aunque lleve la bandera", () => {
+  // Es una jugada real de mesa: el portador dispara al que se le acerca, se
+  // retira y suelta la bandera donde estaba. Cambia una pieza de rango 1 por
+  // una alta y da un vuelco a la partida, así que el motor tiene que
+  // permitirla aunque el portador esté limitado a un paso por turno.
+  const e = estadoVacio();
+  const canon = colocar(e, "rojo", 1, "H6", { bandera: true });
+  colocar(e, "verde", 9, "H4");
+  const disparo = accion(movimientosLegales(e), (a) => a.tipo === "disparar");
+  const tras = aplicar(e, disparo);
+  assert.ok(!tras.piezas[canon.id], "el cañón se retira tras disparar");
+  assert.strictEqual(tras.banderasSueltas["H6"], "rojo", "la bandera queda donde estaba el cañón");
+  assert.strictEqual(tras.marcador.rojo, 1, "el cañonazo cuenta como victoria");
+});
+
 console.log("\nRECOGER BANDERA");
 
 prueba("caer sobre una bandera suelta solo abre la decisión", () => {

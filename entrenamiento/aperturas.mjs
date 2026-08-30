@@ -115,6 +115,32 @@ export function aColocacion(rejilla, color) {
 // Intercambia unas cuantas parejas de piezas. Conserva el aire de la apertura
 // original y cambia lo justo para que el banco de pruebas no sea siempre igual.
 
+// Espejo izquierda-derecha. No es una variación al azar: conserva la estructura
+// entera y solo la refleja, así que sirve para comprobar si un modelo aprendió
+// la idea o se aprendió un lado del tablero.
+export function espejo(rejilla) {
+  return rejilla.map((p) => ({ ...p, columna: COLUMNAS + 1 - p.columna }));
+}
+
+// Niveles de variación, de rozar la original a no quedar casi nada de ella.
+// Hacen falta los dos extremos: con solo cambios pequeños el modelo nunca ve
+// posiciones malas y no aprende a distinguirlas; con solo grandes, todo le
+// parece ruido y no afina dentro del rango bueno.
+export const NIVELES = {
+  minima: 1,
+  pequena: 3,
+  media: 7,
+  grande: 14,
+  enorme: 25,
+};
+
+export function variarPorNivel(rejilla, nivel, azar) {
+  if (nivel === "espejo") return espejo(rejilla);
+  const cambios = NIVELES[nivel];
+  if (cambios === undefined) throw new Error(`nivel de variación desconocido: ${nivel}`);
+  return variar(rejilla, cambios, azar);
+}
+
 export function variar(rejilla, cambios, azar) {
   const copia = rejilla.map((p) => ({ ...p }));
   for (let i = 0; i < cambios; i++) {
@@ -227,4 +253,52 @@ export function aTexto(rejilla) {
 
 export function informeDeRecomendaciones(rejilla) {
   return NOMBRES_RECOMENDACIONES.map((n) => ({ nombre: n, cumple: RECOMENDACIONES[n](rejilla) }));
+}
+
+
+// --- Fuente de despliegues para entrenar --------------------------------------
+// Mezcla de dónde salen las posiciones con las que se entrena. La red de
+// despliegue se entrenó al principio SOLO con posiciones al azar, así que nunca
+// vio una posición humana y no tenía con qué formar criterio en ese rango: toda
+// su discriminación estaba en distinguir un desastre de otro desastre.
+//
+// Con la mezcla ve el espectro entero -de lo bueno a lo malo pasando por todos
+// los grados- y puede ordenar dentro de él, que es lo que hace falta para que
+// acabe teniendo valoraciones propias y no solo "esto no es aleatorio".
+
+export const MEZCLA = [
+  { clase: "humana", peso: 0.20 },
+  { clase: "minima", peso: 0.12 },
+  { clase: "pequena", peso: 0.14 },
+  { clase: "media", peso: 0.14 },
+  { clase: "grande", peso: 0.12 },
+  { clase: "espejo", peso: 0.06 },
+  { clase: "guiada", peso: 0.10 },
+  { clase: "azar", peso: 0.12 },
+];
+
+export function fuenteDeDespliegues(humanas, despliegueAleatorio) {
+  const acumulado = [];
+  let suma = 0;
+  for (const m of MEZCLA) {
+    suma += m.peso;
+    acumulado.push({ clase: m.clase, hasta: suma });
+  }
+  const sinHumanas = !humanas || !humanas.length;
+
+  return function sacar(color, azar) {
+    const r = azar() * suma;
+    let clase = acumulado.find((a) => r <= a.hasta).clase;
+    // Sin aperturas humanas cargadas, todo lo que dependa de ellas cae al azar.
+    if (sinHumanas && clase !== "azar" && clase !== "guiada") clase = "azar";
+
+    if (clase === "azar") return { clase, colocacion: despliegueAleatorio(color, azar) };
+    if (clase === "guiada") {
+      const g = guiada(azar, 2 + Math.floor(azar() * 3), 120);
+      return { clase, colocacion: aColocacion(g.rejilla, color) };
+    }
+    const base = humanas[Math.floor(azar() * humanas.length)];
+    const rejilla = clase === "humana" ? base.rejilla : variarPorNivel(base.rejilla, clase, azar);
+    return { clase, colocacion: aColocacion(rejilla, color) };
+  };
 }

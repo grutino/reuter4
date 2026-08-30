@@ -21,6 +21,8 @@ import { configuracion, generador, repartoDeTablas } from "./arena.mjs";
 import { nuevaPartida, aplicar, reclutar, recogerLaBandera, renunciarARecoger } from "../src/motor/motor.js";
 import { accionDeBot, decisionDeRecogida } from "../src/motor/bot.js";
 import { rasgosDeDespliegue, TAMANO, nombreDeRasgo } from "./rasgos-despliegue.mjs";
+import { fuenteDeDespliegues } from "./aperturas.mjs";
+import { cargarAperturas } from "./panel.mjs";
 import { crearRed, entrenarLote, evaluar, aObjeto } from "./red.mjs";
 
 const AQUI = path.dirname(fileURLToPath(import.meta.url));
@@ -38,7 +40,14 @@ function opciones(argv) {
 
 // --- Datos -------------------------------------------------------------------
 
+// Los despliegues de entrenamiento salen ahora de la mezcla, no solo del azar.
+// Entrenada solo con posiciones aleatorias, la red no veía nunca una humana y
+// toda su discriminación estaba en distinguir un desastre de otro: no tenía con
+// qué formar criterio dentro del rango bueno.
 function generarDatos(partidas, semilla, limite) {
+  const humanas = cargarAperturas();
+  const sacar = fuenteDeDespliegues(humanas, despliegueAleatorio);
+  const porClase = {};
   const ejemplos = [];
   const base = configuracion({ pesos: PESOS_BASE });
   const porColor = Object.fromEntries(COLORES.map((c) => [c, base]));
@@ -48,7 +57,12 @@ function generarDatos(partidas, semilla, limite) {
   for (let i = 0; i < partidas; i++) {
     const semillaPartida = semilla + i * 7919;
     const azar = generador(semillaPartida);
-    const despliegues = Object.fromEntries(COLORES.map((c) => [c, despliegueAleatorio(c, azar)]));
+    const despliegues = {};
+    for (const c of COLORES) {
+      const s = sacar(c, azar);
+      despliegues[c] = s.colocacion;
+      porClase[s.clase] = (porClase[s.clase] || 0) + 1;
+    }
     const { estado } = jugarPartidaCon(despliegues, porColor, semillaPartida, limite);
 
     const fin = estado.fin;
@@ -65,12 +79,13 @@ function generarDatos(partidas, semilla, limite) {
       ejemplos.push({ entrada: rasgosDeDespliegue(color, despliegues[color]), objetivo: suyo });
     }
   }
-  return { ejemplos, ganadas, tablas };
+  return { ejemplos, ganadas, tablas, porClase };
 }
 
 // --- Despliegue guiado por la red --------------------------------------------
 
-export function despliegueGuiado(color, azar, red, candidatos = 40) {
+export function despliegueGuiado(color, azar, red, candidatos = 40, escalada = 250) {
+  // Primero, el mejor de unos cuantos al azar, como punto de partida.
   let mejor = null;
   let mejorNota = -Infinity;
   for (let i = 0; i < candidatos; i++) {
@@ -81,8 +96,44 @@ export function despliegueGuiado(color, azar, red, candidatos = 40) {
       mejor = propuesta;
     }
   }
-  return mejor;
+
+  // Y después, recocido: se proponen intercambios y se acepta el que mejora,
+  // pero también, con probabilidad decreciente, alguno que empeora.
+  //
+  // Con escalada pura -aceptando solo mejoras- la búsqueda se queda en el
+  // óptimo convencional más cercano y nunca llega a probar cosas raras: poner
+  // la bandera sobre un cañón, o sobre el espía. Esas jugadas parecen malas
+  // hasta que se ven en contexto, y son justo las que dan sorpresa. Para que el
+  // modelo pueda descubrirlas por su cuenta hay que dejarle bajar antes de
+  // subir. La casilla de la bandera se intercambia como cualquier otra, así que
+  // también decide qué rango la lleva.
+  const actual = mejor.map((p) => ({ ...p }));
+  let notaActual = mejorNota;
+  let mejorCopia = actual.map((p) => ({ ...p }));
+  for (let paso = 0; paso < escalada; paso++) {
+    const temperatura = 0.03 * (1 - paso / escalada); // se enfría hasta cero
+    const i = Math.floor(azar() * actual.length);
+    const j = Math.floor(azar() * actual.length);
+    if (i === j || actual[i].rango === actual[j].rango) continue;
+    const t = actual[i].rango;
+    actual[i].rango = actual[j].rango;
+    actual[j].rango = t;
+    const nota = evaluar(red, rasgosDeDespliegue(color, actual));
+    const salto = nota - notaActual;
+    if (salto > 0 || (temperatura > 0 && azar() < Math.exp(salto / temperatura))) {
+      notaActual = nota;
+      if (nota > mejorNota) {
+        mejorNota = nota;
+        mejorCopia = actual.map((p) => ({ ...p }));
+      }
+    } else {
+      actual[j].rango = actual[i].rango;
+      actual[i].rango = t;
+    }
+  }
+  return mejorCopia;
 }
+
 
 // --- Medida: ¿gana un despliegue elegido a uno al azar? ----------------------
 
@@ -103,7 +154,7 @@ function medirEnJuego(red, partidas, candidatos, limite, semillaBase) {
         // El equipo que "elige" alterna de bando para que el tablero no decida.
         const eligeLaRed = esEquipoA !== invertido;
         despliegues[color] = eligeLaRed
-          ? despliegueGuiado(color, azar, red, candidatos)
+          ? despliegueGuiado(color, azar, red, candidatos, 250)
           : despliegueAleatorio(color, azar);
       }
       const { estado } = jugarPartidaCon(despliegues, porColor, semilla, limite);
@@ -151,8 +202,10 @@ async function main() {
 
   console.log(`  Jugando ${o.partidas} partidas con despliegues al azar...`);
   const t0 = Date.now();
-  const { ejemplos, ganadas, tablas } = generarDatos(o.partidas, o.semilla, o.limite);
-  console.log(`  ${ejemplos.length} ejemplos en ${Math.round((Date.now() - t0) / 1000)}s · decididas ${ganadas} · tablas ${tablas}\n`);
+  const { ejemplos, ganadas, tablas, porClase } = generarDatos(o.partidas, o.semilla, o.limite);
+  console.log(`  ${ejemplos.length} ejemplos en ${Math.round((Date.now() - t0) / 1000)}s · decididas ${ganadas} · tablas ${tablas}`);
+  const total = Object.values(porClase).reduce((a, b) => a + b, 0) || 1;
+  console.log(`  de dónde salen: ${Object.entries(porClase).sort((a, b) => b[1] - a[1]).map(([k, v]) => `${k} ${Math.round((v / total) * 100)}%`).join(" · ")}\n`);
 
   // Un tercio se aparta y no se entrena con él: sin eso, una red con 45
   // entradas memoriza el ruido y la pérdida baja sin que aprenda nada útil.

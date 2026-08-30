@@ -1,0 +1,4 @@
+# apertura humana 11 de 11, pasadas por el jugador
+3 3 4 7 4 3 3
+6 6 4 . 2 5 6
+5 9 1 1 8 7 5
