@@ -27,6 +27,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { accionDeBot, accionDeBotClasico, decisionDeRecogida, despliegueAleatorio, DISTANCIA } from "./bot.js";
+import { peligroEn } from "./analisis.js";
 import { analizarTurno } from "./analisis.js";
 import { rasgosDeJugada, contextoDeTurno, NOMBRES as NOMBRES_RASGOS, TAMANO as TAMANO_JUGADA } from "./rasgos-jugada.js";
 import { cargarModelos, jugadaDeBot } from "./bot-red.js";
@@ -1488,6 +1489,10 @@ prueba("el informe reconstruye de qué rango era cada jugada", () => {
     historia.forEach((h, i) => {
       const duelo = (h.eventos || []).find((ev) => ev.tipo === "duelo");
       if (!duelo) return;
+      // Un recluta no se puede identificar -su rango no se publica- y también
+      // pelea. Cuando el replay dice null, no hay nada que comparar; lo que no
+      // puede pasar es que diga un rango DISTINTO del que publica el duelo.
+      if (rangos[i] === null) return;
       duelosComprobados++;
       assert.strictEqual(
         rangos[i], duelo.atacante.rango,
@@ -1495,16 +1500,90 @@ prueba("el informe reconstruye de qué rango era cada jugada", () => {
       );
     });
 
-    jugadasTotales += historia.length;
-    identificadasTotales += rangos.filter((r) => r).length;
+    // La afirmación exacta, en vez de un porcentaje a ojo: si en la partida NO
+    // ha reclutado nadie, todas las jugadas tienen que quedar identificadas. Un
+    // recluta es lo único irrecuperable -su rango no se publica- y sigue jugando
+    // el resto de la partida, así que en cuanto aparece uno, el porcentaje deja
+    // de significar nada.
+    // Solo cuentan las entradas que SON un movimiento: recoger una bandera o
+    // renunciar a ella son decisiones y no tienen origen, así que no hay rango
+    // que identificar. Esta prueba lo confundía y señalaba seis "fallos" que no
+    // lo eran; de paso destapó que el informe las renderizaba como
+    // "undefined va a undefined".
+    const huboReclutas = historia.some((h) => h.tipo === "reclutar");
+    const sinIdentificar = historia.filter((h, i) => h.desde && !rangos[i]).length;
+    if (!huboReclutas) {
+      assert.strictEqual(
+        sinIdentificar, 0,
+        `semilla ${semilla}: sin reclutamientos deberían identificarse todas, y faltan ${sinIdentificar}`
+      );
+    }
+
+    jugadasTotales += historia.filter((h) => h.desde).length;
+    identificadasTotales += historia.filter((h, i) => h.desde && rangos[i]).length;
   }
 
   assert.ok(duelosComprobados >= 8, `hacen falta duelos para comprobar nada; hubo ${duelosComprobados}`);
-  // Solo los reclutas se escapan: su rango no se publica.
   assert.ok(
-    identificadasTotales >= jugadasTotales * 0.9,
-    `solo se identificaron ${identificadasTotales} de ${jugadasTotales}: el replay pierde piezas`
+    identificadasTotales >= jugadasTotales * 0.6,
+    `solo se identificaron ${identificadasTotales} de ${jugadasTotales}: eso ya no lo explican los reclutas`
   );
+});
+
+
+prueba("la sospecha de cañón baja según van cayendo", () => {
+  // Un cañón no se revela JAMÁS: no sobrevive a un duelo y no se delata al
+  // moverse. Medido, 0 revelados en 7.335 turnos. Así que mirar solo
+  // `rangosRevelados` daba "quedan 2 de 2" toda la partida, incluso después de
+  // que el rival hubiera gastado los dos, y el portador de la bandera se quedaba
+  // esperando a un cañón que ya no existía.
+  //
+  // Las caídas SÍ son públicas: toda muerte publica el rango. Lo que no lo es,
+  // es qué rango recupera un reclutamiento, así que un recluta solo devuelve la
+  // POSIBILIDAD de cañón, y como mucho tantas veces como cañones hayan caído.
+  const escenario = (canonesCaidos, reclutas) => {
+    const e = estadoVacio();
+    colocar(e, "rojo", 5, "H6");
+    // H4 bate hacia el sur: la bala sobrevuela el lago de H5 y pasa por H6.
+    // (H5 y H11 son lagos, así que no vale poner piezas en cualquier sitio.)
+    for (const casilla of ["H4", "G4", "I4", "G2"]) colocar(e, "verde", 4, casilla);
+    e.caidosPublicos = { rojo: [], verde: Array(canonesCaidos).fill(1), azul: [], amarillo: [] };
+    e.reclutas = { rojo: 0, verde: reclutas, azul: 0, amarillo: 0 };
+    return e;
+  };
+  const sospecha = (e) => {
+    const a = analizarTurno(e, "rojo", DISTANCIA);
+    return peligroEn(a, "H6", 5).riesgoCanon;
+  };
+
+  const sinCaer = sospecha(escenario(0, 0));
+  const unoCaido = sospecha(escenario(1, 0));
+  const dosCaidos = sospecha(escenario(2, 0));
+  const dosYRecluta = sospecha(escenario(2, 1));
+
+  assert.ok(sinCaer > 0, "con los dos cañones vivos debería haber sospecha");
+  assert.ok(unoCaido < sinCaer, `con uno caído la sospecha debería bajar: ${sinCaer} -> ${unoCaido}`);
+  assert.strictEqual(dosCaidos, 0, "gastados los dos y sin reclutar, no queda ninguno: el anillo es seguro");
+  assert.ok(
+    dosYRecluta > 0 && dosYRecluta <= unoCaido,
+    `un recluta devuelve la posibilidad de UN cañón, no más: salió ${dosYRecluta}`
+  );
+
+  // Y un recluta sin cañones caídos no inventa cañones.
+  assert.strictEqual(sospecha(escenario(0, 3)), sinCaer, "reclutar sin cañones caídos no cambia la sospecha");
+});
+
+prueba("las caídas públicas no delatan qué recupera un reclutamiento", () => {
+  // `bajas` es la bolsa de reclutamiento y `reclutar` SACA de ella el rango
+  // recuperado; leerla para otro color sería saber QUÉ pieza ha vuelto, y eso no
+  // es público. `caidosPublicos` solo apunta y nunca quita.
+  const e = estadoVacio();
+  e.marcador.rojo = 5;
+  colocar(e, "rojo", 6, "H4");
+  colocar(e, "verde", 3, "H3");   // H5 es lago; el vecino jugable es H3
+  const tras = aplicar(e, accion(movimientosLegales(e), (a) => a.tipo === "atacar" && a.hasta === "H3"));
+  assert.deepStrictEqual(tras.caidosPublicos.verde, [3], "la caída se apunta con su rango");
+  assert.deepStrictEqual(tras.bajas.verde, [3], "y también entra en la bolsa de reclutamiento");
 });
 
 console.log(`\n${pasadas} pruebas superadas, ${fallidas} fallidas\n`);

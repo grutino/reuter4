@@ -69,6 +69,12 @@ function asegurarRegistros(estado) {
   if (!estado.rangosRevelados) estado.rangosRevelados = {};
   if (!estado.historia) estado.historia = [];
   if (!estado.colaPendientes) estado.colaPendientes = [];
+  if (!estado.caidosPublicos) estado.caidosPublicos = {};
+  if (!estado.reclutas) estado.reclutas = {};
+  for (const color of COLORES) {
+    if (!estado.caidosPublicos[color]) estado.caidosPublicos[color] = [];
+    if (estado.reclutas[color] === undefined) estado.reclutas[color] = 0;
+  }
 }
 
 // --- Cola de decisiones pendientes -------------------------------------------
@@ -362,6 +368,21 @@ function retirar(estado, pieza, { soltar = true } = {}) {
   if (soltar) soltarBandera(estado, pieza);
   delete estado.tablero[pieza.casilla];
   estado.bajas[pieza.color].push(pieza.rango);
+  // Registro público de caídas, distinto de `bajas`.
+  //
+  // `bajas` es la bolsa de reclutamiento y `reclutar` SACA de ella el rango que
+  // se recupera, así que leerla sería saber QUÉ pieza ha vuelto — y eso no es
+  // público: el evento de reclutamiento publica el color y nada más. Aquí solo
+  // se apunta y nunca se quita, que es exactamente lo que ve la mesa: todas las
+  // muertes publican el rango, en el duelo o en el cañonazo.
+  //
+  // Sirve para contar la bolsa oculta del rival de verdad. Sin esto, la sospecha
+  // de cañón se calculaba como "quedan 2 de 2 siempre", porque un cañón no se
+  // revela nunca: no sobrevive a un duelo y no se delata al moverse. Medido: 0
+  // cañones revelados en 7.335 turnos.
+  if (estado.caidosPublicos && estado.caidosPublicos[pieza.color]) {
+    estado.caidosPublicos[pieza.color].push(pieza.rango);
+  }
   delete estado.piezas[pieza.id];
   // Un rango revelado deja de interesar cuando la pieza ya no está en el tablero.
   if (estado.rangosRevelados) delete estado.rangosRevelados[pieza.id];
@@ -592,6 +613,10 @@ export function reclutar(estado, rango) {
   siguiente.piezas[id] = { id, color, rango, casilla, bandera: null, alternancias: 0, ultimoTramo: null };
   siguiente.tablero[casilla] = id;
   siguiente.pendiente = null;
+  // El rango no se publica, pero el hecho sí: cualquiera puede contar cuántas
+  // veces ha reclutado cada bando, y eso limita cuántos de los caídos pueden
+  // haber vuelto.
+  siguiente.reclutas[color] = (siguiente.reclutas[color] || 0) + 1;
   siguiente.eventos = [{ tipo: "reclutamiento", color }]; // el rango no se publica
   cerrarPendiente(siguiente);
   anotarEnHistoria(siguiente, { color, tipo: "reclutar", eventos: [...siguiente.eventos] });

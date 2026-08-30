@@ -73,6 +73,20 @@ function lineaDeCanon(estado, desde) {
 // Probabilidad de que una pieza sin identificar de este color sea un cañón.
 // Tratar "puede haber un cañón en esa línea" como certeza sale carísimo: solo
 // hay dos cañones entre veinte piezas, y el bot que se lo cree no avanza nunca.
+// Con qué probabilidad una pieza sin identificar de `color` es un cañón.
+//
+// LO QUE FALTABA ERA LLEVAR LA CUENTA DE LOS QUE YA HAN CAÍDO. Un cañón no se
+// revela jamás -no sobrevive a un duelo y no se delata al moverse; medido, 0
+// revelados en 7.335 turnos-, así que mirar solo `rangosRevelados` daba
+// "quedan 2 de 2" durante toda la partida, incluso después de que el rival
+// hubiera gastado los dos. Y ahí está la diferencia entre sospechar bien y
+// sospechar siempre: si ya han disparado los dos y no han reclutado desde
+// entonces, no les queda ninguno y subir al anillo es seguro.
+//
+// Las caídas son públicas: toda muerte publica el rango, en el duelo o en el
+// cañonazo. Lo que NO es público es qué rango recupera un reclutamiento, así que
+// un recluta solo devuelve la POSIBILIDAD de que sea un cañón, y como mucho
+// tantas veces como cañones hayan caído.
 function riesgoDeCanon(estado, color, memoria) {
   let ocultas = 0;
   let canonesVistos = 0;
@@ -83,7 +97,17 @@ function riesgoDeCanon(estado, color, memoria) {
     else if (visto === CANON) canonesVistos++;
   }
   if (!ocultas) return 0;
-  const quedan = Math.max(0, RANGOS[CANON].cantidad - canonesVistos);
+
+  const caidos = (estado.caidosPublicos && estado.caidosPublicos[color]) || [];
+  const canonesCaidos = caidos.reduce((n, r) => n + (r === CANON ? 1 : 0), 0);
+  const reclutas = (estado.reclutas && estado.reclutas[color]) || 0;
+  // Un recluta puede haber devuelto un cañón, pero solo si había caído alguno.
+  const puedenHaberVuelto = Math.min(reclutas, canonesCaidos);
+
+  const quedan = Math.max(
+    0,
+    RANGOS[CANON].cantidad - canonesVistos - canonesCaidos + puedenHaberVuelto
+  );
   return Math.min(1, quedan / ocultas);
 }
 
@@ -116,7 +140,16 @@ export function analizarTurno(estado, color, distancias, misAcciones = null) {
     if (!esEnemigo(color, pieza.color)) continue;
     const conocido = memoria[pieza.id];
     for (const casilla of casillasBatidas(estado, pieza, conocido)) {
-      if (conocido !== undefined) anotar(casilla, "peorConocido", conocido, pieza.id);
+      // UN CAÑÓN CONOCIDO NO SE MIDE POR SU RANGO. Marcarlo como `peorConocido:
+      // 1` lo hacía invisible: `peligroEn` resuelve el duelo, un rango 1 pierde
+      // contra cualquiera, y salía `pierde: false` y `riesgoCanon: 0`. O sea que
+      // la única pieza que se lleva por delante lo que sea, en cuanto se
+      // revelaba, pasaba a ser la amenaza más débil del tablero. El portador de
+      // la bandera subía al anillo con un cañón enemigo apuntándole.
+      //
+      // Un cañón identificado es certeza, no probabilidad: riesgo 1.
+      if (conocido === CANON) anotar(casilla, "riesgoCanon", 1, pieza.id);
+      else if (conocido !== undefined) anotar(casilla, "peorConocido", conocido, pieza.id);
       else anotar(casilla, "hayDesconocido", true, pieza.id);
     }
     // Un enemigo sin identificar PODRÍA ser un cañón, con la probabilidad que

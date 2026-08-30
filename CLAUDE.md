@@ -150,6 +150,22 @@ Tres cosas que conviene tener claras antes de tocar nada de esto:
   en la torre" sí es cosa del compañero: uno no se estorba a sí mismo. Tapa cualquier pieza que
   llegue con su movimiento —un explorador cruza el tablero de una sentada— menos un cañón, que
   no combate cuerpo a cuerpo y plantarlo ahí es regalarlo.
+- **UN CAÑÓN NO SE CONOCE NUNCA, SE SOSPECHA.** No sobrevive a un duelo —rango 1, pierde contra
+  todo— y no se delata al moverse, porque anda una casilla por turno. Medido: **0 cañones
+  revelados en 7.335 turnos**. Cualquier código que dependa de `rangosRevelados[id] === CANON`
+  es código muerto; la rama existe en `analisis.js` como red de seguridad, pero no se ejecuta.
+- **Y la sospecha hay que llevarla contando la bolsa.** Mirar solo `rangosRevelados` daba
+  "quedan 2 de 2" toda la partida, incluso después de que el rival gastara los dos. Ahora el
+  motor lleva dos registros públicos nuevos: `caidosPublicos[color]`, los rangos que han caído
+  —toda muerte publica el rango, en el duelo o en el cañonazo—, y `reclutas[color]`, cuántas
+  veces ha reclutado cada bando. Con eso, gastados los dos cañones y sin reclutar, la sospecha
+  es **cero** y subir al anillo es seguro.
+
+  **`caidosPublicos` no es `bajas`, y la diferencia importa.** `bajas` es la bolsa de
+  reclutamiento y `reclutar` SACA de ella el rango recuperado, así que leerla para otro color
+  sería saber *qué* pieza ha vuelto — y eso no es público: el evento de reclutamiento publica el
+  color y nada más. `caidosPublicos` solo apunta y nunca quita, y por eso un recluta devuelve
+  solo la *posibilidad* de cañón, como mucho tantas veces como cañones hayan caído.
 - **El tiro a la torre es legal pero los bots no lo ejecutan nunca.** Medido: en 17.213 turnos,
   un jugador tuvo un cañón en una de las doce casillas solo 2 veces, y ninguna con la torre
   ocupada, aunque la torre lo está el 12,8% de los turnos. Es geometría: ninguna casilla de

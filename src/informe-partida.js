@@ -254,9 +254,15 @@ const CASILLA = (c) => (c === ANILLO ? "anillo" : c === TORRE ? "torre" : c);
 
 function lineaDeJugada(h, rango) {
   if (h.tipo === "reclutar") return "recluta una pieza nueva";
-  const quien = rango ? `el ${NOMBRE_RANGO[rango]} de ` : "";
-  const verbo = h.tipo === "disparar" ? "dispara a" : h.tipo === "atacar" ? "ataca" : "va a";
-  const partes = [`${quien}${CASILLA(h.desde)} ${verbo} ${CASILLA(h.hasta)}`];
+  const partes = [];
+  // No todas las entradas del hilo son movimientos: recoger una bandera o
+  // renunciar a ella son decisiones, y no traen origen ni destino. Sin esto
+  // salía "undefined va a undefined".
+  if (h.desde && h.hasta) {
+    const quien = rango ? `el ${NOMBRE_RANGO[rango]} de ` : "";
+    const verbo = h.tipo === "disparar" ? "dispara a" : h.tipo === "atacar" ? "ataca" : "va a";
+    partes.push(`${quien}${CASILLA(h.desde)} ${verbo} ${CASILLA(h.hasta)}`);
+  }
   for (const e of h.eventos || []) {
     if (e.tipo === "duelo") {
       const gana = e.resultado === "atacante" ? "gana el atacante" : e.resultado === "defensor" ? "gana el defensor" : "empate, se retiran los dos";
@@ -266,8 +272,10 @@ function lineaDeJugada(h, rango) {
     if (e.tipo === "bandera-recogida") partes.push("recoge una bandera");
     if (e.tipo === "bandera-soltada") partes.push("suelta la bandera");
     if (e.tipo === "victoria") partes.push("CORONA Y GANA");
+    if (e.tipo === "reclutamiento-fallido") partes.push("no puede reclutar");
+    if (e.tipo === "empate") partes.push("se retiran los dos");
   }
-  return partes.join(" · ");
+  return partes.length ? partes.join(" · ") : h.tipo;
 }
 
 // --- El documento entero ------------------------------------------------------
