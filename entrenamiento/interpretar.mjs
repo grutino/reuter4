@@ -22,7 +22,7 @@ import { COLORES } from "../src/motor/tablero.js";
 import { RANGOS } from "../src/motor/motor.js";
 import { despliegueAleatorio, PESOS_BASE } from "../src/motor/bot.js";
 import { generador } from "./arena.mjs";
-import { rasgosDeDespliegue, RANGOS_ORDENADOS, PROPIEDADES, GLOBALES } from "./rasgos-despliegue.mjs";
+import { rasgosDeDespliegue, RANGOS_ORDENADOS, PROPIEDADES, GLOBALES } from "../src/motor/rasgos-despliegue.js";
 import { desdeObjeto, evaluar } from "./red.mjs";
 import { ESCALAS, GENES } from "./genoma.mjs";
 import { revisar } from "./revisar-pesos.mjs";

@@ -385,7 +385,7 @@ export async function generarInforme() {
     try {
       const { sensibilidadDeLaRed } = await import("./interpretar.mjs");
       const { desdeObjeto } = await import("./red.mjs");
-      const { nombreDeRasgo } = await import("./rasgos-despliegue.mjs");
+      const { nombreDeRasgo } = await import("../src/motor/rasgos-despliegue.js");
       sensibilidad = sensibilidadDeLaRed(desdeObjeto(despliegue.red), 200).map((s) => ({
         nombre: nombreDeRasgo(s.indice).replace(" · ", " "),
         efecto: s.efecto,
@@ -406,7 +406,7 @@ if (process.argv[1] && process.argv[1].endsWith("informe-redes.mjs")) {
   if (despliegue) {
     const { sensibilidadDeLaRed } = await import("./interpretar.mjs");
     const { desdeObjeto } = await import("./red.mjs");
-    const { nombreDeRasgo } = await import("./rasgos-despliegue.mjs");
+    const { nombreDeRasgo } = await import("../src/motor/rasgos-despliegue.js");
     sensibilidad = sensibilidadDeLaRed(desdeObjeto(despliegue.red)).map((s) => ({
       nombre: nombreDeRasgo(s.indice).replace(" · ", " "),
       efecto: s.efecto,

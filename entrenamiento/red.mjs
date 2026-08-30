@@ -1,63 +1,12 @@
-// Red neuronal mínima: perceptrón multicapa con retropropagación y Adam.
+// Entrenamiento de la red: retropropagación con Adam.
 //
-// Escrita a mano y sin dependencias por la misma razón que todo lo demás del
-// proyecto: la red entrenada acaba siendo un JSON de números que el juego carga
-// y evalúa con veinte líneas, sin arrastrar una cadena de herramientas de
-// Python al servidor.
-//
-// Por qué una red y no seguir con el evolutivo: el evolutivo escoge entre
-// candidatos enteros por su resultado final, así que necesita que la diferencia
-// entre dos candidatos supere el ruido de las partidas, y con 26 pesos ya no lo
-// hacía. El descenso de gradiente no compara candidatos: reparte la culpa del
-// error entre todos los parámetros a la vez, ejemplo a ejemplo. Eso escala a
-// cientos de parámetros con miles de posiciones etiquetadas.
+// El paso adelante y la serialización viven en `src/motor/red.js`, porque el
+// juego los necesita para que un bot pueda decidir con la red. Aquí queda solo
+// lo que hace falta para APRENDER, que el juego no ejecuta nunca. Se reexporta
+// lo de allí para que quien entrena tenga todo en un sitio.
 
-// Capas: [entradas, oculta, ..., 1]. Oculta con ReLU, salida con sigmoide.
-export function crearRed(capas, azar = Math.random) {
-  const pesos = [];
-  const sesgos = [];
-  for (let i = 1; i < capas.length; i++) {
-    const entradas = capas[i - 1];
-    const salidas = capas[i];
-    // He: varianza 2/n para ReLU, que evita que la señal se apague al propagar.
-    const escala = Math.sqrt(2 / entradas);
-    const w = new Float64Array(entradas * salidas);
-    for (let k = 0; k < w.length; k++) w[k] = (azar() * 2 - 1) * escala;
-    pesos.push(w);
-    sesgos.push(new Float64Array(salidas));
-  }
-  return { capas, pesos, sesgos, paso: 0, momento: null };
-}
-
-const sigmoide = (x) => 1 / (1 + Math.exp(-x));
-
-// Devuelve las activaciones de todas las capas, que la retropropagación
-// necesita: sin ellas habría que volver a pasar hacia delante.
-export function adelante(red, entrada) {
-  const activaciones = [entrada];
-  let actual = entrada;
-  for (let c = 0; c < red.pesos.length; c++) {
-    const entradas = red.capas[c];
-    const salidas = red.capas[c + 1];
-    const w = red.pesos[c];
-    const b = red.sesgos[c];
-    const siguiente = new Float64Array(salidas);
-    for (let j = 0; j < salidas; j++) {
-      let suma = b[j];
-      for (let i = 0; i < entradas; i++) suma += actual[i] * w[i * salidas + j];
-      // Última capa: sigmoide, porque la salida es una probabilidad de ganar.
-      siguiente[j] = c === red.pesos.length - 1 ? sigmoide(suma) : Math.max(0, suma);
-    }
-    activaciones.push(siguiente);
-    actual = siguiente;
-  }
-  return activaciones;
-}
-
-export function evaluar(red, entrada) {
-  const a = adelante(red, entrada);
-  return a[a.length - 1][0];
-}
+import { crearRed, adelante, evaluar, aObjeto, desdeObjeto } from "../src/motor/red.js";
+export { crearRed, adelante, evaluar, aObjeto, desdeObjeto };
 
 function prepararMomento(red) {
   if (red.momento) return;
@@ -137,20 +86,3 @@ export function entrenarLote(red, ejemplos, { tasa = 0.01, b1 = 0.9, b2 = 0.999,
 }
 
 // A JSON y de vuelta: es lo que se guarda y lo que el juego carga.
-export function aObjeto(red) {
-  return {
-    capas: red.capas,
-    pesos: red.pesos.map((w) => Array.from(w, (v) => Number(v.toFixed(5)))),
-    sesgos: red.sesgos.map((b) => Array.from(b, (v) => Number(v.toFixed(5)))),
-  };
-}
-
-export function desdeObjeto(obj) {
-  return {
-    capas: obj.capas,
-    pesos: obj.pesos.map((w) => Float64Array.from(w)),
-    sesgos: obj.sesgos.map((b) => Float64Array.from(b)),
-    paso: 0,
-    momento: null,
-  };
-}

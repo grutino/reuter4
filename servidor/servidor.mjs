@@ -17,8 +17,23 @@ import {
   validarDespliegue,
 } from "../src/motor/motor.js";
 import { accionDeBot, decisionDeRecogida, despliegueAleatorio } from "../src/motor/bot.js";
+import { accionConRed, despliegueGuiado, cargarModelos } from "../src/motor/bot-red.js";
 
 const RAIZ = path.dirname(fileURLToPath(import.meta.url));
+
+// Los modelos entrenados, cargados una vez al arrancar. Si no están o están
+// obsoletos, `cargarModelos` devuelve nulos y los bots juegan con la heurística
+// de siempre: el juego tiene que funcionar igual sin ellos, porque durante la
+// mayor parte de la vida del proyecto funcionó así.
+const MODELOS = cargarModelos();
+for (const nota of MODELOS.notas) console.log(`  red de ${nota}`);
+
+// Cómo despliega y cómo mueve un bot. Un solo sitio, para que la partida real y
+// lo que se mide en el entrenamiento sean lo mismo.
+const desplegarBot = (color) =>
+  MODELOS.despliegue ? despliegueGuiado(color, Math.random, MODELOS.despliegue, 30, 200) : despliegueAleatorio(color);
+const moverBot = (estado, color) =>
+  MODELOS.jugada ? accionConRed(estado, color, MODELOS.jugada, { candidatas: 12 }) : accionDeBot(estado, color);
 const ESTATICO = path.join(RAIZ, "..", "dist");
 const PUERTO = process.env.PORT || 8080;
 const FICHERO_ESTADO = process.env.R4_ESTADO || path.join(RAIZ, "salas.json");
@@ -152,7 +167,7 @@ setInterval(() => {
     if (sala.fase === "desplegando") {
       for (const color of COLORES) {
         if (esAutomatico(sala, color) && !sala.despliegues[color]) {
-          sala.despliegues[color] = despliegueAleatorio(color);
+          sala.despliegues[color] = desplegarBot(color);
           cambios = true;
         }
       }
@@ -179,7 +194,7 @@ setInterval(() => {
       } else {
         const turno = sala.estado.turno;
         if (!esAutomatico(sala, turno)) continue;
-        const accion = accionDeBot(sala.estado, turno);
+        const accion = moverBot(sala.estado, turno);
         if (!accion) continue;
         sala.estado = resolverPendientesDeBots(sala, aplicar(sala.estado, accion));
       }

@@ -20,7 +20,9 @@ import { despliegueAleatorio, PESOS_BASE } from "../src/motor/bot.js";
 import { configuracion, generador, repartoDeTablas } from "./arena.mjs";
 import { nuevaPartida, aplicar, reclutar, recogerLaBandera, renunciarARecoger } from "../src/motor/motor.js";
 import { accionDeBot, decisionDeRecogida } from "../src/motor/bot.js";
-import { rasgosDeDespliegue, TAMANO, nombreDeRasgo } from "./rasgos-despliegue.mjs";
+import { rasgosDeDespliegue, TAMANO, nombreDeRasgo } from "../src/motor/rasgos-despliegue.js";
+import { despliegueGuiado } from "../src/motor/bot-red.js";
+export { despliegueGuiado };
 import { fuenteDeDespliegues } from "./aperturas.mjs";
 import { cargarAperturas } from "./panel.mjs";
 import { crearRed, entrenarLote, evaluar, aObjeto } from "./red.mjs";
@@ -84,55 +86,6 @@ function generarDatos(partidas, semilla, limite) {
 
 // --- Despliegue guiado por la red --------------------------------------------
 
-export function despliegueGuiado(color, azar, red, candidatos = 40, escalada = 250) {
-  // Primero, el mejor de unos cuantos al azar, como punto de partida.
-  let mejor = null;
-  let mejorNota = -Infinity;
-  for (let i = 0; i < candidatos; i++) {
-    const propuesta = despliegueAleatorio(color, azar);
-    const nota = evaluar(red, rasgosDeDespliegue(color, propuesta));
-    if (nota > mejorNota) {
-      mejorNota = nota;
-      mejor = propuesta;
-    }
-  }
-
-  // Y después, recocido: se proponen intercambios y se acepta el que mejora,
-  // pero también, con probabilidad decreciente, alguno que empeora.
-  //
-  // Con escalada pura -aceptando solo mejoras- la búsqueda se queda en el
-  // óptimo convencional más cercano y nunca llega a probar cosas raras: poner
-  // la bandera sobre un cañón, o sobre el espía. Esas jugadas parecen malas
-  // hasta que se ven en contexto, y son justo las que dan sorpresa. Para que el
-  // modelo pueda descubrirlas por su cuenta hay que dejarle bajar antes de
-  // subir. La casilla de la bandera se intercambia como cualquier otra, así que
-  // también decide qué rango la lleva.
-  const actual = mejor.map((p) => ({ ...p }));
-  let notaActual = mejorNota;
-  let mejorCopia = actual.map((p) => ({ ...p }));
-  for (let paso = 0; paso < escalada; paso++) {
-    const temperatura = 0.03 * (1 - paso / escalada); // se enfría hasta cero
-    const i = Math.floor(azar() * actual.length);
-    const j = Math.floor(azar() * actual.length);
-    if (i === j || actual[i].rango === actual[j].rango) continue;
-    const t = actual[i].rango;
-    actual[i].rango = actual[j].rango;
-    actual[j].rango = t;
-    const nota = evaluar(red, rasgosDeDespliegue(color, actual));
-    const salto = nota - notaActual;
-    if (salto > 0 || (temperatura > 0 && azar() < Math.exp(salto / temperatura))) {
-      notaActual = nota;
-      if (nota > mejorNota) {
-        mejorNota = nota;
-        mejorCopia = actual.map((p) => ({ ...p }));
-      }
-    } else {
-      actual[j].rango = actual[i].rango;
-      actual[i].rango = t;
-    }
-  }
-  return mejorCopia;
-}
 
 
 // --- Medida: ¿gana un despliegue elegido a uno al azar? ----------------------

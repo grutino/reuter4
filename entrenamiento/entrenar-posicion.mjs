@@ -33,7 +33,7 @@ import {
 } from "../src/motor/motor.js";
 import { accionDeBot, puntuarAcciones, decisionDeRecogida, despliegueAleatorio, PESOS_BASE } from "../src/motor/bot.js";
 import { generador, repartoDeTablas } from "./arena.mjs";
-import { rasgosDePosicion, TAMANO, NOMBRES } from "./rasgos-posicion.mjs";
+import { rasgosDePosicion, TAMANO, NOMBRES } from "../src/motor/rasgos-posicion.js";
 import { crearRed, entrenarLote, evaluar, aObjeto, desdeObjeto } from "./red.mjs";
 
 const AQUI = path.dirname(fileURLToPath(import.meta.url));

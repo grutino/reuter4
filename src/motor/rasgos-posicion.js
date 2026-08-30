@@ -11,10 +11,10 @@
 // piezas conozco el rango; de las del compañero y de las enemigas, únicamente
 // lo que se haya destapado en combate. Hay una prueba que lo vigila.
 
-import { ANILLO, TORRE, COLORES } from "../src/motor/tablero.js";
-import { RANGOS, SOCIO, EQUIPOS, inventarioInicial } from "../src/motor/motor.js";
-import { DISTANCIA } from "../src/motor/bot.js";
-import { analizarTurno } from "../src/motor/analisis.js";
+import { ANILLO, TORRE, COLORES } from "./tablero.js";
+import { RANGOS, SOCIO, EQUIPOS, inventarioInicial } from "./motor.js";
+import { DISTANCIA } from "./bot.js";
+import { analizarTurno } from "./analisis.js";
 
 const FUERZA_TOTAL = inventarioInicial().reduce((a, b) => a + b, 0); // 20 piezas
 const PIEZAS = 20;

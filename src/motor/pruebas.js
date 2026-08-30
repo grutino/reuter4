@@ -22,7 +22,13 @@ import {
   MAX_HISTORIA,
   resolverDuelo,
 } from "./motor.js";
-import { accionDeBot, accionDeBotClasico } from "./bot.js";
+import fs from "node:fs";
+import os from "node:os";
+import path from "node:path";
+import { accionDeBot, accionDeBotClasico, DISTANCIA } from "./bot.js";
+import { analizarTurno } from "./analisis.js";
+import { rasgosDeJugada, contextoDeTurno, NOMBRES as NOMBRES_RASGOS } from "./rasgos-jugada.js";
+import { cargarModelos } from "./bot-red.js";
 
 let pasadas = 0;
 let fallidas = 0;
@@ -885,6 +891,85 @@ prueba("resolverDuelo trabaja con rangos sueltos", () => {
   assert.strictEqual(resolverDuelo(9, 2), "atacante");
   assert.strictEqual(resolverDuelo(5, 5), "empate");
   assert.strictEqual(resolverDuelo(3, 7), "defensor");
+});
+
+
+prueba("los bots CON RED tampoco ven el rango oculto", () => {
+  // El servidor ya no mueve con `accionDeBot` sino con `accionConRed`, que pasa
+  // por otro camino entero: los rasgos de jugada y de posición. La prueba de
+  // arriba no lo cubría, y una fuga ahí sería peor -no cambiaría el resultado de
+  // ninguna prueba, solo haría que el bot jugase demasiado bien-.
+  //
+  // Se comprueba sobre los RASGOS, no sobre la jugada elegida: si los dos
+  // escenarios producen el mismo vector de entrada, ninguna red posible puede
+  // distinguirlos. Es una garantía más fuerte que comparar decisiones, que
+  // depende de los pesos que tenga la red ese día.
+  function escenario(rangoOculto) {
+    const e = estadoVacio();
+    colocar(e, "rojo", 5, "H4");
+    colocar(e, "verde", rangoOculto, "H3");
+    colocar(e, "rojo", 7, "G4");
+    colocar(e, "azul", 6, "D8");
+    return e;
+  }
+  const debil = escenario(1);
+  const fuerte = escenario(9);
+
+  const ctxD = contextoDeTurno(debil, "rojo", analizarTurno(debil, "rojo", DISTANCIA));
+  const ctxF = contextoDeTurno(fuerte, "rojo", analizarTurno(fuerte, "rojo", DISTANCIA));
+
+  const jugadas = movimientosLegales(debil, "rojo");
+  assert.ok(jugadas.length > 0, "el escenario debería dar jugadas legales");
+
+  for (const accion of jugadas) {
+    const a = Array.from(rasgosDeJugada(debil, "rojo", accion, ctxD));
+    const b = Array.from(rasgosDeJugada(fuerte, "rojo", accion, ctxF));
+    const distinto = a.findIndex((v, i) => v !== b[i]);
+    assert.strictEqual(
+      distinto, -1,
+      `el rasgo "${distinto >= 0 ? NOMBRES_RASGOS[distinto] : ""}" cambia con el rango escondido ` +
+        `(${distinto >= 0 ? a[distinto] : ""} vs ${distinto >= 0 ? b[distinto] : ""}): eso es una fuga`
+    );
+  }
+});
+
+prueba("una vez revelado, el rango SÍ se usa", () => {
+  // El complemento de la prueba anterior: si los rasgos nunca cambiaran, la
+  // memoria no serviría de nada y la fuga estaría tapada por accidente.
+  function escenario(rangoOculto, revelar) {
+    const e = estadoVacio();
+    colocar(e, "rojo", 5, "H4");
+    const pieza = colocar(e, "verde", rangoOculto, "H3");
+    if (revelar) e.rangosRevelados = { [pieza.id]: rangoOculto };
+    return e;
+  }
+  const tapado = escenario(9, false);
+  const visto = escenario(9, true);
+  const ctxT = contextoDeTurno(tapado, "rojo", analizarTurno(tapado, "rojo", DISTANCIA));
+  const ctxV = contextoDeTurno(visto, "rojo", analizarTurno(visto, "rojo", DISTANCIA));
+  const ataque = movimientosLegales(tapado, "rojo").find((a) => a.tipo === "atacar");
+  assert.ok(ataque, "debería haber un ataque posible contra H3");
+  const a = Array.from(rasgosDeJugada(tapado, "rojo", ataque, ctxT));
+  const b = Array.from(rasgosDeJugada(visto, "rojo", ataque, ctxV));
+  assert.notDeepStrictEqual(a, b, "con el rango ya revelado los rasgos tienen que cambiar");
+});
+
+prueba("cargarModelos rechaza un modelo con otro número de entradas", () => {
+  // El fallo que esta comprobación evita no da ningún error: un modelo viejo se
+  // carga, evalúa y juega con basura. Ya pasó al añadir rasgos.
+  const carpeta = fs.mkdtempSync(path.join(os.tmpdir(), "reuter4-modelos-"));
+  fs.writeFileSync(
+    path.join(carpeta, "red-jugada.json"),
+    JSON.stringify({ red: { capas: [7, 3, 1], pesos: [], sesgos: [] } })
+  );
+  const cargado = cargarModelos(carpeta);
+  assert.strictEqual(cargado.jugada, null, "un modelo de 7 entradas no puede cargarse");
+  assert.ok(
+    cargado.notas.some((n) => n.includes("obsoleto")),
+    "y tiene que decir por qué, no fallar en silencio"
+  );
+  assert.strictEqual(cargado.despliegue, null, "sin fichero, null y a la heurística");
+  fs.rmSync(carpeta, { recursive: true, force: true });
 });
 
 console.log(`\n${pasadas} pruebas superadas, ${fallidas} fallidas\n`);

@@ -19,7 +19,8 @@
     "mirar": "node entrenamiento/mirar.mjs",
     "informe-redes": "node entrenamiento/informe-redes.mjs",
     "panel": "node entrenamiento/medir-panel.mjs",
-    "coevolucion": "node entrenamiento/coevolucion.mjs"
+    "coevolucion": "node entrenamiento/coevolucion.mjs",
+    "publicar-redes": "node herramientas/publicar-redes.mjs"
   },
   "dependencies": {
     "react": "^18.3.1",

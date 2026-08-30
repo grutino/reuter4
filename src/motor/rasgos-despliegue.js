@@ -17,9 +17,9 @@
 // hacia el castillo» y «apertura lateral» en vez de en filas y columnas. Así
 // los cuatro colores alimentan el mismo conjunto de entrenamiento.
 
-import { ZONAS, ADYACENTES, LAGOS, ANILLO, CASILLAS, coord, casillasDeZona, rayo, DIRECCIONES } from "../src/motor/tablero.js";
-import { RANGOS, EXPLORADOR, CAPITAN, ESPIA } from "../src/motor/motor.js";
-import { DISTANCIA } from "../src/motor/bot.js";
+import { ZONAS, ADYACENTES, LAGOS, ANILLO, CASILLAS, coord, casillasDeZona, rayo, DIRECCIONES } from "./tablero.js";
+import { RANGOS, EXPLORADOR, CAPITAN, ESPIA } from "./motor.js";
+import { DISTANCIA } from "./bot.js";
 
 export const RANGOS_ORDENADOS = Object.keys(RANGOS).map(Number).sort((a, b) => b - a); // 9..1
 export const PROPIEDADES = [

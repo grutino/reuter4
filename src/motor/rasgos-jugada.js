@@ -16,11 +16,11 @@
 // misma jugada no vale igual yendo por delante que por detrás, ni al principio
 // que al final. Eso la heurística no podía expresarlo de ninguna forma.
 
-import { ANILLO, TORRE, ADYACENTES } from "../src/motor/tablero.js";
-import { resolverDuelo, MARISCAL, ESPIA, CANON, EXPLORADOR, CAPITAN } from "../src/motor/motor.js";
-import { DISTANCIA, bolsaOculta, valorEsperado, amenazasDesde } from "../src/motor/bot.js";
-import { peligroEn } from "../src/motor/analisis.js";
-import { rasgosDePosicion, TAMANO as TAMANO_POSICION, NOMBRES as NOMBRES_POSICION } from "./rasgos-posicion.mjs";
+import { ANILLO, TORRE, ADYACENTES } from "./tablero.js";
+import { resolverDuelo, MARISCAL, ESPIA, CANON, EXPLORADOR, CAPITAN } from "./motor.js";
+import { DISTANCIA, bolsaOculta, valorEsperado, amenazasDesde } from "./bot.js";
+import { peligroEn } from "./analisis.js";
+import { rasgosDePosicion, TAMANO as TAMANO_POSICION, NOMBRES as NOMBRES_POSICION } from "./rasgos-posicion.js";
 
 export const NOMBRES_JUGADA = [
   "esMovimiento",

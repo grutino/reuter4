@@ -43,8 +43,8 @@ import {
 } from "../src/motor/bot.js";
 import { analizarTurno } from "../src/motor/analisis.js";
 import { generador, repartoDeTablas } from "./arena.mjs";
-import { rasgosDeDespliegue, TAMANO as TAMANO_DESPLIEGUE } from "./rasgos-despliegue.mjs";
-import { rasgosDeJugada, contextoDeTurno, TAMANO as TAMANO_JUGADA } from "./rasgos-jugada.mjs";
+import { rasgosDeDespliegue, TAMANO as TAMANO_DESPLIEGUE } from "../src/motor/rasgos-despliegue.js";
+import { rasgosDeJugada, contextoDeTurno, TAMANO as TAMANO_JUGADA } from "../src/motor/rasgos-jugada.js";
 import { crearRed, entrenarLote, evaluar, aObjeto, desdeObjeto } from "./red.mjs";
 import { construirPanel, medirContraPanel, cargarAperturas } from "./panel.mjs";
 import { fuenteDeDespliegues, aColocacion, aTexto } from "./aperturas.mjs";

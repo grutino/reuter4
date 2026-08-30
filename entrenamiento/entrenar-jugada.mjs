@@ -24,8 +24,10 @@ import {
 } from "../src/motor/bot.js";
 import { analizarTurno } from "../src/motor/analisis.js";
 import { generador, repartoDeTablas } from "./arena.mjs";
-import { rasgosDeJugada, contextoDeTurno, TAMANO, NOMBRES } from "./rasgos-jugada.mjs";
+import { rasgosDeJugada, contextoDeTurno, TAMANO, NOMBRES } from "../src/motor/rasgos-jugada.js";
 import { crearRed, entrenarLote, evaluar, aObjeto, desdeObjeto } from "./red.mjs";
+import { accionConRed } from "../src/motor/bot-red.js";
+export { accionConRed };
 
 const AQUI = path.dirname(fileURLToPath(import.meta.url));
 const [EQUIPO_A] = EQUIPOS;
@@ -55,24 +57,6 @@ const resolverPendiente = (estado) => {
 // evita clonar el estado doce veces por turno, que es lo que hacía inviable el
 // intento anterior.
 
-export function accionConRed(estado, color, red, { candidatas = 12, azar = Math.random, pesos = PESOS_BASE } = {}) {
-  const puntuadas = puntuarAcciones(estado, color, { pesos, azar });
-  if (!puntuadas.length) return null;
-  const finalistas = puntuadas.slice(0, Math.min(candidatas, puntuadas.length));
-  if (finalistas.length === 1) return finalistas[0].accion;
-
-  const contexto = contextoDeTurno(estado, color, analizarTurno(estado, color, DISTANCIA));
-  let mejor = finalistas[0].accion;
-  let mejorValor = -Infinity;
-  for (const { accion } of finalistas) {
-    const valor = evaluar(red, rasgosDeJugada(estado, color, accion, contexto));
-    if (valor > mejorValor) {
-      mejorValor = valor;
-      mejor = accion;
-    }
-  }
-  return mejor;
-}
 
 // --- Datos -------------------------------------------------------------------------
 
