@@ -33,7 +33,7 @@ const [EQUIPO_A] = EQUIPOS;
 function opciones(argv) {
   const o = {
     partidas: 800, epocas: 200, lote: 64, tasa: 0.006, oculta: 28, decaimiento: 0.0008,
-    semilla: 1, limite: 400, candidatas: 12, exploracion: 0.25, medir: 80,
+    semilla: 1, limite: 400, candidatas: 12, exploracion: 0.25, medir: 80, rondas: 1,
   };
   for (let i = 2; i < argv.length; i += 2) {
     const clave = argv[i].replace(/^--/, "");
@@ -76,7 +76,11 @@ export function accionConRed(estado, color, red, { candidatas = 12, azar = Math.
 
 // --- Datos -------------------------------------------------------------------------
 
-function generarDatos(o) {
+// `guia` es la red con la que se juega para generar los datos. En la primera
+// ronda no hay ninguna y juega la heurística; en las siguientes juega la red
+// de la ronda anterior. Sin esto la red solo aprende a imitar a su maestro y se
+// queda clavada en su nivel, que es lo que pasó midiendo 46% ronda tras ronda.
+function generarDatos(o, guia = null) {
   const ejemplos = [];
   let decididas = 0;
   for (let i = 0; i < o.partidas; i++) {
@@ -98,12 +102,20 @@ function generarDatos(o) {
       const finalistas = puntuadas.slice(0, Math.min(o.candidatas, puntuadas.length));
       // Exploración: a veces una candidata al azar, para que la red vea también
       // jugadas que la heurística nunca elegiría.
-      const elegida =
-        azar() < o.exploracion
-          ? finalistas[Math.floor(azar() * finalistas.length)].accion
-          : finalistas[0].accion;
-
       const contexto = contextoDeTurno(estado, color, analizarTurno(estado, color, DISTANCIA));
+      let elegida;
+      if (azar() < o.exploracion) {
+        elegida = finalistas[Math.floor(azar() * finalistas.length)].accion;
+      } else if (guia) {
+        let mejorValor = -Infinity;
+        elegida = finalistas[0].accion;
+        for (const { accion } of finalistas) {
+          const valor = evaluar(guia, rasgosDeJugada(estado, color, accion, contexto));
+          if (valor > mejorValor) { mejorValor = valor; elegida = accion; }
+        }
+      } else {
+        elegida = finalistas[0].accion;
+      }
       muestras.push({ entrada: rasgosDeJugada(estado, color, elegida, contexto), color });
 
       estado = aplicar(estado, elegida);
@@ -168,20 +180,7 @@ async function main() {
   const o = opciones(process.argv);
   const azar = generador(o.semilla);
   console.log("Entrenamiento del evaluador de jugadas\n");
-
-  console.log(`  Jugando ${o.partidas} partidas con ${Math.round(o.exploracion * 100)}% de exploración...`);
-  const t0 = Date.now();
-  const { ejemplos, decididas } = generarDatos(o);
-  console.log(`  ${ejemplos.length} jugadas en ${Math.round((Date.now() - t0) / 1000)}s · partidas decididas ${decididas}\n`);
-
-  const barajado = ejemplos.slice();
-  for (let i = barajado.length - 1; i > 0; i--) {
-    const j = Math.floor(azar() * (i + 1));
-    [barajado[i], barajado[j]] = [barajado[j], barajado[i]];
-  }
-  const corte = Math.floor(barajado.length * 0.75);
-  const entrenamiento = barajado.slice(0, corte);
-  const validacion = barajado.slice(corte);
+  console.log(`  ${o.rondas} ronda(s) · ${o.partidas} partidas por ronda · ${Math.round(o.exploracion * 100)}% de exploración\n`);
 
   const perdidaDe = (red, conjunto) => {
     let s = 0;
@@ -192,57 +191,77 @@ async function main() {
     return s / conjunto.length;
   };
 
-  const red = crearRed([TAMANO, o.oculta, 1], azar);
-  console.log(`  Red ${TAMANO}-${o.oculta}-1 · ${entrenamiento.length} de entrenamiento, ${validacion.length} de validación`);
-  console.log(`  pérdida de partida ${perdidaDe(red, validacion).toFixed(4)}  (a ciegas ≈ 0.693)\n`);
+  let guia = null;
+  const rondas = [];
+  let mejorPesosGlobal = null;
+  let mejorVictorias = -1;
 
-  let mejor = Infinity;
-  let mejorPesos = aObjeto(red);
-  const curva = [];
-  for (let epoca = 1; epoca <= o.epocas; epoca++) {
-    for (let i = 0; i < entrenamiento.length; i += o.lote) {
-      entrenarLote(red, entrenamiento.slice(i, i + o.lote), { tasa: o.tasa, decaimiento: o.decaimiento });
+  for (let ronda = 1; ronda <= o.rondas; ronda++) {
+    console.log(`--- Ronda ${ronda} de ${o.rondas} ---`);
+    const t0 = Date.now();
+    const { ejemplos, decididas } = generarDatos({ ...o, semilla: o.semilla + ronda * 104729 }, guia);
+    console.log(`  ${ejemplos.length} jugadas en ${Math.round((Date.now() - t0) / 1000)}s · decididas ${decididas}`);
+
+    const barajado = ejemplos.slice();
+    for (let i = barajado.length - 1; i > 0; i--) {
+      const j = Math.floor(azar() * (i + 1));
+      [barajado[i], barajado[j]] = [barajado[j], barajado[i]];
     }
-    if (epoca % 5 === 0 || epoca === o.epocas) {
-      const pEnt = perdidaDe(red, entrenamiento);
-      const pVal = perdidaDe(red, validacion);
-      curva.push({ epoca, entrenamiento: Number(pEnt.toFixed(5)), validacion: Number(pVal.toFixed(5)) });
-      if (pVal < mejor) {
-        mejor = pVal;
-        mejorPesos = aObjeto(red);
+    const corte = Math.floor(barajado.length * 0.75);
+    const entrenamiento = barajado.slice(0, corte);
+    const validacion = barajado.slice(corte);
+
+    // Cada ronda empieza de cero: reaprovechar la red anterior la ancla a los
+    // datos viejos, que son justo los que se quieren superar.
+    const red = crearRed([TAMANO, o.oculta, 1], azar);
+    let mejor = Infinity;
+    let mejorPesos = aObjeto(red);
+    const curva = [];
+    for (let epoca = 1; epoca <= o.epocas; epoca++) {
+      for (let i = 0; i < entrenamiento.length; i += o.lote) {
+        entrenarLote(red, entrenamiento.slice(i, i + o.lote), { tasa: o.tasa, decaimiento: o.decaimiento });
       }
-      if (epoca % 40 === 0) console.log(`  época ${String(epoca).padStart(4)}  entrenamiento ${pEnt.toFixed(4)}  validación ${pVal.toFixed(4)}`);
+      if (epoca % 5 === 0 || epoca === o.epocas) {
+        const pEnt = perdidaDe(red, entrenamiento);
+        const pVal = perdidaDe(red, validacion);
+        curva.push({ epoca, entrenamiento: Number(pEnt.toFixed(5)), validacion: Number(pVal.toFixed(5)) });
+        if (pVal < mejor) { mejor = pVal; mejorPesos = aObjeto(red); }
+      }
     }
-  }
-  console.log(`\n  Mejor pérdida de validación: ${mejor.toFixed(4)}`);
 
-  const redBuena = desdeObjeto(mejorPesos);
-  const cubos = Array.from({ length: 10 }, () => ({ n: 0, suma: 0, real: 0 }));
-  let aciertos = 0;
-  for (const ej of validacion) {
-    const p = evaluar(redBuena, ej.entrada);
-    const c = cubos[Math.min(9, Math.floor(p * 10))];
-    c.n++; c.suma += p; c.real += ej.objetivo;
-    if ((p > 0.5 ? 1 : 0) === (ej.objetivo > 0.5 ? 1 : 0)) aciertos++;
-  }
-  const calibracion = cubos.filter((c) => c.n).map((c) => ({ n: c.n, predicho: c.suma / c.n, real: c.real / c.n }));
-  console.log(`  Acierto en validación: ${((aciertos / validacion.length) * 100).toFixed(1)}%`);
+    const redBuena = desdeObjeto(mejorPesos);
+    const cubos = Array.from({ length: 10 }, () => ({ n: 0, suma: 0, real: 0 }));
+    let aciertos = 0;
+    for (const ej of validacion) {
+      const p = evaluar(redBuena, ej.entrada);
+      const c = cubos[Math.min(9, Math.floor(p * 10))];
+      c.n++; c.suma += p; c.real += ej.objetivo;
+      if ((p > 0.5 ? 1 : 0) === (ej.objetivo > 0.5 ? 1 : 0)) aciertos++;
+    }
+    const calibracion = cubos.filter((c) => c.n).map((c) => ({ n: c.n, predicho: c.suma / c.n, real: c.real / c.n }));
+    const medida = medirEnJuego(redBuena, o.medir, o, 909090);
+    console.log(
+      `  validación ${mejor.toFixed(4)} · acierto ${((aciertos / validacion.length) * 100).toFixed(1)}% · ` +
+      `en juego ${medida.gana}-${medida.pierde} = ${(medida.tasa * 100).toFixed(0)}% ±${Math.round(medida.error * 100)}\n`
+    );
 
-  console.log(`\n  Midiendo en juego: la red contra la heurística sola...`);
-  const t1 = Date.now();
-  const medida = medirEnJuego(redBuena, o.medir, o, 909090);
-  console.log(
-    `  ${medida.gana}-${medida.pierde} (tablas ${medida.tablas}) = ${(medida.tasa * 100).toFixed(0)}% ±${Math.round(medida.error * 100)} en ${Math.round((Date.now() - t1) / 1000)}s`
-  );
+    rondas.push({
+      ronda, ejemplos: ejemplos.length, perdidaValidacion: mejor, acierto: aciertos / validacion.length,
+      victoriasEnJuego: medida.tasa, errorEnJuego: medida.error, tablas: medida.tablas, calibracion, curva,
+    });
+    if (medida.tasa > mejorVictorias) { mejorVictorias = medida.tasa; mejorPesosGlobal = mejorPesos; }
+    guia = redBuena;
+  }
+
+  console.log(`  Mejor de todas las rondas: ${(mejorVictorias * 100).toFixed(0)}% de victorias`);
 
   const salida = path.join(AQUI, "modelos", "red-jugada.json");
   fs.mkdirSync(path.dirname(salida), { recursive: true });
   fs.writeFileSync(salida, JSON.stringify({
-    creado: new Date().toISOString(), opciones: o, perdidaValidacion: mejor,
-    acierto: aciertos / validacion.length, victoriasEnJuego: medida.tasa, errorEnJuego: medida.error,
-    nombres: NOMBRES, calibracion, curva, red: mejorPesos,
+    creado: new Date().toISOString(), opciones: o, nombres: NOMBRES,
+    mejorVictorias, rondas, red: mejorPesosGlobal,
   }, null, 2));
-  console.log(`\n  Guardado en ${path.relative(process.cwd(), salida)}`);
+  console.log(`  Guardado en ${path.relative(process.cwd(), salida)}`);
 }
 
 if (process.argv[1] && process.argv[1].endsWith("entrenar-jugada.mjs")) {

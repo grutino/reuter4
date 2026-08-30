@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="es"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Redes de Reuter4</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600&family=Spectral:wght@300;400;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+ :root{--suelo:#EDE4D2;--tabla:#F8F3E7;--tinta:#2B2118;--apagado:#6E6045;--tenue:#8C7C5E;--laton:#8A6420;
+  --filo:#CDBE9F;--bien:#4B7B3C;--mal:#A8452F;--dato:#2F6B8A}
+ @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--suelo:#1E1710;--tabla:#2B2118;--tinta:#EDE3CC;
+  --apagado:#B0A183;--tenue:#8C7F64;--laton:#D9A94C;--filo:#4A3D2B;--bien:#7FB069;--mal:#C97A6A;--dato:#6FA8C7}}
+ :root[data-theme="dark"]{--suelo:#1E1710;--tabla:#2B2118;--tinta:#EDE3CC;--apagado:#B0A183;--tenue:#8C7F64;
+  --laton:#D9A94C;--filo:#4A3D2B;--bien:#7FB069;--mal:#C97A6A;--dato:#6FA8C7}
+ *{box-sizing:border-box}
+ body{margin:0;background:var(--suelo);color:var(--tinta);font:400 16.5px/1.65 Spectral,Georgia,serif}
+ .hoja{max-width:860px;margin:0 auto;padding:52px 24px 90px}
+ .cintillo{font:500 11.5px/1 "IBM Plex Mono",monospace;letter-spacing:.18em;text-transform:uppercase;color:var(--laton)}
+ h1{font:600 clamp(36px,7vw,54px)/1.05 "Cormorant Garamond",Georgia,serif;margin:14px 0 0;text-wrap:balance}
+ .entradilla{font-size:18.5px;color:var(--apagado);margin:14px 0 26px;max-width:62ch;font-weight:300}
+ .entradilla b{color:var(--tinta);font-weight:600}
+ section{background:var(--tabla);border:1px solid var(--filo);border-radius:4px;padding:22px 24px 8px;margin-bottom:24px}
+ h2{font:600 26px/1.2 "Cormorant Garamond",Georgia,serif;margin:0 0 6px}
+ h3{font:600 18px/1.3 "Cormorant Garamond",Georgia,serif;margin:22px 0 4px;color:var(--laton)}
+ .sub{color:var(--tenue);font-size:14.5px;margin:0 0 18px;max-width:64ch}
+ .fichas{display:grid;grid-template-columns:repeat(auto-fit,minmax(126px,1fr));gap:9px;margin:0 0 20px;padding:0}
+ .ficha{background:var(--suelo);border:1px solid var(--filo);border-radius:3px;padding:10px 12px}
+ .ficha dt{font:500 10px/1.3 "IBM Plex Mono",monospace;letter-spacing:.09em;text-transform:uppercase;color:var(--tenue)}
+ .ficha dd{margin:5px 0 0;font:500 23px/1 "IBM Plex Mono",monospace;font-variant-numeric:tabular-nums}
+ .ficha dd small{font-size:12px;color:var(--apagado)}
+ figure{margin:0 0 18px}
+ figcaption{font-size:13px;color:var(--tenue);margin-bottom:7px;max-width:64ch}
+ .lienzo{background:var(--suelo);border:1px solid var(--filo);border-radius:3px;padding:10px;overflow-x:auto}
+ svg{display:block;width:100%;height:auto}
+ .par{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px}
+ .nota{border-top:1px solid var(--filo);padding-top:14px;margin-bottom:14px;color:var(--apagado);font-size:15.5px}
+ .nota p{margin:0 0 8px} .nota b{color:var(--tinta)}
+ footer{margin-top:44px;padding-top:18px;border-top:1px solid var(--filo);font:400 13px/1.7 "IBM Plex Mono",monospace;color:var(--tenue)}
+ a{color:var(--laton)}
+</style>
+</head><body>
+<div class="hoja">
+<p class="cintillo">Reuter4 · modelos de los bots</p>
+<h1>Redes de Reuter4</h1>
+<p class="entradilla">Dos redes, entrenadas jugando contra sí mismas sin ninguna ayuda humana de partida.
+Una elige la posición inicial y otra decide cada jugada. <b>La medida que manda es la última:
+victorias contra la heurística escrita a mano</b>; lo demás es diagnóstico.</p>
+<section>
+    <h2>Evaluador de jugadas</h2>
+    <p class="sub">Decide qué jugada hacer. Ve la posición y la jugada en sí, y estima la probabilidad de acabar ganando. Cada ronda genera partidas nuevas jugando con la red de la ronda anterior y reentrena desde cero.</p>
+    <dl class="fichas"><div class="ficha"><dt>victorias en juego</dt><dd>—</dd></div><div class="ficha"><dt>pérdida validación</dt><dd>—</dd></div><div class="ficha"><dt>acierto</dt><dd>—</dd></div><div class="ficha"><dt>entradas</dt><dd>61</dd></div></dl>
+    
+    <div class="par">
+      
+      
+    </div>
+    <figure><figcaption>Arquitectura.</figcaption><div class="lienzo"><svg viewBox="0 0 340 200" role="img"><line x1="91" y1="100" x2="164" y2="100" stroke="var(--filo)" stroke-width="1.5"/><line x1="176" y1="100" x2="249" y2="100" stroke="var(--filo)" stroke-width="1.5"/><circle cx="85" cy="32" r="5" fill="var(--dato)" opacity=".85"/><circle cx="85" cy="49" r="5" fill="var(--dato)" opacity=".85"/><circle cx="85" cy="66" r="5" fill="var(--dato)" opacity=".85"/><circle cx="85" cy="83" r="5" fill="var(--dato)" opacity=".85"/><circle cx="85" cy="100" r="5" fill="var(--dato)" opacity=".85"/><circle cx="85" cy="117" r="5" fill="var(--dato)" opacity=".85"/><circle cx="85" cy="134" r="5" fill="var(--dato)" opacity=".85"/><circle cx="85" cy="151" r="5" fill="var(--dato)" opacity=".85"/><circle cx="85" cy="168" r="5" fill="var(--dato)" opacity=".85"/><text x="85" y="192" fill="var(--tenue)" font-size="10.5" text-anchor="middle" font-family="'IBM Plex Mono',monospace">61</text>
+        <text x="85" y="18" fill="var(--tenue)" font-size="9.5" text-anchor="middle" font-family="'IBM Plex Mono',monospace">entradas</text>
+        <text x="85" y="188" fill="var(--tenue)" font-size="13" text-anchor="middle">⋮</text><circle cx="170" cy="32" r="5" fill="var(--laton)" opacity=".85"/><circle cx="170" cy="49" r="5" fill="var(--laton)" opacity=".85"/><circle cx="170" cy="66" r="5" fill="var(--laton)" opacity=".85"/><circle cx="170" cy="83" r="5" fill="var(--laton)" opacity=".85"/><circle cx="170" cy="100" r="5" fill="var(--laton)" opacity=".85"/><circle cx="170" cy="117" r="5" fill="var(--laton)" opacity=".85"/><circle cx="170" cy="134" r="5" fill="var(--laton)" opacity=".85"/><circle cx="170" cy="151" r="5" fill="var(--laton)" opacity=".85"/><circle cx="170" cy="168" r="5" fill="var(--laton)" opacity=".85"/><text x="170" y="192" fill="var(--tenue)" font-size="10.5" text-anchor="middle" font-family="'IBM Plex Mono',monospace">28</text>
+        <text x="170" y="18" fill="var(--tenue)" font-size="9.5" text-anchor="middle" font-family="'IBM Plex Mono',monospace">oculta</text>
+        <text x="170" y="188" fill="var(--tenue)" font-size="13" text-anchor="middle">⋮</text><circle cx="255" cy="100" r="5" fill="var(--bien)" opacity=".85"/><text x="255" y="192" fill="var(--tenue)" font-size="10.5" text-anchor="middle" font-family="'IBM Plex Mono',monospace">1</text>
+        <text x="255" y="18" fill="var(--tenue)" font-size="9.5" text-anchor="middle" font-family="'IBM Plex Mono',monospace">salida</text>
+        </svg></div></figure>
+    
+    
+  </section><section>
+    <h2>Red de la posición de salida</h2>
+    <p class="sub">Juzga un despliegue inicial antes de empezar. Al desplegar se generan cuarenta candidatos al azar y se elige el que mejor puntúa. Es el modelo que más gana de los dos.</p>
+    <dl class="fichas"><div class="ficha"><dt>victorias en juego</dt><dd>75%</dd></div><div class="ficha"><dt>pérdida validación</dt><dd>0.6888</dd></div><div class="ficha"><dt>acierto</dt><dd>—</dd></div><div class="ficha"><dt>entradas</dt><dd>75</dd></div></dl>
+    <figure><figcaption>Curvas de aprendizaje. Si la de validación sube mientras la otra baja, está memorizando.</figcaption><div class="lienzo"><svg viewBox="0 0 700 200" role="img"><g><line x1="50" y1="174" x2="686" y2="174" stroke="var(--filo)" opacity=".45"/>
+        <text x="43" y="177.5" fill="var(--tenue)" font-size="10" text-anchor="end" font-family="'IBM Plex Mono',monospace">0.685</text><line x1="50" y1="134" x2="686" y2="134" stroke="var(--filo)" opacity=".45"/>
+        <text x="43" y="137.5" fill="var(--tenue)" font-size="10" text-anchor="end" font-family="'IBM Plex Mono',monospace">0.686</text><line x1="50" y1="94" x2="686" y2="94" stroke="var(--filo)" opacity=".45"/>
+        <text x="43" y="97.5" fill="var(--tenue)" font-size="10" text-anchor="end" font-family="'IBM Plex Mono',monospace">0.687</text><line x1="50" y1="54" x2="686" y2="54" stroke="var(--filo)" opacity=".45"/>
+        <text x="43" y="57.5" fill="var(--tenue)" font-size="10" text-anchor="end" font-family="'IBM Plex Mono',monospace">0.688</text><line x1="50" y1="14" x2="686" y2="14" stroke="var(--filo)" opacity=".45"/>
+        <text x="43" y="17.5" fill="var(--tenue)" font-size="10" text-anchor="end" font-family="'IBM Plex Mono',monospace">0.689</text></g><path d="M50.0,151.2 L66.3,167.0 L82.6,169.8 L98.9,172.2 L115.2,169.4 L131.5,169.4 L147.8,174.0 L164.2,160.7 L180.5,171.5 L196.8,171.9 L213.1,171.2 L229.4,171.9 L245.7,173.3 L262.0,170.8 L278.3,170.8 L294.6,169.8 L310.9,171.2 L327.2,170.5 L343.5,165.6 L359.8,166.6 L376.2,170.5 L392.5,169.1 L408.8,171.2 L425.1,162.8 L441.4,165.2 L457.7,162.4 L474.0,170.1 L490.3,169.1 L506.6,171.9 L522.9,171.5 L539.2,170.8 L555.5,169.4 L571.8,169.1 L588.2,170.1 L604.5,172.2 L620.8,172.9 L637.1,171.9 L653.4,170.8 L669.7,171.2 L686.0,170.8" fill="none" stroke="var(--dato)" stroke-width="2"  stroke-linejoin="round"/><path d="M50.0,14.0 L66.3,26.3 L82.6,27.0 L98.9,30.1 L115.2,28.0 L131.5,27.0 L147.8,31.9 L164.2,16.8 L180.5,27.3 L196.8,28.7 L213.1,28.7 L229.4,29.1 L245.7,30.5 L262.0,28.4 L278.3,28.7 L294.6,27.7 L310.9,27.7 L327.2,29.1 L343.5,22.8 L359.8,21.7 L376.2,29.1 L392.5,25.2 L408.8,28.0 L425.1,18.9 L441.4,22.8 L457.7,18.6 L474.0,29.1 L490.3,25.6 L506.6,29.8 L522.9,29.8 L539.2,28.4 L555.5,27.3 L571.8,28.7 L588.2,25.9 L604.5,31.2 L620.8,31.9 L637.1,30.1 L653.4,28.0 L669.7,29.4 L686.0,27.0" fill="none" stroke="var(--laton)" stroke-width="2"  stroke-linejoin="round"/><rect x="56" y="14" width="10" height="3" fill="var(--dato)"/>
+      <text x="71" y="18" fill="var(--tenue)" font-size="11" font-family="'IBM Plex Mono',monospace">entrenamiento</text><rect x="204" y="14" width="10" height="3" fill="var(--laton)"/>
+      <text x="219" y="18" fill="var(--tenue)" font-size="11" font-family="'IBM Plex Mono',monospace">validación</text>
+    <text x="686" y="194" fill="var(--tenue)" font-size="10" text-anchor="end" font-family="'IBM Plex Mono',monospace">época</text></svg></div></figure>
+    <div class="par">
+      
+      
+    </div>
+    <figure><figcaption>Arquitectura.</figcaption><div class="lienzo"><svg viewBox="0 0 340 200" role="img"><line x1="91" y1="100" x2="164" y2="100" stroke="var(--filo)" stroke-width="1.5"/><line x1="176" y1="100" x2="249" y2="100" stroke="var(--filo)" stroke-width="1.5"/><circle cx="85" cy="32" r="5" fill="var(--dato)" opacity=".85"/><circle cx="85" cy="49" r="5" fill="var(--dato)" opacity=".85"/><circle cx="85" cy="66" r="5" fill="var(--dato)" opacity=".85"/><circle cx="85" cy="83" r="5" fill="var(--dato)" opacity=".85"/><circle cx="85" cy="100" r="5" fill="var(--dato)" opacity=".85"/><circle cx="85" cy="117" r="5" fill="var(--dato)" opacity=".85"/><circle cx="85" cy="134" r="5" fill="var(--dato)" opacity=".85"/><circle cx="85" cy="151" r="5" fill="var(--dato)" opacity=".85"/><circle cx="85" cy="168" r="5" fill="var(--dato)" opacity=".85"/><text x="85" y="192" fill="var(--tenue)" font-size="10.5" text-anchor="middle" font-family="'IBM Plex Mono',monospace">75</text>
+        <text x="85" y="18" fill="var(--tenue)" font-size="9.5" text-anchor="middle" font-family="'IBM Plex Mono',monospace">entradas</text>
+        <text x="85" y="188" fill="var(--tenue)" font-size="13" text-anchor="middle">⋮</text><circle cx="170" cy="32" r="5" fill="var(--laton)" opacity=".85"/><circle cx="170" cy="49" r="5" fill="var(--laton)" opacity=".85"/><circle cx="170" cy="66" r="5" fill="var(--laton)" opacity=".85"/><circle cx="170" cy="83" r="5" fill="var(--laton)" opacity=".85"/><circle cx="170" cy="100" r="5" fill="var(--laton)" opacity=".85"/><circle cx="170" cy="117" r="5" fill="var(--laton)" opacity=".85"/><circle cx="170" cy="134" r="5" fill="var(--laton)" opacity=".85"/><circle cx="170" cy="151" r="5" fill="var(--laton)" opacity=".85"/><circle cx="170" cy="168" r="5" fill="var(--laton)" opacity=".85"/><text x="170" y="192" fill="var(--tenue)" font-size="10.5" text-anchor="middle" font-family="'IBM Plex Mono',monospace">14</text>
+        <text x="170" y="18" fill="var(--tenue)" font-size="9.5" text-anchor="middle" font-family="'IBM Plex Mono',monospace">oculta</text>
+        <text x="170" y="188" fill="var(--tenue)" font-size="13" text-anchor="middle">⋮</text><circle cx="255" cy="100" r="5" fill="var(--bien)" opacity=".85"/><text x="255" y="192" fill="var(--tenue)" font-size="10.5" text-anchor="middle" font-family="'IBM Plex Mono',monospace">1</text>
+        <text x="255" y="18" fill="var(--tenue)" font-size="9.5" text-anchor="middle" font-family="'IBM Plex Mono',monospace">salida</text>
+        </svg></div></figure>
+    <figure><figcaption>Qué mira: efecto de cada rasgo sobre la predicción.</figcaption><div class="lienzo"><svg viewBox="0 0 700 304" role="img"><text x="264" y="15" fill="var(--apagado)" font-size="11.5" text-anchor="end" font-family="'IBM Plex Mono',monospace">conjunto rangoDeLaBandera</text>
+        <rect x="272" y="6" width="300.0" height="11" rx="1.5" fill="var(--bien)"/><text x="264" y="36" fill="var(--apagado)" font-size="11.5" text-anchor="end" font-family="'IBM Plex Mono',monospace">6 Capitán cercaDeTiro</text>
+        <rect x="272" y="27" width="272.1" height="11" rx="1.5" fill="var(--bien)"/><text x="264" y="57" fill="var(--apagado)" font-size="11.5" text-anchor="end" font-family="'IBM Plex Mono',monospace">6 Capitán lateral</text>
+        <rect x="272" y="48" width="223.9" height="11" rx="1.5" fill="var(--mal)"/><text x="264" y="78" fill="var(--apagado)" font-size="11.5" text-anchor="end" font-family="'IBM Plex Mono',monospace">6 Capitán juntoAReclutamiento</text>
+        <rect x="272" y="69" width="157.8" height="11" rx="1.5" fill="var(--bien)"/><text x="264" y="99" fill="var(--apagado)" font-size="11.5" text-anchor="end" font-family="'IBM Plex Mono',monospace">4 Sargento lateral</text>
+        <rect x="272" y="90" width="127.9" height="11" rx="1.5" fill="var(--bien)"/><text x="264" y="120" fill="var(--apagado)" font-size="11.5" text-anchor="end" font-family="'IBM Plex Mono',monospace">1 Cañón cercaDeTiro</text>
+        <rect x="272" y="111" width="122.8" height="11" rx="1.5" fill="var(--bien)"/><text x="264" y="141" fill="var(--apagado)" font-size="11.5" text-anchor="end" font-family="'IBM Plex Mono',monospace">4 Sargento cercaDeTiro</text>
+        <rect x="272" y="132" width="116.6" height="11" rx="1.5" fill="var(--mal)"/><text x="264" y="162" fill="var(--apagado)" font-size="11.5" text-anchor="end" font-family="'IBM Plex Mono',monospace">1 Cañón lateral</text>
+        <rect x="272" y="153" width="111.3" height="11" rx="1.5" fill="var(--mal)"/><text x="264" y="183" fill="var(--apagado)" font-size="11.5" text-anchor="end" font-family="'IBM Plex Mono',monospace">3 Explorador cercaDeTiro</text>
+        <rect x="272" y="174" width="110.7" height="11" rx="1.5" fill="var(--mal)"/><text x="264" y="204" fill="var(--apagado)" font-size="11.5" text-anchor="end" font-family="'IBM Plex Mono',monospace">6 Capitán avance</text>
+        <rect x="272" y="195" width="104.7" height="11" rx="1.5" fill="var(--bien)"/><text x="264" y="225" fill="var(--apagado)" font-size="11.5" text-anchor="end" font-family="'IBM Plex Mono',monospace">5 Teniente lateral</text>
+        <rect x="272" y="216" width="102.5" height="11" rx="1.5" fill="var(--bien)"/><text x="264" y="246" fill="var(--apagado)" font-size="11.5" text-anchor="end" font-family="'IBM Plex Mono',monospace">6 Capitán juntoABandera</text>
+        <rect x="272" y="237" width="97.7" height="11" rx="1.5" fill="var(--mal)"/><text x="264" y="267" fill="var(--apagado)" font-size="11.5" text-anchor="end" font-family="'IBM Plex Mono',monospace">5 Teniente juntoAReclutamiento</text>
+        <rect x="272" y="258" width="78.9" height="11" rx="1.5" fill="var(--mal)"/><text x="264" y="288" fill="var(--apagado)" font-size="11.5" text-anchor="end" font-family="'IBM Plex Mono',monospace">9 Mariscal cercaDeTiro</text>
+        <rect x="272" y="279" width="71.6" height="11" rx="1.5" fill="var(--mal)"/></svg></div></figure>
+    <div class="nota"><p><b>Un aviso sobre la pérdida:</b> apenas se despega de 0,693, que es adivinar a ciegas, y aun así en juego gana el 75%. No es contradictorio: el resultado de una partida depende de los cuatro despliegues y de todo lo jugado después, así que casi toda la varianza es irreducible. La red tiene una señal débil pero bien ordenada, y elegir el mejor de cuarenta candidatos la amplifica.</p></div>
+  </section>
+<footer>Generado el 30/8/2026, 18:09:57 · <a href="https://github.com/grutino/reuter4">github.com/grutino/reuter4</a><br>
+Motor propio sin dependencias. La red se entrena y se ejecuta en JavaScript.</footer>
+</div>
+</body></html>
