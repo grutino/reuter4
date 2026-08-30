@@ -59,9 +59,18 @@ const [EQUIPO_A, EQUIPO_B] = EQUIPOS;
 
 function opciones(argv) {
   const o = {
-    rondas: 6, partidas: 400, epocas: 60, lote: 64, tasa: 0.002, decaimiento: 0.001,
+    rondas: 6, partidas: 400, epocas: 60, lote: 64, decaimiento: 0.001,
     ocultaDespliegue: 16, ocultaJugada: 28, semilla: 1, limite: 400,
-    candidatas: 12, candidatos: 30, escalada: 200, exploracion: 0.22, parejasPanel: 6,
+    candidatas: 12, candidatos: 30, escalada: 200, parejasPanel: 6,
+    // Recocido a lo largo de las rondas. Al principio la exploración es lo que
+    // impide que las dos redes jueguen siempre la misma partida; al final, con
+    // las redes ya buenas, ese mismo 22% es ruido metido en los datos: una de
+    // cada cinco jugadas elegida a voleo entre las candidatas. Así que se
+    // enfría. Pero NO hasta cero: las formaciones siguen evolucionando, o sea
+    // que el entorno no deja de moverse, y una red que deja de explorar deja de
+    // encontrar respuestas a lo que aparece nuevo.
+    exploracion: 0.25, exploracionFinal: 0.08,
+    tasa: 0.003, tasaFinal: 0.0008,
     // Cuántas rondas de ejemplos se conservan. Con una sola, cada ronda ve muy
     // poco y el ajuste va dando bandazos.
     memoria: 3,
@@ -267,7 +276,8 @@ async function main() {
   console.log(`  ${o.rondas} rondas · ${o.partidas} partidas por ronda · panel de ${panel.length} rivales`);
   console.log(`  arranque: despliegue ${redD ? "modelo guardado" : "desde cero"} · jugada ${redJ ? "modelo guardado" : "desde cero"}`);
   console.log(`  ${Math.round(o.liga * 100)}% de partidas de liga · memoria de ${o.memoria} rondas de ejemplos`);
-  console.log(`  población de ${o.poblacion} formaciones que evoluciona contra las redes\n`);
+  console.log(`  población de ${o.poblacion} formaciones que evoluciona contra las redes`);
+  console.log(`  exploración ${o.exploracion} -> ${o.exploracionFinal} · tasa ${o.tasa} -> ${o.tasaFinal}\n`);
 
   const historia = [];
   const arranque = Date.now();
@@ -296,16 +306,25 @@ async function main() {
   let poblacion = poblacionInicial(o.poblacion, cargarAperturas(), azar);
   const archivo = new Map();
 
+  // Interpolación lineal de la ronda 1 a la última.
+  const enfriar = (desde, hasta, ronda) =>
+    o.rondas <= 1 ? hasta : desde + (hasta - desde) * ((ronda - 1) / (o.rondas - 1));
+
   for (let ronda = 1; ronda <= o.rondas; ronda++) {
     const t0 = Date.now();
-    const tanda = jugarTanda(redD, redJ, o, o.semilla + ronda * 104729, sacarDespliegue, poblacion);
+    const oRonda = {
+      ...o,
+      exploracion: enfriar(o.exploracion, o.exploracionFinal, ronda),
+      tasa: enfriar(o.tasa, o.tasaFinal, ronda),
+    };
+    const tanda = jugarTanda(redD, redJ, oRonda, o.semilla + ronda * 104729, sacarDespliegue, poblacion);
     deposito.push(tanda);
     while (deposito.length > o.memoria) deposito.shift();
     const todosD = deposito.flatMap((t) => t.deDespliegue);
     const todosJ = deposito.flatMap((t) => t.deJugada);
 
-    const nuevaD = entrenar(todosD, TAMANO_DESPLIEGUE, o.ocultaDespliegue, o, azar, redD);
-    const nuevaJ = entrenar(todosJ, TAMANO_JUGADA, o.ocultaJugada, o, azar, redJ);
+    const nuevaD = entrenar(todosD, TAMANO_DESPLIEGUE, o.ocultaDespliegue, oRonda, azar, redD);
+    const nuevaJ = entrenar(todosJ, TAMANO_JUGADA, o.ocultaJugada, oRonda, azar, redJ);
     const medida = medir(nuevaD.red, nuevaJ.red);
 
     // Las formaciones se reproducen con la aptitud que acaban de sacar contra
@@ -325,7 +344,7 @@ async function main() {
     if (mejora) { redD = nuevaD.red; redJ = nuevaJ.red; }
 
     console.log(
-      `  ronda ${ronda}  ${todosJ.length} jugadas (${tanda.deLiga}/${o.partidas} de liga) · decididas ${tanda.decididas} · ` +
+      `  ronda ${ronda}  ${todosJ.length} jugadas (${tanda.deLiga}/${o.partidas} de liga, expl ${oRonda.exploracion.toFixed(2)}) · decididas ${tanda.decididas} · ` +
         `panel ${(medida.tasa * 100).toFixed(0)}% ±${Math.round(medida.error * 100)} · ` +
         `peor ${medida.peor.rival} (${(medida.peor.tasa * 100).toFixed(0)}%)` +
         (mejora ? "  <- adoptadas" : `  (descartadas, hacía falta ${(listón * 100).toFixed(0)}%)`) +
@@ -341,6 +360,7 @@ async function main() {
       medida: medida.tasa, error: medida.error, adoptadas: mejora,
       ejemplosDespliegue: todosD.length, ejemplosJugada: todosJ.length,
       decididas: tanda.decididas, deLiga: tanda.deLiga,
+      exploracion: oRonda.exploracion, tasa: oRonda.tasa,
       formaciones: {
         masDura: { origen: dura.origen, aptitud: dura.aptitud, juega: dura.juega },
         media: generacion.ordenada.reduce((s, f) => s + f.aptitud, 0) / generacion.ordenada.length,
