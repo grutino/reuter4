@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import Tablero3D, { ESTILO, NOMBRE_RANGO, LATON_CSS } from "./Tablero3D.jsx";
-import { COLORES, ZONAS, casillasDeZona, zonaDe } from "./motor/tablero.js";
+import { COLORES, ZONAS, casillasDeZona, zonaDe, coord } from "./motor/tablero.js";
 import { RANGOS, VICTORIAS_PARA_RECLUTAR, SOCIO, movimientosLegales, inventarioInicial } from "./motor/motor.js";
 import { pintarFicha, LADO_FICHA } from "./ficha.js";
 
@@ -69,6 +69,36 @@ function describirEvento(ev) {
   if (ev.tipo === "victoria") return `¡${ev.color} corona su bandera en la torre!`;
   if (ev.tipo === "turno-saltado") return `${ev.color} no tiene movimientos y pasa turno.`;
   return null;
+}
+
+// Exporta el despliegue como rejilla de texto, en coordenadas de la propia
+// zona. Es el formato que come el banco de pruebas, y sirve igual para los
+// cuatro colores aunque las zonas norte y sur sean anchas y las otras altas.
+//
+// Existe porque leer los rangos de una captura del tablero 3D es poco fiable:
+// una silueta mal interpretada entraría en la batería como una apertura que no
+// es, sin dar error. Con esto se copia y se pega, y no hay nada que interpretar.
+function despliegueComoRejilla(color, colocacion) {
+  const zona = ZONAS[color];
+  const [cBandera, fBandera] = coord(zona.bandera);
+  const anchaEnColumnas = zona.cols[1] - zona.cols[0] > zona.filas[1] - zona.filas[0];
+  const rejilla = Array.from({ length: 3 }, () => Array(7).fill("?"));
+
+  for (const casilla of casillasDeZona(color)) {
+    const [c, f] = coord(casilla);
+    const profundidad = anchaEnColumnas
+      ? (fBandera === zona.filas[0] ? f - zona.filas[0] : zona.filas[1] - f)
+      : (cBandera === zona.cols[0] ? c - zona.cols[0] : zona.cols[1] - c);
+    const lateral = anchaEnColumnas ? c - zona.cols[0] : f - zona.filas[0];
+    if (casilla === zona.reclutamiento) rejilla[profundidad][lateral] = ".";
+    else if (colocacion[casilla]) rejilla[profundidad][lateral] = String(colocacion[casilla]);
+  }
+  const cabecera = [
+    `# despliegue de ${color}`,
+    "# fila 1 la más atrasada · fila 3 la más adelantada",
+    "# el punto es la casilla de reclutamiento · la bandera va en el centro de la fila 1",
+  ];
+  return `${cabecera.join("\n")}\n${rejilla.map((f) => f.join(" ")).join("\n")}`;
 }
 
 function Boton({ children, onClick, disabled, variante = "principal" }) {
@@ -379,6 +409,7 @@ export default function App() {
   const [combates, setCombates] = useState([]);
   const combatesVistos = useRef({});
   const [tableroAmpliado, setTableroAmpliado] = useState(false);
+  const [rejillaCopiada, setRejillaCopiada] = useState(null);
   const [confirmando, setConfirmando] = useState(null); // "parar" | "borrar", solo el anfitrión
   const socketRef = useRef(null);
   const yoRef = useRef(null);
@@ -920,8 +951,37 @@ export default function App() {
                   <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
                     <Boton variante="secundario" onClick={() => setColocacion(colocacionAleatoria(miColor))}>Al azar</Boton>
                     <Boton variante="secundario" onClick={() => setColocacion({})}>Vaciar</Boton>
+                    <Boton
+                      variante="secundario"
+                      onClick={() => {
+                        const texto = despliegueComoRejilla(miColor, colocacion);
+                        setRejillaCopiada(texto);
+                        if (navigator.clipboard) navigator.clipboard.writeText(texto).catch(() => {});
+                      }}
+                    >
+                      Copiar
+                    </Boton>
                     <Boton onClick={() => enviar({ tipo: "despliegue", sala: salaId, colocacion })}>Confirmar</Boton>
                   </div>
+                  {rejillaCopiada && (
+                    <div style={{ marginTop: 10 }}>
+                      <Rotulo>Copiado al portapapeles</Rotulo>
+                      <textarea
+                        readOnly
+                        value={rejillaCopiada}
+                        onFocus={(e) => e.target.select()}
+                        rows={6}
+                        style={{
+                          ...entradaEstilo,
+                          width: "100%",
+                          fontFamily: "ui-monospace, monospace",
+                          fontSize: 12.5,
+                          lineHeight: 1.5,
+                          resize: "vertical",
+                        }}
+                      />
+                    </div>
+                  )}
                 </>
               )}
             </div>
