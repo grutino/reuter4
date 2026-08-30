@@ -18,7 +18,7 @@
 // los cuatro colores alimentan el mismo conjunto de entrenamiento.
 
 import { ZONAS, ADYACENTES, LAGOS, ANILLO, CASILLAS, coord, casillasDeZona, rayo, DIRECCIONES } from "../src/motor/tablero.js";
-import { RANGOS, EXPLORADOR, CAPITAN, ESPIA, CANON } from "../src/motor/motor.js";
+import { RANGOS, EXPLORADOR, CAPITAN, ESPIA } from "../src/motor/motor.js";
 import { DISTANCIA } from "../src/motor/bot.js";
 
 export const RANGOS_ORDENADOS = Object.keys(RANGOS).map(Number).sort((a, b) => b - a); // 9..1
@@ -52,10 +52,14 @@ export const GLOBALES = [
   "altosCamuflados",
   "altosJuntoAComandante",
   "comandantesJuntoATeniente",
-  "canonesArropados",
   "mezclaEnPrimeraLinea",
-  "agrupamientoDeFuerza",
   "altosEnPrimeraLinea",
+  // Recaptura a dos saltos de RANGO, que es la idea fina: si me capturan un
+  // teniente (5), quien recaptura debe ser un comandante (7). Si para vengar
+  // una pieza intermedia hay que sacar al general, se paga el secreto de una
+  // pieza grande por una captura pequeña, y eso suele ser mal negocio.
+  "parejasDeDosSaltos",
+  "defensaEconomica",
 ];
 
 export const TAMANO = RANGOS_ORDENADOS.length * PROPIEDADES.length + GLOBALES.length;
@@ -198,32 +202,39 @@ export function rasgosDeDespliegue(color, colocacion) {
   const altos = colocacion.filter((p) => p.rango >= 8);
   const espia = colocacion.find((p) => p.rango === ESPIA);
   const comandantes = colocacion.filter((p) => p.rango === 7);
-  const canones = colocacion.filter((p) => p.rango === CANON);
   const fraccion = (lista, prueba) => (lista.length ? lista.filter(prueba).length / lista.length : 0);
 
   const vecindad = {
+    // El general solo lo bate el mariscal, y al mariscal solo lo bate el espía
+    // atacándole. Un espía pegado al general es una trampa: si el mariscal se
+    // lleva al general, queda revelado y el espía lo remata.
     espiaJuntoAAlto: espia && vecinos(espia.casilla).some((r) => r >= 8) ? 1 : 0,
     // Arropar a los altos con piezas medias: si al rival le sale un 5 donde
     // esperaba un 9, tarda más en localizar de verdad las piezas fuertes.
     altosCamuflados: fraccion(altos, (p) => vecinos(p.casilla).some((r) => r >= 4 && r <= 7)),
     altosJuntoAComandante: fraccion(altos, (p) => vecinos(p.casilla).includes(7)),
     comandantesJuntoATeniente: fraccion(comandantes, (p) => vecinos(p.casilla).includes(5)),
-    canonesArropados: fraccion(canones, (p) => vecinos(p.casilla).some((r) => r >= 4)),
     altosEnPrimeraLinea: fraccion(altos, (p) => propiedadesDePieza(color, p.casilla, p.rango).avance > 0.66),
+    // Quién puede vengar a cada pieza sin gastar más secreto del necesario.
+    // A una pieza de rango r la captura como mínimo una de r+1, así que la
+    // recaptura más barata es exactamente r+2.
+    parejasDeDosSaltos: fraccion(colocacion, (p) => vecinos(p.casilla).includes(p.rango + 2)),
   };
 
-  // Cuánto se parece cada pieza a sus vecinas en rango. Alto = las fuertes van
-  // juntas y se delatan en bloque; bajo = van mezcladas y cuesta leerlas.
-  let sumaProducto = 0;
-  let cuantas = 0;
+  // Cuánto rango de más habría que enseñar para recapturar. 1 = siempre se
+  // puede vengar con la pieza justa; 0 = hay que sacar al general para
+  // recuperar un sargento.
+  let sumaExceso = 0;
+  let conCobertura = 0;
   for (const pieza of colocacion) {
-    const alrededor = vecinos(pieza.casilla);
-    if (!alrededor.length) continue;
-    const media = alrededor.reduce((a, b) => a + b, 0) / alrededor.length;
-    sumaProducto += (pieza.rango - 5) * (media - 5);
-    cuantas++;
+    const minimoUtil = pieza.rango + 2;
+    const candidatos = vecinos(pieza.casilla).filter((r) => r > pieza.rango + 1);
+    if (!candidatos.length) continue;
+    const masBarato = Math.min(...candidatos);
+    sumaExceso += Math.max(0, masBarato - minimoUtil);
+    conCobertura++;
   }
-  vecindad.agrupamientoDeFuerza = cuantas ? 0.5 + sumaProducto / cuantas / 32 : 0.5;
+  vecindad.defensaEconomica = conCobertura ? 1 - Math.min(1, sumaExceso / conCobertura / 4) : 0;
 
   // Variedad de rangos en la línea de contacto: uniforme se lee de un vistazo.
   const primera = colocacion.filter((p) => propiedadesDePieza(color, p.casilla, p.rango).avance > 0.66).map((p) => p.rango);

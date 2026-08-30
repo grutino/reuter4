@@ -42,6 +42,17 @@ export const NOMBRES_JUGADA = [
   "espiaContraMariscal",
   "valorEsperadoDelDuelo",
   "objetivoConBandera",
+  // Economía del secreto. Ganar un duelo revela tu rango, así que llevarse un
+  // capitán con el mariscal cuesta lo mismo en piezas pero mucho más en
+  // información que llevárselo con un comandante. La excepción la aporta el
+  // contexto: si esa victoria remata la promoción, quizá compensa.
+  //
+  // OJO: este orden tiene que coincidir EXACTAMENTE con el de las llamadas a
+  // `pon` de abajo. Al insertarlos en distinto sitio quedaron desincronizados y
+  // todos los rasgos siguientes salían mal etiquetados, sin dar ningún error.
+  "economiaDelAtaque",
+  "revelaPiezaAlta",
+  "recapturaAlQueMato",
   "amenazasQueDejo",
   "amenazaCombinada",
   "contraAmenaza",
@@ -126,6 +137,28 @@ export function rasgosDeJugada(estado, color, accion, { analisis, bolsas, resume
     : objetivo
     ? [objetivo.id]
     : [];
+  // Cuánto rango de más estoy enseñando para ganar este duelo. Contra un rango
+  // conocido k, la pieza más barata que gana es k+1: todo lo que pase de ahí es
+  // secreto malgastado.
+  let economia = 0.5;
+  let revela = 0;
+  let recaptura = 0;
+  if (accion.tipo === "atacar" && pieza && conocido !== undefined && ganado) {
+    economia = 1 - Math.min(1, Math.max(0, pieza.rango - (conocido + 1)) / 6);
+    revela = pieza.rango >= 8 ? 1 : 0;
+    // ¿Es este el que acaba de llevarse una de las mías? El hilo lo sabe.
+    const ultima = estado.historia && estado.historia[estado.historia.length - 1];
+    if (ultima) {
+      for (const ev of ultima.eventos || []) {
+        if (ev.tipo !== "duelo" || ev.resultado !== "atacante") continue;
+        if (ev.atacante.id === objetivo.id && ev.defensor.color === color) recaptura = 1;
+      }
+    }
+  }
+  pon(economia);
+  pon(revela);
+  pon(recaptura);
+
   pon(Math.min(1, amenazo.length / 3));
   pon(amenazo.some((id) => analisis.presionadasPorSocio.has(id)) ? 1 : 0);
   pon(amenazo.some((id) => analisis.apuntanALosMios.has(id)) ? 1 : 0);
