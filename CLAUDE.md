@@ -333,6 +333,22 @@ maraña— y el hilo completo con sus combates.
 El fondo del tablero se define **una vez** como `<symbol>` y los ocho diagramas lo referencian
 con `<use>`: son 225 rectángulos por diagrama y el documento pasaba de 258 KB a 66 KB.
 
+Las piezas se dibujan con `pintarFicha`, **la misma** que genera la textura del tablero 3D y la
+de la ventana de combate: el informe no imita el aspecto del juego, usa el mismo dibujo con su
+silueta y su contorno interior grabado. Necesita canvas, así que solo salen en el navegador;
+generado desde una prueba cae al número dentro de un disco. Las 36 fichas (9 rangos x 4
+colores) van una sola vez en `<defs>` como `<symbol>` y se referencian con `<use>`, también en
+el hilo.
+
+**El hilo dice de qué rango era cada jugada, y eso hay que reconstruirlo.** El registro guarda
+color, tipo, origen y destino pero no el rango de quien mueve, porque mientras se juega es
+información oculta. `reconstruirRangos` parte del despliegue inicial y aplica el hilo entero.
+Lo único irrecuperable es un recluta: su rango no se publica, así que esa casilla queda sin
+identificar y sus jugadas salen sin ficha, que es más honesto que inventarla. La reconstrucción
+trae su propia vara de medir: los duelos **sí** publican los dos rangos, así que si el replay no
+coincide con lo que dice el duelo, el replay está mal — y hay una prueba que lo exige sobre
+cuatro partidas.
+
 **Ojo con `coord`, que usa una convención mixta**: devuelve la columna en base 0 y la fila en
 base 1, así que `coord("A1")` es `[0, 1]`. Tratar las dos igual desplaza las columnas —y solo
 las columnas— una casilla a la izquierda. Pasó aquí, y no lo cazó ninguna prueba porque el

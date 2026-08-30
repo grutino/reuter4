@@ -26,14 +26,14 @@ import {
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import { accionDeBot, accionDeBotClasico, DISTANCIA } from "./bot.js";
+import { accionDeBot, accionDeBotClasico, decisionDeRecogida, despliegueAleatorio, DISTANCIA } from "./bot.js";
 import { analizarTurno } from "./analisis.js";
 import { rasgosDeJugada, contextoDeTurno, NOMBRES as NOMBRES_RASGOS, TAMANO as TAMANO_JUGADA } from "./rasgos-jugada.js";
 import { cargarModelos, jugadaDeBot } from "./bot-red.js";
 import { NIVELES, nivelValido, ESCALA } from "./dificultad.js";
 import { BATEN_ANILLO, BATEN_LA_TORRE, PASOS_A_TIRO, ANILLO as ANILLO_T } from "./tablero.js";
 import { salaParaJugador } from "../../servidor/vista.mjs";
-import { centro as centroEnInforme, CELDA, MARGEN, LADO } from "../informe-partida.js";
+import { centro as centroEnInforme, reconstruirRangos, CELDA, MARGEN, LADO } from "../informe-partida.js";
 import { propiedadesDePieza, FIRMA as FIRMA_DESPLIEGUE } from "./rasgos-despliegue.js";
 
 let pasadas = 0;
@@ -1373,6 +1373,81 @@ prueba("en el informe las piezas caen sobre su casilla del tablero de fondo", ()
     const c = centroEnInforme(nombre);
     assert.ok(c.x > MARGEN && c.x < fin && c.y > MARGEN && c.y < fin, `${nombre} se sale del lienzo`);
   }
+});
+
+
+prueba("el informe reconstruye de qué rango era cada jugada", () => {
+  // El hilo guarda color, tipo, origen y destino, pero no el rango de quien
+  // mueve: mientras se juega eso es información oculta. Terminada la partida se
+  // reconstruye partiendo del despliegue inicial y aplicando el hilo entero.
+  //
+  // Y la reconstrucción trae su propia vara: los duelos SÍ publican los dos
+  // rangos, así que si el replay no coincide con lo que dice el duelo, el replay
+  // está mal.
+  //
+  // Se juegan VARIAS partidas y se acumulan las comprobaciones: con una sola
+  // salían dos duelos, y elegir la semilla que diera más habría sido escoger el
+  // caso que conviene.
+  const generador = (semilla) => {
+    let a = semilla >>> 0;
+    return () => {
+      a = (a + 0x6d2b79f5) >>> 0;
+      let x = a;
+      x = Math.imul(x ^ (x >>> 15), x | 1);
+      x ^= x + Math.imul(x ^ (x >>> 7), x | 61);
+      return ((x ^ (x >>> 14)) >>> 0) / 4294967296;
+    };
+  };
+
+  let duelosComprobados = 0;
+  let jugadasTotales = 0;
+  let identificadasTotales = 0;
+
+  for (const semilla of [4242, 90210, 31415, 27182]) {
+    const azar = generador(semilla);
+    const despliegues = {};
+    for (const color of COLORES) despliegues[color] = despliegueAleatorio(color, azar);
+
+    let e = nuevaPartida(despliegues, { primero: "rojo" });
+    let turnos = 0;
+    while (!e.fin && turnos < 300) {
+      if (e.pendiente) {
+        const p = e.pendiente;
+        e = p.tipo === "recoger"
+          ? (decisionDeRecogida(e, p.color) ? recogerLaBandera(e) : renunciarARecoger(e))
+          : reclutar(e, Math.max(...p.opciones));
+        continue;
+      }
+      const a = accionDeBot(e, e.turno, { azar });
+      if (!a) break;
+      e = aplicar(e, a);
+      turnos++;
+    }
+
+    const historia = e.historia || [];
+    const rangos = reconstruirRangos(despliegues, historia);
+    assert.strictEqual(rangos.length, historia.length);
+
+    historia.forEach((h, i) => {
+      const duelo = (h.eventos || []).find((ev) => ev.tipo === "duelo");
+      if (!duelo) return;
+      duelosComprobados++;
+      assert.strictEqual(
+        rangos[i], duelo.atacante.rango,
+        `semilla ${semilla}, jugada ${h.n}: el replay dice ${rangos[i]} y el duelo dice ${duelo.atacante.rango}`
+      );
+    });
+
+    jugadasTotales += historia.length;
+    identificadasTotales += rangos.filter((r) => r).length;
+  }
+
+  assert.ok(duelosComprobados >= 8, `hacen falta duelos para comprobar nada; hubo ${duelosComprobados}`);
+  // Solo los reclutas se escapan: su rango no se publica.
+  assert.ok(
+    identificadasTotales >= jugadasTotales * 0.9,
+    `solo se identificaron ${identificadasTotales} de ${jugadasTotales}: el replay pierde piezas`
+  );
 });
 
 console.log(`\n${pasadas} pruebas superadas, ${fallidas} fallidas\n`);
