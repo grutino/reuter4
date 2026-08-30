@@ -38,20 +38,23 @@ export const DISTANCIA = (() => {
   return d;
 })();
 
-export function barajar(lista) {
+// `azar` se puede sustituir por un generador con semilla. El entrenamiento lo
+// necesita: comparar dos configuraciones con los mismos despliegues y los mismos
+// desempates quita casi todo el ruido, y bajan mucho las partidas necesarias.
+export function barajar(lista, azar = Math.random) {
   for (let i = lista.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
+    const j = Math.floor(azar() * (i + 1));
     [lista[i], lista[j]] = [lista[j], lista[i]];
   }
   return lista;
 }
 
-export function despliegueAleatorio(color) {
+export function despliegueAleatorio(color, azar = Math.random) {
   const zona = casillasDeZona(color).filter((c) => c !== ZONAS[color].reclutamiento);
   const casillaBandera = ZONAS[color].bandera;
-  const resto = barajar(zona.filter((c) => c !== casillaBandera));
+  const resto = barajar(zona.filter((c) => c !== casillaBandera), azar);
   const usadas = [casillaBandera, ...resto.slice(0, 19)];
-  const bolsa = barajar(inventarioInicial());
+  const bolsa = barajar(inventarioInicial(), azar);
   return usadas.map((casilla, i) => ({ casilla, rango: bolsa[i], bandera: casilla === casillaBandera }));
 }
 
@@ -59,7 +62,7 @@ export function despliegueAleatorio(color) {
 // El de siempre: posicional, sin memoria. Se conserva intacto como vara de medir
 // en `npm run simular`. No lo toques para "mejorarlo": deja de ser referencia.
 
-export function accionDeBotClasico(estado, color) {
+export function accionDeBotClasico(estado, color, { azar = Math.random } = {}) {
   const acciones = movimientosLegales(estado, color);
   if (!acciones.length) return null;
   let mejor = null;
@@ -67,7 +70,7 @@ export function accionDeBotClasico(estado, color) {
   for (const a of acciones) {
     const pieza = estado.piezas[a.pieza];
     const propia = pieza.bandera && (pieza.bandera === color || SOCIO[color] === pieza.bandera);
-    let nota = Math.random() * 2;
+    let nota = azar() * 2;
     if (a.tipo === "mover") {
       const antes = DISTANCIA[a.desde] ?? 30;
       const despues = DISTANCIA[a.hasta] ?? 30;
@@ -189,7 +192,7 @@ export const PESOS_BASE = {
 
 // --- Bot con memoria ---------------------------------------------------------
 
-export function accionDeBot(estado, color, { pesos = PESOS_BASE } = {}) {
+export function accionDeBot(estado, color, { pesos = PESOS_BASE, azar = Math.random } = {}) {
   const acciones = movimientosLegales(estado, color);
   if (!acciones.length) return null;
 
@@ -202,7 +205,7 @@ export function accionDeBot(estado, color, { pesos = PESOS_BASE } = {}) {
   for (const a of acciones) {
     const pieza = estado.piezas[a.pieza];
     const llevaBanderaAmiga = pieza.bandera && (pieza.bandera === color || SOCIO[color] === pieza.bandera);
-    let nota = Math.random() * pesos.ruido;
+    let nota = azar() * pesos.ruido;
 
     if (a.tipo === "mover") {
       const antes = DISTANCIA[a.desde] ?? 30;

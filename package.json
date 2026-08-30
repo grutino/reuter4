@@ -12,7 +12,9 @@
     "servidor": "node servidor/servidor.mjs",
     "start": "npm run build && node servidor/servidor.mjs",
     "test": "node src/motor/pruebas.js",
-    "simular": "node src/motor/simulacion.js"
+    "simular": "node src/motor/simulacion.js",
+    "entrenar": "node entrenamiento/entrenar-pesos.mjs",
+    "informe": "node entrenamiento/informe.mjs"
   },
   "dependencies": {
     "react": "^18.3.1",

@@ -1,0 +1,78 @@
+{
+  "creado": "2026-08-30T11:59:53.299Z",
+  "opciones": {
+    "generaciones": 3,
+    "poblacion": 8,
+    "parejas": 4,
+    "semilla": 1,
+    "inicio": "aleatorio",
+    "paciencia": 30,
+    "limite": 400,
+    "salida": "/Users/Patxy/proyectos/reuter4/entrenamiento/modelos",
+    "nucleos": 9
+  },
+  "generaciones": 3,
+  "mejorPuntuacion": 0.31601179013314457,
+  "victoriasFinales": 0.2152,
+  "pesos": {
+    "coronar": 10000,
+    "ruido": 1.813800767984287,
+    "avanceConBandera": 15.564644829436098,
+    "primaPortador": 22.211684924077577,
+    "avanceNormal": 15.150786950921148,
+    "banderaSuelta": 159.19995687902153,
+    "amenazaBase": -26.31093662014702,
+    "amenazaFactor": -20.194719110502067,
+    "disparoConocidoBase": 61.839250184804385,
+    "disparoConocidoFactor": 19.29769781483419,
+    "disparoDesconocido": -2.3788674652431325,
+    "disparoABandera": 1.6031590648030385,
+    "ataqueGanaBase": -212.61137628564083,
+    "ataqueGanaFactor": 17.186723364051304,
+    "ataqueEmpate": 195.32938356913576,
+    "ataquePierde": -228.30352405345192,
+    "espiaAMariscal": 146.4905335578622,
+    "ataqueDesconocido": -0.13867599241940642,
+    "ataqueABandera": -4.888134240427844,
+    "portadorNoPelea": 175.86843280721683,
+    "ataqueAlCastillo": -74.7968761696075
+  },
+  "historia": [
+    {
+      "generacion": 1,
+      "aptitudMejor": 0.8039,
+      "aptitudMedia": 0.4441,
+      "contraBase": 0.3117,
+      "puntuacionContraBase": 0.316,
+      "tablasContraBase": 3,
+      "sigma": 0.42,
+      "paso": 1.6678,
+      "turnosMedia": 112,
+      "segundos": 3
+    },
+    {
+      "generacion": 2,
+      "aptitudMejor": 0.5366,
+      "aptitudMedia": 0.3416,
+      "contraBase": 0.2692,
+      "puntuacionContraBase": 0.2734,
+      "tablasContraBase": 2,
+      "sigma": 0.3906,
+      "paso": 1.488,
+      "turnosMedia": 100,
+      "segundos": 5
+    },
+    {
+      "generacion": 3,
+      "aptitudMejor": 0.8625,
+      "aptitudMedia": 0.5325,
+      "contraBase": 0.2152,
+      "puntuacionContraBase": 0.2143,
+      "tablasContraBase": 1,
+      "sigma": 0.3633,
+      "paso": 1.5898,
+      "turnosMedia": 98,
+      "segundos": 7
+    }
+  ]
+}

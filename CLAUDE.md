@@ -15,6 +15,8 @@ estado, no cadenas de presentación: no las traduzcas.
 npm install
 npm test              # 68 pruebas del motor; sale con código 1 si falla alguna
 npm run simular       # salud de los bots + duelo entre el bot con memoria y el clásico
+npm run entrenar      # autojuego evolutivo de los pesos; escribe el informe en cada generación
+npm run informe       # rehace la página de seguimiento desde los modelos guardados
 npm run build         # compila el cliente a dist/
 npm run servidor      # servidor en el 8080 (sirve dist/ y el WebSocket)
 npm run dev           # cliente Vite en el 5173, con /ws redirigido al 8080
@@ -32,6 +34,42 @@ Variables: `PORT` (8080) y `R4_ESTADO` (fichero de salas, `servidor/salas.json`)
 **Ejecutar una sola prueba**: no hay filtro por nombre. `pruebas.js` es un guion plano que
 invoca `prueba(nombre, fn)` de arriba abajo. Para aislar una, comenta las demás o extrae el
 escenario a un `node -e`. Si añades un filtro, hazlo en la función `prueba`.
+
+## Entrenamiento de los bots (`entrenamiento/`)
+
+Vive fuera de `src/` y el servidor no importa nada de ahí. Produce artefactos que el juego
+consume, no código que el juego ejecute.
+
+```
+arena.mjs            una partida, un enfrentamiento; todo el azar sale de una semilla
+paralelo.mjs         piscina de obreros persistente + trocear/sumar combates largos
+obrero.mjs           un hilo que juega lo que le mandan
+entrenar-pesos.mjs   estrategia evolutiva con recombinación ponderada
+informe.mjs          página de seguimiento con SVG, sin dependencias
+modelos/             artefactos generados (JSON con pesos e historia)
+informe/index.html   la página; se reescribe en cada generación
+```
+
+**Cuatro cosas se descubrieron midiendo y no conviene volver a romperlas:**
+
+1. **Semilla y números aleatorios comunes.** Cada emparejamiento se juega dos veces con la
+   misma semilla y los bandos cambiados. Sin eso, el ruido del despliegue tapa cualquier
+   diferencia entre configuraciones.
+2. **La medición contra la heurística a mano usa semillas FIJAS** (`SEMILLA_MEDIDA`). Con
+   semillas variables la curva saltaba del 47% al 28% con el mismo modelo: era todo ruido.
+3. **Tope de turnos.** Dos configuraciones malas no rematan la partida jamás: se van a los
+   4000 turnos. Con tope de 400, el entrenamiento va ocho veces más rápido.
+4. **Recompensa moldeada.** Y lo más importante: dos bots al azar dan *ocho tablas de ocho*.
+   Con solo victoria/derrota la fase de arranque a ciegas no tiene gradiente ninguno. Por eso
+   `repartoDeTablas` reparte las tablas según quién estaba más cerca de ganar —distancia de la
+   bandera al castillo, material y marcador—, y la aptitud usa `puntuacionA`, no `tasaA`.
+
+También se probó y se descartó: medir la aptitud solo contra el campeón vigente (la población
+se deteriora, porque ganar a un campeón malo no te hace bueno) y quedarse con el mejor de cada
+generación (con partidas tan ruidosas, el mejor lo es a menudo por suerte).
+
+`coronar` no se entrena: llevar la bandera a la torre es ganar, no una preferencia que
+convenga graduar. Las `ESCALAS` dicen en qué unidades vive cada peso, no qué valor es bueno.
 
 ## Arquitectura
 
