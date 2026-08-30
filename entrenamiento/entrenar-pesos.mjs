@@ -33,54 +33,11 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { PESOS_BASE } from "../src/motor/bot.js";
 import { configuracion, generador } from "./arena.mjs";
+import { CORONAR, ESCALAS, GENES, pesosDesdeGenes, genesDesdePesos } from "./genoma.mjs";
 import { crearPiscina, trocear, sumar, NUCLEOS } from "./paralelo.mjs";
 import { escribirInforme } from "./informe.mjs";
 
 const AQUI = path.dirname(fileURLToPath(import.meta.url));
-
-export const CORONAR = 10000;
-
-// La escala dice en qué orden de magnitud vive cada peso, no qué valor le
-// conviene. Los términos que se suman tal cual van en centenas; los que
-// multiplican un rango (1 a 9) o una distancia van en decenas.
-export const ESCALAS = {
-  ruido: 6,
-  avanceConBandera: 20,
-  primaPortador: 30,
-  avanceNormal: 20,
-  banderaSuelta: 100,
-  amenazaBase: 30,
-  amenazaFactor: 10,
-  disparoConocidoBase: 100,
-  disparoConocidoFactor: 15,
-  disparoDesconocido: 100,
-  disparoABandera: 100,
-  ataqueGanaBase: 100,
-  ataqueGanaFactor: 15,
-  ataqueEmpate: 100,
-  ataquePierde: 200,
-  espiaAMariscal: 150,
-  ataqueDesconocido: 10,
-  ataqueABandera: 150,
-  portadorNoPelea: 150,
-  ataqueAlCastillo: 100,
-};
-
-export const GENES = Object.keys(ESCALAS);
-
-export function pesosDesdeGenes(genes) {
-  const pesos = { coronar: CORONAR };
-  GENES.forEach((k, i) => {
-    pesos[k] = genes[i] * ESCALAS[k];
-  });
-  // El ruido es un desempate, no puede ser negativo.
-  pesos.ruido = Math.abs(pesos.ruido);
-  return pesos;
-}
-
-export function genesDesdePesos(pesos) {
-  return GENES.map((k) => pesos[k] / ESCALAS[k]);
-}
 
 function normal(azar) {
   // Box-Muller. Dos uniformes dentro dan una normal fuera.
@@ -205,6 +162,13 @@ async function main() {
       return partidas ? puntos / partidas : 0.5;
     });
 
+    // Regla del quinto de éxito: sigma sube si muchos descendientes superan a
+    // su padre y baja si casi ninguno lo hace. Se mira SOLO el combate contra
+    // la media —la señal interna—, nunca la medición externa: esa es ruidosa y
+    // hacía que sigma se desplomara aunque la búsqueda fuese bien.
+    const exitos = descendencia.filter((_, i) => resultados[i * panel.length].puntuacionA > 0.5).length;
+    const tasaExito = exitos / descendencia.length;
+
     const orden = descendencia
       .map((g, i) => ({ g, apt: aptitud[i] }))
       .sort((x, y) => y.apt - x.apt)
@@ -227,11 +191,10 @@ async function main() {
     if (puntuacion > mejorMarca + 0.005) {
       mejorMarca = puntuacion;
       sinMejorar = 0;
-      sigma = Math.min(0.5, sigma * 1.05);
     } else {
       sinMejorar++;
-      sigma = Math.max(0.04, sigma * 0.93);
     }
+    sigma = Math.max(0.08, Math.min(0.6, sigma * Math.exp((tasaExito - 0.2) * 0.6)));
 
     historia.push({
       generacion: gen,
@@ -241,6 +204,7 @@ async function main() {
       puntuacionContraBase: Number(puntuacion.toFixed(4)),
       tablasContraBase: contraBase.tablas,
       sigma: Number(sigma.toFixed(4)),
+      tasaExito: Number(tasaExito.toFixed(3)),
       paso: Number(paso.toFixed(4)),
       turnosMedia: contraBase.turnosMedia,
       segundos: Math.round((Date.now() - arranque) / 1000),
@@ -283,7 +247,11 @@ async function main() {
   console.log(`  Informe en ${path.relative(process.cwd(), rutaInforme)}`);
 }
 
-main().catch((e) => {
-  console.error(e);
-  process.exit(1);
-});
+// Solo entrena si se le invoca directamente. Importarlo no debe hacer nada:
+// el informe necesita leer de aquí y no puede arrancar una tanda de partidas.
+if (process.argv[1] && process.argv[1].endsWith("entrenar-pesos.mjs")) {
+  main().catch((e) => {
+    console.error(e);
+    process.exit(1);
+  });
+}

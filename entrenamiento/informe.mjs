@@ -12,7 +12,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { PESOS_BASE } from "../src/motor/bot.js";
-import { ESCALAS, GENES } from "./entrenar-pesos.mjs";
+import { ESCALAS, GENES } from "./genoma.mjs";
 
 const AQUI = path.dirname(fileURLToPath(import.meta.url));
 
