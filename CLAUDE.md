@@ -13,7 +13,7 @@ estado, no cadenas de presentación: no las traduzcas.
 
 ```bash
 npm install
-npm test              # 60 pruebas del motor; sale con código 1 si falla alguna
+npm test              # 68 pruebas del motor; sale con código 1 si falla alguna
 npm run simular       # salud de los bots + duelo entre el bot con memoria y el clásico
 npm run build         # compila el cliente a dist/
 npm run servidor      # servidor en el 8080 (sirve dist/ y el WebSocket)
@@ -41,6 +41,7 @@ cliente, y esa separación es lo que permite probar las reglas sin levantar nada
 ```
 src/motor/    reglas puras: estado y transiciones, sin E/S ni gráficos
 src/motor/bot.js  heurística de los bots, compartida por servidor y simulación
+src/siluetas.js   dibujos de los nueve rangos, en trazados de canvas
 servidor/     autoridad: guarda el estado completo, reparte vistas recortadas, mueve bots
 src/          cliente React; Tablero3D.jsx pinta con three.js
 ```
@@ -74,11 +75,18 @@ Reglas que no se deducen leyendo un solo fichero:
 - **Banderas**: `estado.banderas[color]` tiene `{portador, casilla, ultimoDueño}` y
   `estado.banderasSueltas` es un mapa `casilla → color` de las que están en el suelo. El campo
   `ultimoDueño` es el que decide si capturar una bandera da promoción: solo la da si venía de
-  su dueño original. Un portador que cae suelta su bandera donde muere, y recogerla es
-  hoy **automático y obligatorio** (`recogerBandera`): está pendiente hacerlo opcional.
+  su dueño original. Un portador que cae suelta su bandera donde muere, y **recogerla es una
+  decisión**: caer sobre una bandera suelta abre un `pendiente` de tipo `recoger`, con dos
+  salidas, `recogerLaBandera` y `renunciarARecoger`. Lo que cuelga de recoger —la promoción y
+  la victoria al coronar— vive en la resolución, no en `aplicar`.
 - **Reclutamiento**: se abre por 6 victorias (que reinician el marcador) o por capturar una
   bandera enemiga (que no lo toca). Mientras `estado.pendiente` esté puesto, `aplicar` lanza:
   hay que resolverlo antes de seguir.
+- **Cola de decisiones**: una jugada puede abrir dos a la vez (recoger y reclutar).
+  `estado.pendiente` es la que toca ahora y `estado.colaPendientes` guarda el resto; la
+  recogida se ofrece siempre antes. Quien resuelve una pone `pendiente` a null y llama a
+  `cerrarPendiente`, que saca la siguiente o pasa turno. Se mantiene la regla vieja: una
+  jugada abre como mucho **un** reclutamiento.
 - **Equipos**: siempre 2 contra 2, fijos, según `SOCIO` y `EQUIPOS`. Ni siquiera el compañero
   ve tus rangos. Corona cualquiera de las dos banderas del equipo y ganan los dos.
 - **Turnos**: `pasarTurno` salta a quien no tenga movimientos legales; si no los tiene nadie,
@@ -137,7 +145,7 @@ para todos. Las dos exigen `sala.anfitrion === sesion.id`, igual que `bot`, `lib
 ### Protocolo WebSocket
 
 Cliente → servidor: `hola`, `crear`, `unirse`, `bot`, `librar`, `empezar`, `despliegue`,
-`accion`, `reclutar`, `parar`, `borrar`, `salir`. Servidor → cliente: `identidad`, `salas`, `error`.
+`accion`, `reclutar`, `recoger`, `parar`, `borrar`, `salir`. Servidor → cliente: `identidad`, `salas`, `error`.
 
 No hay mensajes diferenciales: cada cambio dispara `repartir()`, que reenvía a cada sesión el
 mapa completo de salas ya recortado. Es derrochador pero simple, y evita que el cliente pueda

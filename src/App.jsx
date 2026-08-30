@@ -644,6 +644,7 @@ export default function App() {
           <Tablero3D
             piezas={piezasEnTablero}
             banderasSueltas={estado ? estado.banderasSueltas : null}
+            rangosRevelados={estado ? estado.rangosRevelados : null}
             resaltadas={sala.fase === "jugando" || sala.fase === "fin" ? resaltadas : {}}
             zonaPropia={sala.fase === "desplegando" ? miColor : null}
             colorCamara={miColor}

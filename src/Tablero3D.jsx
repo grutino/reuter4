@@ -1,6 +1,7 @@
 import React, { useRef, useEffect } from "react";
 import * as THREE from "three";
 import { CASILLAS, LAGOS, ANILLO, TORRE, ZONAS, coord, zonaDe, casillasDeZona } from "./motor/tablero.js";
+import { dibujarSilueta } from "./siluetas.js";
 
 export const ESTILO = {
   rojo: { hex: 0xa8322c, css: "#A8322C", lado: "Norte" },
@@ -35,28 +36,57 @@ function geometrias() {
 }
 
 const CACHE_TEXTURAS = {};
-function texturaRango(rango) {
-  if (CACHE_TEXTURAS[rango]) return CACHE_TEXTURAS[rango];
+// La ficha lleva la silueta del rango en oro sobre el color de su ejército, como
+// en el tablero de cartón. Dos acabados: el normal y uno para los rangos que has
+// deducido de lo que ha pasado en la mesa, marcado con un aro discontinuo para
+// que no se confunda lo que sabes con certeza con lo que has averiguado.
+const ORO = "#E9C979";
+const BORDE_FICHA = "#1E1A14";
+
+function texturaRango(rango, color, revelado = false) {
+  const clave = `${rango}-${color}${revelado ? "-rev" : ""}`;
+  if (CACHE_TEXTURAS[clave]) return CACHE_TEXTURAS[clave];
+  const fondo = (ESTILO[color] && ESTILO[color].css) || "#5B4229";
   const lienzo = document.createElement("canvas");
   lienzo.width = 128;
   lienzo.height = 128;
   const ctx = lienzo.getContext("2d");
-  ctx.fillStyle = "#d9c184";
+
+  ctx.fillStyle = fondo;
   ctx.beginPath();
   ctx.arc(64, 64, 62, 0, Math.PI * 2);
   ctx.fill();
-  ctx.strokeStyle = "#6b5220";
+  ctx.strokeStyle = BORDE_FICHA;
   ctx.lineWidth = 5;
   ctx.stroke();
-  ctx.fillStyle = "#2a1d0d";
-  ctx.font = "bold 66px Georgia, serif";
-  ctx.textAlign = "center";
-  ctx.textBaseline = "middle";
-  ctx.fillText(String(rango), 64, 52);
-  ctx.font = "15px Georgia, serif";
-  ctx.fillText(NOMBRE_RANGO[rango].slice(0, 11), 64, 103);
+
+  // La silueta se recorta al disco para que nada se salga por los bordes.
+  ctx.save();
+  ctx.beginPath();
+  ctx.arc(64, 64, 58, 0, Math.PI * 2);
+  ctx.clip();
+  ctx.fillStyle = ORO;
+  ctx.strokeStyle = ORO;
+  if (!dibujarSilueta(ctx, rango, { hueco: fondo })) {
+    ctx.font = "bold 66px Georgia, serif";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText(String(rango), 64, 64);
+  }
+  ctx.restore();
+
+  if (revelado) {
+    ctx.strokeStyle = "#F2E4C0";
+    ctx.setLineDash([9, 7]);
+    ctx.lineWidth = 4;
+    ctx.beginPath();
+    ctx.arc(64, 64, 53, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.setLineDash([]);
+  }
+
   const textura = new THREE.CanvasTexture(lienzo);
-  CACHE_TEXTURAS[rango] = textura;
+  CACHE_TEXTURAS[clave] = textura;
   return textura;
 }
 
@@ -67,7 +97,15 @@ function posicion3D(casilla) {
   return [c - 7, 0.1, f - 8];
 }
 
-export default function Tablero3D({ piezas, banderasSueltas, resaltadas, zonaPropia, colorCamara, onCasilla }) {
+export default function Tablero3D({
+  piezas,
+  banderasSueltas,
+  rangosRevelados,
+  resaltadas,
+  zonaPropia,
+  colorCamara,
+  onCasilla,
+}) {
   const contenedor = useRef(null);
   const ref = useRef(null);
   const manejador = useRef(onCasilla);
@@ -325,10 +363,13 @@ export default function Tablero3D({ piezas, banderasSueltas, resaltadas, zonaPro
       aro.rotation.x = Math.PI / 2;
       aro.position.y = 0.42;
       grupo.add(aro);
+      // El rango propio se sabe; el ajeno solo si la mesa lo ha destapado.
+      const deducido = pieza.rango ? null : (rangosRevelados || {})[pieza.id];
+      const rangoVisible = pieza.rango || deducido;
       const tapa = new THREE.Mesh(
         g.tapa,
-        pieza.rango
-          ? new THREE.MeshBasicMaterial({ map: texturaRango(pieza.rango) })
+        rangoVisible
+          ? new THREE.MeshBasicMaterial({ map: texturaRango(rangoVisible, pieza.color, Boolean(deducido)) })
           : new THREE.MeshLambertMaterial({ color: 0x8d7742 })
       );
       tapa.rotation.x = -Math.PI / 2;
@@ -380,7 +421,7 @@ export default function Tablero3D({ piezas, banderasSueltas, resaltadas, zonaPro
       grupo.position.set(x, y, z);
       r.grupoPiezas.add(grupo);
     }
-  }, [piezas, banderasSueltas]);
+  }, [piezas, banderasSueltas, rangosRevelados]);
 
   return (
     <div
