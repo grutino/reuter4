@@ -218,8 +218,9 @@ export const PESOS_BASE = {
   // turnos. Subir el peso general no vale -eso es lo que costó la partida por
   // tempo-, así que el empujón se condiciona a que haya blanco.
   canonHaciaBlancoEnTorre: 9,  // factor por paso, solo con un enemigo en la torre
-  // Tapar el tiro rival antes de que suba el compañero. Es la tarea defensiva
-  // que faltaba entera: solo existía "no me metas TÚ en una línea de tiro".
+  // Tapar el tiro rival antes de que suba el que lleva la bandera, sea el
+  // compañero o uno mismo. Es la tarea defensiva que faltaba entera: solo
+  // existía "no me metas TÚ en una línea de tiro".
   taparCanonAlAnillo: 40,
 
   // Ataque cuerpo a cuerpo
@@ -359,7 +360,10 @@ export function accionDeBot(estado, color, { pesos = PESOS_BASE, azar = Math.ran
       // Taparle el tiro al enemigo cuando el compañero va a subir. Es lo caro de
       // una coronación: subes al anillo y te barre un cañón que llevaba tres
       // turnos apuntando.
-      if (analisis.socio.aPuntoDeCoronar && analisis.tapanElAnillo.has(a.hasta) && pieza.rango !== CANON) {
+      // Vale cualquier pieza que llegue con su movimiento -un explorador cruza
+      // el tablero de una sentada, un capitán da el rodeo-, menos un cañón: no
+      // combate cuerpo a cuerpo, así que plantarlo ahí es regalarlo.
+      if (analisis.equipoAPuntoDeCoronar && analisis.tapanElAnillo.has(a.hasta) && pieza.rango !== CANON) {
         nota += pesos.taparCanonAlAnillo;
         apuntar("taparCanonAlAnillo");
       }

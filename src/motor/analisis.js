@@ -203,6 +203,21 @@ export function analizarTurno(estado, color, distancias, misAcciones = null) {
     socioLlevaBandera = portador.color === socio;
     if (socioLlevaBandera) socioDistancia = distanciaATorre(distancias, portador.casilla);
   }
+  // Y yo mismo: una bandera solo la corona una pieza de su propio color, así que
+  // el equipo puede ganar por dos vías -yo con la mía o el compañero con la
+  // suya- y las dos piden lo mismo: que nadie pueda batir el anillo cuando toque
+  // subir. Mirar solo al compañero dejaba fuera la mitad de los casos, y eran
+  // justo los que uno juega en primera persona.
+  const banderaPropia = estado.banderas[color];
+  let yoLlevoBandera = false;
+  let miDistancia = 40;
+  if (banderaPropia && banderaPropia.portador && estado.piezas[banderaPropia.portador]) {
+    const portador = estado.piezas[banderaPropia.portador];
+    yoLlevoBandera = portador.color === color;
+    if (yoLlevoBandera) miDistancia = distanciaATorre(distancias, portador.casilla);
+  }
+  const yoAPuntoDeCoronar = yoLlevoBandera && miDistancia <= 2;
+
   const torreOcupada = Boolean(estado.tablero[TORRE]);
 
   // --- El castillo: quién está a punto de ganar y quién puede impedirlo ------
@@ -264,6 +279,11 @@ export function analizarTurno(estado, color, distancias, misAcciones = null) {
   return {
     coronadorRival,
     blancoEnLaTorre,
+    // Cualquiera de los dos del equipo a punto de subir. Es lo que manda para
+    // taparle el tiro al enemigo; `socio.aPuntoDeCoronar` sigue existiendo
+    // aparte porque "no estorbar en la torre" sí es cosa del compañero: uno no
+    // se estorba a sí mismo.
+    equipoAPuntoDeCoronar: yoAPuntoDeCoronar || (socioLlevaBandera && socioDistancia <= 2),
     lineasAlAnillo,
     // Casillas donde plantarse corta al menos una línea de tiro al anillo.
     tapanElAnillo,

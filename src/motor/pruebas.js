@@ -1181,6 +1181,49 @@ prueba("el cañón prefiere batir al que va a coronar antes que a una pieza mayo
   assert.strictEqual(elegida.hasta, ANILLO_T, "parar la coronación vale más que llevarse un mariscal");
 });
 
+prueba("tapa el tiro también cuando el que va a coronar es uno mismo", () => {
+  // Una bandera solo la corona una pieza de su propio color, así que el equipo
+  // puede ganar por dos vías -yo con la mía o el compañero con la suya- y las
+  // dos piden lo mismo: que nadie pueda batir el anillo cuando toque subir.
+  // Mirar solo al compañero dejaba fuera la mitad de los casos, y justo los que
+  // uno juega en primera persona.
+  const escenario = (quienCorona, rangoDelTapador) => {
+    const e = estadoVacio();
+    const portador = colocar(e, quienCorona, 5, "H6");
+    portador.bandera = quienCorona;
+    e.banderas[quienCorona] = { portador: portador.id, casilla: null, ultimoDueño: quienCorona };
+    const canon = colocar(e, "verde", 1, "H12");   // bate el anillo pasando por H10
+    colocar(e, "rojo", rangoDelTapador, "G10");
+    e.rangosRevelados = { [canon.id]: 1 };
+    return e;
+  };
+
+  for (const [quien, rango] of [["azul", 4], ["rojo", 4], ["rojo", 3]]) {
+    const e = escenario(quien, rango);
+    const analisis = analizarTurno(e, "rojo", DISTANCIA);
+    assert.ok(analisis.equipoAPuntoDeCoronar, `con ${quien} a un paso, el equipo está a punto de coronar`);
+    assert.ok(analisis.tapanElAnillo.has("H10"), "H10 corta la línea H12->anillo");
+    const elegida = accionDeBot(e, "rojo");
+    assert.strictEqual(
+      elegida && elegida.hasta, "H10",
+      `con ${quien} a punto de coronar y un rango ${rango} en G10, debería taparse el tiro`
+    );
+  }
+
+  // Y un cañón NO se usa de tapón: no combate cuerpo a cuerpo, plantarlo ahí es
+  // regalarlo.
+  const conCanon = estadoVacio();
+  const portador = colocar(conCanon, "rojo", 5, "H6");
+  portador.bandera = "rojo";
+  conCanon.banderas.rojo = { portador: portador.id, casilla: null, ultimoDueño: "rojo" };
+  const enemigo = colocar(conCanon, "verde", 1, "H12");
+  const miCanon = colocar(conCanon, "rojo", 1, "G10");
+  conCanon.rangosRevelados = { [enemigo.id]: 1 };
+  const conCanonElegida = accionDeBot(conCanon, "rojo");
+  const fueElCanon = conCanonElegida && conCanonElegida.pieza === miCanon.id && conCanonElegida.hasta === "H10";
+  assert.ok(!fueElCanon, "un cañón no debería plantarse de tapón");
+});
+
 prueba("el bot tapa la línea de tiro cuando el compañero va a coronar", () => {
   // La tarea que no existía: solo había "no me meta YO en una línea de tiro".
   const e = estadoVacio();

@@ -208,9 +208,10 @@ export function rasgosDeJugada(estado, color, accion, { analisis, bolsas, resume
   }
   pon(haciaElTiro);
 
-  // Taparle el tiro al enemigo antes de que suba el compañero.
+  // Taparle el tiro al enemigo antes de que suba el que lleva la bandera, sea el
+  // compañero o uno mismo.
   pon(
-    accion.tipo === "mover" && analisis.socio.aPuntoDeCoronar &&
+    accion.tipo === "mover" && analisis.equipoAPuntoDeCoronar &&
     analisis.tapanElAnillo.has(accion.hasta) ? 1 : 0
   );
 

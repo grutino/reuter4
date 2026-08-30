@@ -138,6 +138,18 @@ Tres cosas que conviene tener claras antes de tocar nada de esto:
   el motor genera este tiro aparte de `rayo`, que corta al llegar al castillo y no devuelve
   `TORRE` nunca. Un cañón metido en el anillo no puede atacar la torre: no está en las doce y
   tampoco combate cuerpo a cuerpo.
+- **Batir el castillo no es solo parar coronaciones.** `disparoAlCastillo` se suma por estar el
+  objetivo en el anillo o la torre, lleve bandera o no: un mariscal conocido plantado en el
+  anillo puntúa 130 frente a 66 de un capitán en campo abierto. `disparoAlCoronador` es un extra
+  aparte, para quien puede ganar en su turno.
+- **Tapar el tiro vale para los dos del equipo.** Una bandera solo la corona una pieza de su
+  propio color, así que el equipo gana por dos vías —yo con la mía o el compañero con la suya— y
+  las dos piden lo mismo. La primera versión miraba solo `socio.aPuntoDeCoronar` y dejaba fuera
+  la mitad de los casos, justo los que uno juega en primera persona; ahora manda
+  `equipoAPuntoDeCoronar`. `socio.aPuntoDeCoronar` sigue existiendo aparte porque "no estorbar
+  en la torre" sí es cosa del compañero: uno no se estorba a sí mismo. Tapa cualquier pieza que
+  llegue con su movimiento —un explorador cruza el tablero de una sentada— menos un cañón, que
+  no combate cuerpo a cuerpo y plantarlo ahí es regalarlo.
 - **El tiro a la torre es legal pero los bots no lo ejecutan nunca.** Medido: en 17.213 turnos,
   un jugador tuvo un cañón en una de las doce casillas solo 2 veces, y ninguna con la torre
   ocupada, aunque la torre lo está el 12,8% de los turnos. Es geometría: ninguna casilla de
