@@ -1,0 +1,24 @@
+{
+  "name": "stratego4",
+  "version": "1.0.0",
+  "description": "Stratego 4 (Jumbo) en 3D, dos bandos de dos jugadores, online",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "servidor": "node servidor/servidor.mjs",
+    "start": "npm run build && node servidor/servidor.mjs",
+    "test": "node src/motor/pruebas.js",
+    "simular": "node src/motor/simulacion.js"
+  },
+  "dependencies": {
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "three": "^0.160.0",
+    "ws": "^8.18.0"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.3.1",
+    "vite": "^5.4.0"
+  }
+}

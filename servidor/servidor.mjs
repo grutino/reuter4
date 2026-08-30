@@ -1,0 +1,433 @@
+// Servidor de Stratego 4: guarda el estado completo y reparte a cada cliente
+// solo lo que su bando puede ver. Los rangos ajenos no salen de aquí.
+
+import http from "node:http";
+import fs from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+import { WebSocketServer } from "ws";
+
+import { COLORES, ZONAS, ANILLO, TORRE, ADYACENTES, casillasDeZona } from "../src/motor/tablero.js";
+import {
+  nuevaPartida,
+  movimientosLegales,
+  aplicar,
+  reclutar,
+  validarDespliegue,
+  inventarioInicial,
+  SOCIO,
+} from "../src/motor/motor.js";
+
+const RAIZ = path.dirname(fileURLToPath(import.meta.url));
+const ESTATICO = path.join(RAIZ, "..", "dist");
+const PUERTO = process.env.PORT || 8080;
+const FICHERO_ESTADO = process.env.S4_ESTADO || path.join(RAIZ, "salas.json");
+
+// --- Bots -------------------------------------------------------------------
+
+const DISTANCIA = (() => {
+  const d = { [ANILLO]: 0, [TORRE]: 0 };
+  let frente = [ANILLO];
+  while (frente.length) {
+    const siguiente = [];
+    for (const c of frente) {
+      for (const v of ADYACENTES[c]) {
+        if (d[v] === undefined) {
+          d[v] = d[c] + 1;
+          siguiente.push(v);
+        }
+      }
+    }
+    frente = siguiente;
+  }
+  return d;
+})();
+
+function barajar(lista) {
+  for (let i = lista.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [lista[i], lista[j]] = [lista[j], lista[i]];
+  }
+  return lista;
+}
+
+export function despliegueAleatorio(color) {
+  const zona = casillasDeZona(color).filter((c) => c !== ZONAS[color].reclutamiento);
+  const casillaBandera = ZONAS[color].bandera;
+  const resto = barajar(zona.filter((c) => c !== casillaBandera));
+  const usadas = [casillaBandera, ...resto.slice(0, 19)];
+  const bolsa = barajar(inventarioInicial());
+  return usadas.map((casilla, i) => ({ casilla, rango: bolsa[i], bandera: casilla === casillaBandera }));
+}
+
+export function accionDeBot(estado, color) {
+  const acciones = movimientosLegales(estado, color);
+  if (!acciones.length) return null;
+  let mejor = null;
+  let mejorNota = -Infinity;
+  for (const a of acciones) {
+    const pieza = estado.piezas[a.pieza];
+    const propia = pieza.bandera && (pieza.bandera === color || SOCIO[color] === pieza.bandera);
+    let nota = Math.random() * 2;
+    if (a.tipo === "mover") {
+      const antes = DISTANCIA[a.desde] ?? 30;
+      const despues = DISTANCIA[a.hasta] ?? 30;
+      if (a.hasta === TORRE && propia) nota += 10000;
+      else if (propia) nota += (antes - despues) * 14 + 6;
+      else nota += (antes - despues) * 3;
+      if (estado.banderasSueltas[a.hasta]) nota += 25;
+    }
+    if (a.tipo === "disparar") nota += 55;
+    if (a.tipo === "atacar") {
+      nota += 12 + pieza.rango * 2.5;
+      if (propia) nota -= 60;
+      if (pieza.rango <= 2) nota -= 15;
+      if (a.hasta === ANILLO || a.hasta === TORRE) nota += 20;
+    }
+    if (nota > mejorNota) {
+      mejorNota = nota;
+      mejor = a;
+    }
+  }
+  return mejor;
+}
+
+// --- Salas ------------------------------------------------------------------
+
+let salas = {};
+try {
+  if (fs.existsSync(FICHERO_ESTADO)) salas = JSON.parse(fs.readFileSync(FICHERO_ESTADO, "utf8"));
+} catch (e) {
+  salas = {};
+}
+
+let guardadoPendiente = null;
+function persistir() {
+  if (guardadoPendiente) return;
+  guardadoPendiente = setTimeout(() => {
+    guardadoPendiente = null;
+    fs.writeFile(FICHERO_ESTADO, JSON.stringify(salas), () => {});
+  }, 1500);
+}
+
+const idAleatorio = (p) => p + "_" + Math.random().toString(36).slice(2, 9);
+
+function huella(texto) {
+  let h = 5381;
+  for (let i = 0; i < texto.length; i++) h = ((h << 5) + h + texto.charCodeAt(i)) | 0;
+  return String(h >>> 0);
+}
+
+function colorDe(sala, idJugador) {
+  return COLORES.find((c) => sala.puestos[c] && sala.puestos[c].id === idJugador) || null;
+}
+
+// Lo que se manda a cada cliente: rangos propios, bajas propias, nada más.
+function salaParaJugador(sala, idJugador) {
+  const miColor = colorDe(sala, idJugador);
+  const base = {
+    id: sala.id,
+    nombre: sala.nombre,
+    anfitrion: sala.anfitrion,
+    privada: sala.privada,
+    fase: sala.fase,
+    puestos: sala.puestos,
+    creada: sala.creada,
+    desplegados: COLORES.filter((c) => sala.despliegues[c]),
+    miColor,
+  };
+  if (!sala.estado) return base;
+  const e = sala.estado;
+  return {
+    ...base,
+    estado: {
+      turno: e.turno,
+      fin: e.fin,
+      eventos: e.eventos,
+      banderasSueltas: e.banderasSueltas,
+      marcador: e.marcador,
+      misBajas: miColor ? e.bajas[miColor] : [],
+      pendiente: e.pendiente && e.pendiente.color === miColor ? e.pendiente : null,
+      piezas: Object.fromEntries(
+        Object.entries(e.piezas).map(([id, p]) => [
+          id,
+          p.color === miColor
+            ? { id, color: p.color, casilla: p.casilla, bandera: p.bandera, rango: p.rango, ultimoTramo: p.ultimoTramo, alternancias: p.alternancias }
+            : { id, color: p.color, casilla: p.casilla, bandera: p.bandera, rango: null },
+        ])
+      ),
+    },
+  };
+}
+
+function repartir() {
+  for (const [socket, sesion] of clientes) {
+    if (socket.readyState !== 1 || !sesion.id) continue;
+    const vista = Object.fromEntries(
+      Object.entries(salas).map(([id, sala]) => [id, salaParaJugador(sala, sesion.id)])
+    );
+    socket.send(JSON.stringify({ tipo: "salas", salas: vista }));
+  }
+  persistir();
+}
+
+// --- Ciclo de los bots ------------------------------------------------------
+
+function esAutomatico(sala, color) {
+  const puesto = sala.puestos[color];
+  if (!puesto) return false;
+  if (puesto.tipo === "bot") return true;
+  // Si un humano lleva más de un minuto desconectado, la máquina juega por él.
+  return puesto.desconectadoDesde && Date.now() - puesto.desconectadoDesde > 60000;
+}
+
+setInterval(() => {
+  let cambios = false;
+  for (const sala of Object.values(salas)) {
+    if (sala.fase === "desplegando") {
+      for (const color of COLORES) {
+        if (esAutomatico(sala, color) && !sala.despliegues[color]) {
+          sala.despliegues[color] = despliegueAleatorio(color);
+          cambios = true;
+        }
+      }
+      if (COLORES.every((c) => sala.despliegues[c])) {
+        try {
+          sala.estado = nuevaPartida(sala.despliegues, { primero: COLORES[Math.floor(Math.random() * 4)] });
+          sala.fase = "jugando";
+          cambios = true;
+        } catch (e) {
+          console.error("despliegue inválido:", e.message);
+        }
+      }
+      continue;
+    }
+
+    if (sala.fase !== "jugando" || !sala.estado || sala.estado.fin) continue;
+    const turno = sala.estado.turno;
+    if (!esAutomatico(sala, turno)) continue;
+    try {
+      if (sala.estado.pendiente && sala.estado.pendiente.color === turno) {
+        sala.estado = reclutar(sala.estado, Math.max(...sala.estado.pendiente.opciones));
+      } else {
+        const accion = accionDeBot(sala.estado, turno);
+        if (!accion) continue;
+        sala.estado = aplicar(sala.estado, accion);
+        const pend = sala.estado.pendiente;
+        if (pend && esAutomatico(sala, pend.color)) {
+          sala.estado = reclutar(sala.estado, Math.max(...pend.opciones));
+        }
+      }
+      if (sala.estado.fin) sala.fase = "fin";
+      sala.actualizada = Date.now();
+      cambios = true;
+    } catch (e) {
+      console.error("bot atascado:", e.message);
+    }
+  }
+  if (cambios) repartir();
+}, 1200);
+
+// Limpieza de salas viejas
+setInterval(() => {
+  const ahora = Date.now();
+  let cambios = false;
+  for (const [id, sala] of Object.entries(salas)) {
+    if (ahora - (sala.actualizada || 0) > 12 * 60 * 60 * 1000) {
+      delete salas[id];
+      cambios = true;
+    }
+  }
+  if (cambios) repartir();
+}, 60000);
+
+// --- HTTP y WebSocket -------------------------------------------------------
+
+const TIPOS = {
+  ".html": "text/html; charset=utf-8",
+  ".js": "text/javascript; charset=utf-8",
+  ".css": "text/css; charset=utf-8",
+  ".json": "application/json",
+  ".svg": "image/svg+xml",
+  ".png": "image/png",
+  ".ico": "image/x-icon",
+};
+
+const servidor = http.createServer((peticion, respuesta) => {
+  const url = (peticion.url || "/").split("?")[0];
+  let fichero = path.join(ESTATICO, url === "/" ? "index.html" : url);
+  if (!fichero.startsWith(ESTATICO)) {
+    respuesta.writeHead(403).end();
+    return;
+  }
+  if (!fs.existsSync(fichero) || fs.statSync(fichero).isDirectory()) fichero = path.join(ESTATICO, "index.html");
+  if (!fs.existsSync(fichero)) {
+    respuesta.writeHead(404).end("Compila antes el cliente: npm run build");
+    return;
+  }
+  respuesta.writeHead(200, { "Content-Type": TIPOS[path.extname(fichero)] || "application/octet-stream" });
+  fs.createReadStream(fichero).pipe(respuesta);
+});
+
+const wss = new WebSocketServer({ server: servidor, path: "/ws" });
+const clientes = new Map();
+
+function error(socket, texto) {
+  socket.send(JSON.stringify({ tipo: "error", texto }));
+}
+
+wss.on("connection", (socket) => {
+  clientes.set(socket, { id: null, nombre: null });
+
+  socket.on("message", (bruto) => {
+    let mensaje;
+    try {
+      mensaje = JSON.parse(bruto.toString());
+    } catch (e) {
+      return;
+    }
+    const sesion = clientes.get(socket);
+
+    if (mensaje.tipo === "hola") {
+      sesion.id = String(mensaje.id || idAleatorio("j")).slice(0, 40);
+      sesion.nombre = String(mensaje.nombre || "Anónimo").slice(0, 18);
+      for (const sala of Object.values(salas)) {
+        const color = colorDe(sala, sesion.id);
+        if (color) delete sala.puestos[color].desconectadoDesde;
+      }
+      socket.send(JSON.stringify({ tipo: "identidad", id: sesion.id, nombre: sesion.nombre }));
+      repartir();
+      return;
+    }
+    if (!sesion.id) return;
+
+    if (mensaje.tipo === "crear") {
+      const id = idAleatorio("s");
+      const ahora = Date.now();
+      salas[id] = {
+        id,
+        nombre: String(mensaje.nombre || `Campaña de ${sesion.nombre}`).slice(0, 40),
+        anfitrion: sesion.id,
+        privada: Boolean(mensaje.clave),
+        clave: mensaje.clave ? huella(String(mensaje.clave)) : null,
+        fase: "esperando",
+        puestos: { rojo: { tipo: "humano", id: sesion.id, nombre: sesion.nombre }, verde: null, azul: null, amarillo: null },
+        despliegues: {},
+        estado: null,
+        creada: ahora,
+        actualizada: ahora,
+      };
+      repartir();
+      return;
+    }
+
+    const sala = mensaje.sala ? salas[mensaje.sala] : null;
+    if (!sala) return;
+    const miColor = colorDe(sala, sesion.id);
+
+    if (mensaje.tipo === "unirse") {
+      if (miColor) return repartir();
+      if (sala.privada && huella(String(mensaje.clave || "")) !== sala.clave) return error(socket, "Contraseña incorrecta.");
+      if (sala.fase !== "esperando") return error(socket, "Esa partida ya ha empezado.");
+      const hueco = COLORES.find((c) => !sala.puestos[c]);
+      if (!hueco) return error(socket, "No quedan puestos libres.");
+      sala.puestos[hueco] = { tipo: "humano", id: sesion.id, nombre: sesion.nombre };
+      sala.actualizada = Date.now();
+      return repartir();
+    }
+
+    if (mensaje.tipo === "bot" || mensaje.tipo === "librar" || mensaje.tipo === "empezar") {
+      if (sala.anfitrion !== sesion.id) return error(socket, "Solo el anfitrión puede hacer eso.");
+      if (mensaje.tipo === "bot" && !sala.puestos[mensaje.color]) {
+        const usados = COLORES.map((c) => sala.puestos[c]).filter(Boolean).map((p) => p.nombre);
+        const nombres = ["Ney", "Davout", "Murat", "Soult", "Masséna", "Lannes"];
+        const libre = nombres.find((n) => !usados.includes(`Mariscal ${n}`)) || "Bonaparte";
+        sala.puestos[mensaje.color] = { tipo: "bot", id: idAleatorio("b"), nombre: `Mariscal ${libre}` };
+      }
+      if (mensaje.tipo === "librar" && sala.puestos[mensaje.color] && sala.puestos[mensaje.color].tipo === "bot") {
+        sala.puestos[mensaje.color] = null;
+      }
+      if (mensaje.tipo === "empezar") {
+        if (!COLORES.every((c) => sala.puestos[c])) return error(socket, "Faltan puestos por cubrir.");
+        sala.fase = "desplegando";
+      }
+      sala.actualizada = Date.now();
+      return repartir();
+    }
+
+    if (mensaje.tipo === "despliegue") {
+      if (!miColor || sala.fase !== "desplegando") return;
+      const colocacion = Object.entries(mensaje.colocacion || {}).map(([casilla, rango]) => ({
+        casilla,
+        rango: Number(rango),
+        bandera: casilla === ZONAS[miColor].bandera,
+      }));
+      const errores = validarDespliegue(miColor, colocacion);
+      if (errores.length) return error(socket, errores[0]);
+      sala.despliegues[miColor] = colocacion;
+      sala.actualizada = Date.now();
+      return repartir();
+    }
+
+    if (mensaje.tipo === "accion") {
+      if (!miColor || !sala.estado || sala.estado.turno !== miColor) return error(socket, "No es tu turno.");
+      try {
+        sala.estado = aplicar(sala.estado, mensaje.accion);
+        if (sala.estado.fin) sala.fase = "fin";
+        sala.actualizada = Date.now();
+        repartir();
+      } catch (e) {
+        error(socket, e.message);
+      }
+      return;
+    }
+
+    if (mensaje.tipo === "reclutar") {
+      if (!miColor || !sala.estado || !sala.estado.pendiente || sala.estado.pendiente.color !== miColor) return;
+      try {
+        sala.estado = reclutar(sala.estado, Number(mensaje.rango));
+        sala.actualizada = Date.now();
+        repartir();
+      } catch (e) {
+        error(socket, e.message);
+      }
+      return;
+    }
+
+    if (mensaje.tipo === "salir") {
+      if (!miColor) return;
+      if (sala.fase === "esperando") sala.puestos[miColor] = null;
+      else sala.puestos[miColor] = { ...sala.puestos[miColor], desconectadoDesde: Date.now() - 60000 };
+      if (!COLORES.some((c) => sala.puestos[c] && sala.puestos[c].tipo === "humano")) delete salas[sala.id];
+      else if (sala.anfitrion === sesion.id) {
+        const relevo = COLORES.map((c) => sala.puestos[c]).find((p) => p && p.tipo === "humano");
+        if (relevo) sala.anfitrion = relevo.id;
+      }
+      repartir();
+    }
+  });
+
+  socket.on("close", () => {
+    const sesion = clientes.get(socket);
+    clientes.delete(socket);
+    if (!sesion || !sesion.id) return;
+    const sigueConectado = [...clientes.values()].some((s) => s.id === sesion.id);
+    if (sigueConectado) return;
+    for (const sala of Object.values(salas)) {
+      const color = colorDe(sala, sesion.id);
+      if (!color) continue;
+      if (sala.fase === "esperando") sala.puestos[color] = null;
+      else sala.puestos[color].desconectadoDesde = Date.now();
+    }
+    for (const [id, sala] of Object.entries(salas)) {
+      if (sala.fase === "esperando" && !COLORES.some((c) => sala.puestos[c] && sala.puestos[c].tipo === "humano")) {
+        delete salas[id];
+      }
+    }
+    repartir();
+  });
+});
+
+servidor.listen(PUERTO, () => {
+  console.log(`Stratego 4 escuchando en http://localhost:${PUERTO}`);
+});

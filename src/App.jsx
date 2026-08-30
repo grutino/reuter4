@@ -1,0 +1,703 @@
+import React, { useState, useEffect, useRef, useCallback } from "react";
+import Tablero3D, { ESTILO, NOMBRE_RANGO, LATON_CSS } from "./Tablero3D.jsx";
+import { COLORES, ZONAS, casillasDeZona, zonaDe } from "./motor/tablero.js";
+import { RANGOS, VICTORIAS_PARA_RECLUTAR, SOCIO, movimientosLegales, inventarioInicial } from "./motor/motor.js";
+
+const MADERA = "#3A2A1C";
+const MADERA_CLARA = "#5B4229";
+const LATON_CLARO = "#E2BB6B";
+const PERGAMINO = "#E8DCC2";
+const FIELTRO = "#22392E";
+const TINTA = "#1C140D";
+
+const EQUIPOS = [["rojo", "azul"], ["verde", "amarillo"]];
+
+function barajar(lista) {
+  for (let i = lista.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [lista[i], lista[j]] = [lista[j], lista[i]];
+  }
+  return lista;
+}
+
+function colocacionAleatoria(color) {
+  const zona = casillasDeZona(color).filter((c) => c !== ZONAS[color].reclutamiento);
+  const casillaBandera = ZONAS[color].bandera;
+  const resto = barajar(zona.filter((c) => c !== casillaBandera));
+  const usadas = [casillaBandera, ...resto.slice(0, 19)];
+  const bolsa = barajar(inventarioInicial());
+  const mapa = {};
+  usadas.forEach((casilla, i) => {
+    mapa[casilla] = bolsa[i];
+  });
+  return mapa;
+}
+
+// El servidor manda el estado ya filtrado. Para calcular tus jugadas legales
+// solo hacen falta tus rangos y quién ocupa cada casilla.
+function estadoJugable(estadoServidor) {
+  if (!estadoServidor) return null;
+  const tablero = {};
+  for (const pieza of Object.values(estadoServidor.piezas)) tablero[pieza.casilla] = pieza.id;
+  return {
+    ...estadoServidor,
+    modo: "equipos",
+    orden: COLORES,
+    tablero,
+    bajas: {},
+  };
+}
+
+function describirEvento(ev) {
+  if (!ev) return null;
+  if (ev.tipo === "duelo") {
+    const a = `${NOMBRE_RANGO[ev.atacante.rango]} ${ev.atacante.rango} de ${ev.atacante.color}`;
+    const d = `${NOMBRE_RANGO[ev.defensor.rango]} ${ev.defensor.rango} de ${ev.defensor.color}`;
+    if (ev.resultado === "empate") return `Duelo: ${a} y ${d} caen los dos.`;
+    return ev.resultado === "atacante" ? `Duelo: ${a} vence a ${d}.` : `Duelo: ${d} resiste a ${a}.`;
+  }
+  if (ev.tipo === "cañonazo") {
+    return `Cañonazo de ${ev.color}: revienta al ${NOMBRE_RANGO[ev.objetivo.rango]} ${ev.objetivo.rango} de ${ev.objetivo.color} en ${ev.objetivo.casilla}. El cañón se retira.`;
+  }
+  if (ev.tipo === "bandera-capturada") return `${ev.color} se hace con la bandera de ${ev.bandera}.`;
+  if (ev.tipo === "bandera-recogida") return `${ev.color} recoge del suelo la bandera de ${ev.bandera}.`;
+  if (ev.tipo === "bandera-en-el-suelo") return `La bandera de ${ev.bandera} queda suelta en ${ev.casilla}.`;
+  if (ev.tipo === "reclutamiento") return `${ev.color} recupera una pieza en su casilla de reclutamiento.`;
+  if (ev.tipo === "reclutamiento-fallido") return `${ev.color} pierde su reclutamiento: ${ev.razón}.`;
+  if (ev.tipo === "victoria") return `¡${ev.color} corona su bandera en la torre!`;
+  if (ev.tipo === "turno-saltado") return `${ev.color} no tiene movimientos y pasa turno.`;
+  return null;
+}
+
+function Boton({ children, onClick, disabled, variante = "principal" }) {
+  const base = {
+    fontFamily: "Georgia, serif",
+    fontSize: 14,
+    padding: "8px 16px",
+    borderRadius: 3,
+    cursor: disabled ? "not-allowed" : "pointer",
+    opacity: disabled ? 0.45 : 1,
+  };
+  const estilos = {
+    principal: { background: LATON_CSS, color: TINTA, border: `1px solid ${LATON_CLARO}` },
+    secundario: { background: "transparent", color: PERGAMINO, border: `1px solid ${LATON_CSS}` },
+    peligro: { background: "transparent", color: "#E8A9A4", border: "1px solid #8C4038" },
+  };
+  return (
+    <button onClick={disabled ? undefined : onClick} disabled={disabled} style={{ ...base, ...estilos[variante] }}>
+      {children}
+    </button>
+  );
+}
+
+const entradaEstilo = {
+  width: "100%",
+  boxSizing: "border-box",
+  background: "rgba(0,0,0,0.28)",
+  border: `1px solid ${LATON_CSS}`,
+  borderRadius: 3,
+  color: PERGAMINO,
+  padding: "9px 11px",
+  fontSize: 15,
+  fontFamily: "Georgia, serif",
+  outline: "none",
+};
+
+const panelEstilo = {
+  background: MADERA,
+  border: `2px solid ${LATON_CSS}`,
+  borderRadius: 6,
+  padding: 18,
+  color: PERGAMINO,
+  fontFamily: "Georgia, serif",
+};
+
+function Rotulo({ children }) {
+  return (
+    <div style={{ fontSize: 11, letterSpacing: "0.18em", textTransform: "uppercase", color: LATON_CLARO, marginBottom: 8 }}>
+      {children}
+    </div>
+  );
+}
+
+function Sello({ color, tamano = 30, activo }) {
+  return (
+    <span
+      style={{
+        display: "inline-block",
+        width: tamano,
+        height: tamano,
+        borderRadius: "50%",
+        background: ESTILO[color].css,
+        border: activo ? `3px solid ${LATON_CLARO}` : `2px solid ${LATON_CSS}`,
+      }}
+    />
+  );
+}
+
+export default function App() {
+  const [yo, setYo] = useState(null);
+  const [nombreBorrador, setNombreBorrador] = useState("");
+  const [salas, setSalas] = useState({});
+  const [salaId, setSalaId] = useState(null);
+  const [conectado, setConectado] = useState(false);
+  const [aviso, setAviso] = useState("");
+  const [creando, setCreando] = useState(false);
+  const [nuevaSala, setNuevaSala] = useState({ nombre: "", privada: false, clave: "" });
+  const [pidiendoClave, setPidiendoClave] = useState(null);
+  const [claveEntrada, setClaveEntrada] = useState("");
+  const [colocacion, setColocacion] = useState({});
+  const [rangoActivo, setRangoActivo] = useState(9);
+  const [seleccion, setSeleccion] = useState(null);
+  const socketRef = useRef(null);
+  const yoRef = useRef(null);
+
+  useEffect(() => {
+    yoRef.current = yo;
+  }, [yo]);
+
+  useEffect(() => {
+    let guardado = null;
+    try {
+      guardado = JSON.parse(localStorage.getItem("s4:jugador") || "null");
+    } catch (e) {
+      guardado = null;
+    }
+    if (guardado && guardado.id) setYo(guardado);
+
+    let cerrado = false;
+    let reintento = null;
+
+    function conectar() {
+      const protocolo = location.protocol === "https:" ? "wss" : "ws";
+      const socket = new WebSocket(`${protocolo}://${location.host}/ws`);
+      socketRef.current = socket;
+
+      socket.onopen = () => {
+        setConectado(true);
+        const identidad = yoRef.current;
+        if (identidad) socket.send(JSON.stringify({ tipo: "hola", id: identidad.id, nombre: identidad.nombre }));
+      };
+      socket.onmessage = (e) => {
+        const mensaje = JSON.parse(e.data);
+        if (mensaje.tipo === "salas") setSalas(mensaje.salas);
+        if (mensaje.tipo === "identidad") {
+          const identidad = { id: mensaje.id, nombre: mensaje.nombre };
+          localStorage.setItem("s4:jugador", JSON.stringify(identidad));
+          setYo(identidad);
+        }
+        if (mensaje.tipo === "error") setAviso(mensaje.texto);
+      };
+      socket.onclose = () => {
+        setConectado(false);
+        if (!cerrado) reintento = setTimeout(conectar, 1500);
+      };
+    }
+    conectar();
+
+    return () => {
+      cerrado = true;
+      if (reintento) clearTimeout(reintento);
+      if (socketRef.current) socketRef.current.close();
+    };
+  }, []);
+
+  const enviar = useCallback((mensaje) => {
+    const socket = socketRef.current;
+    if (!socket || socket.readyState !== WebSocket.OPEN) {
+      setAviso("Sin conexión con el servidor.");
+      return;
+    }
+    socket.send(JSON.stringify(mensaje));
+  }, []);
+
+  function presentarse() {
+    const nombre = nombreBorrador.trim();
+    if (nombre.length < 2) {
+      setAviso("Escribe un nombre de al menos dos letras.");
+      return;
+    }
+    const identidad = yo || { id: "j_" + Math.random().toString(36).slice(2, 9) };
+    enviar({ tipo: "hola", id: identidad.id, nombre });
+    setAviso("");
+  }
+
+  const sala = salaId ? salas[salaId] : null;
+  const miColor = sala ? sala.miColor : null;
+  const soyAnfitrion = sala && yo && sala.anfitrion === yo.id;
+  const estado = sala && sala.estado ? estadoJugable(sala.estado) : null;
+  const esMiTurno = Boolean(estado && miColor && estado.turno === miColor && !estado.fin);
+  const accionesMias = esMiTurno && !estado.pendiente ? movimientosLegales(estado, miColor) : [];
+
+  useEffect(() => {
+    if (sala && sala.fase === "desplegando" && sala.desplegados.includes(miColor)) setColocacion({});
+  }, [sala && sala.fase, sala && sala.desplegados.length]);
+
+  const restantes = miColor
+    ? Object.entries(RANGOS)
+        .map(([rango, info]) => {
+          const puestas = Object.values(colocacion).filter((r) => r === Number(rango)).length;
+          return { rango: Number(rango), nombre: info.nombre, quedan: info.cantidad - puestas };
+        })
+        .sort((a, b) => b.rango - a.rango)
+    : [];
+
+  const alClicarDespliegue = useCallback(
+    (casilla) => {
+      if (!miColor) return;
+      if (zonaDe(casilla) !== miColor) {
+        setAviso(`${casilla} está fuera de tu zona.`);
+        return;
+      }
+      if (casilla === ZONAS[miColor].reclutamiento) {
+        setAviso(`${ZONAS[miColor].reclutamiento} es tu casilla de reclutamiento y va vacía.`);
+        return;
+      }
+      setAviso("");
+      setColocacion((previa) => {
+        if (previa[casilla]) {
+          const copia = { ...previa };
+          delete copia[casilla];
+          return copia;
+        }
+        const puestas = Object.values(previa).filter((r) => r === rangoActivo).length;
+        if (puestas >= RANGOS[rangoActivo].cantidad) {
+          setAviso("Ya has colocado todas las piezas de ese rango.");
+          return previa;
+        }
+        return { ...previa, [casilla]: rangoActivo };
+      });
+    },
+    [miColor, rangoActivo]
+  );
+
+  const alClicarPartida = useCallback(
+    (casilla) => {
+      if (!estado || !miColor) return;
+      if (!esMiTurno) {
+        setAviso("No es tu turno.");
+        return;
+      }
+      const propia = Object.values(estado.piezas).find((p) => p.casilla === casilla && p.color === miColor);
+      if (propia) {
+        setSeleccion({ id: propia.id, casilla });
+        setAviso("");
+        return;
+      }
+      if (!seleccion) return;
+      const accion = accionesMias.find((a) => a.pieza === seleccion.id && a.hasta === casilla);
+      if (!accion) {
+        setAviso("Esa jugada no es legal con la pieza elegida.");
+        return;
+      }
+      setSeleccion(null);
+      setAviso("");
+      enviar({ tipo: "accion", sala: salaId, accion });
+    },
+    [estado, miColor, esMiTurno, seleccion, accionesMias, enviar, salaId]
+  );
+
+  const resaltadas = (() => {
+    if (!seleccion) return {};
+    const marcas = { [seleccion.casilla]: "seleccion" };
+    for (const a of accionesMias) if (a.pieza === seleccion.id) marcas[a.hasta] = a.tipo === "mover" ? "mover" : a.tipo;
+    return marcas;
+  })();
+
+  const marco = { minHeight: "100vh", background: FIELTRO, padding: 16, fontFamily: "Georgia, serif", color: PERGAMINO };
+
+  if (!yo || !yo.nombre) {
+    return (
+      <div style={marco}>
+        <div style={{ ...panelEstilo, maxWidth: 420, margin: "40px auto" }}>
+          <h1 style={{ fontSize: 30, letterSpacing: "0.2em", textAlign: "center", textTransform: "uppercase", margin: "0 0 6px" }}>
+            Stratego <span style={{ color: LATON_CLARO }}>4</span>
+          </h1>
+          <p style={{ textAlign: "center", color: LATON_CLARO, fontSize: 12, letterSpacing: "0.16em", textTransform: "uppercase" }}>
+            dos bandos, cuatro ejércitos, un castillo
+          </p>
+          <Rotulo>Tu nombre</Rotulo>
+          <input
+            style={entradaEstilo}
+            value={nombreBorrador}
+            maxLength={18}
+            onChange={(e) => setNombreBorrador(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && presentarse()}
+            placeholder="Napoleón"
+          />
+          {aviso && <p style={{ color: "#E8A9A4", fontSize: 13 }}>{aviso}</p>}
+          <div style={{ marginTop: 12 }}>
+            <Boton onClick={presentarse} disabled={!conectado}>
+              {conectado ? "Entrar en el campamento" : "Conectando…"}
+            </Boton>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!sala) {
+    const listado = Object.values(salas).sort((a, b) => b.creada - a.creada);
+    return (
+      <div style={marco}>
+        <div style={{ ...panelEstilo, maxWidth: 760, margin: "0 auto" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
+            <h1 style={{ fontSize: 26, letterSpacing: "0.18em", textTransform: "uppercase", margin: 0 }}>
+              Stratego <span style={{ color: LATON_CLARO }}>4</span>
+            </h1>
+            <span style={{ fontSize: 12, color: conectado ? LATON_CLARO : "#E8A9A4" }}>
+              {conectado ? `al mando: ${yo.nombre}` : "sin conexión"}
+            </span>
+          </div>
+
+          {creando ? (
+            <div style={{ background: "rgba(0,0,0,0.22)", border: `1px solid ${LATON_CSS}`, borderRadius: 4, padding: 16, marginTop: 14 }}>
+              <Rotulo>Nombre de la partida</Rotulo>
+              <input
+                style={entradaEstilo}
+                value={nuevaSala.nombre}
+                maxLength={40}
+                onChange={(e) => setNuevaSala({ ...nuevaSala, nombre: e.target.value })}
+                placeholder={`Campaña de ${yo.nombre}`}
+              />
+              <label style={{ display: "flex", alignItems: "center", gap: 8, margin: "12px 0", fontSize: 15 }}>
+                <input
+                  type="checkbox"
+                  checked={nuevaSala.privada}
+                  onChange={(e) => setNuevaSala({ ...nuevaSala, privada: e.target.checked })}
+                />
+                Partida privada, solo con contraseña
+              </label>
+              {nuevaSala.privada && (
+                <input
+                  style={entradaEstilo}
+                  value={nuevaSala.clave}
+                  maxLength={24}
+                  placeholder="contraseña"
+                  onChange={(e) => setNuevaSala({ ...nuevaSala, clave: e.target.value })}
+                />
+              )}
+              <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
+                <Boton
+                  onClick={() => {
+                    enviar({
+                      tipo: "crear",
+                      nombre: nuevaSala.nombre,
+                      clave: nuevaSala.privada ? nuevaSala.clave : null,
+                    });
+                    setCreando(false);
+                    setNuevaSala({ nombre: "", privada: false, clave: "" });
+                  }}
+                >
+                  Levantar la partida
+                </Boton>
+                <Boton variante="secundario" onClick={() => setCreando(false)}>Cancelar</Boton>
+              </div>
+            </div>
+          ) : (
+            <div style={{ margin: "16px 0" }}>
+              <Boton onClick={() => setCreando(true)} disabled={!conectado}>Levantar una partida</Boton>
+            </div>
+          )}
+
+          <Rotulo>Partidas abiertas</Rotulo>
+          {listado.length === 0 && (
+            <p style={{ fontSize: 15, color: "rgba(232,220,194,0.7)" }}>
+              No hay ninguna partida en pie. Levanta la primera y cubre los huecos con bots.
+            </p>
+          )}
+          {listado.map((s) => {
+            const ocupados = COLORES.filter((c) => s.puestos[c]).length;
+            return (
+              <div
+                key={s.id}
+                style={{
+                  border: `1px solid ${LATON_CSS}`,
+                  borderRadius: 4,
+                  padding: 12,
+                  marginBottom: 10,
+                  background: "rgba(0,0,0,0.2)",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 12,
+                  flexWrap: "wrap",
+                }}
+              >
+                <div style={{ flex: "1 1 220px" }}>
+                  <div style={{ fontSize: 16 }}>
+                    {s.nombre}
+                    {s.privada && <span style={{ color: LATON_CLARO, fontSize: 12 }}> · con contraseña</span>}
+                  </div>
+                  <div style={{ fontSize: 12, color: "rgba(232,220,194,0.65)" }}>
+                    {ocupados} de 4 puestos ·{" "}
+                    {s.fase === "esperando" ? "esperando" : s.fase === "desplegando" ? "desplegando" : "en juego"}
+                  </div>
+                </div>
+                <div style={{ display: "flex", gap: 5 }}>
+                  {COLORES.map((c) => (
+                    <span
+                      key={c}
+                      title={s.puestos[c] ? s.puestos[c].nombre : "libre"}
+                      style={{
+                        width: 14,
+                        height: 14,
+                        borderRadius: "50%",
+                        background: s.puestos[c] ? ESTILO[c].css : "transparent",
+                        border: `1px solid ${s.puestos[c] ? ESTILO[c].css : "rgba(232,220,194,0.35)"}`,
+                      }}
+                    />
+                  ))}
+                </div>
+                {s.miColor ? (
+                  <Boton onClick={() => setSalaId(s.id)}>Volver</Boton>
+                ) : s.fase !== "esperando" ? (
+                  <span style={{ fontSize: 13, color: "rgba(232,220,194,0.5)" }}>Ya ha empezado</span>
+                ) : ocupados === 4 ? (
+                  <span style={{ fontSize: 13, color: "rgba(232,220,194,0.5)" }}>Completa</span>
+                ) : pidiendoClave === s.id ? (
+                  <div style={{ display: "flex", gap: 8 }}>
+                    <input
+                      style={{ ...entradaEstilo, width: 130 }}
+                      value={claveEntrada}
+                      placeholder="contraseña"
+                      onChange={(e) => setClaveEntrada(e.target.value)}
+                    />
+                    <Boton
+                      onClick={() => {
+                        enviar({ tipo: "unirse", sala: s.id, clave: claveEntrada });
+                        setSalaId(s.id);
+                        setPidiendoClave(null);
+                      }}
+                    >
+                      Entrar
+                    </Boton>
+                  </div>
+                ) : (
+                  <Boton
+                    onClick={() => {
+                      if (s.privada) {
+                        setPidiendoClave(s.id);
+                        setClaveEntrada("");
+                      } else {
+                        enviar({ tipo: "unirse", sala: s.id });
+                        setSalaId(s.id);
+                      }
+                    }}
+                  >
+                    Unirse
+                  </Boton>
+                )}
+              </div>
+            );
+          })}
+          {aviso && <p style={{ color: "#E8A9A4", fontSize: 13 }}>{aviso}</p>}
+        </div>
+      </div>
+    );
+  }
+
+  const piezasEnTablero = (() => {
+    if (sala.fase === "esperando") return [];
+    if (sala.fase === "desplegando") {
+      if (!miColor) return [];
+      return Object.entries(colocacion).map(([casilla, rango]) => ({
+        casilla,
+        color: miColor,
+        rango,
+        bandera: casilla === ZONAS[miColor].bandera ? miColor : null,
+      }));
+    }
+    return estado ? Object.values(estado.piezas) : [];
+  })();
+
+  const yaDesplegado = sala.desplegados && sala.desplegados.includes(miColor);
+
+  return (
+    <div style={marco}>
+      <div style={{ display: "flex", gap: 16, alignItems: "flex-start", flexWrap: "wrap", maxWidth: 1120, margin: "0 auto" }}>
+        <div style={{ flex: "1 1 480px", minWidth: 320 }}>
+          <Tablero3D
+            piezas={piezasEnTablero}
+            resaltadas={sala.fase === "jugando" || sala.fase === "fin" ? resaltadas : {}}
+            zonaPropia={sala.fase === "desplegando" ? miColor : null}
+            colorCamara={miColor}
+            onCasilla={sala.fase === "desplegando" ? alClicarDespliegue : alClicarPartida}
+          />
+          <p style={{ color: "#C9BC9C", fontSize: 12, marginTop: 8 }}>
+            Arrastra para girar, rueda para acercar.{" "}
+            {sala.fase === "desplegando"
+              ? "Toca una casilla de tu zona para poner o quitar una pieza."
+              : "Toca una pieza tuya y luego una casilla marcada."}
+          </p>
+        </div>
+
+        <div style={{ ...panelEstilo, flex: "0 1 320px", minWidth: 270 }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
+            <strong style={{ fontSize: 18 }}>{sala.nombre}</strong>
+            {miColor && <Sello color={miColor} tamano={22} activo />}
+          </div>
+
+          {sala.fase === "esperando" && (
+            <div style={{ marginTop: 14 }}>
+              <Rotulo>Puestos</Rotulo>
+              {EQUIPOS.map((equipo, i) => (
+                <div key={i} style={{ marginBottom: 10 }}>
+                  <div style={{ fontSize: 12, color: LATON_CLARO, marginBottom: 4 }}>Bando {i + 1}</div>
+                  {equipo.map((c) => (
+                    <div key={c} style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+                      <Sello color={c} tamano={18} />
+                      <span style={{ flex: 1, fontSize: 14 }}>
+                        {sala.puestos[c] ? sala.puestos[c].nombre : <em style={{ opacity: 0.6 }}>libre</em>}
+                        <span style={{ color: LATON_CLARO, fontSize: 11 }}> · {ESTILO[c].lado}</span>
+                      </span>
+                      {soyAnfitrion && !sala.puestos[c] && (
+                        <Boton variante="secundario" onClick={() => enviar({ tipo: "bot", sala: salaId, color: c })}>Bot</Boton>
+                      )}
+                      {soyAnfitrion && sala.puestos[c] && sala.puestos[c].tipo === "bot" && (
+                        <Boton variante="peligro" onClick={() => enviar({ tipo: "librar", sala: salaId, color: c })}>Quitar</Boton>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              ))}
+              <div style={{ display: "flex", gap: 8, marginTop: 12, flexWrap: "wrap" }}>
+                {soyAnfitrion && (
+                  <Boton onClick={() => enviar({ tipo: "empezar", sala: salaId })} disabled={!COLORES.every((c) => sala.puestos[c])}>
+                    {COLORES.every((c) => sala.puestos[c]) ? "Empezar el despliegue" : "Faltan puestos"}
+                  </Boton>
+                )}
+                <Boton
+                  variante="secundario"
+                  onClick={() => {
+                    enviar({ tipo: "salir", sala: salaId });
+                    setSalaId(null);
+                  }}
+                >
+                  Dejar la partida
+                </Boton>
+              </div>
+            </div>
+          )}
+
+          {sala.fase === "desplegando" && miColor && (
+            <div style={{ marginTop: 14 }}>
+              {yaDesplegado ? (
+                <div>
+                  <p style={{ fontSize: 15 }}>Despliegue enviado. Esperando a los demás bandos.</p>
+                  <div style={{ fontSize: 13, color: "#C9BC9C" }}>{sala.desplegados.length} de 4 ejércitos listos.</div>
+                </div>
+              ) : (
+                <>
+                  <Rotulo>Piezas por colocar</Rotulo>
+                  {restantes.map((r) => (
+                    <button
+                      key={r.rango}
+                      onClick={() => setRangoActivo(r.rango)}
+                      style={{
+                        display: "flex",
+                        width: "100%",
+                        justifyContent: "space-between",
+                        background: rangoActivo === r.rango ? MADERA_CLARA : "transparent",
+                        border: `1px solid ${rangoActivo === r.rango ? LATON_CLARO : MADERA_CLARA}`,
+                        borderRadius: 3,
+                        color: r.quedan === 0 ? "#8d8371" : PERGAMINO,
+                        padding: "5px 10px",
+                        marginBottom: 3,
+                        cursor: "pointer",
+                        fontFamily: "Georgia, serif",
+                        fontSize: 14,
+                      }}
+                    >
+                      <span>
+                        <strong style={{ color: LATON_CLARO }}>{r.rango}</strong> {r.nombre}
+                      </span>
+                      <span>{r.quedan}</span>
+                    </button>
+                  ))}
+                  <div style={{ fontSize: 13, color: "#C9BC9C", margin: "10px 0" }}>
+                    {Object.keys(colocacion).length} de 20 · bandera en {ZONAS[miColor].bandera}{" "}
+                    {colocacion[ZONAS[miColor].bandera] ? "lista" : "sin pieza"}
+                  </div>
+                  <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                    <Boton variante="secundario" onClick={() => setColocacion(colocacionAleatoria(miColor))}>Al azar</Boton>
+                    <Boton variante="secundario" onClick={() => setColocacion({})}>Vaciar</Boton>
+                    <Boton onClick={() => enviar({ tipo: "despliegue", sala: salaId, colocacion })}>Confirmar</Boton>
+                  </div>
+                </>
+              )}
+            </div>
+          )}
+
+          {(sala.fase === "jugando" || sala.fase === "fin") && estado && (
+            <div style={{ marginTop: 14 }}>
+              {estado.fin ? (
+                <div style={{ border: `1px solid ${LATON_CSS}`, borderRadius: 4, padding: 12, marginBottom: 12 }}>
+                  <strong style={{ fontSize: 16 }}>
+                    {estado.fin.ganador ? `Gana el bando ${estado.fin.equipo.join(" y ")}` : "Partida cerrada sin ganador"}
+                  </strong>
+                </div>
+              ) : (
+                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
+                  <Sello color={estado.turno} tamano={20} activo={esMiTurno} />
+                  <span style={{ fontSize: 15 }}>
+                    {esMiTurno ? "Te toca" : `Turno de ${sala.puestos[estado.turno]?.nombre || estado.turno}`}
+                  </span>
+                </div>
+              )}
+
+              {miColor && (
+                <div style={{ fontSize: 13, color: "#C9BC9C", lineHeight: 1.6 }}>
+                  Tu bando: {miColor} y {SOCIO[miColor]}
+                  <br />
+                  Marcador de victorias: {estado.marcador[miColor]} de {VICTORIAS_PARA_RECLUTAR}
+                  <br />
+                  Tus bajas: {estado.misBajas.length ? estado.misBajas.join(", ") : "ninguna"}
+                </div>
+              )}
+
+              {estado.pendiente && (
+                <div style={{ border: `1px solid ${LATON_CLARO}`, borderRadius: 4, padding: 12, marginTop: 12 }}>
+                  <Rotulo>Reclutas una pieza</Rotulo>
+                  <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                    {estado.pendiente.opciones.map((r) => (
+                      <Boton key={r} onClick={() => enviar({ tipo: "reclutar", sala: salaId, rango: r })}>
+                        {r} {NOMBRE_RANGO[r]}
+                      </Boton>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {estado.eventos && estado.eventos.length > 0 && (
+                <div style={{ marginTop: 12, fontSize: 13, background: "rgba(0,0,0,0.25)", padding: 10, borderRadius: 3 }}>
+                  {estado.eventos
+                    .map(describirEvento)
+                    .filter(Boolean)
+                    .map((t, i) => (
+                      <div key={i} style={{ marginBottom: 4 }}>{t}</div>
+                    ))}
+                </div>
+              )}
+
+              {aviso && <p style={{ color: "#E8A9A4", fontSize: 13 }}>{aviso}</p>}
+
+              <div style={{ marginTop: 12 }}>
+                <Boton
+                  variante="secundario"
+                  onClick={() => {
+                    enviar({ tipo: "salir", sala: salaId });
+                    setSalaId(null);
+                  }}
+                >
+                  Dejar la partida
+                </Boton>
+              </div>
+            </div>
+          )}
+
+          {aviso && sala.fase === "desplegando" && <p style={{ color: "#E8A9A4", fontSize: 13 }}>{aviso}</p>}
+        </div>
+      </div>
+    </div>
+  );
+}

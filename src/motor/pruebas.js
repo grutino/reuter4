@@ -1,0 +1,536 @@
+import assert from "node:assert";
+import {
+  CASILLAS,
+  ADYACENTES,
+  ACCESOS_CASTILLO,
+  ANILLO,
+  TORRE,
+  ZONAS,
+  casillasDeZona,
+} from "./tablero.js";
+import {
+  nuevaPartida,
+  validarDespliegue,
+  movimientosLegales,
+  aplicar,
+  reclutar,
+  inventarioInicial,
+  vistaDe,
+  MAX_ALTERNANCIAS,
+} from "./motor.js";
+
+let pasadas = 0;
+let fallidas = 0;
+function prueba(nombre, fn) {
+  try {
+    fn();
+    pasadas++;
+    console.log(`  ok  ${nombre}`);
+  } catch (e) {
+    fallidas++;
+    console.log(`FALLA  ${nombre}\n       ${e.message}`);
+  }
+}
+
+// --- Utilidades de escenario ------------------------------------------------
+
+function estadoVacio() {
+  return {
+    modo: "equipos",
+    orden: ["rojo", "verde", "verde", "amarillo"],
+    turno: "rojo",
+    piezas: {},
+    tablero: {},
+    banderas: {},
+    banderasSueltas: {},
+    marcador: { rojo: 0, verde: 0, azul: 0, amarillo: 0 },
+    bajas: { rojo: [], verde: [], azul: [], amarillo: [] },
+    pendiente: null,
+    fin: null,
+    eventos: [],
+    contador: 0,
+  };
+}
+
+function colocar(estado, color, rango, casilla, opciones = {}) {
+  const id = `${color}-${++estado.contador}`;
+  estado.piezas[id] = {
+    id,
+    color,
+    rango,
+    casilla,
+    bandera: opciones.bandera ? color : null,
+    alternancias: 0,
+    ultimoTramo: null,
+  };
+  estado.tablero[casilla] = id;
+  if (opciones.bandera) {
+    estado.banderas[color] = { portador: id, casilla: null, ultimoDueño: color };
+  }
+  return estado.piezas[id];
+}
+
+function despliegueEstandar(color) {
+  const casillas = casillasDeZona(color).filter((c) => c !== ZONAS[color].reclutamiento);
+  const rangos = inventarioInicial();
+  const banderaCasilla = ZONAS[color].bandera;
+  return casillas.map((casilla, i) => ({
+    casilla,
+    rango: rangos[i],
+    bandera: casilla === banderaCasilla,
+  }));
+}
+
+function partidaCompleta() {
+  return nuevaPartida({
+    rojo: despliegueEstandar("rojo"),
+    verde: despliegueEstandar("verde"),
+    azul: despliegueEstandar("azul"),
+    amarillo: despliegueEstandar("amarillo"),
+  });
+}
+
+function accion(acciones, filtro) {
+  const encontrada = acciones.find(filtro);
+  assert.ok(encontrada, "no se ha generado la acción esperada");
+  return encontrada;
+}
+
+console.log("\nGEOMETRÍA");
+
+prueba("144 casillas de rejilla más anillo y torre", () => {
+  assert.strictEqual(CASILLAS.length, 146);
+  assert.ok(CASILLAS.includes(ANILLO) && CASILLAS.includes(TORRE));
+});
+
+prueba("el castillo tiene exactamente 12 accesos", () => {
+  assert.strictEqual(ACCESOS_CASTILLO.size, 12);
+  for (const c of ["F7", "F8", "F9", "J7", "J8", "J9", "G6", "H6", "I6", "G10", "H10", "I10"]) {
+    assert.ok(ACCESOS_CASTILLO.has(c), `falta ${c}`);
+  }
+});
+
+prueba("la torre solo conecta con el anillo", () => {
+  assert.deepStrictEqual(ADYACENTES[TORRE], [ANILLO]);
+  assert.strictEqual(ADYACENTES[ANILLO].length, 13);
+});
+
+prueba("el bosque y los lagos no son casillas", () => {
+  assert.ok(!CASILLAS.includes("A1"));
+  assert.ok(!CASILLAS.includes("O15"));
+  assert.ok(!CASILLAS.includes("H5"));
+  assert.ok(!CASILLAS.includes("E8"));
+});
+
+console.log("\nDESPLIEGUE");
+
+prueba("el despliegue estándar es válido para los cuatro colores", () => {
+  for (const color of ["rojo", "verde", "verde", "amarillo"]) {
+    assert.deepStrictEqual(validarDespliegue(color, despliegueEstandar(color)), []);
+  }
+});
+
+prueba("ocupar la casilla de reclutamiento invalida el despliegue", () => {
+  const d = despliegueEstandar("rojo");
+  d[0].casilla = "H2";
+  const errores = validarDespliegue("rojo", d);
+  assert.ok(errores.some((e) => e.includes("reclutamiento")));
+});
+
+prueba("la bandera debe salir de su casilla marcada", () => {
+  const d = despliegueEstandar("rojo").map((p) => ({ ...p, bandera: false }));
+  d[0].bandera = true;
+  const errores = validarDespliegue("rojo", d);
+  assert.ok(errores.some((e) => e.includes("H1")));
+});
+
+prueba("una partida completa arranca con 80 piezas y turno de rojo", () => {
+  const e = partidaCompleta();
+  assert.strictEqual(Object.keys(e.piezas).length, 80);
+  assert.strictEqual(e.turno, "rojo");
+  assert.strictEqual(movimientosLegales(e).length > 0, true);
+});
+
+console.log("\nMOVIMIENTO");
+
+prueba("el capitán llega a dos casillas con giro", () => {
+  const e = estadoVacio();
+  colocar(e, "rojo", 6, "H4");
+  const m = movimientosLegales(e);
+  assert.ok(m.some((a) => a.hasta === "J4" && a.via === "I4"));
+  assert.ok(m.some((a) => a.hasta === "I3" && a.via));
+  assert.ok(!m.some((a) => a.hasta === "H4"));
+});
+
+prueba("el capitán que ataca en la primera casilla no sigue avanzando", () => {
+  const e = estadoVacio();
+  const cap = colocar(e, "rojo", 6, "H4");
+  colocar(e, "verde", 5, "I4");
+  const m = movimientosLegales(e);
+  const ataque = accion(m, (a) => a.tipo === "atacar" && a.hasta === "I4");
+  assert.strictEqual(ataque.via, undefined);
+  const despues = aplicar(e, ataque);
+  assert.strictEqual(despues.piezas[cap.id].casilla, "I4");
+});
+
+prueba("el explorador recorre la recta y se detiene ante el castillo", () => {
+  const e = estadoVacio();
+  colocar(e, "rojo", 3, "F11");
+  const destinos = movimientosLegales(e)
+    .filter((a) => a.desde === "F11" && ["F10", "F9", "F8", "F7", "F6"].includes(a.hasta))
+    .map((a) => a.hasta);
+  assert.ok(["F10", "F9", "F8", "F7"].every((c) => destinos.includes(c)));
+  assert.ok(!movimientosLegales(e).some((a) => a.hasta === TORRE));
+});
+
+prueba("el explorador no cruza un lago", () => {
+  const e = estadoVacio();
+  colocar(e, "rojo", 3, "H4");
+  const m = movimientosLegales(e);
+  assert.ok(!m.some((a) => a.hasta === "H6"), "no debería pasar por encima de H5");
+});
+
+prueba("el portador de bandera solo avanza una casilla", () => {
+  const e = estadoVacio();
+  colocar(e, "rojo", 3, "F11", { bandera: true });
+  const m = movimientosLegales(e);
+  assert.ok(m.some((a) => a.hasta === "F10"));
+  assert.ok(!m.some((a) => a.hasta === "F9"));
+});
+
+console.log("\nDUELOS");
+
+prueba("el espía gana al mariscal solo si ataca él", () => {
+  const e = estadoVacio();
+  const espia = colocar(e, "rojo", 2, "H4");
+  colocar(e, "verde", 9, "G4");
+  const tras = aplicar(e, accion(movimientosLegales(e), (a) => a.tipo === "atacar"));
+  assert.strictEqual(tras.eventos[0].resultado, "atacante");
+  assert.ok(tras.piezas[espia.id]);
+  assert.strictEqual(tras.piezas[espia.id].casilla, "G4");
+});
+
+prueba("el mariscal gana si es él quien ataca al espía", () => {
+  const e = estadoVacio();
+  e.turno = "verde";
+  colocar(e, "rojo", 2, "H4");
+  const mariscal = colocar(e, "verde", 9, "G4");
+  const tras = aplicar(e, accion(movimientosLegales(e, "verde"), (a) => a.tipo === "atacar"));
+  assert.strictEqual(tras.eventos[0].resultado, "atacante");
+  assert.strictEqual(tras.piezas[mariscal.id].casilla, "H4");
+});
+
+prueba("mismo rango: caen las dos y nadie avanza el marcador", () => {
+  const e = estadoVacio();
+  colocar(e, "rojo", 7, "H4");
+  colocar(e, "verde", 7, "G4");
+  const tras = aplicar(e, accion(movimientosLegales(e), (a) => a.tipo === "atacar"));
+  assert.strictEqual(Object.keys(tras.piezas).length, 0);
+  assert.strictEqual(tras.marcador.rojo, 0);
+  assert.strictEqual(tras.marcador.verde, 0);
+});
+
+prueba("el defensor que gana también avanza su marcador", () => {
+  const e = estadoVacio();
+  colocar(e, "rojo", 4, "H4");
+  colocar(e, "verde", 8, "G4");
+  const tras = aplicar(e, accion(movimientosLegales(e), (a) => a.tipo === "atacar"));
+  assert.strictEqual(tras.marcador.verde, 1);
+  assert.strictEqual(tras.marcador.rojo, 0);
+});
+
+console.log("\nCAÑÓN");
+
+prueba("el cañón dispara a 1, 2 y 3 casillas", () => {
+  for (const [destino, distancia] of [["I4", 1], ["J4", 2], ["K4", 3]]) {
+    const e = estadoVacio();
+    colocar(e, "rojo", 1, "H4");
+    colocar(e, "verde", 9, destino);
+    assert.ok(
+      movimientosLegales(e).some((a) => a.tipo === "disparar" && a.hasta === destino),
+      `debería alcanzar a distancia ${distancia}`
+    );
+  }
+  const lejos = estadoVacio();
+  colocar(lejos, "rojo", 1, "H4");
+  colocar(lejos, "verde", 9, "L4");
+  assert.ok(!movimientosLegales(lejos).some((a) => a.tipo === "disparar"), "a cuatro casillas no llega");
+});
+
+prueba("la bala sobrevuela el lago y bate el anillo a tres casillas", () => {
+  const e = estadoVacio();
+  colocar(e, "rojo", 1, "D8"); // D8 - E8 (lago) - F8 - anillo
+  colocar(e, "verde", 9, ANILLO);
+  assert.ok(movimientosLegales(e).some((a) => a.tipo === "disparar" && a.hasta === ANILLO));
+});
+
+prueba("una pieza en medio corta la línea de tiro", () => {
+  const e = estadoVacio();
+  colocar(e, "rojo", 1, "D8");
+  colocar(e, "rojo", 4, "F8"); // pieza propia bloqueando
+  colocar(e, "verde", 9, ANILLO);
+  assert.ok(!movimientosLegales(e).some((a) => a.tipo === "disparar"));
+});
+
+prueba("el cañón bate al primero de la línea, no al que elija", () => {
+  const e = estadoVacio();
+  colocar(e, "rojo", 1, "D8");
+  colocar(e, "verde", 3, "F8");
+  colocar(e, "verde", 9, ANILLO);
+  const disparos = movimientosLegales(e).filter((a) => a.tipo === "disparar");
+  assert.strictEqual(disparos.length, 1);
+  assert.strictEqual(disparos[0].hasta, "F8");
+});
+
+prueba("tras el cañonazo se retiran los dos y el marcador sube", () => {
+  const e = estadoVacio();
+  const canon = colocar(e, "rojo", 1, "D8");
+  const objetivo = colocar(e, "verde", 9, "F8");
+  colocar(e, "rojo", 4, "D9");
+  const tras = aplicar(e, accion(movimientosLegales(e), (a) => a.tipo === "disparar"));
+  assert.ok(!tras.piezas[canon.id], "el cañón debe retirarse");
+  assert.ok(!tras.piezas[objetivo.id], "el objetivo debe retirarse");
+  assert.strictEqual(tras.marcador.rojo, 1);
+});
+
+prueba("el cañón no ataca cuerpo a cuerpo: siempre es disparo", () => {
+  const e = estadoVacio();
+  colocar(e, "rojo", 1, "H4");
+  colocar(e, "verde", 9, "H3");
+  const m = movimientosLegales(e);
+  assert.ok(!m.some((a) => a.tipo === "atacar"));
+  assert.ok(m.some((a) => a.tipo === "disparar" && a.hasta === "H3"));
+});
+
+prueba("el cañón pierde siempre defendiendo, incluso ante un explorador", () => {
+  const e = estadoVacio();
+  e.turno = "verde";
+  const canon = colocar(e, "rojo", 1, "G4");
+  const explorador = colocar(e, "verde", 3, "D4");
+  const ataque = accion(
+    movimientosLegales(e, "verde"),
+    (a) => a.tipo === "atacar" && a.pieza === explorador.id && a.hasta === "G4"
+  );
+  const tras = aplicar(e, ataque);
+  assert.strictEqual(tras.eventos[0].resultado, "atacante");
+  assert.ok(!tras.piezas[canon.id]);
+  assert.strictEqual(tras.marcador.verde, 1);
+});
+
+console.log("\nBANDERA Y CASTILLO");
+
+prueba("la bandera queda suelta tras un empate y la recoge un tercero", () => {
+  const e = estadoVacio();
+  colocar(e, "rojo", 7, "H4", { bandera: true });
+  colocar(e, "verde", 7, "G4");
+  const tras = aplicar(e, accion(movimientosLegales(e), (a) => a.tipo === "atacar"));
+  assert.strictEqual(tras.banderasSueltas["H4"], "rojo");
+
+  // tras el empate no quedaba nadie en el tablero, así que la partida se había dado por cerrada
+  const e2 = { ...tras, turno: "verde", fin: null };
+  colocar(e2, "verde", 5, "H3");
+  const recoge = accion(movimientosLegales(e2, "verde"), (a) => a.hasta === "H4");
+  const tras2 = aplicar({ ...e2, turno: "verde" }, recoge);
+  const portador = Object.values(tras2.piezas).find((p) => p.bandera === "rojo");
+  assert.ok(portador, "alguien debe llevar ahora la bandera roja");
+  assert.strictEqual(portador.color, "verde");
+});
+
+prueba("capturar la bandera de su dueño abre reclutamiento", () => {
+  const e = estadoVacio();
+  colocar(e, "verde", 4, "G4", { bandera: true });
+  colocar(e, "rojo", 9, "H4");
+  e.bajas.rojo.push(5);
+  const tras = aplicar(e, accion(movimientosLegales(e), (a) => a.tipo === "atacar"));
+  assert.ok(tras.pendiente, "debería abrirse un reclutamiento");
+  assert.strictEqual(tras.pendiente.color, "rojo");
+});
+
+prueba("se puede ocupar la torre sin bandera y es atacable desde el anillo", () => {
+  const e = estadoVacio();
+  colocar(e, "rojo", 9, TORRE);
+  e.turno = "verde";
+  colocar(e, "verde", 4, ANILLO);
+  const m = movimientosLegales(e, "verde");
+  assert.ok(m.some((a) => a.tipo === "atacar" && a.hasta === TORRE));
+});
+
+prueba("llegar a la torre con la bandera propia gana la partida", () => {
+  const e = estadoVacio();
+  colocar(e, "rojo", 4, ANILLO, { bandera: true });
+  const tras = aplicar(e, accion(movimientosLegales(e), (a) => a.hasta === TORRE));
+  assert.ok(tras.fin);
+  assert.strictEqual(tras.fin.ganador, "rojo");
+});
+
+prueba("llegar a la torre con la bandera de otro no gana", () => {
+  const e = estadoVacio();
+  const pieza = colocar(e, "rojo", 4, ANILLO);
+  pieza.bandera = "verde";
+  e.banderas.azul = { portador: pieza.id, casilla: null, ultimoDueño: "rojo" };
+  colocar(e, "rojo", 5, "H6");
+  const tras = aplicar(e, accion(movimientosLegales(e), (a) => a.hasta === TORRE));
+  assert.strictEqual(tras.fin, null);
+});
+
+console.log("\nRECLUTAMIENTO");
+
+prueba("seis victorias abren el reclutamiento", () => {
+  const e = estadoVacio();
+  e.marcador.rojo = 5;
+  e.bajas.rojo.push(9, 3);
+  colocar(e, "rojo", 8, "H4");
+  colocar(e, "verde", 4, "G4");
+  const tras = aplicar(e, accion(movimientosLegales(e), (a) => a.tipo === "atacar"));
+  assert.ok(tras.pendiente);
+  assert.deepStrictEqual(tras.pendiente.opciones, [9, 3]);
+  assert.strictEqual(tras.marcador.rojo, 0);
+});
+
+prueba("el reclutamiento falla si la casilla está ocupada", () => {
+  const e = estadoVacio();
+  e.marcador.rojo = 5;
+  e.bajas.rojo.push(9);
+  colocar(e, "rojo", 8, "H4");
+  colocar(e, "rojo", 5, "H2"); // casilla de reclutamiento ocupada
+  colocar(e, "verde", 4, "G4");
+  const tras = aplicar(e, accion(movimientosLegales(e), (a) => a.tipo === "atacar"));
+  assert.strictEqual(tras.pendiente, null);
+  assert.strictEqual(tras.marcador.rojo, 0);
+  assert.ok(tras.eventos.some((ev) => ev.tipo === "reclutamiento-fallido"));
+});
+
+prueba("la pieza reclutada entra sin publicar su rango", () => {
+  const e = estadoVacio();
+  e.marcador.rojo = 5;
+  e.bajas.rojo.push(9);
+  colocar(e, "rojo", 8, "H4");
+  colocar(e, "verde", 4, "G4");
+  const conPendiente = aplicar(e, accion(movimientosLegales(e), (a) => a.tipo === "atacar"));
+  const tras = reclutar(conPendiente, 9);
+  assert.strictEqual(tras.piezas[tras.tablero["H2"]].rango, 9);
+  assert.deepStrictEqual(tras.eventos[0], { tipo: "reclutamiento", color: "rojo" });
+  assert.ok(!tras.eventos.some((ev) => "rango" in ev), "el rango reclutado no se publica");
+  assert.strictEqual(tras.bajas.rojo.length, 0);
+});
+
+
+console.log("\nEQUIPOS");
+
+prueba("no se puede atacar a una pieza del compañero", () => {
+  const e = estadoVacio();
+  colocar(e, "rojo", 9, "H4");
+  colocar(e, "azul", 4, "G4"); // azul es el compañero de rojo
+  const m = movimientosLegales(e);
+  assert.ok(!m.some((a) => a.tipo === "atacar"), "no debería haber ataque contra el compañero");
+  assert.ok(!m.some((a) => a.hasta === "G4"), "tampoco se puede ocupar su casilla");
+});
+
+prueba("el cañón tampoco dispara al compañero", () => {
+  const e = estadoVacio();
+  colocar(e, "rojo", 1, "H4");
+  colocar(e, "azul", 9, "J4");
+  assert.ok(!movimientosLegales(e).some((a) => a.tipo === "disparar"));
+});
+
+prueba("recoger la bandera del compañero no da promoción", () => {
+  const e = estadoVacio();
+  colocar(e, "rojo", 4, "H4");
+  e.banderasSueltas["G4"] = "azul";
+  e.banderas.azul = { portador: null, casilla: "G4", ultimoDueño: "azul" };
+  e.bajas.rojo.push(9);
+  const tras = aplicar(e, accion(movimientosLegales(e), (a) => a.hasta === "G4"));
+  const portador = Object.values(tras.piezas).find((p) => p.bandera === "azul");
+  assert.ok(portador, "la bandera del compañero sí se puede recoger");
+  assert.strictEqual(tras.pendiente, null, "pero no abre reclutamiento");
+});
+
+prueba("recoger del suelo la bandera enemiga sí da promoción", () => {
+  const e = estadoVacio();
+  colocar(e, "rojo", 4, "H4");
+  e.banderasSueltas["G4"] = "verde";
+  e.banderas.verde = { portador: null, casilla: "G4", ultimoDueño: "verde" };
+  e.bajas.rojo.push(9);
+  const tras = aplicar(e, accion(movimientosLegales(e), (a) => a.hasta === "G4"));
+  assert.ok(tras.pendiente, "debería abrirse el reclutamiento");
+  assert.strictEqual(tras.pendiente.color, "rojo");
+});
+
+prueba("recuperar tu propia bandera no da promoción", () => {
+  const e = estadoVacio();
+  colocar(e, "rojo", 4, "H4");
+  e.banderasSueltas["G4"] = "rojo";
+  e.banderas.rojo = { portador: null, casilla: "G4", ultimoDueño: "rojo" };
+  e.bajas.rojo.push(9);
+  const tras = aplicar(e, accion(movimientosLegales(e), (a) => a.hasta === "G4"));
+  assert.strictEqual(tras.pendiente, null);
+});
+
+prueba("coronar con la bandera del compañero gana para los dos", () => {
+  const e = estadoVacio();
+  const pieza = colocar(e, "rojo", 4, ANILLO);
+  pieza.bandera = "azul";
+  e.banderas.azul = { portador: pieza.id, casilla: null, ultimoDueño: "azul" };
+  const tras = aplicar(e, accion(movimientosLegales(e), (a) => a.hasta === TORRE));
+  assert.ok(tras.fin);
+  assert.deepStrictEqual(tras.fin.equipo.sort(), ["azul", "rojo"]);
+});
+
+prueba("el compañero tampoco ve tus rangos", () => {
+  const e = partidaCompleta();
+  const vista = vistaDe(e, "rojo");
+  assert.ok(vista.piezas.filter((p) => p.color === "azul").every((p) => p.rango === null));
+  assert.deepStrictEqual(vista.equipo.sort(), ["azul", "rojo"]);
+});
+
+prueba("la promoción por bandera no toca el contador de victorias", () => {
+  const e = estadoVacio();
+  e.marcador.rojo = 4;
+  colocar(e, "rojo", 4, "H4");
+  e.banderasSueltas["G4"] = "verde";
+  e.banderas.verde = { portador: null, casilla: "G4", ultimoDueño: "verde" };
+  e.bajas.rojo.push(9);
+  const tras = aplicar(e, accion(movimientosLegales(e), (a) => a.hasta === "G4"));
+  assert.ok(tras.pendiente);
+  assert.strictEqual(tras.marcador.rojo, 4, "el contador se queda como estaba");
+});
+
+prueba("la promoción por victorias sí reinicia el contador", () => {
+  const e = estadoVacio();
+  e.marcador.rojo = 5;
+  e.bajas.rojo.push(9);
+  colocar(e, "rojo", 8, "H4");
+  colocar(e, "verde", 4, "G4");
+  const tras = aplicar(e, accion(movimientosLegales(e), (a) => a.tipo === "atacar"));
+  assert.strictEqual(tras.marcador.rojo, 0);
+});
+
+console.log("\nVISIBILIDAD Y VAIVÉN");
+
+prueba("un jugador solo ve sus propios rangos y sus propias bajas", () => {
+  const e = partidaCompleta();
+  e.bajas.verde.push(9);
+  const vista = vistaDe(e, "rojo");
+  assert.ok(vista.piezas.filter((p) => p.color === "rojo").every((p) => p.rango !== null));
+  assert.ok(vista.piezas.filter((p) => p.color !== "rojo").every((p) => p.rango === null));
+  assert.deepStrictEqual(vista.misBajas, []);
+  assert.ok(!("bajas" in vista));
+});
+
+prueba("el vaivén se corta tras cinco idas y vueltas", () => {
+  let e = estadoVacio();
+  const pieza = colocar(e, "rojo", 4, "H4");
+  let actual = "H4";
+  let otra = "G4";
+  for (let i = 0; i < MAX_ALTERNANCIAS; i++) {
+    const m = movimientosLegales(e).filter((a) => a.hasta === otra);
+    assert.ok(m.length, `movimiento ${i + 1} debería ser legal`);
+    e = aplicar(e, m[0]);
+    [actual, otra] = [otra, actual];
+  }
+  const bloqueado = movimientosLegales(e).some((a) => a.pieza === pieza.id && a.hasta === otra);
+  assert.strictEqual(bloqueado, false, "la décima alternancia debe estar prohibida");
+});
+
+console.log(`\n${pasadas} pruebas superadas, ${fallidas} fallidas\n`);
+process.exit(fallidas ? 1 : 0);
