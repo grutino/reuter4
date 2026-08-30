@@ -1,7 +1,7 @@
 {
-  "name": "stratego4",
+  "name": "reuter4",
   "version": "1.0.0",
-  "description": "Stratego 4 (Jumbo) en 3D, dos bandos de dos jugadores, online",
+  "description": "Reuter4: cuatro ejércitos en dos bandos, tablero en 3D y partidas online",
   "type": "module",
   "engines": {
     "node": ">=18"

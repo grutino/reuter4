@@ -1,4 +1,4 @@
-// Motor de reglas de Stratego 4. Sin gráficos: solo estado y transiciones.
+// Motor de reglas de Reuter4. Sin gráficos: solo estado y transiciones.
 
 import {
   ANILLO,

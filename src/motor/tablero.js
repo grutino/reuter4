@@ -1,4 +1,4 @@
-// Geometría del tablero de Stratego 4 (cara de 4 jugadores).
+// Geometría del tablero de Reuter4 (cara de 4 jugadores).
 // Rejilla nominal 15x15, columnas A-O, filas 1-15. Solo 165 casillas están en juego.
 
 export const COLUMNAS = "ABCDEFGHIJKLMNO";

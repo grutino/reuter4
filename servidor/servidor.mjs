@@ -1,4 +1,4 @@
-// Servidor de Stratego 4: guarda el estado completo y reparte a cada cliente
+// Servidor de Reuter4: guarda el estado completo y reparte a cada cliente
 // solo lo que su bando puede ver. Los rangos ajenos no salen de aquí.
 
 import http from "node:http";
@@ -21,7 +21,7 @@ import { accionDeBot, decisionDeRecogida, despliegueAleatorio } from "../src/mot
 const RAIZ = path.dirname(fileURLToPath(import.meta.url));
 const ESTATICO = path.join(RAIZ, "..", "dist");
 const PUERTO = process.env.PORT || 8080;
-const FICHERO_ESTADO = process.env.S4_ESTADO || path.join(RAIZ, "salas.json");
+const FICHERO_ESTADO = process.env.R4_ESTADO || path.join(RAIZ, "salas.json");
 
 // Los bots viven en src/motor/bot.js, compartidos con la simulación: así lo que
 // mide `npm run simular` es exactamente lo que juega este servidor.
@@ -428,5 +428,5 @@ wss.on("connection", (socket) => {
 });
 
 servidor.listen(PUERTO, () => {
-  console.log(`Stratego 4 escuchando en http://localhost:${PUERTO}`);
+  console.log(`Reuter4 escuchando en http://localhost:${PUERTO}`);
 });

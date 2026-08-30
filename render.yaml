@@ -1,9 +1,9 @@
-# Blueprint de Render para Stratego 4.
+# Blueprint de Render para Reuter4.
 # Un único servicio web Node: compila el cliente y sirve dist/ junto al WebSocket.
 # La versión de Node se fija en el fichero .node-version.
 services:
   - type: web
-    name: stratego4
+    name: reuter4
     runtime: node
     plan: free
     region: frankfurt

@@ -573,7 +573,7 @@ export default function App() {
       <div style={marco}>
         <div style={{ ...panelEstilo, maxWidth: 420, margin: "40px auto" }}>
           <h1 style={{ fontSize: 30, letterSpacing: "0.2em", textAlign: "center", textTransform: "uppercase", margin: "0 0 6px" }}>
-            Stratego <span style={{ color: LATON_CLARO }}>4</span>
+            Reuter<span style={{ color: LATON_CLARO }}>4</span>
           </h1>
           <p style={{ textAlign: "center", color: LATON_CLARO, fontSize: 12, letterSpacing: "0.16em", textTransform: "uppercase" }}>
             dos bandos, cuatro ejércitos, un castillo
@@ -605,7 +605,7 @@ export default function App() {
         <div style={{ ...panelEstilo, maxWidth: 760, margin: "0 auto" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
             <h1 style={{ fontSize: 26, letterSpacing: "0.18em", textTransform: "uppercase", margin: 0 }}>
-              Stratego <span style={{ color: LATON_CLARO }}>4</span>
+              Reuter<span style={{ color: LATON_CLARO }}>4</span>
             </h1>
             <span style={{ fontSize: 12, color: conectado ? LATON_CLARO : "#E8A9A4" }}>
               {conectado ? `al mando: ${yo.nombre}` : "sin conexión"}

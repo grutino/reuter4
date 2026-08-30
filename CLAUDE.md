@@ -27,7 +27,7 @@ En desarrollo hacen falta dos terminales: `npm run servidor` y `npm run dev`.
 `node src/motor/simulacion.js 0 2000` mide solo el duelo, con muestra grande. El duelo alterna
 los bandos partida sí, partida no, porque el tablero no es simétrico.
 
-Variables: `PORT` (8080) y `S4_ESTADO` (fichero de salas, `servidor/salas.json`).
+Variables: `PORT` (8080) y `R4_ESTADO` (fichero de salas, `servidor/salas.json`).
 
 **Ejecutar una sola prueba**: no hay filtro por nombre. `pruebas.js` es un guion plano que
 invoca `prueba(nombre, fn)` de arriba abajo. Para aislar una, comenta las demás o extrae el
@@ -113,7 +113,7 @@ que falten, arranca la partida cuando están los cuatro y mueve al que le toque.
 desconectado más de 60 s pasa a jugar automático (`esAutomatico`), y al reconectar recupera su
 puesto porque el identificador vive en `localStorage` del cliente.
 
-El estado se persiste con un *debounce* de 1500 ms a `S4_ESTADO`, y las salas sin actividad se
+El estado se persiste con un *debounce* de 1500 ms a `R4_ESTADO`, y las salas sin actividad se
 borran a las 12 horas.
 
 ### Memoria de los bots e hilo de historia

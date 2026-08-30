@@ -1,8 +1,12 @@
-# Stratego 4
+# Reuter4
 
-Versión digital del Stratego 4 de Jumbo: cuatro ejércitos en dos bandos, tablero en 3D
-y partidas online. Rojo y Azul contra Verde y Amarillo, cada jugador enfrente de su compañero.
+Juego de tablero para cuatro, en dos bandos de dos: cuatro ejércitos, tablero en 3D y
+partidas online. Rojo y Azul contra Verde y Amarillo, cada jugador enfrente de su compañero.
 Gana el bando que corone cualquiera de sus dos banderas en la torre del castillo.
+
+Proyecto personal, sin ánimo de lucro. El reglamento se inspira en el del *Stratego 4* de
+Jumbo, incluida su variante por equipos; la aplicación, el motor, los bots y el nombre son
+propios y no guardan relación con Jumbo ni con la marca Stratego.
 
 ## Qué hay dentro
 
@@ -56,7 +60,7 @@ npm start   # compila el cliente y arranca el servidor sirviendo dist/
 Con eso, `http://localhost:8080` sirve el juego entero. Variables útiles:
 
 - `PORT`: puerto de escucha, 8080 por defecto.
-- `S4_ESTADO`: fichero donde se guardan las salas, `servidor/salas.json` por defecto.
+- `R4_ESTADO`: fichero donde se guardan las salas, `servidor/salas.json` por defecto.
 
 ## Publicarlo en internet
 
@@ -93,25 +97,25 @@ Dos avisos sobre el plan gratuito, que importan bastante en un juego con WebSock
 - El servicio se duerme tras unos 15 minutos sin tráfico. Al despertar tarda alrededor de un
   minuto y, mientras tanto, las conexiones abiertas se cortan y la partida en curso se pierde.
 - No admite discos persistentes. Si quieres que las salas sobrevivan a un reinicio, hace falta
-  un plan de pago: añade un disco al servicio y apunta `S4_ESTADO` al punto de montaje, por
+  un plan de pago: añade un disco al servicio y apunta `R4_ESTADO` al punto de montaje, por
   ejemplo `/var/datos/salas.json`.
 
 ### Opción B: tu propio servidor con nginx
 
 ```bash
-git clone TU_REPOSITORIO stratego4 && cd stratego4
+git clone TU_REPOSITORIO reuter4 && cd reuter4
 npm install && npm run build
 ```
 
-Servicio de systemd en `/etc/systemd/system/stratego4.service`:
+Servicio de systemd en `/etc/systemd/system/reuter4.service`:
 
 ```ini
 [Unit]
-Description=Stratego 4
+Description=Reuter4
 After=network.target
 
 [Service]
-WorkingDirectory=/ruta/a/stratego4
+WorkingDirectory=/ruta/a/reuter4
 ExecStart=/usr/bin/node servidor/servidor.mjs
 Environment=PORT=8080
 Restart=always
@@ -122,14 +126,14 @@ WantedBy=multi-user.target
 ```
 
 ```bash
-sudo systemctl enable --now stratego4
+sudo systemctl enable --now reuter4
 ```
 
 Y en nginx, un bloque que pase también la conexión WebSocket:
 
 ```nginx
 server {
-    server_name stratego.tudominio.com;
+    server_name reuter4.tudominio.com;
 
     location / {
         proxy_pass http://127.0.0.1:8080;
@@ -150,9 +154,9 @@ y el cliente pasará a `wss://` él solo.
 ```bash
 git init
 git add .
-git commit -m "Stratego 4: motor, servidor y cliente 3D"
+git commit -m "Reuter4: motor, servidor y cliente 3D"
 git branch -M main
-git remote add origin git@github.com:TU_USUARIO/stratego4.git
+git remote add origin git@github.com:TU_USUARIO/reuter4.git
 git push -u origin main
 ```
 

@@ -1,4 +1,4 @@
-// Bots de Stratego 4. Módulo compartido: lo usan el servidor y la simulación,
+// Bots de Reuter4. Módulo compartido: lo usan el servidor y la simulación,
 // para que lo que se mide sea exactamente lo que se juega.
 //
 // Regla de oro: un bot solo puede mirar información pública. Corre dentro del
