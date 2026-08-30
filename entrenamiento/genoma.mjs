@@ -30,6 +30,14 @@ export const ESCALAS = {
   ataqueABandera: 150,
   portadorNoPelea: 150,
   ataqueAlCastillo: 100,
+
+  // Amenazas, en pareja: generar y no sufrir.
+  amenazaGenerada: 80,
+  amenazaCombinada: 150,
+  contraAmenaza: 120,
+  exponerseACanon: 80,
+  salvarAmenazada: 120,
+  estorbarEnTorre: 200,
 };
 
 export const GENES = Object.keys(ESCALAS);

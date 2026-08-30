@@ -8,6 +8,7 @@
 // que el motor alimenta con lo que ha quedado a la vista de toda la mesa.
 
 import { ANILLO, TORRE, ADYACENTES, ZONAS, casillasDeZona } from "./tablero.js";
+import { analizarTurno, peligroEn } from "./analisis.js";
 import {
   RANGOS,
   MARISCAL,
@@ -188,7 +189,33 @@ export const PESOS_BASE = {
   ataqueABandera: 60,          // quien lleva bandera es objetivo prioritario
   portadorNoPelea: -60,
   ataqueAlCastillo: 20,
+
+  // --- Amenazas, en pareja ----------------------------------------------------
+  // Cada concepto va dos veces: lo que gano al provocarlo y lo que pierdo al
+  // sufrirlo. Sin la mitad defensiva el bot juega a ciegas hacia delante.
+  amenazaGenerada: 22,         // acabo la jugada amenazando a alguien a quien gano
+  amenazaCombinada: 70,        // ...y mi compañero ya le apuntaba: solo salva a uno
+  contraAmenaza: 45,           // amenazo al que está apuntando a los míos
+  exponerseACanon: -18,        // me meto en la línea de tiro de un cañón posible
+  salvarAmenazada: 40,         // saco de la línea a una pieza que estaba en peligro
+  estorbarEnTorre: -120,       // el compañero va a coronar y yo le tapo el sitio
 };
+
+// A quién amenazaría esta pieza si acabase su jugada en `casilla`. Solo cuenta
+// cuerpo a cuerpo con rango ya visto: una amenaza que no se sabe ganada no es
+// una amenaza, es una apuesta.
+function amenazasDesde(estado, casilla, miRango, color, memoria) {
+  const sobre = [];
+  for (const vecina of ADYACENTES[casilla] || []) {
+    const id = estado.tablero[vecina];
+    if (!id) continue;
+    const otra = estado.piezas[id];
+    if (!otra || !esEnemigo(color, otra.color)) continue;
+    const suyo = memoria[otra.id];
+    if (suyo !== undefined && resolverDuelo(miRango, suyo) === "atacante") sobre.push(otra.id);
+  }
+  return sobre;
+}
 
 // --- Bot con memoria ---------------------------------------------------------
 
@@ -202,6 +229,8 @@ export function accionDeBot(estado, color, { pesos = PESOS_BASE, azar = Math.ran
 
   const memoria = estado.rangosRevelados || {};
   const bolsas = {}; // prior de cada rival, calculado una vez por turno
+  // El análisis del tablero se hace una vez y lo consultan todas las jugadas.
+  const analisis = analizarTurno(estado, color, DISTANCIA, acciones);
 
   let mejor = null;
   let mejorNota = -Infinity;
@@ -223,6 +252,40 @@ export function accionDeBot(estado, color, { pesos = PESOS_BASE, azar = Math.ran
       // Al portador de bandera le duele el doble, porque su caída suelta la bandera.
       const amenaza = amenazaConocida(estado, a.hasta, pieza.rango, color);
       if (amenaza && !llevaBanderaAmiga) { nota -= pesos.amenazaBase + amenaza * pesos.amenazaFactor; apuntar("amenazaBase"); apuntar("amenazaFactor"); }
+
+      // Defenderse: la línea de tiro de un cañón que aún no se ha visto.
+      const riesgo = peligroEn(analisis, a.hasta, pieza.rango);
+      if (riesgo.riesgoCanon > 0) { nota += pesos.exponerseACanon * riesgo.riesgoCanon; apuntar("exponerseACanon"); }
+
+      // Sacar de la línea a una pieza que ya estaba señalada.
+      if (analisis.enPeligro.mias.has(pieza.id) && !riesgo.pierde) {
+        nota += pesos.salvarAmenazada;
+        apuntar("salvarAmenazada");
+      }
+
+      // No taparle la torre al compañero cuando va a coronar en su turno.
+      if (analisis.socio.aPuntoDeCoronar && (a.hasta === TORRE || a.hasta === ANILLO)) {
+        nota += pesos.estorbarEnTorre;
+        apuntar("estorbarEnTorre");
+      }
+
+      // Amenazas que dejo planteadas al terminar la jugada.
+      const amenazo = amenazasDesde(estado, a.hasta, pieza.rango, color, memoria);
+      if (amenazo.length) {
+        nota += pesos.amenazaGenerada;
+        apuntar("amenazaGenerada");
+        // La combinada es la buena: si mi compañero ya le apuntaba, en su turno
+        // el rival solo puede salvar a uno de los dos.
+        if (amenazo.some((id) => analisis.presionadasPorSocio.has(id))) {
+          nota += pesos.amenazaCombinada;
+          apuntar("amenazaCombinada");
+        }
+        // Y amenazar al que amenaza: le obligo a mirar atrás.
+        if (amenazo.some((id) => analisis.apuntanALosMios.has(id))) {
+          nota += pesos.contraAmenaza;
+          apuntar("contraAmenaza");
+        }
+      }
     }
 
     if (a.tipo === "disparar") {
@@ -257,6 +320,11 @@ export function accionDeBot(estado, color, { pesos = PESOS_BASE, azar = Math.ran
       if (objetivo && objetivo.bandera) { nota += pesos.ataqueABandera; apuntar("ataqueABandera"); }
       if (llevaBanderaAmiga) { nota += pesos.portadorNoPelea; apuntar("portadorNoPelea"); }
       if (a.hasta === ANILLO || a.hasta === TORRE) { nota += pesos.ataqueAlCastillo; apuntar("ataqueAlCastillo"); }
+
+      // Rematar a quien el compañero ya tenía apuntado, o al que apunta a los
+      // nuestros, vale más que un ataque suelto.
+      if (objetivo && analisis.presionadasPorSocio.has(objetivo.id)) { nota += pesos.amenazaCombinada; apuntar("amenazaCombinada"); }
+      if (objetivo && analisis.apuntanALosMios.has(objetivo.id)) { nota += pesos.contraAmenaza; apuntar("contraAmenaza"); }
     }
 
     if (nota > mejorNota) {

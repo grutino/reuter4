@@ -837,19 +837,32 @@ prueba("los bots solo miran la memoria pública, nunca el rango oculto", () => {
     colocar(e, "verde", rangoOculto, "H3");
     return e;
   }
+  // El azar va sembrado y es el MISMO para los dos escenarios. Antes la prueba
+  // se apoyaba en que el bot fuera determinista de hecho; en cuanto la decisión
+  // quedó ajustada, el desempate aleatorio la volcaba y la prueba fallaba sin
+  // que hubiera ninguna fuga. Sembrando el azar, cualquier diferencia que
+  // aparezca es información y no ruido.
+  function sembrado(semilla) {
+    let a = semilla >>> 0;
+    return () => {
+      a = (a + 0x6d2b79f5) >>> 0;
+      let x = a;
+      x = Math.imul(x ^ (x >>> 15), x | 1);
+      x ^= x + Math.imul(x ^ (x >>> 7), x | 61);
+      return ((x ^ (x >>> 14)) >>> 0) / 4294967296;
+    };
+  }
   const conDebil = escenario(1);
   const conFuerte = escenario(9);
-  let atacaAlDebil = 0;
-  let atacaAlFuerte = 0;
   for (let i = 0; i < 300; i++) {
-    if (accionDeBot(conDebil, "rojo").tipo === "atacar") atacaAlDebil++;
-    if (accionDeBot(conFuerte, "rojo").tipo === "atacar") atacaAlFuerte++;
+    const conDebilJuega = accionDeBot(conDebil, "rojo", { azar: sembrado(i + 1) });
+    const conFuerteJuega = accionDeBot(conFuerte, "rojo", { azar: sembrado(i + 1) });
+    assert.deepStrictEqual(
+      { tipo: conDebilJuega.tipo, hasta: conDebilJuega.hasta },
+      { tipo: conFuerteJuega.tipo, hasta: conFuerteJuega.hasta },
+      `con el mismo azar, la jugada ${i} debería ser idéntica: el rango escondido no se ve`
+    );
   }
-  assert.strictEqual(
-    atacaAlDebil,
-    atacaAlFuerte,
-    "sin nada revelado, los dos casos son indistinguibles para el bot"
-  );
 });
 
 prueba("resolverDuelo trabaja con rangos sueltos", () => {
