@@ -74,7 +74,8 @@ Reglas que no se deducen leyendo un solo fichero:
 - **Banderas**: `estado.banderas[color]` tiene `{portador, casilla, ultimoDueño}` y
   `estado.banderasSueltas` es un mapa `casilla → color` de las que están en el suelo. El campo
   `ultimoDueño` es el que decide si capturar una bandera da promoción: solo la da si venía de
-  su dueño original. Un portador que cae suelta su bandera donde muere.
+  su dueño original. Un portador que cae suelta su bandera donde muere, y recogerla es
+  hoy **automático y obligatorio** (`recogerBandera`): está pendiente hacerlo opcional.
 - **Reclutamiento**: se abre por 6 victorias (que reinician el marcador) o por capturar una
   bandera enemiga (que no lo toca). Mientras `estado.pendiente` esté puesto, `aplicar` lanza:
   hay que resolverlo antes de seguir.

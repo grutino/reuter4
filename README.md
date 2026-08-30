@@ -182,6 +182,14 @@ memoria ganan el 65% de las partidas decididas frente a los antiguos.
   en un `canvas` (`texturaRango` en `Tablero3D.jsx`). Las del juego real traen una silueta por
   rango, la misma para los cuatro ejércitos, cambiando solo el color de fondo. Sustituir el
   número por esa silueta es cosa de cambiar esa función.
+- **Recoger bandera debería ser opcional**: hoy es obligatorio. `recogerBandera` en
+  `motor.js` se dispara sola en cuanto una pieza cae sobre una bandera suelta, tanto al
+  moverse como al ganar un ataque, y el jugador no pinta nada. Debería poder decidir. El
+  motor ya tiene el mecanismo para eso: `estado.pendiente`, que es como funciona el
+  reclutamiento. Sería un `pendiente` de tipo `recoger` con sus dos salidas, al estilo de
+  `reclutar` y `renunciarAlReclutamiento`. Ojo al hacerlo con lo que cuelga de la recogida:
+  la promoción depende de `ultimoDueño`, la victoria se comprueba justo después de mover, y
+  los bots necesitarán un criterio propio para decidir.
 - **Rangos revelados sobre el tablero**: el servidor ya manda `rangosRevelados`, que es
   información pública, pero el cliente todavía no la pinta. Ahora mismo el jugador humano
   tiene que repasar el hilo para saber lo que el bot recuerda de memoria.
