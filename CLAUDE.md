@@ -126,6 +126,38 @@ cubría. Ahora hay una que compara los RASGOS entre dos escenarios que solo difi
 escondido: si el vector de entrada es idéntico, ninguna red posible puede distinguirlos. Es más
 fuerte que comparar decisiones, que depende de los pesos que tenga la red ese día.
 
+### Los cañones y el castillo
+
+Tres cosas que conviene tener claras antes de tocar nada de esto:
+
+- **La torre no se puede batir.** `rayo` devuelve `ANILLO` al llegar al castillo y nunca
+  `TORRE`, así que quien ya subió es inalcanzable para cualquier cañón. La única ventana es
+  mientras el rival está en el anillo. No es un fallo: es la regla.
+- **La regla de coronación vive en un solo sitio**, `banderaQueCorona`. Los bots necesitan
+  saber quién está a un movimiento de ganar, y si duplicaran la regla, cambiarla en el motor
+  dejaría a los bots prediciendo un juego distinto del que se juega.
+- **El problema de los cañones nunca fue la valoración del disparo.** Medido: cuando el tiro al
+  anillo es legal, el bot lo toma el 98% de las veces. Lo que pasaba es que solo era legal en el
+  1% de los turnos en que había un rival ahí, porque un cañón mueve una casilla por turno y de
+  media empieza a 6,6 pasos del castillo.
+
+Y la lección de los pesos de posicionamiento, que es contraintuitiva: **empujar fuerte al cañón
+hacia su posición de tiro hace PERDER**. Con 24/20/5 el bot bajó al 37% contra el de antes. No
+era que los cañones murieran —mueren en duelo el 1% de las veces, con y sin los pesos— sino
+tempo: cada turno que un cañón camina es un turno que nadie usa para avanzar banderas, y en una
+carrera a cuatro eso se paga. Escalando los tres pesos a la vez, contra el bot anterior:
+
+```
+x1,00 -> 36%     x0,25 -> 51%     x0,12 -> 59%     x0,06 -> 62%     apagado -> 52%
+```
+
+Con los valores pequeños que quedaron, cinco juegos de semillas frescos dan 53/52/58/61/54, o
+sea 55,6% de media. Y **no se pueden poner a cero**: la red solo ordena las candidatas que le
+pasa la heurística, así que con peso cero la jugada no asoma nunca y la red no puede aprender
+cuándo conviene. Ese es el equilibrio que hay que respetar al añadir cualquier táctica nueva —
+el peso tiene que ser bastante para que la jugada aparezca entre las candidatas y poco para no
+imponer la decisión.
+
 ### Medir sin engañarse (lo que ha costado tres veces)
 
 `medirContraPanel` es determinista: misma semilla, mismas partidas. De ahí salen tres errores

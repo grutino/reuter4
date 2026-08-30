@@ -9,8 +9,8 @@
 // han visto en un combate. Nunca se mira `estado.piezas[id].rango` de una pieza
 // ajena, que es la regla que separa a un bot de un tramposo.
 
-import { ADYACENTES, ANILLO, TORRE, DIRECCIONES, rayo } from "./tablero.js";
-import { movimientosLegales, resolverDuelo, SOCIO, RANGOS, CANON, EXPLORADOR, CAPITAN } from "./motor.js";
+import { ADYACENTES, ANILLO, TORRE, DIRECCIONES, rayo, ALCANCE_CANON } from "./tablero.js";
+import { movimientosLegales, resolverDuelo, banderaQueCorona, SOCIO, RANGOS, CANON, EXPLORADOR, CAPITAN } from "./motor.js";
 
 const esEnemigo = (color, otro) => otro !== color && SOCIO[color] !== otro;
 
@@ -205,7 +205,59 @@ export function analizarTurno(estado, color, distancias, misAcciones = null) {
   }
   const torreOcupada = Boolean(estado.tablero[TORRE]);
 
+  // --- El castillo: quién está a punto de ganar y quién puede impedirlo ------
+  //
+  // Se gana llegando a la TORRE con una bandera aliada, así que el rival
+  // realmente urgente es el que está en el ANILLO llevando bandera: le queda un
+  // movimiento. Sin esto, un bot le disparaba con la misma gana que a cualquier
+  // otra pieza, porque el disparo solo valía por el rango.
+  //
+  // Y la torre no se puede batir: `rayo` devuelve ANILLO al llegar al castillo y
+  // nunca TORRE, así que quien ya subió es inalcanzable. La única ventana es
+  // mientras está en el anillo.
+  const enElAnillo = estado.tablero[ANILLO] ? estado.piezas[estado.tablero[ANILLO]] : null;
+  const coronadorRival =
+    enElAnillo && esEnemigo(color, enElAnillo.color) && banderaQueCorona(estado, enElAnillo) ? enElAnillo : null;
+
+  // Líneas por las que un cañón enemigo puede batir el anillo. Cada una trae las
+  // casillas intermedias: plantarse en cualquiera de ellas corta el disparo, que
+  // es lo que hay que hacer antes de que suba el compañero.
+  //
+  // Se cuenta también al enemigo sin identificar, con el riesgo que salga de su
+  // bolsa oculta, por la misma razón que el resto del análisis: esperar a estar
+  // seguro de que es un cañón es esperar a que dispare.
+  const lineasAlAnillo = [];
+  for (const pieza of Object.values(estado.piezas)) {
+    if (!esEnemigo(color, pieza.color)) continue;
+    const conocido = memoria[pieza.id];
+    if (conocido !== undefined && conocido !== CANON) continue;
+    let riesgo = 1;
+    if (conocido === undefined) {
+      if (riesgoPorColor[pieza.color] === undefined) riesgoPorColor[pieza.color] = riesgoDeCanon(estado, pieza.color, memoria);
+      riesgo = riesgoPorColor[pieza.color];
+      if (riesgo <= 0) continue;
+    }
+    for (const direccion of Object.keys(DIRECCIONES)) {
+      const pasos = rayo(pieza.casilla, direccion, ALCANCE_CANON);
+      const intermedias = [];
+      let llega = false;
+      for (const paso of pasos) {
+        if (paso.tipo === "lago") continue; // la bala sobrevuela el lago
+        if (paso.tipo === "castillo") { llega = true; break; }
+        if (estado.tablero[paso.casilla]) break; // ya hay algo tapando
+        intermedias.push(paso.casilla);
+      }
+      if (llega) lineasAlAnillo.push({ desde: pieza.casilla, de: pieza.id, riesgo, intermedias });
+    }
+  }
+  const tapanElAnillo = new Set();
+  for (const linea of lineasAlAnillo) for (const c of linea.intermedias) tapanElAnillo.add(c);
+
   return {
+    coronadorRival,
+    lineasAlAnillo,
+    // Casillas donde plantarse corta al menos una línea de tiro al anillo.
+    tapanElAnillo,
     peligro,
     amenazadasPorMi,
     presionadasPorSocio,

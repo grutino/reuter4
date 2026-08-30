@@ -16,7 +16,7 @@
 // misma jugada no vale igual yendo por delante que por detrás, ni al principio
 // que al final. Eso la heurística no podía expresarlo de ninguna forma.
 
-import { ANILLO, TORRE, ADYACENTES } from "./tablero.js";
+import { ANILLO, TORRE, ADYACENTES, BATEN_ANILLO, PASOS_A_TIRO } from "./tablero.js";
 import { resolverDuelo, MARISCAL, ESPIA, CANON, EXPLORADOR, CAPITAN } from "./motor.js";
 import { DISTANCIA, bolsaOculta, valorEsperado, amenazasDesde } from "./bot.js";
 import { peligroEn } from "./analisis.js";
@@ -62,6 +62,17 @@ export const NOMBRES_JUGADA = [
   "riesgoDeCanonEnDestino",
   "salgoDePeligro",
   "estorboEnLaTorre",
+  // El castillo y los cañones. Faltaba entero: el disparo solo valía por el
+  // rango del objetivo, así que batir al que está a un movimiento de coronar
+  // puntuaba igual que batirlo en mitad del campo. Y no había ninguna forma de
+  // expresar "llevo el cañón a donde sirve" ni "le tapo el tiro al enemigo
+  // antes de que suba mi compañero".
+  //
+  // OJO, otra vez: este orden tiene que coincidir EXACTAMENTE con el de las
+  // llamadas a `pon` de abajo.
+  "disparoAlCoronador",
+  "canonHaciaElTiro",
+  "tapaLineaAlAnillo",
 ];
 
 export const TAMANO = TAMANO_POSICION + NOMBRES_JUGADA.length;
@@ -173,6 +184,35 @@ export function rasgosDeJugada(estado, color, accion, { analisis, bolsas, resume
   pon(riesgo.riesgoCanon);
   pon(pieza && analisis.enPeligro.mias.has(pieza.id) && !riesgo.pierde ? 1 : 0);
   pon(analisis.socio.aPuntoDeCoronar && (accion.hasta === TORRE || accion.hasta === ANILLO) ? 1 : 0);
+
+  // Batir al que va a coronar. Se gana llegando a la TORRE, y la torre no se
+  // puede batir -`rayo` devuelve ANILLO al llegar al castillo y nunca TORRE-,
+  // así que la única ventana es mientras el rival está en el anillo.
+  pon(
+    accion.tipo === "disparar" && accion.hasta === ANILLO &&
+    analisis.coronadorRival && objetivo && analisis.coronadorRival.id === objetivo.id ? 1 : 0
+  );
+
+  // Llevar el cañón a donde sirve. Graduado, no binario: mueve una casilla por
+  // turno y de media empieza a 6,6 pasos, así que sin gradiente ningún
+  // movimiento suelto expresaría nada y la red no podría aprender a ponerlo en
+  // marcha.
+  let haciaElTiro = 0;
+  if (pieza && pieza.rango === CANON && accion.tipo === "mover") {
+    if (BATEN_ANILLO.has(accion.hasta)) haciaElTiro = 1;
+    else {
+      const antes = PASOS_A_TIRO[accion.desde];
+      const despues = PASOS_A_TIRO[accion.hasta];
+      if (antes !== undefined && despues !== undefined && despues < antes) haciaElTiro = 0.5;
+    }
+  }
+  pon(haciaElTiro);
+
+  // Taparle el tiro al enemigo antes de que suba el compañero.
+  pon(
+    accion.tipo === "mover" && analisis.socio.aPuntoDeCoronar &&
+    analisis.tapanElAnillo.has(accion.hasta) ? 1 : 0
+  );
 
   return v;
 }

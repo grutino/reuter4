@@ -7,7 +7,7 @@
 // No se hace. La única fuente sobre rangos ajenos es `estado.rangosRevelados`,
 // que el motor alimenta con lo que ha quedado a la vista de toda la mesa.
 
-import { ANILLO, TORRE, ADYACENTES, ZONAS, casillasDeZona } from "./tablero.js";
+import { ANILLO, TORRE, ADYACENTES, ZONAS, casillasDeZona, BATEN_ANILLO, PASOS_A_TIRO, DIRECCIONES, rayo, ALCANCE_CANON } from "./tablero.js";
 import { analizarTurno, peligroEn } from "./analisis.js";
 import {
   RANGOS,
@@ -16,6 +16,7 @@ import {
   movimientosLegales,
   inventarioInicial,
   resolverDuelo,
+  CANON,
   SOCIO,
 } from "./motor.js";
 
@@ -178,6 +179,41 @@ export const PESOS_BASE = {
   disparoConocidoFactor: 7,
   disparoDesconocido: 45,
   disparoABandera: 40,
+  // El disparo valía solo por el rango, así que batir al que está en el anillo
+  // -a un movimiento de coronar- puntuaba igual que batirlo en mitad del campo.
+  // Medido: cuando el tiro al anillo es legal el bot ya lo toma el 98% de las
+  // veces, pero solo lo es en el 1% de los turnos en que hay un rival ahí.
+  disparoAlAnillo: 45,         // el objetivo controla el castillo
+  disparoAlCoronador: 400,     // y además puede coronar en su turno: es la partida
+  disparoCercaDelCentro: 14,   // factor por cercanía al castillo, aunque no lleve bandera
+  // Llevar el cañón a donde sirve. Sin esto no va nunca: mueve una casilla por
+  // turno y de media empieza a 6,6 pasos del castillo, así que ningún movimiento
+  // suelto le acerca lo bastante para cobrar nada.
+  //
+  // PERO ESTOS PESOS SON DIMINUTOS A PROPÓSITO, y costó descubrirlo. La primera
+  // versión les puso 24/20/5 y el bot pasó a PERDER 37% contra el de antes. No
+  // era que los cañones murieran -mueren en duelo el 1% de las veces, igual que
+  // antes- sino TEMPO: cada turno que un cañón camina es un turno que nadie usa
+  // para avanzar banderas o pelear, y en una carrera a cuatro eso se paga. Un
+  // "ve a posición de tiro" incondicional es una orden mala.
+  //
+  // Medido contra el bot anterior en tres juegos de semillas, escalando los tres
+  // pesos a la vez:
+  //
+  //   x1,00 -> 36%     x0,25 -> 51%     x0,12 -> 59%     x0,06 -> 62%     apagado -> 52%
+  //
+  // O sea que el empujón PEQUEÑO sí gana: el cañón se coloca cuando no tiene
+  // nada mejor que hacer, en vez de abandonar todo lo demás. Y no se pueden
+  // poner a cero: la red solo ordena las candidatas que le pasa la heurística,
+  // así que con peso cero la jugada no asoma nunca y la red no puede aprender
+  // cuándo conviene. Con estos valores asoma entre las cuatro mejores en un 40%
+  // de las ocasiones en que existe, que es sitio de sobra para aprenderla.
+  canonEnPosicionDeTiro: 2.5,  // se planta en una de las 24 casillas que baten el anillo
+  canonConLineaLibre: 2,       // y además la línea está despejada
+  canonSeAcercaATiro: 0.5,     // factor por cada paso que se acerca a una de ellas
+  // Tapar el tiro rival antes de que suba el compañero. Es la tarea defensiva
+  // que faltaba entera: solo existía "no me metas TÚ en una línea de tiro".
+  taparCanonAlAnillo: 40,
 
   // Ataque cuerpo a cuerpo
   ataqueGanaBase: 30,          // captura segura contra un rango ya visto
@@ -204,6 +240,18 @@ export const PESOS_BASE = {
 // A quién amenazaría esta pieza si acabase su jugada en `casilla`. Solo cuenta
 // cuerpo a cuerpo con rango ya visto: una amenaza que no se sabe ganada no es
 // una amenaza, es una apuesta.
+// ¿Desde aquí llega la bala al castillo sin que nadie la pare?
+function lineaLibreAlCastillo(estado, casilla) {
+  for (const direccion of Object.keys(DIRECCIONES)) {
+    for (const paso of rayo(casilla, direccion, ALCANCE_CANON)) {
+      if (paso.tipo === "lago") continue; // la bala sobrevuela el lago
+      if (paso.tipo === "castillo") return true;
+      if (estado.tablero[paso.casilla]) break;
+    }
+  }
+  return false;
+}
+
 export function amenazasDesde(estado, casilla, miRango, color, memoria) {
   const sobre = [];
   for (const vecina of ADYACENTES[casilla] || []) {
@@ -277,6 +325,32 @@ export function accionDeBot(estado, color, { pesos = PESOS_BASE, azar = Math.ran
         apuntar("estorbarEnTorre");
       }
 
+      // Poner el cañón donde sirve de algo.
+      if (pieza.rango === CANON) {
+        if (BATEN_ANILLO.has(a.hasta)) {
+          nota += pesos.canonEnPosicionDeTiro;
+          apuntar("canonEnPosicionDeTiro");
+          if (lineaLibreAlCastillo(estado, a.hasta)) {
+            nota += pesos.canonConLineaLibre;
+            apuntar("canonConLineaLibre");
+          }
+        }
+        const antes = PASOS_A_TIRO[a.desde];
+        const despues = PASOS_A_TIRO[a.hasta];
+        if (antes !== undefined && despues !== undefined && despues < antes) {
+          nota += pesos.canonSeAcercaATiro * (antes - despues);
+          apuntar("canonSeAcercaATiro");
+        }
+      }
+
+      // Taparle el tiro al enemigo cuando el compañero va a subir. Es lo caro de
+      // una coronación: subes al anillo y te barre un cañón que llevaba tres
+      // turnos apuntando.
+      if (analisis.socio.aPuntoDeCoronar && analisis.tapanElAnillo.has(a.hasta) && pieza.rango !== CANON) {
+        nota += pesos.taparCanonAlAnillo;
+        apuntar("taparCanonAlAnillo");
+      }
+
       // Amenazas que dejo planteadas al terminar la jugada.
       const amenazo = amenazasDesde(estado, a.hasta, pieza.rango, color, memoria);
       if (amenazo.length) {
@@ -304,6 +378,25 @@ export function accionDeBot(estado, color, { pesos = PESOS_BASE, azar = Math.ran
       if (conocido !== undefined) { nota += pesos.disparoConocidoBase + conocido * pesos.disparoConocidoFactor; apuntar("disparoConocidoBase"); apuntar("disparoConocidoFactor"); }
       else { nota += pesos.disparoDesconocido; apuntar("disparoDesconocido"); }
       if (objetivo && objetivo.bandera) { nota += pesos.disparoABandera; apuntar("disparoABandera"); }
+
+      // Dónde está el que recibe el cañonazo, que es la mitad que faltaba.
+      if (a.hasta === ANILLO) {
+        nota += pesos.disparoAlAnillo;
+        apuntar("disparoAlAnillo");
+        if (analisis.coronadorRival && objetivo && analisis.coronadorRival.id === objetivo.id) {
+          nota += pesos.disparoAlCoronador;
+          apuntar("disparoAlCoronador");
+        }
+      } else {
+        // Y aunque no lleve bandera: una pieza fuerte maniobrando cerca del
+        // centro es justo la que conviene quitar antes de que empiece el baile
+        // de las banderas.
+        const d = DISTANCIA[a.hasta];
+        if (d !== undefined) {
+          const cerca = Math.max(0, 1 - d / 8);
+          if (cerca > 0) { nota += pesos.disparoCercaDelCentro * cerca; apuntar("disparoCercaDelCentro"); }
+        }
+      }
     }
 
     if (a.tipo === "atacar") {

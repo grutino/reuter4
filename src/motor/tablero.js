@@ -118,6 +118,8 @@ export const ADYACENTES = (() => {
 
 // Un rayo devuelve los pasos en una dirección. Cada paso es un salto de distancia 1.
 // tipo: "casilla" (ocupable), "lago" (se sobrevuela, nunca hay piezas), "castillo" (= ANILLO, y corta).
+export const ALCANCE_CANON = 3;
+
 export function rayo(desde, direccion, pasosMax = Infinity) {
   const pasos = [];
   let c;
@@ -150,6 +152,53 @@ export function rayo(desde, direccion, pasosMax = Infinity) {
   }
   return pasos;
 }
+
+// Las casillas desde las que un cañón alcanza el anillo, si la línea está libre.
+//
+// Son 24 de 146. El dato importa porque explica por qué los cañones casi nunca
+// disparan al castillo: no es que el bot desprecie el tiro -cuando puede, lo
+// toma el 98% de las veces- es que un cañón mueve UNA casilla por turno y de
+// media empieza a 6,6 pasos, así que llegar cuesta siete turnos de caminar en
+// línea recta hacia el sitio exacto. Sin un peso que se lo pida, no va nunca.
+export const BATEN_ANILLO = (() => {
+  const salida = new Set();
+  for (const casilla of CASILLAS) {
+    if (casilla === ANILLO || casilla === TORRE) continue;
+    for (const direccion of Object.keys(DIRECCIONES)) {
+      if (rayo(casilla, direccion, ALCANCE_CANON).some((p) => p.tipo === "castillo")) {
+        salida.add(casilla);
+        break;
+      }
+    }
+  }
+  return salida;
+})();
+
+// Pasos hasta la casilla de tiro más cercana. Hace falta el GRADIENTE, no solo
+// el conjunto: un cañón a seis pasos nunca cobraría una bonificación por estar
+// en posición, porque ningún movimiento suyo llega de una vez. Con el mapa de
+// distancias cada paso que acerca ya puntúa, y por eso el cañón se pone en
+// marcha en vez de quedarse donde nació.
+export const PASOS_A_TIRO = (() => {
+  const mapa = {};
+  let frente = [];
+  for (const c of BATEN_ANILLO) { mapa[c] = 0; frente.push(c); }
+  let d = 0;
+  while (frente.length) {
+    d++;
+    const siguiente = [];
+    for (const c of frente) {
+      for (const v of ADYACENTES[c] || []) {
+        if (mapa[v] === undefined) { mapa[v] = d; siguiente.push(v); }
+      }
+    }
+    frente = siguiente;
+  }
+  return mapa;
+})();
+
+export const PASOS_A_TIRO_MAX = Math.max(1, ...Object.values(PASOS_A_TIRO));
+
 
 export function casillasDeZona(color) {
   const z = ZONAS[color];

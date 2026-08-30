@@ -410,10 +410,20 @@ function consumarRecogida(estado, pieza) {
   comprobarVictoria(estado, pieza);
 }
 
+// ¿La bandera que lleva esta pieza le sirve para coronar?
+//
+// Se exporta y se usa en un solo sitio a propósito: los bots necesitan saber
+// quién está a un movimiento de ganar, y si duplicaran la regla aquí y allá,
+// cambiarla en el motor dejaría a los bots prediciendo un juego distinto del que
+// se juega. Hoy vale la del compañero además de la propia; si eso cambia, cambia
+// también a quién persiguen los bots, sin tocar nada más.
+export function banderaQueCorona(estado, pieza) {
+  return Boolean(pieza && pieza.bandera && sonAliados(estado, pieza.bandera, pieza.color));
+}
+
 function comprobarVictoria(estado, pieza) {
   if (pieza.casilla !== TORRE || !llevaBandera(pieza)) return;
-  // Corona cualquiera de las dos banderas del equipo: gana la pareja entera.
-  if (!sonAliados(estado, pieza.bandera, pieza.color)) return;
+  if (!banderaQueCorona(estado, pieza)) return;
   estado.fin = {
     ganador: pieza.color,
     equipo: equipoDe(pieza.color),

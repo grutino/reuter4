@@ -28,9 +28,10 @@ import os from "node:os";
 import path from "node:path";
 import { accionDeBot, accionDeBotClasico, DISTANCIA } from "./bot.js";
 import { analizarTurno } from "./analisis.js";
-import { rasgosDeJugada, contextoDeTurno, NOMBRES as NOMBRES_RASGOS } from "./rasgos-jugada.js";
+import { rasgosDeJugada, contextoDeTurno, NOMBRES as NOMBRES_RASGOS, TAMANO as TAMANO_JUGADA } from "./rasgos-jugada.js";
 import { cargarModelos, jugadaDeBot } from "./bot-red.js";
 import { NIVELES, nivelValido, ESCALA } from "./dificultad.js";
+import { BATEN_ANILLO, PASOS_A_TIRO, ANILLO as ANILLO_T } from "./tablero.js";
 import { propiedadesDePieza, FIRMA as FIRMA_DESPLIEGUE } from "./rasgos-despliegue.js";
 
 let pasadas = 0;
@@ -1088,6 +1089,133 @@ prueba("el bot de nivel 1 no mira los rangos revelados", () => {
     `sin memoria atacó ${ataquesSinMemoria} veces al mariscal fichado y con memoria ${ataquesConMemoria}: ` +
       `el nivel 1 debería estrellarse más`
   );
+});
+
+
+prueba("la geometría de tiro al anillo existe y tiene gradiente", () => {
+  // Sin el conjunto no hay a dónde ir; sin el gradiente el cañón nunca se pone
+  // en marcha, porque a seis pasos ningún movimiento suelto le hace cobrar nada.
+  assert.ok(BATEN_ANILLO.size > 0, "ninguna casilla bate el anillo: el cañón no sirve para nada");
+  assert.ok(BATEN_ANILLO.size < CASILLAS.length / 3, "si baten casi todas, el rasgo no distingue");
+  for (const c of BATEN_ANILLO) assert.strictEqual(PASOS_A_TIRO[c], 0, `${c} bate el anillo y no está a distancia 0`);
+  const fuera = CASILLAS.filter((c) => PASOS_A_TIRO[c] === undefined);
+  assert.deepStrictEqual(fuera, [], "hay casillas sin distancia a una posición de tiro");
+});
+
+prueba("el análisis ve al rival que va a coronar en su turno", () => {
+  // Se gana llegando a la TORRE con bandera aliada, así que el rival urgente es
+  // el que ya está en el ANILLO llevándola: le queda un movimiento.
+  const conBandera = estadoVacio();
+  const suyo = colocar(conBandera, "verde", 6, ANILLO_T);
+  suyo.bandera = "verde";
+  conBandera.banderas.verde = { portador: suyo.id, casilla: null, ultimoDueño: "verde" };
+  const a1 = analizarTurno(conBandera, "rojo", DISTANCIA);
+  assert.ok(a1.coronadorRival, "un rival en el anillo con su bandera es un coronador");
+  assert.strictEqual(a1.coronadorRival.id, suyo.id);
+
+  // El mismo rival sin bandera no está a punto de nada.
+  const sinBandera = estadoVacio();
+  colocar(sinBandera, "verde", 6, ANILLO_T);
+  assert.strictEqual(analizarTurno(sinBandera, "rojo", DISTANCIA).coronadorRival, null);
+
+  // Y el del propio equipo tampoco es un "rival".
+  const socio = estadoVacio();
+  const mio = colocar(socio, "azul", 6, ANILLO_T);
+  mio.bandera = "azul";
+  socio.banderas.azul = { portador: mio.id, casilla: null, ultimoDueño: "azul" };
+  assert.strictEqual(analizarTurno(socio, "rojo", DISTANCIA).coronadorRival, null, "el compañero no es un coronador rival");
+});
+
+prueba("el cañón prefiere batir al que va a coronar antes que a una pieza mayor", () => {
+  // Es la comprobación que justifica el peso: sin `disparoAlCoronador`, el
+  // disparo valía solo por el rango, así que un mariscal en mitad del campo
+  // ganaba a un capitán a un movimiento de la victoria.
+  const e = estadoVacio();
+  colocar(e, "rojo", 1, "H6");           // mi cañón: al sur tiene el anillo pegado
+  const coronador = colocar(e, "verde", 6, ANILLO_T);
+  coronador.bandera = "verde";
+  e.banderas.verde = { portador: coronador.id, casilla: null, ultimoDueño: "verde" };
+  // H7 es huella del castillo, no una casilla: el mariscal va al norte, y la
+  // bala le llega sobrevolando el lago de H5.
+  const gordo = colocar(e, "verde", 9, "H4");
+  e.rangosRevelados = { [gordo.id]: 9, [coronador.id]: 6 };
+
+  const legales = movimientosLegales(e, "rojo").filter((a) => a.tipo === "disparar");
+  const objetivos = legales.map((a) => a.hasta);
+  assert.ok(objetivos.includes(ANILLO_T), `debería poder batir el anillo; puede: ${objetivos.join(" ")}`);
+  assert.ok(objetivos.includes("H4"), `y también al mariscal; puede: ${objetivos.join(" ")}`);
+
+  const elegida = accionDeBot(e, "rojo");
+  assert.strictEqual(elegida.tipo, "disparar");
+  assert.strictEqual(elegida.hasta, ANILLO_T, "parar la coronación vale más que llevarse un mariscal");
+});
+
+prueba("el bot tapa la línea de tiro cuando el compañero va a coronar", () => {
+  // La tarea que no existía: solo había "no me meta YO en una línea de tiro".
+  const e = estadoVacio();
+  // El compañero, con su bandera, a un paso del castillo.
+  const socio = colocar(e, "azul", 5, "H6");
+  socio.bandera = "azul";
+  e.banderas.azul = { portador: socio.id, casilla: null, ultimoDueño: "azul" };
+  // Un cañón enemigo identificado apuntando al castillo desde el sur: desde H12
+  // la bala sobrevuela el lago de H11, pasa por H10 y llega al anillo. H10 es
+  // justo la casilla que hay que ocupar para cortarle el tiro.
+  const canon = colocar(e, "verde", 1, "H12");
+
+  const analisis = analizarTurno(e, "rojo", DISTANCIA);
+  assert.ok(analisis.socio.aPuntoDeCoronar, "el compañero debería contar como a punto de coronar");
+  e.rangosRevelados = { [canon.id]: 1 };
+  const conMemoria = analizarTurno(e, "rojo", DISTANCIA);
+  assert.ok(
+    conMemoria.tapanElAnillo.has("H10"),
+    `H10 corta la línea H12->anillo y debería estar en la lista; están: ${[...conMemoria.tapanElAnillo].join(" ")}`
+  );
+  // Y una pieza que puede llegar a H10 debería querer ir.
+  colocar(e, "rojo", 4, "G10");
+  const conPieza = analizarTurno(e, "rojo", DISTANCIA);
+  assert.ok(conPieza.tapanElAnillo.has("H10"), "la casilla que tapa sigue estando");
+});
+
+
+prueba("los rasgos del castillo caen en la casilla que dice su nombre", () => {
+  // Esta prueba existe por un fallo concreto: al insertar rasgos en mitad de la
+  // lista, los nombres se desincronizaron de las llamadas a `pon` y TODOS los
+  // rasgos posteriores quedaron mal etiquetados, sin error ninguno. Se detectó
+  // de milagro, viendo que dos rangos daban el mismo valor donde no debían.
+  assert.strictEqual(NOMBRES_RASGOS.length, TAMANO_JUGADA, "hay más nombres que entradas o al revés");
+  const indice = (nombre) => {
+    const i = NOMBRES_RASGOS.indexOf(`jugada · ${nombre}`);
+    assert.ok(i >= 0, `no existe el rasgo ${nombre}`);
+    return i;
+  };
+
+  // Escenario: mi cañón en H6 puede batir el anillo, donde hay un coronador.
+  const e = estadoVacio();
+  colocar(e, "rojo", 1, "H6");
+  const coronador = colocar(e, "verde", 6, ANILLO_T);
+  coronador.bandera = "verde";
+  e.banderas.verde = { portador: coronador.id, casilla: null, ultimoDueño: "verde" };
+  e.rangosRevelados = { [coronador.id]: 6 };
+
+  const ctx = contextoDeTurno(e, "rojo", analizarTurno(e, "rojo", DISTANCIA));
+  const tiro = movimientosLegales(e, "rojo").find((a) => a.tipo === "disparar" && a.hasta === ANILLO_T);
+  assert.ok(tiro, "debería poder batir el anillo");
+  const v = rasgosDeJugada(e, "rojo", tiro, ctx);
+  assert.strictEqual(v[indice("disparoAlCoronador")], 1, "el disparo para una coronación y el rasgo no lo dice");
+  assert.strictEqual(v[indice("canonHaciaElTiro")], 0, "esto es un disparo, no un desplazamiento de cañón");
+  assert.strictEqual(v[indice("tapaLineaAlAnillo")], 0, "no se está tapando nada");
+
+  // Y un movimiento del cañón hacia una posición de tiro sí marca el suyo.
+  const m = estadoVacio();
+  const canon = colocar(m, "rojo", 1, "H2");
+  const ctxM = contextoDeTurno(m, "rojo", analizarTurno(m, "rojo", DISTANCIA));
+  const acerca = movimientosLegales(m, "rojo").find(
+    (a) => a.tipo === "mover" && a.pieza === canon.id && PASOS_A_TIRO[a.hasta] < PASOS_A_TIRO[a.desde]
+  );
+  assert.ok(acerca, `el cañón de H2 (a ${PASOS_A_TIRO["H2"]} pasos del tiro) debería poder acercarse`);
+  const w = rasgosDeJugada(m, "rojo", acerca, ctxM);
+  assert.ok(w[indice("canonHaciaElTiro")] > 0, "acercarse a una posición de tiro debería marcar");
+  assert.strictEqual(w[indice("disparoAlCoronador")], 0, "no hay ningún coronador que parar");
 });
 
 console.log(`\n${pasadas} pruebas superadas, ${fallidas} fallidas\n`);
