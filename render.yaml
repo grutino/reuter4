@@ -1,0 +1,23 @@
+# Blueprint de Render para Stratego 4.
+# Un único servicio web Node: compila el cliente y sirve dist/ junto al WebSocket.
+# La versión de Node se fija en el fichero .node-version.
+services:
+  - type: web
+    name: stratego4
+    runtime: node
+    plan: free
+    region: frankfurt
+    branch: main
+
+    # --include=dev es imprescindible: vite está en devDependencies y hace falta
+    # para compilar. Sin él, un NODE_ENV=production dejaría el build sin vite.
+    buildCommand: npm ci --include=dev && npm run build
+    # No usamos "npm start" porque volvería a compilar en cada arranque.
+    startCommand: npm run servidor
+
+    # El servidor responde 200 en / sirviendo index.html.
+    healthCheckPath: /
+    autoDeployTrigger: commit
+
+    # PORT lo inyecta Render y el servidor ya lo lee de process.env.PORT,
+    # así que no hace falta declarar ninguna variable de entorno.

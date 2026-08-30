@@ -61,12 +61,32 @@ dos caminos.
 En Render, Railway, Fly.io o similar, crea un servicio web de tipo Node apuntando a este
 repositorio, con:
 
-- comando de construcción: `npm install && npm run build`
+- comando de construcción: `npm ci --include=dev && npm run build`
 - comando de arranque: `npm run servidor`
 
-La plataforma inyecta `PORT` y termina el HTTPS por ti, así que el cliente hablará por `wss://`
-automáticamente. Ten en cuenta que en los planes gratuitos el disco suele ser efímero: las
-salas guardadas en `salas.json` se pierden al reiniciar. Para partidas de una tarde da igual.
+El `--include=dev` no es opcional: `vite` vive en `devDependencies` y hace falta para compilar,
+así que un `NODE_ENV=production` sin esa bandera dejaría el build sin compilador. Y el arranque
+es `npm run servidor`, no `npm start`, porque `npm start` volvería a compilar en cada reinicio.
+
+La plataforma inyecta `PORT` y termina el HTTPS por ti. El cliente deduce el protocolo de
+`location.protocol`, así que pasa a `wss://` él solo, sin tocar nada.
+
+Ten en cuenta que en los planes gratuitos el disco suele ser efímero: las salas guardadas en
+`salas.json` se pierden al reiniciar. Para partidas de una tarde da igual.
+
+#### Render, en concreto
+
+Este repositorio ya trae un `render.yaml` (blueprint) con el servicio definido y un
+`.node-version` que fija Node 24. Con eso, en Render basta con **New > Blueprint**, elegir el
+repositorio y aplicar: los comandos, la región y el health check salen del fichero.
+
+Dos avisos sobre el plan gratuito, que importan bastante en un juego con WebSocket:
+
+- El servicio se duerme tras unos 15 minutos sin tráfico. Al despertar tarda alrededor de un
+  minuto y, mientras tanto, las conexiones abiertas se cortan y la partida en curso se pierde.
+- No admite discos persistentes. Si quieres que las salas sobrevivan a un reinicio, hace falta
+  un plan de pago: añade un disco al servicio y apunta `S4_ESTADO` al punto de montaje, por
+  ejemplo `/var/datos/salas.json`.
 
 ### Opción B: tu propio servidor con nginx
 

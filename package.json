@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "description": "Stratego 4 (Jumbo) en 3D, dos bandos de dos jugadores, online",
   "type": "module",
+  "engines": {
+    "node": ">=18"
+  },
   "scripts": {
     "dev": "vite",
     "build": "vite build",
