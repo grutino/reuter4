@@ -18,7 +18,7 @@
 // los cuatro colores alimentan el mismo conjunto de entrenamiento.
 
 import { ZONAS, ADYACENTES, LAGOS, ANILLO, CASILLAS, coord, casillasDeZona, rayo, DIRECCIONES } from "../src/motor/tablero.js";
-import { RANGOS, EXPLORADOR, CAPITAN } from "../src/motor/motor.js";
+import { RANGOS, EXPLORADOR, CAPITAN, ESPIA, CANON } from "../src/motor/motor.js";
 import { DISTANCIA } from "../src/motor/bot.js";
 
 export const RANGOS_ORDENADOS = Object.keys(RANGOS).map(Number).sort((a, b) => b - a); // 9..1
@@ -38,7 +38,25 @@ export const PROPIEDADES = [
 // Rasgos del despliegue entero, no de una pieza suelta. Sin ellos no se puede
 // expresar "reparte la fuerza entre los dos lados", que es una propiedad del
 // conjunto y no de ninguna casilla.
-export const GLOBALES = ["equilibrioLateral", "rangoDeLaBandera", "fuerzaAdelantada"];
+export const GLOBALES = [
+  "equilibrioLateral",
+  "rangoDeLaBandera",
+  "fuerzaAdelantada",
+  // --- Vecindad -------------------------------------------------------------
+  // Qué tiene cada pieza AL LADO. Hasta aquí todos los rasgos describían una
+  // pieza contra la geometría del tablero, así que "el espía junto al general"
+  // o "los altos arropados por piezas medias" eran inexpresables. Y esa parece
+  // ser justo la idea que hace fuertes a las mejores aperturas humanas: no
+  // dónde está cada pieza, sino con quién.
+  "espiaJuntoAAlto",
+  "altosCamuflados",
+  "altosJuntoAComandante",
+  "comandantesJuntoATeniente",
+  "canonesArropados",
+  "mezclaEnPrimeraLinea",
+  "agrupamientoDeFuerza",
+  "altosEnPrimeraLinea",
+];
 
 export const TAMANO = RANGOS_ORDENADOS.length * PROPIEDADES.length + GLOBALES.length;
 
@@ -172,6 +190,51 @@ export function rasgosDeDespliegue(color, colocacion) {
     });
   });
 
+  // --- Rasgos de vecindad ----------------------------------------------------
+  const porCasilla = {};
+  for (const pieza of colocacion) porCasilla[pieza.casilla] = pieza.rango;
+  const vecinos = (casilla) => (ADYACENTES[casilla] || []).map((v) => porCasilla[v]).filter((r) => r !== undefined);
+
+  const altos = colocacion.filter((p) => p.rango >= 8);
+  const espia = colocacion.find((p) => p.rango === ESPIA);
+  const comandantes = colocacion.filter((p) => p.rango === 7);
+  const canones = colocacion.filter((p) => p.rango === CANON);
+  const fraccion = (lista, prueba) => (lista.length ? lista.filter(prueba).length / lista.length : 0);
+
+  const vecindad = {
+    espiaJuntoAAlto: espia && vecinos(espia.casilla).some((r) => r >= 8) ? 1 : 0,
+    // Arropar a los altos con piezas medias: si al rival le sale un 5 donde
+    // esperaba un 9, tarda más en localizar de verdad las piezas fuertes.
+    altosCamuflados: fraccion(altos, (p) => vecinos(p.casilla).some((r) => r >= 4 && r <= 7)),
+    altosJuntoAComandante: fraccion(altos, (p) => vecinos(p.casilla).includes(7)),
+    comandantesJuntoATeniente: fraccion(comandantes, (p) => vecinos(p.casilla).includes(5)),
+    canonesArropados: fraccion(canones, (p) => vecinos(p.casilla).some((r) => r >= 4)),
+    altosEnPrimeraLinea: fraccion(altos, (p) => propiedadesDePieza(color, p.casilla, p.rango).avance > 0.66),
+  };
+
+  // Cuánto se parece cada pieza a sus vecinas en rango. Alto = las fuertes van
+  // juntas y se delatan en bloque; bajo = van mezcladas y cuesta leerlas.
+  let sumaProducto = 0;
+  let cuantas = 0;
+  for (const pieza of colocacion) {
+    const alrededor = vecinos(pieza.casilla);
+    if (!alrededor.length) continue;
+    const media = alrededor.reduce((a, b) => a + b, 0) / alrededor.length;
+    sumaProducto += (pieza.rango - 5) * (media - 5);
+    cuantas++;
+  }
+  vecindad.agrupamientoDeFuerza = cuantas ? 0.5 + sumaProducto / cuantas / 32 : 0.5;
+
+  // Variedad de rangos en la línea de contacto: uniforme se lee de un vistazo.
+  const primera = colocacion.filter((p) => propiedadesDePieza(color, p.casilla, p.rango).avance > 0.66).map((p) => p.rango);
+  if (primera.length > 1) {
+    const media = primera.reduce((a, b) => a + b, 0) / primera.length;
+    const desv = Math.sqrt(primera.reduce((s, r) => s + (r - media) ** 2, 0) / primera.length);
+    vecindad.mezclaEnPrimeraLinea = Math.min(1, desv / 3);
+  } else {
+    vecindad.mezclaEnPrimeraLinea = 0;
+  }
+
   // --- Rasgos del conjunto ---------------------------------------------------
   const g = GEOMETRIA[color];
   let fuerzaIzquierda = 0;
@@ -200,6 +263,10 @@ export function rasgosDeDespliegue(color, colocacion) {
   // hasta ahora se tomaba al azar.
   vector[base + 1] = rangoBandera / 9;
   vector[base + 2] = fuerzaTotal ? fuerzaPorAvance / fuerzaTotal : 0;
+  GLOBALES.slice(3).forEach((nombre, i) => {
+    const v = vecindad[nombre];
+    vector[base + 3 + i] = v === undefined ? 0 : Math.max(0, Math.min(1, v));
+  });
   return vector;
 }
 
