@@ -47,7 +47,8 @@ import { rasgosDeDespliegue, TAMANO as TAMANO_DESPLIEGUE } from "./rasgos-despli
 import { rasgosDeJugada, contextoDeTurno, TAMANO as TAMANO_JUGADA } from "./rasgos-jugada.mjs";
 import { crearRed, entrenarLote, evaluar, aObjeto, desdeObjeto } from "./red.mjs";
 import { construirPanel, medirContraPanel, cargarAperturas } from "./panel.mjs";
-import { fuenteDeDespliegues } from "./aperturas.mjs";
+import { fuenteDeDespliegues, aColocacion, aTexto } from "./aperturas.mjs";
+import { poblacionInicial, siguienteGeneracion, actualizarArchivo } from "./formaciones.mjs";
 import { despliegueGuiado } from "./entrenar-despliegue.mjs";
 import { accionConRed } from "./entrenar-jugada.mjs";
 import { generarInforme } from "./informe-redes.mjs";
@@ -64,9 +65,12 @@ function opciones(argv) {
     // Cuántas rondas de ejemplos se conservan. Con una sola, cada ronda ve muy
     // poco y el ajuste va dando bandazos.
     memoria: 3,
-    // Fracción de partidas de liga: el otro equipo sale de la mezcla de
-    // aperturas y juega con la heurística, para no perder de vista al mundo.
+    // Fracción de partidas de liga: el otro equipo sale de la población de
+    // formaciones y juega con la heurística, para no perder de vista al mundo.
     liga: 0.5,
+    // La población de formaciones que evoluciona contra las redes. Su aptitud
+    // sale de las propias partidas de liga, así que no cuesta partidas aparte.
+    poblacion: 30, elite: 0.25, sangreNueva: 0.15, mutacion: 0.4,
     // Cuántos errores estándar tiene que sacarle una ronda a la mejor marca
     // para adoptarla. Sin margen se adopta ruido: en una prueba con un solo
     // emparejamiento subió del 53% al 61% con +-6 de error en cada medida, y
@@ -95,7 +99,7 @@ function leer(nombre) {
 
 // --- Una tanda de partidas ----------------------------------------------------
 
-function jugarTanda(redD, redJ, o, semillaBase, sacarDespliegue) {
+function jugarTanda(redD, redJ, o, semillaBase, sacarDespliegue, liga) {
   const deDespliegue = [];
   const deJugada = [];
   let decididas = 0;
@@ -109,6 +113,9 @@ function jugarTanda(redD, redJ, o, semillaBase, sacarDespliegue) {
     const esLiga = azar() < o.liga;
     const ladoRed = i % 2 === 0 ? EQUIPO_A : EQUIPO_B;
     const conRed = (color) => !esLiga || ladoRed.includes(color);
+    // Turno rotatorio, no sorteo: así todas las formaciones juegan el mismo
+    // número de partidas y sus aptitudes son comparables entre sí.
+    const formacion = esLiga && liga && liga.length ? liga[deLiga % liga.length] : null;
     if (esLiga) deLiga++;
 
     const despliegues = {};
@@ -116,6 +123,7 @@ function jugarTanda(redD, redJ, o, semillaBase, sacarDespliegue) {
     for (const color of COLORES) {
       const colocacion = conRed(color)
         ? redD ? despliegueGuiado(color, azar, redD, o.candidatos, o.escalada) : despliegueAleatorio(color, azar)
+        : formacion ? aColocacion(formacion.rejilla, color)
         : sacarDespliegue(color, azar).colocacion;
       despliegues[color] = colocacion;
       rasgosPorColor[color] = rasgosDeDespliegue(color, colocacion);
@@ -166,6 +174,12 @@ function jugarTanda(redD, redJ, o, semillaBase, sacarDespliegue) {
       valorA = repartoDeTablas(estado);
     }
     const suyo = (color) => (EQUIPO_A.includes(color) ? valorA : 1 - valorA);
+    // La aptitud de la formación es lo que le saca a las redes. Las tablas
+    // cuentan en fracción, que es más información que tirarlas.
+    if (formacion) {
+      formacion.gana += ladoRed === EQUIPO_A ? 1 - valorA : valorA;
+      formacion.juega += 1;
+    }
     for (const color of COLORES) deDespliegue.push({ entrada: rasgosPorColor[color], objetivo: suyo(color) });
     for (const m of muestras) deJugada.push({ entrada: m.entrada, objetivo: suyo(m.color) });
   }
@@ -252,7 +266,8 @@ async function main() {
   console.log("Coevolución: las dos redes juegan entre ellas\n");
   console.log(`  ${o.rondas} rondas · ${o.partidas} partidas por ronda · panel de ${panel.length} rivales`);
   console.log(`  arranque: despliegue ${redD ? "modelo guardado" : "desde cero"} · jugada ${redJ ? "modelo guardado" : "desde cero"}`);
-  console.log(`  ${Math.round(o.liga * 100)}% de partidas de liga · memoria de ${o.memoria} rondas de ejemplos\n`);
+  console.log(`  ${Math.round(o.liga * 100)}% de partidas de liga · memoria de ${o.memoria} rondas de ejemplos`);
+  console.log(`  población de ${o.poblacion} formaciones que evoluciona contra las redes\n`);
 
   const historia = [];
   const arranque = Date.now();
@@ -275,9 +290,15 @@ async function main() {
   // ronda recién jugada da muy pocos datos y el ajuste va a bandazos.
   const deposito = [];
 
+  // La población de formaciones. Evoluciona en paralelo a las redes: cada ronda
+  // las que mejor les ganan se cruzan entre ellas. El PANEL no se toca — es la
+  // vara y tiene que seguir siendo el mismo para que la curva signifique algo.
+  let poblacion = poblacionInicial(o.poblacion, cargarAperturas(), azar);
+  const archivo = new Map();
+
   for (let ronda = 1; ronda <= o.rondas; ronda++) {
     const t0 = Date.now();
-    const tanda = jugarTanda(redD, redJ, o, o.semilla + ronda * 104729, sacarDespliegue);
+    const tanda = jugarTanda(redD, redJ, o, o.semilla + ronda * 104729, sacarDespliegue, poblacion);
     deposito.push(tanda);
     while (deposito.length > o.memoria) deposito.shift();
     const todosD = deposito.flatMap((t) => t.deDespliegue);
@@ -286,6 +307,13 @@ async function main() {
     const nuevaD = entrenar(todosD, TAMANO_DESPLIEGUE, o.ocultaDespliegue, o, azar, redD);
     const nuevaJ = entrenar(todosJ, TAMANO_JUGADA, o.ocultaJugada, o, azar, redJ);
     const medida = medir(nuevaD.red, nuevaJ.red);
+
+    // Las formaciones se reproducen con la aptitud que acaban de sacar contra
+    // las redes de ESTA ronda, antes de decidir si las redes se adoptan.
+    const generacion = siguienteGeneracion(poblacion, cargarAperturas(), o, azar);
+    actualizarArchivo(archivo, generacion.ordenada, ronda);
+    const dura = generacion.ordenada[0];
+    poblacion = generacion.poblacion;
 
     // Solo se adoptan si mejoran contra la vara externa, y por encima del
     // ruido. Sin la primera condición la coevolución deriva: las redes se
@@ -303,12 +331,21 @@ async function main() {
         (mejora ? "  <- adoptadas" : `  (descartadas, hacía falta ${(listón * 100).toFixed(0)}%)`) +
         `  ${Math.round((Date.now() - t0) / 1000)}s`
     );
+    console.log(
+      `           formación más dura: ${dura.origen} le saca ${(dura.aptitud * 100).toFixed(0)}% ` +
+        `en ${dura.juega} partidas · archivo de ${archivo.size}`
+    );
 
     historia.push({
       ronda, panel: mejora ? medida.tasa : historia[historia.length - 1].panel,
       medida: medida.tasa, error: medida.error, adoptadas: mejora,
       ejemplosDespliegue: todosD.length, ejemplosJugada: todosJ.length,
       decididas: tanda.decididas, deLiga: tanda.deLiga,
+      formaciones: {
+        masDura: { origen: dura.origen, aptitud: dura.aptitud, juega: dura.juega },
+        media: generacion.ordenada.reduce((s, f) => s + f.aptitud, 0) / generacion.ordenada.length,
+        archivo: archivo.size,
+      },
       despliegue: { perdida: nuevaD.perdida, perdidaDePartida: nuevaD.perdidaDePartida, epocasUtiles: nuevaD.epocasUtiles, acierto: nuevaD.acierto, calibracion: nuevaD.calibracion, curva: nuevaD.curva },
       jugada: { perdida: nuevaJ.perdida, perdidaDePartida: nuevaJ.perdidaDePartida, epocasUtiles: nuevaJ.epocasUtiles, acierto: nuevaJ.acierto, calibracion: nuevaJ.calibracion, curva: nuevaJ.curva },
       porRival: medida.porRival,
@@ -322,9 +359,31 @@ async function main() {
     await publicar(historia, o);
   }
 
+  guardarDuras(archivo);
+
   const mejorPanel = Math.max(...historia.map((h) => h.panel));
   console.log(`\n  Mejor marca contra el panel: ${(mejorPanel * 100).toFixed(0)}%`);
   console.log(`  Informe: docs/index.html`);
+}
+
+// Las formaciones duras van a `aperturas/duras/`, NO a `aperturas/campeonas/`.
+// Parece un detalle y no lo es: `campeonas` la carga `construirPanel`, así que
+// escribir ahí endurecería la vara de medir y la curva bajaría sin que se
+// pudiera distinguir "las redes empeoran" de "los rivales mejoran".
+function guardarDuras(archivo) {
+  const carpeta = path.join(AQUI, "aperturas", "duras");
+  fs.mkdirSync(carpeta, { recursive: true });
+  for (const f of fs.readdirSync(carpeta)) if (f.endsWith(".txt")) fs.unlinkSync(path.join(carpeta, f));
+  const lista = [...archivo.values()].sort((a, b) => b.aptitud - a.aptitud).slice(0, 12);
+  lista.forEach((f, i) => {
+    const cabecera = [
+      `# dura ${i + 1} · le saca ${(f.aptitud * 100).toFixed(0)}% a las redes en ${f.juega} partidas`,
+      `# salida de: ${f.origen} · ronda ${f.ronda}`,
+      `# NO forma parte del panel a propósito: el panel es la vara y no se mueve.`,
+    ].join("\n");
+    fs.writeFileSync(path.join(carpeta, `dura-${String(i + 1).padStart(2, "0")}.txt`), `${cabecera}\n${aTexto(f.rejilla)}\n`);
+  });
+  if (lista.length) console.log(`\n  ${lista.length} formaciones duras en entrenamiento/aperturas/duras/`);
 }
 
 function guardar(nombre, previo, entrenada, o, medida) {
