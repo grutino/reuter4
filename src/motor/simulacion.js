@@ -22,8 +22,11 @@ import {
 const LIMITE_TURNOS = 4000;
 
 const [, , argSalud, argDuelo] = process.argv;
-const PARTIDAS_SALUD = Number(argSalud) || 25;
-const PARTIDAS_DUELO = Number(argDuelo) || 40;
+// Ojo con `Number(x) || defecto`: un 0 explícito es falso y caería al valor por
+// defecto, con lo que no habría forma de desactivar ninguna de las dos tandas.
+const numero = (arg, defecto) => (arg === undefined || arg === "" || Number.isNaN(Number(arg)) ? defecto : Number(arg));
+const PARTIDAS_SALUD = numero(argSalud, 25);
+const PARTIDAS_DUELO = numero(argDuelo, 40);
 
 // `estrategas` asocia cada color a la función que decide su jugada.
 function jugarPartida(estrategas) {

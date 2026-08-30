@@ -152,9 +152,44 @@ function amenazaConocida(estado, casilla, miRango, color) {
   return peor;
 }
 
+// --- Pesos de la heurística ---------------------------------------------------
+// Sacados a una tabla con nombre para poder entrenarlos fuera del juego. Estos
+// son los valores puestos a mano, que sirven de punto de partida y de rival de
+// referencia: un entrenamiento que no los gane no ha aprendido nada.
+
+export const PESOS_BASE = {
+  ruido: 2,                    // desempate aleatorio, evita que el bot se atasque
+
+  // Movimiento
+  coronar: 10000,              // llevar la bandera propia a la torre gana la partida
+  avanceConBandera: 14,        // acercar la bandera al castillo
+  primaPortador: 6,            // el portador se mueve, no se queda mirando
+  avanceNormal: 3,             // el resto también empuja hacia el castillo
+  banderaSuelta: 25,           // pisar una bandera del suelo
+  amenazaBase: 3,              // plantarse al lado de quien sabemos que nos gana
+  amenazaFactor: 1,            // ...y cuánto pesa el rango de esa amenaza
+
+  // Cañonazo
+  disparoConocidoBase: 20,
+  disparoConocidoFactor: 7,
+  disparoDesconocido: 45,
+  disparoABandera: 40,
+
+  // Ataque cuerpo a cuerpo
+  ataqueGanaBase: 30,          // captura segura contra un rango ya visto
+  ataqueGanaFactor: 6,
+  ataqueEmpate: -12,           // intercambio parejo, rara vez interesa
+  ataquePierde: -120,          // suicidio a sabiendas
+  espiaAMariscal: 90,          // el espía existe para esto
+  ataqueDesconocido: 4,        // factor del valor esperado contra un desconocido
+  ataqueABandera: 60,          // quien lleva bandera es objetivo prioritario
+  portadorNoPelea: -60,
+  ataqueAlCastillo: 20,
+};
+
 // --- Bot con memoria ---------------------------------------------------------
 
-export function accionDeBot(estado, color) {
+export function accionDeBot(estado, color, { pesos = PESOS_BASE } = {}) {
   const acciones = movimientosLegales(estado, color);
   if (!acciones.length) return null;
 
@@ -167,20 +202,20 @@ export function accionDeBot(estado, color) {
   for (const a of acciones) {
     const pieza = estado.piezas[a.pieza];
     const llevaBanderaAmiga = pieza.bandera && (pieza.bandera === color || SOCIO[color] === pieza.bandera);
-    let nota = Math.random() * 2;
+    let nota = Math.random() * pesos.ruido;
 
     if (a.tipo === "mover") {
       const antes = DISTANCIA[a.desde] ?? 30;
       const despues = DISTANCIA[a.hasta] ?? 30;
-      if (a.hasta === TORRE && llevaBanderaAmiga) nota += 10000;
-      else if (llevaBanderaAmiga) nota += (antes - despues) * 14 + 6;
-      else nota += (antes - despues) * 3;
-      if (estado.banderasSueltas[a.hasta]) nota += 25;
+      if (a.hasta === TORRE && llevaBanderaAmiga) nota += pesos.coronar;
+      else if (llevaBanderaAmiga) nota += (antes - despues) * pesos.avanceConBandera + pesos.primaPortador;
+      else nota += (antes - despues) * pesos.avanceNormal;
+      if (estado.banderasSueltas[a.hasta]) nota += pesos.banderaSuelta;
 
       // Novedad: no meter la cabeza al lado de alguien que ya sabemos que nos gana.
       // Al portador de bandera le duele el doble, porque su caída suelta la bandera.
       const amenaza = amenazaConocida(estado, a.hasta, pieza.rango, color);
-      if (amenaza && !llevaBanderaAmiga) nota -= 3 + amenaza;
+      if (amenaza && !llevaBanderaAmiga) nota -= pesos.amenazaBase + amenaza * pesos.amenazaFactor;
     }
 
     if (a.tipo === "disparar") {
@@ -188,33 +223,32 @@ export function accionDeBot(estado, color) {
       // por delante. Contra un rango conocido se puede afinar; si no, media.
       const objetivo = estado.piezas[estado.tablero[a.hasta]];
       const conocido = objetivo ? memoria[objetivo.id] : undefined;
-      if (conocido !== undefined) nota += 20 + conocido * 7;
-      else nota += 45;
-      if (objetivo && objetivo.bandera) nota += 40;
+      if (conocido !== undefined) nota += pesos.disparoConocidoBase + conocido * pesos.disparoConocidoFactor;
+      else nota += pesos.disparoDesconocido;
+      if (objetivo && objetivo.bandera) nota += pesos.disparoABandera;
     }
 
     if (a.tipo === "atacar") {
       const objetivo = estado.piezas[estado.tablero[a.hasta]];
       const conocido = objetivo ? memoria[objetivo.id] : undefined;
-      nota += 0;
 
       if (conocido !== undefined) {
         const res = resolverDuelo(pieza.rango, conocido);
-        if (res === "atacante") nota += 30 + conocido * 6; // captura segura
-        else if (res === "empate") nota -= 12; // intercambio parejo, rara vez interesa
-        else nota -= 120; // suicidio a sabiendas
+        if (res === "atacante") nota += pesos.ataqueGanaBase + conocido * pesos.ataqueGanaFactor;
+        else if (res === "empate") nota += pesos.ataqueEmpate;
+        else nota += pesos.ataquePierde;
         // El espía existe para esto y para nada más.
-        if (pieza.rango === ESPIA && conocido === MARISCAL) nota += 90;
+        if (pieza.rango === ESPIA && conocido === MARISCAL) nota += pesos.espiaAMariscal;
       } else {
         if (!bolsas[objetivo.color]) bolsas[objetivo.color] = bolsaOculta(estado, objetivo.color);
-        nota += valorEsperado(pieza.rango, bolsas[objetivo.color]) * 4;
+        nota += valorEsperado(pieza.rango, bolsas[objetivo.color]) * pesos.ataqueDesconocido;
       }
 
       // Quien lleva una bandera es objetivo prioritario, sea de quien sea:
       // si es enemiga se captura, y si es nuestra se recupera.
-      if (objetivo && objetivo.bandera) nota += 60;
-      if (llevaBanderaAmiga) nota -= 60; // el portador no se mete en peleas
-      if (a.hasta === ANILLO || a.hasta === TORRE) nota += 20;
+      if (objetivo && objetivo.bandera) nota += pesos.ataqueABandera;
+      if (llevaBanderaAmiga) nota += pesos.portadorNoPelea; // el portador no se mete en peleas
+      if (a.hasta === ANILLO || a.hasta === TORRE) nota += pesos.ataqueAlCastillo;
     }
 
     if (nota > mejorNota) {
