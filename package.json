@@ -14,7 +14,8 @@
     "test": "node src/motor/pruebas.js",
     "simular": "node src/motor/simulacion.js",
     "entrenar": "node entrenamiento/entrenar-pesos.mjs",
-    "informe": "node entrenamiento/informe.mjs"
+    "informe": "node entrenamiento/informe.mjs",
+    "revisar": "node entrenamiento/revisar-pesos.mjs"
   },
   "dependencies": {
     "react": "^18.3.1",

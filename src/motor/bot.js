@@ -192,7 +192,11 @@ export const PESOS_BASE = {
 
 // --- Bot con memoria ---------------------------------------------------------
 
-export function accionDeBot(estado, color, { pesos = PESOS_BASE, azar = Math.random } = {}) {
+// `contador` es opcional y solo lo usa la revisión de pesos: apunta cuántas
+// veces entra en juego cada término. Un peso que casi nunca se activa no lo
+// sujeta la selección, y deriva; sin este recuento no hay forma de saberlo.
+export function accionDeBot(estado, color, { pesos = PESOS_BASE, azar = Math.random, contador = null } = {}) {
+  const apuntar = contador ? (k) => { contador[k] = (contador[k] || 0) + 1; } : () => {};
   const acciones = movimientosLegales(estado, color);
   if (!acciones.length) return null;
 
@@ -210,15 +214,15 @@ export function accionDeBot(estado, color, { pesos = PESOS_BASE, azar = Math.ran
     if (a.tipo === "mover") {
       const antes = DISTANCIA[a.desde] ?? 30;
       const despues = DISTANCIA[a.hasta] ?? 30;
-      if (a.hasta === TORRE && llevaBanderaAmiga) nota += pesos.coronar;
-      else if (llevaBanderaAmiga) nota += (antes - despues) * pesos.avanceConBandera + pesos.primaPortador;
-      else nota += (antes - despues) * pesos.avanceNormal;
-      if (estado.banderasSueltas[a.hasta]) nota += pesos.banderaSuelta;
+      if (a.hasta === TORRE && llevaBanderaAmiga) { nota += pesos.coronar; apuntar("coronar"); }
+      else if (llevaBanderaAmiga) { nota += (antes - despues) * pesos.avanceConBandera + pesos.primaPortador; apuntar("avanceConBandera"); apuntar("primaPortador"); }
+      else { nota += (antes - despues) * pesos.avanceNormal; apuntar("avanceNormal"); }
+      if (estado.banderasSueltas[a.hasta]) { nota += pesos.banderaSuelta; apuntar("banderaSuelta"); }
 
       // Novedad: no meter la cabeza al lado de alguien que ya sabemos que nos gana.
       // Al portador de bandera le duele el doble, porque su caída suelta la bandera.
       const amenaza = amenazaConocida(estado, a.hasta, pieza.rango, color);
-      if (amenaza && !llevaBanderaAmiga) nota -= pesos.amenazaBase + amenaza * pesos.amenazaFactor;
+      if (amenaza && !llevaBanderaAmiga) { nota -= pesos.amenazaBase + amenaza * pesos.amenazaFactor; apuntar("amenazaBase"); apuntar("amenazaFactor"); }
     }
 
     if (a.tipo === "disparar") {
@@ -226,9 +230,9 @@ export function accionDeBot(estado, color, { pesos = PESOS_BASE, azar = Math.ran
       // por delante. Contra un rango conocido se puede afinar; si no, media.
       const objetivo = estado.piezas[estado.tablero[a.hasta]];
       const conocido = objetivo ? memoria[objetivo.id] : undefined;
-      if (conocido !== undefined) nota += pesos.disparoConocidoBase + conocido * pesos.disparoConocidoFactor;
-      else nota += pesos.disparoDesconocido;
-      if (objetivo && objetivo.bandera) nota += pesos.disparoABandera;
+      if (conocido !== undefined) { nota += pesos.disparoConocidoBase + conocido * pesos.disparoConocidoFactor; apuntar("disparoConocidoBase"); apuntar("disparoConocidoFactor"); }
+      else { nota += pesos.disparoDesconocido; apuntar("disparoDesconocido"); }
+      if (objetivo && objetivo.bandera) { nota += pesos.disparoABandera; apuntar("disparoABandera"); }
     }
 
     if (a.tipo === "atacar") {
@@ -237,21 +241,22 @@ export function accionDeBot(estado, color, { pesos = PESOS_BASE, azar = Math.ran
 
       if (conocido !== undefined) {
         const res = resolverDuelo(pieza.rango, conocido);
-        if (res === "atacante") nota += pesos.ataqueGanaBase + conocido * pesos.ataqueGanaFactor;
-        else if (res === "empate") nota += pesos.ataqueEmpate;
-        else nota += pesos.ataquePierde;
+        if (res === "atacante") { nota += pesos.ataqueGanaBase + conocido * pesos.ataqueGanaFactor; apuntar("ataqueGanaBase"); apuntar("ataqueGanaFactor"); }
+        else if (res === "empate") { nota += pesos.ataqueEmpate; apuntar("ataqueEmpate"); }
+        else { nota += pesos.ataquePierde; apuntar("ataquePierde"); }
         // El espía existe para esto y para nada más.
-        if (pieza.rango === ESPIA && conocido === MARISCAL) nota += pesos.espiaAMariscal;
+        if (pieza.rango === ESPIA && conocido === MARISCAL) { nota += pesos.espiaAMariscal; apuntar("espiaAMariscal"); }
       } else {
         if (!bolsas[objetivo.color]) bolsas[objetivo.color] = bolsaOculta(estado, objetivo.color);
         nota += valorEsperado(pieza.rango, bolsas[objetivo.color]) * pesos.ataqueDesconocido;
+        apuntar("ataqueDesconocido");
       }
 
       // Quien lleva una bandera es objetivo prioritario, sea de quien sea:
       // si es enemiga se captura, y si es nuestra se recupera.
-      if (objetivo && objetivo.bandera) nota += pesos.ataqueABandera;
-      if (llevaBanderaAmiga) nota += pesos.portadorNoPelea; // el portador no se mete en peleas
-      if (a.hasta === ANILLO || a.hasta === TORRE) nota += pesos.ataqueAlCastillo;
+      if (objetivo && objetivo.bandera) { nota += pesos.ataqueABandera; apuntar("ataqueABandera"); }
+      if (llevaBanderaAmiga) { nota += pesos.portadorNoPelea; apuntar("portadorNoPelea"); }
+      if (a.hasta === ANILLO || a.hasta === TORRE) { nota += pesos.ataqueAlCastillo; apuntar("ataqueAlCastillo"); }
     }
 
     if (nota > mejorNota) {
