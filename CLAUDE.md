@@ -333,6 +333,13 @@ maraña— y el hilo completo con sus combates.
 El fondo del tablero se define **una vez** como `<symbol>` y los ocho diagramas lo referencian
 con `<use>`: son 225 rectángulos por diagrama y el documento pasaba de 258 KB a 66 KB.
 
+**Ojo con `coord`, que usa una convención mixta**: devuelve la columna en base 0 y la fila en
+base 1, así que `coord("A1")` es `[0, 1]`. Tratar las dos igual desplaza las columnas —y solo
+las columnas— una casilla a la izquierda. Pasó aquí, y no lo cazó ninguna prueba porque el
+fondo salía bien: construye los nombres desde un contador base 1, y lo que se descuadraba era
+todo lo que iba encima. Hay una prueba que ahora exige que el centro de cada casilla caiga
+dentro del cuadro que el fondo dibuja para ese mismo nombre.
+
 **La censura del servidor vive ahora en `servidor/vista.mjs`.** Estaba dentro de
 `servidor.mjs`, que abre el puerto al importarse, así que la función que no puede fallar era la
 única sin prueba. Siguen siendo dos censuras paralelas —esta y `vistaDe`—, pero ahora las dos

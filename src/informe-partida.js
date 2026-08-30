@@ -16,30 +16,39 @@
 import { CASILLAS, LAGOS, CASTILLO_HUELLA, ANILLO, TORRE, ZONAS, coord, casillasDeZona } from "./motor/tablero.js";
 import { ESTILO, NOMBRE_RANGO } from "./estilo.js";
 
-const LADO = 15;
-const CELDA = 26;
-const MARGEN = 14;
+export const LADO = 15;
+export const CELDA = 26;
+export const MARGEN = 14;
 const TABLERO = LADO * CELDA + MARGEN * 2;
 
 const esc = (t) =>
   String(t == null ? "" : t).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 
-// El centro del castillo en píxeles, para las pseudocasillas.
+// CUIDADO CON LA CONVENCIÓN DE `coord`, que es mixta: devuelve la columna en
+// base 0 y la fila en base 1. `coord("A1")` es [0, 1] y `coord("O15")` es
+// [14, 15]. Tratar las dos igual desplaza las columnas una casilla a la
+// izquierda —y solo las columnas—, que es justo el fallo que tenía esto: el
+// fondo salía bien porque construye los nombres desde un contador base 1, y las
+// piezas y las flechas encima salían corridas.
+const columnaDe = (casilla) => coord(casilla)[0] + 1;
+const filaDe = (casilla) => coord(casilla)[1];
+
+// El centro del castillo, ya en base 1 las dos coordenadas.
 const CENTRO_CASTILLO = (() => {
-  const cs = [...CASTILLO_HUELLA].map(coord);
-  const x = (Math.min(...cs.map((p) => p[0])) + Math.max(...cs.map((p) => p[0]))) / 2;
-  const y = (Math.min(...cs.map((p) => p[1])) + Math.max(...cs.map((p) => p[1]))) / 2;
-  return { x, y };
+  const cs = [...CASTILLO_HUELLA];
+  const xs = cs.map(columnaDe);
+  const ys = cs.map(filaDe);
+  return { x: (Math.min(...xs) + Math.max(...xs)) / 2, y: (Math.min(...ys) + Math.max(...ys)) / 2 };
 })();
 
 // ANILLO y TORRE no tienen coordenadas: son pseudocasillas. Se pintan sobre el
 // castillo, la torre en el centro y el anillo un poco desplazado para que dos
 // flechas al castillo no se superpongan del todo.
-function centro(casilla) {
+export function centro(casilla) {
   if (casilla === TORRE) return px(CENTRO_CASTILLO.x, CENTRO_CASTILLO.y);
   if (casilla === ANILLO) return px(CENTRO_CASTILLO.x, CENTRO_CASTILLO.y - 1);
-  const c = coord(casilla);
-  return c ? px(c[0], c[1]) : null;
+  if (!casilla || !coord(casilla)) return null;
+  return px(columnaDe(casilla), filaDe(casilla));
 }
 const px = (columna, fila) => ({
   x: MARGEN + (columna - 1) * CELDA + CELDA / 2,
@@ -70,10 +79,9 @@ function fondoDelTablero() {
   // Las zonas de cada ejército, con un tinte suave para orientarse.
   for (const [color, estilo] of Object.entries(ESTILO)) {
     for (const casilla of casillasDeZona(color)) {
-      const c = coord(casilla);
-      if (!c) continue;
+      if (!coord(casilla)) continue;
       partes.push(
-        `<rect x="${MARGEN + (c[0] - 1) * CELDA}" y="${MARGEN + (c[1] - 1) * CELDA}" width="${CELDA}" height="${CELDA}" fill="${estilo.css}" opacity="0.10"/>`
+        `<rect x="${MARGEN + (columnaDe(casilla) - 1) * CELDA}" y="${MARGEN + (filaDe(casilla) - 1) * CELDA}" width="${CELDA}" height="${CELDA}" fill="${estilo.css}" opacity="0.10"/>`
       );
     }
   }

@@ -33,6 +33,7 @@ import { cargarModelos, jugadaDeBot } from "./bot-red.js";
 import { NIVELES, nivelValido, ESCALA } from "./dificultad.js";
 import { BATEN_ANILLO, BATEN_LA_TORRE, PASOS_A_TIRO, ANILLO as ANILLO_T } from "./tablero.js";
 import { salaParaJugador } from "../../servidor/vista.mjs";
+import { centro as centroEnInforme, CELDA, MARGEN, LADO } from "../informe-partida.js";
 import { propiedadesDePieza, FIRMA as FIRMA_DESPLIEGUE } from "./rasgos-despliegue.js";
 
 let pasadas = 0;
@@ -1337,6 +1338,41 @@ prueba("al terminar la partida el servidor destapa los cuatro ejércitos", () =>
     "terminada la partida deberían verse todos los rangos"
   );
   assert.ok(vista.despliegues, "y los despliegues iniciales, que el informe necesita");
+});
+
+
+prueba("en el informe las piezas caen sobre su casilla del tablero de fondo", () => {
+  // `coord` devuelve la columna en base 0 y la fila en base 1: coord("A1") es
+  // [0, 1]. Tratar las dos igual desplazaba las columnas -y solo las columnas-
+  // una casilla a la izquierda. El fondo salía bien porque construye los nombres
+  // desde un contador base 1, así que el desajuste solo se veía mirando el
+  // dibujo: las flechas y las fichas encima, corridas.
+  //
+  // Aquí se recalcula la posición del fondo de forma independiente, a partir del
+  // nombre de la casilla, y se exige que el centro caiga dentro de ese cuadro.
+  const casillaDelFondo = (nombre) => {
+    const columna = nombre.charCodeAt(0) - 64;      // A = 1
+    const fila = parseInt(nombre.slice(1), 10);
+    return { x: MARGEN + (columna - 1) * CELDA, y: MARGEN + (fila - 1) * CELDA };
+  };
+
+  for (const nombre of CASILLAS) {
+    if (nombre === ANILLO_T || nombre === TORRE) continue; // pseudocasillas
+    const c = centroEnInforme(nombre);
+    assert.ok(c, `${nombre} no tiene centro`);
+    const caja = casillaDelFondo(nombre);
+    assert.ok(
+      c.x > caja.x && c.x < caja.x + CELDA && c.y > caja.y && c.y < caja.y + CELDA,
+      `${nombre}: el centro (${c.x}, ${c.y}) cae fuera de su cuadro (${caja.x}, ${caja.y})–(${caja.x + CELDA}, ${caja.y + CELDA})`
+    );
+  }
+
+  // Y las esquinas, dentro del lienzo.
+  const fin = MARGEN + LADO * CELDA;
+  for (const nombre of ["A1", "O15"]) {
+    const c = centroEnInforme(nombre);
+    assert.ok(c.x > MARGEN && c.x < fin && c.y > MARGEN && c.y < fin, `${nombre} se sale del lienzo`);
+  }
 });
 
 console.log(`\n${pasadas} pruebas superadas, ${fallidas} fallidas\n`);
