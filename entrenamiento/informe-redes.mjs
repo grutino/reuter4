@@ -188,32 +188,64 @@ export function construir({ despliegue, jugada, coevolucion, sensibilidadDesplie
   const bloques = [];
 
   if (coevolucion && coevolucion.historia && coevolucion.historia.length > 1) {
-    const h = coevolucion.historia;
+    // La entrada "final" no es una ronda: lleva el veredicto en semillas frescas
+    // y no tiene ni número de ronda ni marca de panel. Fuera de las curvas.
+    const veredicto = coevolucion.historia.find((r) => r.ronda === "final");
+    const h = coevolucion.historia.filter((r) => typeof r.ronda === "number");
     const ultima = h[h.length - 1];
     const adoptadas = h.filter((r) => r.adoptadas).length;
+    const conTitular = h.filter((r) => r.titular !== undefined);
+
     const curva = lineas({
       series: [
-        { nombre: "mejor contra el panel", color: "var(--bien)", puntos: h.map((r) => ({ x: r.ronda, y: r.panel })) },
-        { nombre: "medido esta ronda", color: "var(--dato)", grosor: 1.5, puntos: h.filter((r) => r.medida !== undefined).map((r) => ({ x: r.ronda, y: r.medida })) },
+        { nombre: "titular, remedido cada ronda", color: "var(--bien)", puntos: conTitular.map((r) => ({ x: r.ronda, y: r.titular })) },
+        { nombre: "aspirante de la ronda", color: "var(--dato)", grosor: 1.5, puntos: h.filter((r) => r.medida !== undefined).map((r) => ({ x: r.ronda, y: r.medida })) },
       ],
       min: 0, max: 1, formato: (v) => `${Math.round(v * 100)}%`, etiquetaX: "ronda", alto: 190,
     });
+
+    // La carrera: si las dos curvas suben a la vez, las dos partes están
+    // aprendiendo. Si solo sube la de las formaciones, el otro corredor está
+    // parado y hay que mirar por qué.
+    const conFormaciones = h.filter((r) => r.formaciones);
+    const carrera = conFormaciones.length > 1 ? lineas({
+      series: [
+        { nombre: "la formación más dura", color: "var(--mal)", puntos: conFormaciones.map((r) => ({ x: r.ronda, y: r.formaciones.masDura.aptitud })) },
+        { nombre: "media de la población", color: "var(--laton)", grosor: 1.5, puntos: conFormaciones.map((r) => ({ x: r.ronda, y: r.formaciones.media })) },
+        { nombre: "paridad", color: "var(--tenue)", guion: true, grosor: 1.5, puntos: conFormaciones.map((r) => ({ x: r.ronda, y: 0.5 })) },
+      ],
+      min: 0, max: 1, formato: (v) => `${Math.round(v * 100)}%`, etiquetaX: "ronda", alto: 190,
+    }) : "";
+
     const fichas = [
-      ["mejor contra el panel", pct(Math.max(...h.map((r) => r.panel)))],
+      ["veredicto en semillas frescas", veredicto ? pct(veredicto.veredicto) : "—"],
+      ["titular en la última ronda", ultima && ultima.titular !== undefined ? pct(ultima.titular) : "—"],
       ["rondas", h.length - 1],
       ["adoptadas", `${adoptadas}<small> de ${h.length - 1}</small>`],
-      ["partidas por ronda", coevolucion.opciones ? coevolucion.opciones.partidas : "—"],
-      ["tiempo", ultima.segundos !== undefined ? `${Math.round(ultima.segundos / 60)} min` : "—"],
+      ["formaciones archivadas", ultima && ultima.formaciones ? ultima.formaciones.archivo : "—"],
+      ["tiempo", ultima && ultima.segundos !== undefined ? `${Math.round(ultima.segundos / 60)} min` : "—"],
     ].map(([k, v]) => `<div class="ficha"><dt>${esc(k)}</dt><dd>${v}</dd></div>`).join("");
+
+    const semillas = veredicto && veredicto.semillas
+      ? `<p class="sub">Veredicto medido en ${veredicto.semillas.length} juegos de partidas que ninguna ronda ha usado:
+         ${veredicto.semillas.map((t) => pct(t)).join(" · ")}. El máximo de las medidas por ronda no vale como
+         resumen: elegir el máximo de una tanda de medidas ruidosas sesga al alza.</p>`
+      : "";
 
     bloques.push(`<section>
       <h2>Coevolución</h2>
-      <p class="sub">Las dos redes juegan entre ellas y se reentrenan con esas partidas. Se miden
-      contra el panel de aperturas humanas, que no cambia: las redes pueden derivar hacia
-      adaptarse la una a la otra, y la vara externa es lo que impide confundir eso con mejorar.
-      Una ronda solo se adopta si sube contra el panel.</p>
+      <p class="sub">Las dos redes juegan entre ellas y se reentrenan con esas partidas, contra una
+      población de formaciones que evoluciona a la vez para ganarles. Se miden contra el panel de
+      aperturas humanas, que no cambia: las redes pueden derivar hacia adaptarse a lo que tienen
+      enfrente, y la vara externa es lo que impide confundir eso con mejorar.</p>
+      <p class="sub">Cada ronda el titular vuelve a jugar, en las mismas partidas que el aspirante y
+      con semillas nuevas. Conservar la nota con la que fue elegido lo hacía competir con una nota
+      inflada -fue elegido justamente por tener suerte en esas partidas- y el listón se volvía
+      inalcanzable: doce rondas seguidas descartadas.</p>
       <dl class="fichas">${fichas}</dl>
-      ${curva ? `<figure><figcaption>Verde: la mejor marca conservada. Azul: lo que midió cada ronda, adoptada o no.</figcaption><div class="lienzo">${curva}</div></figure>` : ""}
+      ${semillas}
+      ${curva ? `<figure><figcaption>Verde: el titular, remedido en partidas nuevas cada ronda. Azul: el aspirante de esa ronda.</figcaption><div class="lienzo">${curva}</div></figure>` : ""}
+      ${carrera ? `<figure><figcaption>La carrera vista desde el otro lado: cuánto le sacan las formaciones a las redes. Si sube sola, el otro corredor está parado.</figcaption><div class="lienzo">${carrera}</div></figure>` : ""}
     </section>`);
   }
 
