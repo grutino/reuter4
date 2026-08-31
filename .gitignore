@@ -3,3 +3,6 @@ dist/
 servidor/salas.json
 .DS_Store
 *.log
+
+# El banco de escenarios y sus etiquetas: se regeneran y pesan.
+entrenamiento/escenarios/ejemplos.json

@@ -21,7 +21,9 @@
     "panel": "node entrenamiento/medir-panel.mjs",
     "coevolucion": "node entrenamiento/coevolucion.mjs",
     "publicar-redes": "node herramientas/publicar-redes.mjs",
-    "nocturno": "node entrenamiento/nocturno.mjs"
+    "nocturno": "node entrenamiento/nocturno.mjs",
+    "escenarios": "node entrenamiento/construir-escenarios.mjs",
+    "juzgar": "node herramientas/juzgar-escenarios.mjs"
   },
   "dependencies": {
     "react": "^18.3.1",

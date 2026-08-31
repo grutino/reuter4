@@ -35,6 +35,7 @@ import { NIVELES, nivelValido, ESCALA, configuracionDeNivel } from "./dificultad
 import { BATEN_ANILLO, BATEN_LA_TORRE, PASOS_A_TIRO, ANILLO as ANILLO_T } from "./tablero.js";
 import { salaParaJugador } from "../../servidor/vista.mjs";
 import { centro as centroEnInforme, reconstruirRangos, CELDA, MARGEN, LADO } from "../informe-partida.js";
+import { vistaDelEscenario } from "../escenario-vista.js";
 import { propiedadesDePieza, FIRMA as FIRMA_DESPLIEGUE } from "./rasgos-despliegue.js";
 
 let pasadas = 0;
@@ -1653,6 +1654,35 @@ prueba("los rasgos de cobertura y presencia caen en su casilla", () => {
   // La presencia va entre 0 y 1, y con dos míos contra uno suyo debe pasar de 0,5.
   const presencia = v[indice("presenciaEnElCentro")];
   assert.ok(presencia > 0.5 && presencia <= 1, `presencia fuera de rango o sin ventaja: ${presencia}`);
+});
+
+
+prueba("la sala de juicios enseña solo lo que vería quien mueve", () => {
+  // Juzgar una jugada viendo los rangos escondidos del rival sería juzgar otro
+  // juego, y la red aprendería de un consejo que ella nunca podrá seguir. Se ve
+  // lo propio y, de los demás, solo lo ya revelado en combate — ni siquiera los
+  // rangos del compañero, que es la regla de la partida.
+  const e = estadoVacio();
+  const mia = colocar(e, "rojo", 7, "H4");
+  const socio = colocar(e, "azul", 9, "H13");
+  const tapada = colocar(e, "verde", 8, "E7");
+  const vista = colocar(e, "verde", 6, "K7");
+  e.rangosRevelados = { [vista.id]: 6 };
+
+  const ven = vistaDelEscenario(e, "rojo");
+  const de = (id) => ven.find((p) => p.id === id);
+
+  assert.strictEqual(de(mia.id).rango, 7, "la propia se ve entera");
+  assert.strictEqual(de(socio.id).rango, null, "la del compañero NO");
+  assert.strictEqual(de(tapada.id).rango, null, "una enemiga sin revelar tampoco");
+  assert.strictEqual(de(vista.id).rango, 6, "la enemiga ya vista en combate sí");
+  assert.strictEqual(de(vista.id).revelada, true, "y se marca como revelada");
+  assert.strictEqual(de(mia.id).revelada, false, "la propia no es 'revelada', es mía");
+
+  // Y lo importante: el rango escondido no viaja en ningún campo.
+  const serializada = JSON.stringify(ven);
+  assert.ok(!serializada.includes('"rango":8'), "el 8 escondido no debería aparecer por ningún lado");
+  assert.ok(!serializada.includes('"rango":9'), "ni el 9 del compañero");
 });
 
 console.log(`\n${pasadas} pruebas superadas, ${fallidas} fallidas\n`);

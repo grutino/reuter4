@@ -18,6 +18,7 @@ import { ESTILO, NOMBRE_RANGO } from "./estilo.js";
 import { pintarFicha, LADO_FICHA } from "./ficha.js";
 
 export const LADO = 15;
+export const TABLERO_PX = 15 * 26 + 14 * 2;
 export const CELDA = 26;
 export const MARGEN = 14;
 const TABLERO = LADO * CELDA + MARGEN * 2;
@@ -142,9 +143,9 @@ export function generarFichas(lado = 44) {
   return salida;
 }
 
-const idFicha = (color, rango) => `f-${color}-${rango}`;
+export const idFicha = (color, rango) => `f-${color}-${rango}`;
 
-function simbolosDeFichas(fichas) {
+export function simbolosDeFichas(fichas) {
   if (!fichas) return "";
   const simbolos = Object.entries(fichas).map(([clave, url]) => {
     const [color, rango] = clave.split("-");
@@ -159,7 +160,7 @@ function simbolosDeFichas(fichas) {
 // Dibujarlo entero en cada uno son 225 rectángulos por ocho: el documento pasaba
 // de 258 KB, casi todo fondo repetido.
 
-function fondoDelTablero() {
+export function fondoDelTablero() {
   const partes = [];
   const jugables = new Set(CASILLAS);
   for (let f = 1; f <= LADO; f++) {
@@ -189,13 +190,13 @@ function fondoDelTablero() {
 }
 
 // El símbolo va una sola vez en el documento, en un svg de tamaño cero.
-function definicionDelTablero() {
+export function definicionDelTablero() {
   return `<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
     <symbol id="tablero" viewBox="0 0 ${TABLERO} ${TABLERO}">${fondoDelTablero()}</symbol>
   </defs></svg>`;
 }
 
-const FONDO = `<use href="#tablero" x="0" y="0" width="${TABLERO}" height="${TABLERO}"/>`;
+export const FONDO = `<use href="#tablero" x="0" y="0" width="${TABLERO}" height="${TABLERO}"/>`;
 
 // --- Despliegue inicial de un ejército ---------------------------------------
 

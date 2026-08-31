@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><title>Reuter4 · sala de juicios</title>
+<style>
+  :root { --tinta:#2b2620; --tenue:#7a7060; --linea:#ded5c4; --papel:#fffdf8; }
+  * { box-sizing:border-box; }
+  body { margin:0; padding:20px 24px; background:var(--papel); color:var(--tinta);
+         font:15px/1.5 "Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif; }
+  header { display:flex; align-items:baseline; gap:14px; flex-wrap:wrap; margin-bottom:4px; }
+  h1 { font-size:22px; margin:0; }
+  .sub { color:var(--tenue); font-size:13px; }
+  .marco { display:grid; grid-template-columns:minmax(320px, 470px) 1fr; gap:24px; margin-top:14px; align-items:start; }
+  .lienzo { border:1px solid var(--linea); border-radius:6px; padding:6px; background:#fff; }
+  .jugada { border:1px solid var(--linea); border-radius:6px; padding:9px 12px; margin-bottom:9px; cursor:pointer; }
+  .jugada:hover { border-color:var(--tinta); }
+  .jugada.activa { border-color:var(--tinta); box-shadow:inset 3px 0 0 var(--tinta); }
+  .jugada .que { font-size:14px; }
+  .botones { display:flex; gap:7px; margin-top:7px; }
+  button { font:inherit; font-size:13px; padding:5px 11px; border:1px solid var(--linea);
+           background:#fff; color:var(--tinta); border-radius:5px; cursor:pointer; }
+  button:hover { border-color:var(--tinta); }
+  button.puesto { background:var(--tinta); color:var(--papel); border-color:var(--tinta); }
+  .barra { display:flex; gap:10px; align-items:center; margin-top:16px; }
+  .leyenda { font-size:12px; color:var(--tenue); margin-top:12px; line-height:1.7; }
+  .pastilla { display:inline-block; padding:1px 7px; border:1px solid var(--linea); border-radius:20px; font-size:12px; }
+  kbd { font:12px ui-monospace,monospace; border:1px solid var(--linea); border-bottom-width:2px;
+        border-radius:4px; padding:1px 5px; background:#fff; }
+</style></head><body>
+<header>
+  <h1>Sala de juicios</h1>
+  <span class="sub" id="donde"></span>
+  <span class="pastilla" id="motivo"></span>
+</header>
+<div class="sub" id="cuenta"></div>
+
+<div class="marco">
+  <div>
+    <div class="lienzo" id="tablero"></div>
+    <div class="leyenda">
+      Ves lo que vería quien mueve: <b>tus rangos</b> y, de los rivales, solo los que ya se han
+      visto en combate —marcados con borde punteado—. Los discos lisos son piezas tapadas, y el
+      aro dorado es quien lleva bandera.<br>
+      <kbd>1</kbd>…<kbd>9</kbd> elegir jugada · <kbd>B</kbd> buena · <kbd>M</kbd> mala ·
+      <kbd>I</kbd> indefinida · <kbd>←</kbd> <kbd>→</kbd> cambiar de escenario
+    </div>
+  </div>
+  <div>
+    <div id="jugadas"></div>
+    <div class="barra">
+      <button id="antes">← anterior</button>
+      <button id="despues">siguiente →</button>
+      <button id="saltar">saltar a uno sin juzgar</button>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import { tableroDelEscenario, textoDeAccion } from "/src/escenario-vista.js";
+import { generarFichas } from "/src/informe-partida.js";
+
+const datos = await (await fetch("/casos")).json();
+const fichas = generarFichas();
+
+let n = 0;
+let elegida = 0;
+const juicios = datos.juicios;
+const clave = (caso, k) => `${caso.i}:${k}`;
+
+function pinta() {
+  const caso = datos.casos[n];
+  document.getElementById("donde").textContent = `escenario ${n + 1} de ${datos.casos.length} · mueve ${caso.color}`;
+  document.getElementById("motivo").textContent = caso.motivo;
+  const puestos = Object.keys(juicios).length;
+  document.getElementById("cuenta").textContent = `${puestos} juicios guardados`;
+  document.getElementById("tablero").innerHTML =
+    tableroDelEscenario(caso.estado, caso.color, caso.acciones[elegida], fichas);
+
+  document.getElementById("jugadas").innerHTML = caso.acciones.map((a, k) => {
+    const v = juicios[clave(caso, k)];
+    return `<div class="jugada ${k === elegida ? "activa" : ""}" data-k="${k}">
+      <div class="que"><b>${k + 1}.</b> ${textoDeAccion(a, caso.estado, caso.color)}</div>
+      <div class="botones">
+        <button data-v="buena"      class="${v === "buena" ? "puesto" : ""}">buena</button>
+        <button data-v="mala"       class="${v === "mala" ? "puesto" : ""}">mala</button>
+        <button data-v="indefinida" class="${v === "indefinida" ? "puesto" : ""}">indefinida</button>
+      </div></div>`;
+  }).join("");
+
+  for (const div of document.querySelectorAll(".jugada")) {
+    div.onclick = (ev) => {
+      elegida = Number(div.dataset.k);
+      const b = ev.target.closest("button");
+      if (b) juzgar(elegida, b.dataset.v); else pinta();
+    };
+  }
+}
+
+async function juzgar(k, veredicto) {
+  const caso = datos.casos[n];
+  juicios[clave(caso, k)] = veredicto;
+  pinta();
+  await fetch("/juicio", { method: "POST", headers: { "content-type": "application/json" },
+    body: JSON.stringify({ clave: clave(caso, k), veredicto }) });
+}
+
+const ir = (d) => { n = (n + d + datos.casos.length) % datos.casos.length; elegida = 0; pinta(); };
+document.getElementById("antes").onclick = () => ir(-1);
+document.getElementById("despues").onclick = () => ir(1);
+document.getElementById("saltar").onclick = () => {
+  for (let p = 1; p <= datos.casos.length; p++) {
+    const m = (n + p) % datos.casos.length;
+    const caso = datos.casos[m];
+    if (caso.acciones.some((_, k) => !juicios[clave(caso, k)])) { n = m; elegida = 0; pinta(); return; }
+  }
+};
+addEventListener("keydown", (e) => {
+  const caso = datos.casos[n];
+  if (e.key >= "1" && e.key <= "9") { const k = Number(e.key) - 1; if (k < caso.acciones.length) { elegida = k; pinta(); } }
+  else if (e.key === "b" || e.key === "B") juzgar(elegida, "buena");
+  else if (e.key === "m" || e.key === "M") juzgar(elegida, "mala");
+  else if (e.key === "i" || e.key === "I") juzgar(elegida, "indefinida");
+  else if (e.key === "ArrowRight") ir(1);
+  else if (e.key === "ArrowLeft") ir(-1);
+});
+pinta();
+</script></body></html>
