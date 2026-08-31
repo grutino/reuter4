@@ -27,7 +27,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { accionDeBot, accionDeBotClasico, decisionDeRecogida, despliegueAleatorio, DISTANCIA } from "./bot.js";
-import { peligroEn } from "./analisis.js";
+import { peligroEn, lineasAbiertasSi } from "./analisis.js";
 import { analizarTurno } from "./analisis.js";
 import { rasgosDeJugada, contextoDeTurno, NOMBRES as NOMBRES_RASGOS, TAMANO as TAMANO_JUGADA } from "./rasgos-jugada.js";
 import { cargarModelos, jugadaDeBot } from "./bot-red.js";
@@ -1584,6 +1584,75 @@ prueba("las caídas públicas no delatan qué recupera un reclutamiento", () => 
   const tras = aplicar(e, accion(movimientosLegales(e), (a) => a.tipo === "atacar" && a.hasta === "H3"));
   assert.deepStrictEqual(tras.caidosPublicos.verde, [3], "la caída se apunta con su rango");
   assert.deepStrictEqual(tras.bajas.verde, [3], "y también entra en la bolsa de reclutamiento");
+});
+
+
+prueba("con varias líneas batiendo el anillo, tapar una no cuenta como cubrirlo", () => {
+  // Es la corrección de fondo: tapar UNA línea de tres no permite coronar,
+  // porque el rival dispara por cualquiera de las otras dos. Lo que abre la
+  // subida es dejarlas todas tapadas.
+  const e = estadoVacio();
+  const portador = colocar(e, "rojo", 5, "H6");
+  portador.bandera = "rojo";
+  e.banderas.rojo = { portador: portador.id, casilla: null, ultimoDueño: "rojo" };
+  // Tres cañones enemigos identificables por la bolsa: apuntan desde tres lados.
+  const a = colocar(e, "verde", 1, "H12");   // bate pasando por H10
+  const b = colocar(e, "verde", 1, "D8");    // por el oeste
+  const c = colocar(e, "verde", 1, "L8");    // por el este
+  e.rangosRevelados = { [a.id]: 1, [b.id]: 1, [c.id]: 1 };
+
+  const analisis = analizarTurno(e, "rojo", DISTANCIA);
+  assert.ok(analisis.lineasAlAnillo.length >= 3, `deberían verse al menos tres líneas; hay ${analisis.lineasAlAnillo.length}`);
+
+  // Tapar la del norte deja las otras abiertas.
+  const tapandoUna = lineasAbiertasSi(analisis, "H10");
+  assert.ok(tapandoUna > 0, "tapando una sola no debería quedar el anillo cubierto");
+  assert.ok(
+    tapandoUna < analisis.lineasAlAnillo.length,
+    "pero sí debería contarse como una menos"
+  );
+
+  // Y una casilla que no tapa nada las deja todas.
+  assert.strictEqual(lineasAbiertasSi(analisis, "A1"), analisis.lineasAlAnillo.length);
+});
+
+prueba("los rasgos de cobertura y presencia caen en su casilla", () => {
+  // Mismo cuidado que con los rasgos del castillo: insertar en mitad de la lista
+  // desincroniza los nombres de las llamadas a `pon` sin dar ningún error.
+  const indice = (nombre) => {
+    const i = NOMBRES_RASGOS.indexOf(`jugada · ${nombre}`);
+    assert.ok(i >= 0, `no existe el rasgo ${nombre}`);
+    return i;
+  };
+  assert.strictEqual(NOMBRES_RASGOS.length, TAMANO_JUGADA, "hay más nombres que entradas o al revés");
+
+  // Una sola línea, y una pieza que puede taparla del todo.
+  const e = estadoVacio();
+  const portador = colocar(e, "rojo", 5, "H6");
+  portador.bandera = "rojo";
+  e.banderas.rojo = { portador: portador.id, casilla: null, ultimoDueño: "rojo" };
+  const canon = colocar(e, "verde", 1, "H12");
+  const tapador = colocar(e, "rojo", 4, "G10");
+  e.rangosRevelados = { [canon.id]: 1 };
+
+  const ctx = contextoDeTurno(e, "rojo", analizarTurno(e, "rojo", DISTANCIA));
+  const tapa = movimientosLegales(e, "rojo").find((a) => a.pieza === tapador.id && a.hasta === "H10");
+  assert.ok(tapa, "G10 debería poder ir a H10");
+  const v = rasgosDeJugada(e, "rojo", tapa, ctx);
+
+  assert.strictEqual(v[indice("tapaLineaAlAnillo")], 1, "esa jugada tapa una línea");
+  assert.strictEqual(v[indice("cubroLaUltimaLinea")], 1, "y era la única, así que la remata");
+  assert.strictEqual(v[indice("anilloCubiertoTrasJugar")], 1, "el anillo queda cubierto del todo");
+
+  // Una jugada que no tapa deja el anillo descubierto.
+  const otra = movimientosLegales(e, "rojo").find((a) => a.pieza === tapador.id && a.hasta !== "H10");
+  const w = rasgosDeJugada(e, "rojo", otra, ctx);
+  assert.strictEqual(w[indice("cubroLaUltimaLinea")], 0, "esa no remata nada");
+  assert.ok(w[indice("anilloCubiertoTrasJugar")] < 1, "y el anillo sigue batido");
+
+  // La presencia va entre 0 y 1, y con dos míos contra uno suyo debe pasar de 0,5.
+  const presencia = v[indice("presenciaEnElCentro")];
+  assert.ok(presencia > 0.5 && presencia <= 1, `presencia fuera de rango o sin ventaja: ${presencia}`);
 });
 
 console.log(`\n${pasadas} pruebas superadas, ${fallidas} fallidas\n`);

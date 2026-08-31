@@ -19,7 +19,7 @@
 import { ANILLO, TORRE, ADYACENTES, BATEN_ANILLO, PASOS_A_TIRO } from "./tablero.js";
 import { resolverDuelo, MARISCAL, ESPIA, CANON, EXPLORADOR, CAPITAN } from "./motor.js";
 import { DISTANCIA, bolsaOculta, valorEsperado, amenazasDesde } from "./bot.js";
-import { peligroEn } from "./analisis.js";
+import { peligroEn, lineasAbiertasSi } from "./analisis.js";
 import { rasgosDePosicion, TAMANO as TAMANO_POSICION, NOMBRES as NOMBRES_POSICION } from "./rasgos-posicion.js";
 import { firmaDeRasgos } from "./firma.js";
 
@@ -73,6 +73,13 @@ export const NOMBRES_JUGADA = [
   "disparoAlCoronador",
   "canonHaciaElTiro",
   "tapaLineaAlAnillo",
+  // Tapar una línea de tres no permite coronar: el rival dispara por otra. Lo
+  // que importa es cuántas quedan abiertas después de mi jugada, y si esta es la
+  // que remata la cobertura. Y detrás de todo, la presencia: una pieza sola tapa
+  // y el enemigo mueve el cañón de lado; con varias se puede tapar lo que abran.
+  "anilloCubiertoTrasJugar",
+  "cubroLaUltimaLinea",
+  "presenciaEnElCentro",
 ];
 
 export const TAMANO = TAMANO_POSICION + NOMBRES_JUGADA.length;
@@ -214,6 +221,19 @@ export function rasgosDeJugada(estado, color, accion, { analisis, bolsas, resume
     accion.tipo === "mover" && analisis.equipoAPuntoDeCoronar &&
     analisis.tapanElAnillo.has(accion.hasta) ? 1 : 0
   );
+
+  // Cuán cubierto queda el anillo después de esta jugada. 1 = ninguna línea
+  // batiéndolo; 0 = tres o más abiertas. Graduado y no binario: la diferencia
+  // entre dejar dos abiertas y dejar una es real, aunque ninguna de las dos
+  // permita coronar todavía.
+  const abiertas = accion.tipo === "mover" ? lineasAbiertasSi(analisis, accion.hasta) : analisis.lineasAlAnillo.length;
+  pon(1 - Math.min(1, abiertas / 3));
+  // Y el remate: esta jugada es la que cierra la última.
+  pon(accion.tipo === "mover" && analisis.lineasAlAnillo.length > 0 && abiertas === 0 ? 1 : 0);
+
+  // Presencia en el centro, 0,5 = igualdad. Es lo que separa "puedo tapar lo que
+  // abran" de "tapo una y me quedo sin piezas".
+  pon(analisis.presencia.ventaja);
 
   return v;
 }

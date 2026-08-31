@@ -166,6 +166,30 @@ Tres cosas que conviene tener claras antes de tocar nada de esto:
   sería saber *qué* pieza ha vuelto — y eso no es público: el evento de reclutamiento publica el
   color y nada más. `caidosPublicos` solo apunta y nunca quita, y por eso un recluta devuelve
   solo la *posibilidad* de cañón, como mucho tantas veces como cañones hayan caído.
+- **Tapar una línea no es cubrir el anillo.** El rival mueve el cañón de lado y vuelve a
+  apuntar, así que lo que decide es cuántas líneas quedan abiertas después de la jugada
+  (`lineasAbiertasSi`) y si hay presencia suficiente para tapar las que abran
+  (`analisis.presencia`). Por eso `coberturaCompleta` premia rematar la cobertura y no
+  empezarla. Medido, hoy ese peso es casi inerte: con la sospecha bien contada suele haber
+  varias líneas abiertas y llegar a cero es raro.
+- **Y hay que saber cuáles de estos rasgos son demasiado raros para aprenderse.** Medido sobre
+  3.420 vectores de jugada de 25 partidas:
+
+  ```
+  presenciaEnElCentro       31 valores distintos   media 0,478
+  anilloCubiertoTrasJugar    4 valores             media 0,744
+  canonHaciaElTiro           3 valores             media 0,019
+  cubroLaUltimaLinea         2 valores             media 0,002
+  tapaLineaAlAnillo          2 valores             media 0,001
+  disparoAlCoronador         1 valor               media 0,000
+  ```
+
+  Los tres últimos casi no ocurren, y un rasgo que se activa en el 0,2% de los ejemplos no
+  aporta gradiente: la red lo ignorará. No es el caso de `juntoALago` —aquellos eran
+  imposibles por geometría, estos son posibles y decisivos cuando pasan— pero sí quiere decir
+  que **la heurística es quien los cubre de verdad**, con pesos deterministas como
+  `disparoAlCoronador: 400`, y que para que la red los aprenda haría falta sobremuestrear
+  posiciones cerca del castillo.
 - **El tiro a la torre es legal pero los bots no lo ejecutan nunca.** Medido: en 17.213 turnos,
   un jugador tuvo un cañón en una de las doce casillas solo 2 veces, y ninguna con la torre
   ocupada, aunque la torre lo está el 12,8% de los turnos. Es geometría: ninguna casilla de

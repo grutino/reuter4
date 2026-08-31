@@ -8,7 +8,7 @@
 // que el motor alimenta con lo que ha quedado a la vista de toda la mesa.
 
 import { ANILLO, TORRE, ADYACENTES, ZONAS, casillasDeZona, BATEN_ANILLO, PASOS_A_TIRO, DIRECCIONES, rayo, ALCANCE_CANON } from "./tablero.js";
-import { analizarTurno, peligroEn } from "./analisis.js";
+import { analizarTurno, peligroEn, lineasAbiertasSi } from "./analisis.js";
 import {
   RANGOS,
   MARISCAL,
@@ -222,6 +222,10 @@ export const PESOS_BASE = {
   // compañero o uno mismo. Es la tarea defensiva que faltaba entera: solo
   // existía "no me metas TÚ en una línea de tiro".
   taparCanonAlAnillo: 40,
+  // Tapar UNA línea de tres no sirve de nada: el rival dispara por cualquiera de
+  // las otras dos. Lo que abre la subida es dejarlas todas tapadas, y por eso
+  // rematar la cobertura vale mucho más que empezarla.
+  coberturaCompleta: 90,
 
   // Ataque cuerpo a cuerpo
   ataqueGanaBase: 30,          // captura segura contra un rango ya visto
@@ -366,6 +370,10 @@ export function accionDeBot(estado, color, { pesos = PESOS_BASE, azar = Math.ran
       if (analisis.equipoAPuntoDeCoronar && analisis.tapanElAnillo.has(a.hasta) && pieza.rango !== CANON) {
         nota += pesos.taparCanonAlAnillo;
         apuntar("taparCanonAlAnillo");
+        if (lineasAbiertasSi(analisis, a.hasta) === 0) {
+          nota += pesos.coberturaCompleta;
+          apuntar("coberturaCompleta");
+        }
       }
 
       // Amenazas que dejo planteadas al terminar la jugada.

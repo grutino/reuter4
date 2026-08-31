@@ -12,6 +12,12 @@
 import { ADYACENTES, ANILLO, TORRE, DIRECCIONES, rayo, ALCANCE_CANON } from "./tablero.js";
 import { movimientosLegales, resolverDuelo, banderaQueCorona, SOCIO, RANGOS, CANON, EXPLORADOR, CAPITAN } from "./motor.js";
 
+// Hasta dónde llega "el centro" al contar presencia. Cuatro saltos del castillo
+// es el anillo de casillas desde las que se puede intervenir en la coronación
+// en un par de turnos.
+const CERCA_DEL_CENTRO = 4;
+
+
 const esEnemigo = (color, otro) => otro !== color && SOCIO[color] !== otro;
 
 // Casillas que una pieza podría batir en su próximo turno. Con el rango a la
@@ -303,6 +309,19 @@ export function analizarTurno(estado, color, distancias, misAcciones = null) {
   const tapanElAnillo = new Set();
   for (const linea of lineasAlAnillo) for (const c of linea.intermedias) tapanElAnillo.add(c);
 
+  // Presencia en el centro. Coronar no se consigue tapando una línea: se
+  // consigue teniendo bastantes piezas cerca como para tapar las que el rival
+  // vaya abriendo, o con superioridad clara. Una pieza sola tapa, el enemigo
+  // mueve el cañón de lado y vuelve a apuntar.
+  let miosCerca = 0;
+  let suyosCerca = 0;
+  for (const pieza of Object.values(estado.piezas)) {
+    const d = distancias[pieza.casilla];
+    if (d === undefined || d > CERCA_DEL_CENTRO) continue;
+    if (esEnemigo(color, pieza.color)) suyosCerca++;
+    else miosCerca++;
+  }
+
   // ¿Hay un enemigo instalado en la torre? Mientras esté, nadie del equipo puede
   // coronar, y solo se le saca de ahí atacándole desde el anillo o con un cañón
   // desde las doce casillas del castillo.
@@ -320,6 +339,13 @@ export function analizarTurno(estado, color, distancias, misAcciones = null) {
     lineasAlAnillo,
     // Casillas donde plantarse corta al menos una línea de tiro al anillo.
     tapanElAnillo,
+    presencia: {
+      mios: miosCerca,
+      suyos: suyosCerca,
+      // 0,5 es igualdad. Es lo que separa "puedo tapar lo que abran" de "tapo
+      // una y me quedo sin piezas".
+      ventaja: miosCerca + suyosCerca ? miosCerca / (miosCerca + suyosCerca) : 0.5,
+    },
     peligro,
     amenazadasPorMi,
     presionadasPorSocio,
@@ -337,6 +363,19 @@ export function analizarTurno(estado, color, distancias, misAcciones = null) {
 }
 
 // Lo que el enemigo podría batir si me planto en `casilla` llevando `rango`.
+// Cuántas líneas seguirían batiendo el anillo si me planto en `casilla`.
+//
+// Es la pregunta que importa y no "¿tapo alguna?": tapar una de tres no permite
+// coronar, porque el rival dispara por cualquiera de las otras dos. Y llegar a
+// CERO es lo que de verdad abre la subida.
+export function lineasAbiertasSi(analisis, casilla) {
+  let abiertas = 0;
+  for (const linea of analisis.lineasAlAnillo) {
+    if (!linea.intermedias.includes(casilla)) abiertas++;
+  }
+  return abiertas;
+}
+
 export function peligroEn(analisis, casilla, rango) {
   const p = analisis.peligro[casilla];
   if (!p) return { pierde: false, peor: 0, riesgoCanon: 0, hayDesconocido: false };
