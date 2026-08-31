@@ -159,7 +159,7 @@ function leer(nombre) {
   return fs.existsSync(f) ? JSON.parse(fs.readFileSync(f, "utf8")) : null;
 }
 
-function bloqueRed({ titulo, resumen, curva, calib, capas, victorias, error, perdida, acierto, rasgos, nota }) {
+function bloqueRed({ titulo, resumen, curva, calib, capas, victorias, error, perdida, acierto, rasgos, rasgos2, titulo2, nota }) {
   const fichas = [
     ["victorias en juego", victorias === undefined ? "—" : `${pct(victorias)}${error ? ` <small>±${Math.round(error * 100)}</small>` : ""}`],
     ["pérdida validación", perdida === undefined ? "—" : perdida.toFixed(4)],
@@ -180,11 +180,12 @@ function bloqueRed({ titulo, resumen, curva, calib, capas, victorias, error, per
     </div>
     ${capas ? `<figure><figcaption>Arquitectura.</figcaption><div class="lienzo">${arquitectura(capas)}</div></figure>` : ""}
     ${rasgos ? `<figure><figcaption>Qué mira: efecto de cada rasgo sobre la predicción.</figcaption><div class="lienzo">${rasgos}</div></figure>` : ""}
+    ${rasgos2 ? `<figure><figcaption>${esc(titulo2 || "")}</figcaption><div class="lienzo">${rasgos2}</div></figure>` : ""}
     ${nota ? `<div class="nota">${nota}</div>` : ""}
   </section>`;
 }
 
-export function construir({ despliegue, jugada, coevolucion, sensibilidadDespliegue }) {
+export function construir({ despliegue, jugada, coevolucion, panel, sensibilidadDespliegue, sensibilidadJugada }) {
   const bloques = [];
 
   if (coevolucion && coevolucion.historia && coevolucion.historia.length > 1) {
@@ -281,6 +282,18 @@ export function construir({ despliegue, jugada, coevolucion, sensibilidadDesplie
         error: ultima.errorEnJuego,
         perdida: ultima.perdidaValidacion,
         acierto: ultima.acierto,
+        // La sensibilidad de esta red va PARTIDA en dos, y la separación dice
+        // algo: los rasgos de posición pesan un orden de magnitud más que los de
+        // jugada, o sea que la red valora sobre todo DÓNDE se está y no tanto
+        // QUÉ se hace. Eso explica por qué le cuesta distinguir entre jugadas de
+        // una misma posición, que es justo lo que se le pide.
+        rasgos: sensibilidadJugada
+          ? barrasDeRasgos(sensibilidadJugada.filter((r) => r.nombre.startsWith("jugada")).map((r) => ({ ...r, nombre: r.nombre.replace("jugada · ", "") })))
+          : null,
+        rasgos2: sensibilidadJugada
+          ? barrasDeRasgos(sensibilidadJugada.filter((r) => r.nombre.startsWith("posición")).map((r) => ({ ...r, nombre: r.nombre.replace("posición · ", "") })))
+          : null,
+        titulo2: "Y qué mira de la POSICIÓN. Si estas barras son mucho más largas que las de arriba, la red está juzgando dónde se está más que qué se hace.",
         nota: porRonda
           ? `<h3>Progreso por ronda</h3><p>Si la iteración funciona, esta línea sube. Si se queda plana, la red imita a su maestro y no lo supera.</p><div class="lienzo">${porRonda}</div>`
           : "",
@@ -320,6 +333,30 @@ export function construir({ despliegue, jugada, coevolucion, sensibilidadDesplie
 
   // El charset es obligatorio: servido como fichero suelto en GitHub Pages, sin
   // esta línea el navegador asume Latin-1 y todos los acentos salen rotos.
+  if (panel && panel.resultados && panel.resultados.length) {
+    // El desglose importa tanto como la media: una red puede ir muy bien de
+    // promedio y perder siempre contra una apertura concreta, y eso es un
+    // agujero, no una estadística.
+    const mejor = panel.resultados.reduce((m, r) => (r.tasa > m.tasa ? r : m), panel.resultados[0]);
+    const orden = mejor.porRival.slice().sort((a, b) => a.tasa - b.tasa);
+    const filas = orden.map((r) => {
+      const ancho = Math.max(1, Math.round(r.tasa * 100));
+      return `<div class="rival">
+        <span class="nombre">${esc(r.rival)}</span>
+        <span class="clase">${esc(r.clase)}</span>
+        <span class="barra"><i style="width:${ancho}%"></i></span>
+        <span class="cifra">${Math.round(r.tasa * 100)}%</span>
+      </div>`;
+    }).join("");
+    bloques.push(`<section>
+      <h2>Rival a rival</h2>
+      <p class="sub">Contra el panel de aperturas, que no cambia nunca. La media esconde lo que
+        importa: una red puede ir bien de promedio y perder siempre contra una apertura concreta,
+        y eso es un agujero. Ordenado de peor a mejor.</p>
+      <div class="rivales">${filas}</div>
+    </section>`);
+  }
+
   return `<!doctype html>
 <html lang="es"><head>
 <meta charset="utf-8">
@@ -359,6 +396,13 @@ export function construir({ despliegue, jugada, coevolucion, sensibilidadDesplie
  .nota p{margin:0 0 8px} .nota b{color:var(--tinta)}
  footer{margin-top:44px;padding-top:18px;border-top:1px solid var(--filo);font:400 13px/1.7 "IBM Plex Mono",monospace;color:var(--tenue)}
  a{color:var(--laton)}
+  .rivales { display:flex; flex-direction:column; gap:4px; }
+  .rival { display:grid; grid-template-columns:140px 74px 1fr 44px; gap:10px; align-items:center; font-size:13px; }
+  .rival .nombre { font-weight:600; }
+  .rival .clase { color:var(--tenue); font-size:11px; text-transform:uppercase; letter-spacing:.06em; }
+  .rival .barra { background:var(--linea); border-radius:5px; height:9px; overflow:hidden; }
+  .rival .barra i { display:block; height:100%; background:var(--bien); }
+  .rival .cifra { text-align:right; font-variant-numeric:tabular-nums; color:var(--tenue); }
 </style>
 </head><body>
 <div class="hoja">
@@ -376,43 +420,39 @@ Motor propio sin dependencias. La red se entrena y se ejecuta en JavaScript.</fo
 
 // Rehace el informe leyendo lo que haya en modelos/. La llama tanto el guion
 // suelto como el bucle de coevolución después de cada ronda.
+// Las dos sensibilidades, con el mismo módulo y cada una sobre SUS vectores: los
+// de despliegue salen de posiciones iniciales y los de jugada de jugadas
+// concretas en partidas en curso. Es accesoria: si falla, el informe sigue.
+async function calcularSensibilidades(despliegue, jugada) {
+  const salida = { sensibilidadDespliegue: null, sensibilidadJugada: null };
+  try {
+    const { sensibilidadDeDespliegue, sensibilidadDeJugada } = await import("./sensibilidad.mjs");
+    const { desdeObjeto } = await import("../src/motor/red.js");
+    if (despliegue && despliegue.red) {
+      salida.sensibilidadDespliegue = sensibilidadDeDespliegue(desdeObjeto(despliegue.red), { muestras: 200 })
+        .map((r) => ({ nombre: r.nombre.replace(" · ", " "), efecto: r.efecto }));
+    }
+    if (jugada && jugada.red) {
+      salida.sensibilidadJugada = sensibilidadDeJugada(desdeObjeto(jugada.red), { partidas: 14 })
+        .map((r) => ({ nombre: r.nombre, efecto: r.efecto }));
+    }
+  } catch {
+    // accesoria
+  }
+  return salida;
+}
+
 export async function generarInforme() {
   const despliegue = leer("red-despliegue.json");
   const jugada = leer("red-jugada.json");
   const coevolucion = leer("coevolucion.json");
-  let sensibilidad = null;
-  if (despliegue && despliegue.red) {
-    try {
-      const { sensibilidadDeLaRed } = await import("./interpretar.mjs");
-      const { desdeObjeto } = await import("./red.mjs");
-      const { nombreDeRasgo } = await import("../src/motor/rasgos-despliegue.js");
-      sensibilidad = sensibilidadDeLaRed(desdeObjeto(despliegue.red), 200).map((s) => ({
-        nombre: nombreDeRasgo(s.indice).replace(" · ", " "),
-        efecto: s.efecto,
-      }));
-    } catch (e) {
-      sensibilidad = null; // la sensibilidad es accesoria; el informe sigue
-    }
-  }
+  const panel = leer("panel.json");
+  const { sensibilidadDespliegue, sensibilidadJugada } = await calcularSensibilidades(despliegue, jugada);
   fs.mkdirSync(path.dirname(DESTINO), { recursive: true });
-  fs.writeFileSync(DESTINO, construir({ despliegue, jugada, coevolucion, sensibilidadDespliegue: sensibilidad }));
+  fs.writeFileSync(DESTINO, construir({ despliegue, jugada, coevolucion, panel, sensibilidadDespliegue, sensibilidadJugada }));
   return DESTINO;
 }
 
 if (process.argv[1] && process.argv[1].endsWith("informe-redes.mjs")) {
-  const despliegue = leer("red-despliegue.json");
-  const jugada = leer("red-jugada.json");
-  let sensibilidad = null;
-  if (despliegue) {
-    const { sensibilidadDeLaRed } = await import("./interpretar.mjs");
-    const { desdeObjeto } = await import("./red.mjs");
-    const { nombreDeRasgo } = await import("../src/motor/rasgos-despliegue.js");
-    sensibilidad = sensibilidadDeLaRed(desdeObjeto(despliegue.red)).map((s) => ({
-      nombre: nombreDeRasgo(s.indice).replace(" · ", " "),
-      efecto: s.efecto,
-    }));
-  }
-  fs.mkdirSync(path.dirname(DESTINO), { recursive: true });
-  fs.writeFileSync(DESTINO, construir({ despliegue, jugada, sensibilidadDespliegue: sensibilidad }));
-  console.log("Informe escrito en", path.relative(process.cwd(), DESTINO));
+  console.log("Informe escrito en", path.relative(process.cwd(), await generarInforme()));
 }

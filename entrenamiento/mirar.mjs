@@ -9,14 +9,16 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const AQUI = path.dirname(fileURLToPath(import.meta.url));
-const FICHERO = path.join(AQUI, "informe", "index.html");
+// El informe de las redes, que es el único que queda: el del evolutivo se
+// retiró con él.
+const FICHERO = path.join(AQUI, "..", "docs", "index.html");
 const PUERTO = Number(process.env.PUERTO) || 8099;
 
 http
   .createServer((peticion, respuesta) => {
     if (!fs.existsSync(FICHERO)) {
       respuesta.writeHead(404, { "Content-Type": "text/plain; charset=utf-8" });
-      respuesta.end("Aún no hay informe. Lanza: npm run entrenar");
+      respuesta.end("Aún no hay informe. Lanza: npm run informe-redes");
       return;
     }
     respuesta.writeHead(200, { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store" });

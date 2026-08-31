@@ -234,29 +234,27 @@ async function construirDiagnostico(bitacora, mejor, motivo, o, confirmado) {
   // vectores de rasgosDeDespliegue, y para la de jugada haría falta el
   // equivalente sobre jugadas concretas, que no está escrito.
   try {
-    const { sensibilidadDeLaRed } = await import("./interpretar.mjs");
+    const { sensibilidadDeDespliegue, sensibilidadDeJugada, planos } = await import("./sensibilidad.mjs");
     const { desdeObjeto } = await import("../src/motor/red.js");
-    const guardado = leer(path.join(MODELOS, "red-despliegue.json"));
-    if (guardado && guardado.red) {
-      const s = sensibilidadDeLaRed(desdeObjeto(guardado.red), 300)
-        .map((r) => ({ ...r, nombre: r.esGlobal ? r.propiedad : `${r.rango}·${r.propiedad}` }))
-        .sort((a, b) => Math.abs(b.efecto) - Math.abs(a.efecto));
 
-      l.push(`## Rasgos que más mueven la red de despliegue`, ``);
+    // Las dos redes, no solo una. La de jugada es la que decide cada turno, así
+    // que diagnosticar solo la de despliegue dejaba fuera la mitad que juega.
+    const cuales = [
+      ["despliegue", leer(path.join(MODELOS, "red-despliegue.json")), (red) => sensibilidadDeDespliegue(red, { muestras: 300 })],
+      ["jugada", leer(path.join(MODELOS, "red-jugada.json")), (red) => sensibilidadDeJugada(red, { partidas: 16 })],
+    ];
+    for (const [nombre, guardado, calcular] of cuales) {
+      if (!guardado || !guardado.red) continue;
+      const s = calcular(desdeObjeto(guardado.red)).sort((a, b) => Math.abs(b.efecto) - Math.abs(a.efecto));
+      l.push(`## Rasgos que más mueven la red de ${nombre}`, ``);
       l.push(`| rasgo | efecto | sentido |`, `|---|---|---|`);
       for (const r of s.slice(0, 14)) {
         l.push(`| ${r.nombre} | ${r.efecto.toFixed(4)} | ${r.efecto > 0 ? "más es mejor" : "menos es mejor"} |`);
       }
       l.push(``);
-
-      const planos = s.filter((r) => Math.abs(r.efecto) < 5e-4);
-      l.push(`### Rasgos planos: ${planos.length} de ${s.length}`, ``);
-      l.push(
-        planos.length
-          ? planos.map((r) => `\`${r.nombre}\``).join(", ")
-          : "_ninguno: la red usa todos los rasgos_",
-        ``
-      );
+      const muertos = planos(s);
+      l.push(`### Rasgos planos: ${muertos.length} de ${s.length}`, ``);
+      l.push(muertos.length ? muertos.map((r) => `\`${r.nombre}\``).join(", ") : "_ninguno: la red usa todos los rasgos_", ``);
     }
   } catch (e) {
     l.push(`_(no se pudo calcular la sensibilidad: ${e.message})_`, ``);

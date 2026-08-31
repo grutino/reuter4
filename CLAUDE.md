@@ -13,18 +13,35 @@ estado, no cadenas de presentación: no las traduzcas.
 
 ```bash
 npm install
-npm test              # 68 pruebas del motor; sale con código 1 si falla alguna
-npm run simular       # salud de los bots + duelo entre el bot con memoria y el clásico
-npm run entrenar      # autojuego evolutivo de los pesos; escribe el informe en cada generación
-npm run informe       # rehace la página de seguimiento desde los modelos guardados
-npm run coevolucion   # bucle red contra red + genético de formaciones
-npm run nocturno      # sesiones encadenadas hasta que deje de mejorar; deja diagnóstico
+npm test               # pruebas del motor; sale con código 1 si falla alguna
+npm run simular        # salud de los bots + duelo entre el bot con memoria y el clásico
+
+# Entrenar
+npm run destilar       # mete el orden de la heurística en la red, sin jugar partidas
+npm run coevolucion    # bucle red contra red + genético de formaciones
+npm run nocturno       # sesiones encadenadas hasta que deje de mejorar; deja diagnóstico
+npm run escenarios     # llena el banco de posiciones decisivas y las etiqueta jugando
+npm run juzgar         # sala de juicios: marcar candidatas buena/mala/indefinida
 npm run publicar-redes # lleva los modelos entrenados a los que usan los bots
-npm run build         # compila el cliente a dist/
-npm run servidor      # servidor en el 8080 (sirve dist/ y el WebSocket)
-npm run dev           # cliente Vite en el 5173, con /ws redirigido al 8080
-npm start             # build + servidor, producción en un solo proceso
+
+# Mirar
+npm run informe-redes  # rehace la página de seguimiento desde los modelos guardados
+npm run mirar          # sirve esa página en el 8099
+npm run panel          # mide los modelos contra el panel, rival a rival
+npm run analizar       # qué jugadas decidieron una partida
+
+# Jugar
+npm run build          # compila el cliente a dist/
+npm run servidor       # servidor en el 8080 (sirve dist/ y el WebSocket)
+npm run dev            # cliente Vite en el 5173, con /ws redirigido al 8080
+npm start              # build + servidor, producción en un solo proceso
 ```
+
+**El evolutivo de pesos se retiró.** `entrenar-pesos.mjs`, `genoma.mjs`, `revisar-pesos.mjs`,
+`interpretar.mjs` y el informe viejo ya no existen: sus resultados no se cargaban en ninguna
+parte —`PESOS_BASE` está escrito y ajustado a mano— y la red los sustituyó. La lección que
+dejaron sigue abajo, en «Cómo comparar dos genomas sin engañarse», porque vale igual para
+comparar dos redes.
 
 En desarrollo hacen falta dos terminales: `npm run servidor` y `npm run dev`.
 
