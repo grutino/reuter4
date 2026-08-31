@@ -455,6 +455,21 @@ desincronizarse.
 
 `bot`, `librar`, `empezar`, `parar` y `borrar` exigen ser el anfitrión (`sala.anfitrion`).
 
+### El galón de la ficha
+
+A 46 px —el tamaño real en el tablero 3D— las siluetas se vuelven manchas parecidas. Medida la
+distancia entre las nueve fichas, las dos más confundibles eran **explorador y general**, que
+están en extremos opuestos de la escala: confundir un 3 con un 8 cuesta mucho más que confundir
+un 5 con un 6, y sin embargo era la confusión más probable.
+
+Por eso la ficha lleva un arco en el borde cuya longitud crece con el rango. No sustituye a la
+silueta: la silueta dice **quién** es la pieza y el arco **cuánto pesa**. Con él, la distancia
+visual entre dos fichas correlaciona **0,85** con su distancia de rango, o sea que las
+confusiones caras pasan a ser las más difíciles, y aguanta hasta 24 px. Las peores parejas son
+ahora 2-3, 5-6 y 7-9, todas adyacentes.
+
+`pintarFichaTapada` no lo lleva, claro: una pieza enemiga no enseña su rango.
+
 ### Controles de la escena 3D
 
 La cámara orbita alrededor de `objetivo`, un punto que además se desplaza por el plano del

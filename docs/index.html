@@ -37,13 +37,6 @@
  .nota p{margin:0 0 8px} .nota b{color:var(--tinta)}
  footer{margin-top:44px;padding-top:18px;border-top:1px solid var(--filo);font:400 13px/1.7 "IBM Plex Mono",monospace;color:var(--tenue)}
  a{color:var(--laton)}
-  .rivales { display:flex; flex-direction:column; gap:4px; }
-  .rival { display:grid; grid-template-columns:140px 74px 1fr 44px; gap:10px; align-items:center; font-size:13px; }
-  .rival .nombre { font-weight:600; }
-  .rival .clase { color:var(--tenue); font-size:11px; text-transform:uppercase; letter-spacing:.06em; }
-  .rival .barra { background:var(--linea); border-radius:5px; height:9px; overflow:hidden; }
-  .rival .barra i { display:block; height:100%; background:var(--bien); }
-  .rival .cifra { text-align:right; font-variant-numeric:tabular-nums; color:var(--tenue); }
 </style>
 </head><body>
 <div class="hoja">
@@ -62,14 +55,14 @@ victorias contra la heurística escrita a mano</b>; lo demás es diagnóstico.</
       con semillas nuevas. Conservar la nota con la que fue elegido lo hacía competir con una nota
       inflada -fue elegido justamente por tener suerte en esas partidas- y el listón se volvía
       inalcanzable: doce rondas seguidas descartadas.</p>
-      <dl class="fichas"><div class="ficha"><dt>veredicto en semillas frescas</dt><dd>—</dd></div><div class="ficha"><dt>titular en la última ronda</dt><dd>62%</dd></div><div class="ficha"><dt>rondas</dt><dd>2</dd></div><div class="ficha"><dt>adoptadas</dt><dd>1<small> de 2</small></dd></div><div class="ficha"><dt>formaciones archivadas</dt><dd>12</dd></div><div class="ficha"><dt>tiempo</dt><dd>12 min</dd></div></dl>
+      <dl class="fichas"><div class="ficha"><dt>veredicto en semillas frescas</dt><dd>—</dd></div><div class="ficha"><dt>titular en la última ronda</dt><dd>80%</dd></div><div class="ficha"><dt>rondas</dt><dd>3</dd></div><div class="ficha"><dt>adoptadas</dt><dd>2<small> de 3</small></dd></div><div class="ficha"><dt>formaciones archivadas</dt><dd>14</dd></div><div class="ficha"><dt>tiempo</dt><dd>18 min</dd></div></dl>
       
       <figure><figcaption>Verde: el titular, remedido en partidas nuevas cada ronda. Azul: el aspirante de esa ronda.</figcaption><div class="lienzo"><svg viewBox="0 0 700 190" role="img"><g><line x1="50" y1="164" x2="686" y2="164" stroke="var(--filo)" opacity=".45"/>
         <text x="43" y="167.5" fill="var(--tenue)" font-size="10" text-anchor="end" font-family="'IBM Plex Mono',monospace">0%</text><line x1="50" y1="126.5" x2="686" y2="126.5" stroke="var(--filo)" opacity=".45"/>
         <text x="43" y="130" fill="var(--tenue)" font-size="10" text-anchor="end" font-family="'IBM Plex Mono',monospace">25%</text><line x1="50" y1="89" x2="686" y2="89" stroke="var(--filo)" opacity=".45"/>
         <text x="43" y="92.5" fill="var(--tenue)" font-size="10" text-anchor="end" font-family="'IBM Plex Mono',monospace">50%</text><line x1="50" y1="51.5" x2="686" y2="51.5" stroke="var(--filo)" opacity=".45"/>
         <text x="43" y="55" fill="var(--tenue)" font-size="10" text-anchor="end" font-family="'IBM Plex Mono',monospace">75%</text><line x1="50" y1="14" x2="686" y2="14" stroke="var(--filo)" opacity=".45"/>
-        <text x="43" y="17.5" fill="var(--tenue)" font-size="10" text-anchor="end" font-family="'IBM Plex Mono',monospace">100%</text></g><path d="M50.0,60.7 L686.0,71.0" fill="none" stroke="var(--bien)" stroke-width="2"  stroke-linejoin="round"/><path d="M50.0,66.0 L686.0,42.5" fill="none" stroke="var(--dato)" stroke-width="1.5"  stroke-linejoin="round"/><rect x="56" y="14" width="10" height="3" fill="var(--bien)"/>
+        <text x="43" y="17.5" fill="var(--tenue)" font-size="10" text-anchor="end" font-family="'IBM Plex Mono',monospace">100%</text></g><path d="M50.0,60.7 L368.0,71.0 L686.0,44.6" fill="none" stroke="var(--bien)" stroke-width="2"  stroke-linejoin="round"/><path d="M50.0,66.0 L368.0,42.5 L686.0,37.0" fill="none" stroke="var(--dato)" stroke-width="1.5"  stroke-linejoin="round"/><rect x="56" y="14" width="10" height="3" fill="var(--bien)"/>
       <text x="71" y="18" fill="var(--tenue)" font-size="11" font-family="'IBM Plex Mono',monospace">titular, remedido cada ronda</text><rect x="204" y="14" width="10" height="3" fill="var(--dato)"/>
       <text x="219" y="18" fill="var(--tenue)" font-size="11" font-family="'IBM Plex Mono',monospace">aspirante de la ronda</text>
     <text x="686" y="184" fill="var(--tenue)" font-size="10" text-anchor="end" font-family="'IBM Plex Mono',monospace">ronda</text></svg></div></figure>
@@ -78,7 +71,7 @@ victorias contra la heurística escrita a mano</b>; lo demás es diagnóstico.</
         <text x="43" y="130" fill="var(--tenue)" font-size="10" text-anchor="end" font-family="'IBM Plex Mono',monospace">25%</text><line x1="50" y1="89" x2="686" y2="89" stroke="var(--filo)" opacity=".45"/>
         <text x="43" y="92.5" fill="var(--tenue)" font-size="10" text-anchor="end" font-family="'IBM Plex Mono',monospace">50%</text><line x1="50" y1="51.5" x2="686" y2="51.5" stroke="var(--filo)" opacity=".45"/>
         <text x="43" y="55" fill="var(--tenue)" font-size="10" text-anchor="end" font-family="'IBM Plex Mono',monospace">75%</text><line x1="50" y1="14" x2="686" y2="14" stroke="var(--filo)" opacity=".45"/>
-        <text x="43" y="17.5" fill="var(--tenue)" font-size="10" text-anchor="end" font-family="'IBM Plex Mono',monospace">100%</text></g><path d="M50.0,14.0 L686.0,14.0" fill="none" stroke="var(--mal)" stroke-width="2"  stroke-linejoin="round"/><path d="M50.0,92.5 L686.0,82.6" fill="none" stroke="var(--laton)" stroke-width="1.5"  stroke-linejoin="round"/><path d="M50.0,89.0 L686.0,89.0" fill="none" stroke="var(--tenue)" stroke-width="1.5" stroke-dasharray="4 4" stroke-linejoin="round"/><rect x="56" y="14" width="10" height="3" fill="var(--mal)"/>
+        <text x="43" y="17.5" fill="var(--tenue)" font-size="10" text-anchor="end" font-family="'IBM Plex Mono',monospace">100%</text></g><path d="M50.0,14.0 L368.0,14.0 L686.0,42.3" fill="none" stroke="var(--mal)" stroke-width="2"  stroke-linejoin="round"/><path d="M50.0,92.5 L368.0,82.6 L686.0,111.1" fill="none" stroke="var(--laton)" stroke-width="1.5"  stroke-linejoin="round"/><path d="M50.0,89.0 L368.0,89.0 L686.0,89.0" fill="none" stroke="var(--tenue)" stroke-width="1.5" stroke-dasharray="4 4" stroke-linejoin="round"/><rect x="56" y="14" width="10" height="3" fill="var(--mal)"/>
       <text x="71" y="18" fill="var(--tenue)" font-size="11" font-family="'IBM Plex Mono',monospace">la formación más dura</text><rect x="204" y="14" width="10" height="3" fill="var(--laton)"/>
       <text x="219" y="18" fill="var(--tenue)" font-size="11" font-family="'IBM Plex Mono',monospace">media de la población</text><rect x="352" y="14" width="10" height="3" fill="var(--tenue)"/>
       <text x="367" y="18" fill="var(--tenue)" font-size="11" font-family="'IBM Plex Mono',monospace">paridad</text>
@@ -126,47 +119,18 @@ victorias contra la heurística escrita a mano</b>; lo demás es diagnóstico.</
         <text x="113.33333333333333" y="188" fill="var(--tenue)" font-size="13" text-anchor="middle">⋮</text><circle cx="226.66666666666666" cy="100" r="5" fill="var(--bien)" opacity=".85"/><text x="226.66666666666666" y="192" fill="var(--tenue)" font-size="10.5" text-anchor="middle" font-family="'IBM Plex Mono',monospace">1</text>
         <text x="226.66666666666666" y="18" fill="var(--tenue)" font-size="9.5" text-anchor="middle" font-family="'IBM Plex Mono',monospace">salida</text>
         </svg></div></figure>
-    <figure><figcaption>Qué mira: efecto de cada rasgo sobre la predicción.</figcaption><div class="lienzo"><svg viewBox="0 0 700 304" role="img"><text x="264" y="15" fill="var(--apagado)" font-size="11.5" text-anchor="end" font-family="'IBM Plex Mono',monospace">seAleja</text>
-        <rect x="272" y="6" width="300.0" height="11" rx="1.5" fill="var(--mal)"/><text x="264" y="36" fill="var(--apagado)" font-size="11.5" text-anchor="end" font-family="'IBM Plex Mono',monospace">seAcerca</text>
-        <rect x="272" y="27" width="292.7" height="11" rx="1.5" fill="var(--bien)"/><text x="264" y="57" fill="var(--apagado)" font-size="11.5" text-anchor="end" font-family="'IBM Plex Mono',monospace">amenazasQueDejo</text>
-        <rect x="272" y="48" width="247.4" height="11" rx="1.5" fill="var(--bien)"/><text x="264" y="78" fill="var(--apagado)" font-size="11.5" text-anchor="end" font-family="'IBM Plex Mono',monospace">dueloPerdido</text>
-        <rect x="272" y="69" width="184.8" height="11" rx="1.5" fill="var(--mal)"/><text x="264" y="99" fill="var(--apagado)" font-size="11.5" text-anchor="end" font-family="'IBM Plex Mono',monospace">riesgoDeCanonEnDestino</text>
-        <rect x="272" y="90" width="179.1" height="11" rx="1.5" fill="var(--mal)"/><text x="264" y="120" fill="var(--apagado)" font-size="11.5" text-anchor="end" font-family="'IBM Plex Mono',monospace">salgoDePeligro</text>
-        <rect x="272" y="111" width="173.3" height="11" rx="1.5" fill="var(--bien)"/><text x="264" y="141" fill="var(--apagado)" font-size="11.5" text-anchor="end" font-family="'IBM Plex Mono',monospace">tapaLineaAlAnillo</text>
-        <rect x="272" y="132" width="140.8" height="11" rx="1.5" fill="var(--bien)"/><text x="264" y="162" fill="var(--apagado)" font-size="11.5" text-anchor="end" font-family="'IBM Plex Mono',monospace">objetivoConBandera</text>
-        <rect x="272" y="153" width="140.5" height="11" rx="1.5" fill="var(--bien)"/><text x="264" y="183" fill="var(--apagado)" font-size="11.5" text-anchor="end" font-family="'IBM Plex Mono',monospace">valorEsperadoDelDuelo</text>
-        <rect x="272" y="174" width="139.3" height="11" rx="1.5" fill="var(--bien)"/><text x="264" y="204" fill="var(--apagado)" font-size="11.5" text-anchor="end" font-family="'IBM Plex Mono',monospace">dueloGanado</text>
-        <rect x="272" y="195" width="120.8" height="11" rx="1.5" fill="var(--bien)"/><text x="264" y="225" fill="var(--apagado)" font-size="11.5" text-anchor="end" font-family="'IBM Plex Mono',monospace">amenazaCombinada</text>
-        <rect x="272" y="216" width="119.0" height="11" rx="1.5" fill="var(--bien)"/><text x="264" y="246" fill="var(--apagado)" font-size="11.5" text-anchor="end" font-family="'IBM Plex Mono',monospace">contraAmenaza</text>
-        <rect x="272" y="237" width="103.9" height="11" rx="1.5" fill="var(--bien)"/><text x="264" y="267" fill="var(--apagado)" font-size="11.5" text-anchor="end" font-family="'IBM Plex Mono',monospace">pisaBanderaSuelta</text>
-        <rect x="272" y="258" width="103.7" height="11" rx="1.5" fill="var(--bien)"/><text x="264" y="288" fill="var(--apagado)" font-size="11.5" text-anchor="end" font-family="'IBM Plex Mono',monospace">rangoDelObjetivo</text>
-        <rect x="272" y="279" width="88.8" height="11" rx="1.5" fill="var(--mal)"/></svg></div></figure>
-    <figure><figcaption>Y qué mira de la POSICIÓN. Si estas barras son mucho más largas que las de arriba, la red está juzgando dónde se está más que qué se hace.</figcaption><div class="lienzo"><svg viewBox="0 0 700 304" role="img"><text x="264" y="15" fill="var(--apagado)" font-size="11.5" text-anchor="end" font-family="'IBM Plex Mono',monospace">banderaDelSocioAlCastillo</text>
-        <rect x="272" y="6" width="300.0" height="11" rx="1.5" fill="var(--bien)"/><text x="264" y="36" fill="var(--apagado)" font-size="11.5" text-anchor="end" font-family="'IBM Plex Mono',monospace">banderaEnemigaAlCastillo</text>
-        <rect x="272" y="27" width="240.3" height="11" rx="1.5" fill="var(--mal)"/><text x="264" y="57" fill="var(--apagado)" font-size="11.5" text-anchor="end" font-family="'IBM Plex Mono',monospace">piezasEnemigas</text>
-        <rect x="272" y="48" width="196.1" height="11" rx="1.5" fill="var(--mal)"/><text x="264" y="78" fill="var(--apagado)" font-size="11.5" text-anchor="end" font-family="'IBM Plex Mono',monospace">miBanderaAlCastillo</text>
-        <rect x="272" y="69" width="193.3" height="11" rx="1.5" fill="var(--bien)"/><text x="264" y="99" fill="var(--apagado)" font-size="11.5" text-anchor="end" font-family="'IBM Plex Mono',monospace">ventajaDePiezas</text>
-        <rect x="272" y="90" width="180.8" height="11" rx="1.5" fill="var(--bien)"/><text x="264" y="120" fill="var(--apagado)" font-size="11.5" text-anchor="end" font-family="'IBM Plex Mono',monospace">avanceDeLaPartida</text>
-        <rect x="272" y="111" width="176.3" height="11" rx="1.5" fill="var(--bien)"/><text x="264" y="141" fill="var(--apagado)" font-size="11.5" text-anchor="end" font-family="'IBM Plex Mono',monospace">queAmenazo</text>
-        <rect x="272" y="132" width="133.2" height="11" rx="1.5" fill="var(--mal)"/><text x="264" y="162" fill="var(--apagado)" font-size="11.5" text-anchor="end" font-family="'IBM Plex Mono',monospace">suPiezaMasCerca</text>
-        <rect x="272" y="153" width="114.0" height="11" rx="1.5" fill="var(--mal)"/><text x="264" y="183" fill="var(--apagado)" font-size="11.5" text-anchor="end" font-family="'IBM Plex Mono',monospace">piezasDelSocio</text>
-        <rect x="272" y="174" width="110.0" height="11" rx="1.5" fill="var(--bien)"/><text x="264" y="204" fill="var(--apagado)" font-size="11.5" text-anchor="end" font-family="'IBM Plex Mono',monospace">miasEnPeligro</text>
-        <rect x="272" y="195" width="108.2" height="11" rx="1.5" fill="var(--mal)"/><text x="264" y="225" fill="var(--apagado)" font-size="11.5" text-anchor="end" font-family="'IBM Plex Mono',monospace">amenazasCombinadas</text>
-        <rect x="272" y="216" width="93.2" height="11" rx="1.5" fill="var(--mal)"/><text x="264" y="246" fill="var(--apagado)" font-size="11.5" text-anchor="end" font-family="'IBM Plex Mono',monospace">susPiezasEnElCastillo</text>
-        <rect x="272" y="237" width="70.1" height="11" rx="1.5" fill="var(--bien)"/><text x="264" y="267" fill="var(--apagado)" font-size="11.5" text-anchor="end" font-family="'IBM Plex Mono',monospace">rangosQueLesHeVisto</text>
-        <rect x="272" y="258" width="60.6" height="11" rx="1.5" fill="var(--bien)"/><text x="264" y="288" fill="var(--apagado)" font-size="11.5" text-anchor="end" font-family="'IBM Plex Mono',monospace">rangosQueMeHanVisto</text>
-        <rect x="272" y="279" width="44.2" height="11" rx="1.5" fill="var(--mal)"/></svg></div></figure>
+    
     
   </section><section>
     <h2>Red de la posición de salida</h2>
     <p class="sub">Juzga un despliegue inicial antes de empezar. Al desplegar se generan cuarenta candidatos al azar y se elige el que mejor puntúa. Es el modelo que más gana de los dos.</p>
-    <dl class="fichas"><div class="ficha"><dt>victorias en juego</dt><dd>81%</dd></div><div class="ficha"><dt>pérdida validación</dt><dd>0.6810</dd></div><div class="ficha"><dt>acierto</dt><dd>—</dd></div><div class="ficha"><dt>entradas</dt><dd>83</dd></div></dl>
+    <dl class="fichas"><div class="ficha"><dt>victorias en juego</dt><dd>85%</dd></div><div class="ficha"><dt>pérdida validación</dt><dd>0.6712</dd></div><div class="ficha"><dt>acierto</dt><dd>—</dd></div><div class="ficha"><dt>entradas</dt><dd>83</dd></div></dl>
     <figure><figcaption>Curvas de aprendizaje. Si la de validación sube mientras la otra baja, está memorizando.</figcaption><div class="lienzo"><svg viewBox="0 0 700 200" role="img"><g><line x1="50" y1="174" x2="686" y2="174" stroke="var(--filo)" opacity=".45"/>
-        <text x="43" y="177.5" fill="var(--tenue)" font-size="10" text-anchor="end" font-family="'IBM Plex Mono',monospace">0.663</text><line x1="50" y1="134" x2="686" y2="134" stroke="var(--filo)" opacity=".45"/>
+        <text x="43" y="177.5" fill="var(--tenue)" font-size="10" text-anchor="end" font-family="'IBM Plex Mono',monospace">0.668</text><line x1="50" y1="134" x2="686" y2="134" stroke="var(--filo)" opacity=".45"/>
         <text x="43" y="137.5" fill="var(--tenue)" font-size="10" text-anchor="end" font-family="'IBM Plex Mono',monospace">0.669</text><line x1="50" y1="94" x2="686" y2="94" stroke="var(--filo)" opacity=".45"/>
-        <text x="43" y="97.5" fill="var(--tenue)" font-size="10" text-anchor="end" font-family="'IBM Plex Mono',monospace">0.675</text><line x1="50" y1="54" x2="686" y2="54" stroke="var(--filo)" opacity=".45"/>
-        <text x="43" y="57.5" fill="var(--tenue)" font-size="10" text-anchor="end" font-family="'IBM Plex Mono',monospace">0.681</text><line x1="50" y1="14" x2="686" y2="14" stroke="var(--filo)" opacity=".45"/>
-        <text x="43" y="17.5" fill="var(--tenue)" font-size="10" text-anchor="end" font-family="'IBM Plex Mono',monospace">0.688</text></g><path d="M50.0,53.4 L107.8,81.1 L165.6,100.2 L223.5,118.2 L281.3,130.0 L339.1,138.8 L396.9,144.7 L454.7,154.1 L512.5,158.1 L570.4,162.9 L628.2,167.3 L686.0,174.0" fill="none" stroke="var(--dato)" stroke-width="2"  stroke-linejoin="round"/><path d="M50.0,44.3 L107.8,54.9 L165.6,56.6 L223.5,48.3 L281.3,46.4 L339.1,40.3 L396.9,34.8 L454.7,25.0 L512.5,20.3 L570.4,19.8 L628.2,17.4 L686.0,14.0" fill="none" stroke="var(--laton)" stroke-width="2"  stroke-linejoin="round"/><rect x="56" y="14" width="10" height="3" fill="var(--dato)"/>
+        <text x="43" y="97.5" fill="var(--tenue)" font-size="10" text-anchor="end" font-family="'IBM Plex Mono',monospace">0.670</text><line x1="50" y1="54" x2="686" y2="54" stroke="var(--filo)" opacity=".45"/>
+        <text x="43" y="57.5" fill="var(--tenue)" font-size="10" text-anchor="end" font-family="'IBM Plex Mono',monospace">0.672</text><line x1="50" y1="14" x2="686" y2="14" stroke="var(--filo)" opacity=".45"/>
+        <text x="43" y="17.5" fill="var(--tenue)" font-size="10" text-anchor="end" font-family="'IBM Plex Mono',monospace">0.673</text></g><path d="M50.0,19.2 L107.8,61.4 L165.6,92.9 L223.5,112.0 L281.3,127.9 L339.1,140.6 L396.9,148.4 L454.7,156.2 L512.5,162.0 L570.4,166.5 L628.2,170.8 L686.0,174.0" fill="none" stroke="var(--dato)" stroke-width="2"  stroke-linejoin="round"/><path d="M50.0,63.7 L107.8,55.5 L165.6,37.0 L223.5,31.8 L281.3,21.5 L339.1,23.7 L396.9,21.8 L454.7,17.9 L512.5,14.3 L570.4,14.6 L628.2,14.0 L686.0,14.6" fill="none" stroke="var(--laton)" stroke-width="2"  stroke-linejoin="round"/><rect x="56" y="14" width="10" height="3" fill="var(--dato)"/>
       <text x="71" y="18" fill="var(--tenue)" font-size="11" font-family="'IBM Plex Mono',monospace">entrenamiento</text><rect x="204" y="14" width="10" height="3" fill="var(--laton)"/>
       <text x="219" y="18" fill="var(--tenue)" font-size="11" font-family="'IBM Plex Mono',monospace">validación</text>
     <text x="686" y="194" fill="var(--tenue)" font-size="10" text-anchor="end" font-family="'IBM Plex Mono',monospace">época</text></svg></div></figure>
@@ -183,219 +147,22 @@ victorias contra la heurística escrita a mano</b>; lo demás es diagnóstico.</
         </svg></div></figure>
     <figure><figcaption>Qué mira: efecto de cada rasgo sobre la predicción.</figcaption><div class="lienzo"><svg viewBox="0 0 700 304" role="img"><text x="264" y="15" fill="var(--apagado)" font-size="11.5" text-anchor="end" font-family="'IBM Plex Mono',monospace">conjunto rangoDeLaBandera</text>
         <rect x="272" y="6" width="300.0" height="11" rx="1.5" fill="var(--bien)"/><text x="264" y="36" fill="var(--apagado)" font-size="11.5" text-anchor="end" font-family="'IBM Plex Mono',monospace">7 Comandante juntoABandera</text>
-        <rect x="272" y="27" width="278.0" height="11" rx="1.5" fill="var(--mal)"/><text x="264" y="57" fill="var(--apagado)" font-size="11.5" text-anchor="end" font-family="'IBM Plex Mono',monospace">1 Cañón lateral</text>
-        <rect x="272" y="48" width="263.0" height="11" rx="1.5" fill="var(--mal)"/><text x="264" y="78" fill="var(--apagado)" font-size="11.5" text-anchor="end" font-family="'IBM Plex Mono',monospace">1 Cañón cubiertoPorLago</text>
-        <rect x="272" y="69" width="220.7" height="11" rx="1.5" fill="var(--bien)"/><text x="264" y="99" fill="var(--apagado)" font-size="11.5" text-anchor="end" font-family="'IBM Plex Mono',monospace">1 Cañón cercaDeTiro</text>
-        <rect x="272" y="90" width="161.6" height="11" rx="1.5" fill="var(--bien)"/><text x="264" y="120" fill="var(--apagado)" font-size="11.5" text-anchor="end" font-family="'IBM Plex Mono',monospace">4 Sargento avance</text>
-        <rect x="272" y="111" width="153.9" height="11" rx="1.5" fill="var(--mal)"/><text x="264" y="141" fill="var(--apagado)" font-size="11.5" text-anchor="end" font-family="'IBM Plex Mono',monospace">conjunto defensaEconomica</text>
-        <rect x="272" y="132" width="144.3" height="11" rx="1.5" fill="var(--mal)"/><text x="264" y="162" fill="var(--apagado)" font-size="11.5" text-anchor="end" font-family="'IBM Plex Mono',monospace">5 Teniente avance</text>
-        <rect x="272" y="153" width="142.0" height="11" rx="1.5" fill="var(--mal)"/><text x="264" y="183" fill="var(--apagado)" font-size="11.5" text-anchor="end" font-family="'IBM Plex Mono',monospace">6 Capitán cubiertoPorLago</text>
-        <rect x="272" y="174" width="137.3" height="11" rx="1.5" fill="var(--bien)"/><text x="264" y="204" fill="var(--apagado)" font-size="11.5" text-anchor="end" font-family="'IBM Plex Mono',monospace">7 Comandante cubiertoPorLago</text>
-        <rect x="272" y="195" width="125.1" height="11" rx="1.5" fill="var(--mal)"/><text x="264" y="225" fill="var(--apagado)" font-size="11.5" text-anchor="end" font-family="'IBM Plex Mono',monospace">4 Sargento cercaDeTiro</text>
-        <rect x="272" y="216" width="125.1" height="11" rx="1.5" fill="var(--mal)"/><text x="264" y="246" fill="var(--apagado)" font-size="11.5" text-anchor="end" font-family="'IBM Plex Mono',monospace">9 Mariscal juntoABandera</text>
-        <rect x="272" y="237" width="120.8" height="11" rx="1.5" fill="var(--mal)"/><text x="264" y="267" fill="var(--apagado)" font-size="11.5" text-anchor="end" font-family="'IBM Plex Mono',monospace">3 Explorador juntoABandera</text>
-        <rect x="272" y="258" width="120.4" height="11" rx="1.5" fill="var(--bien)"/><text x="264" y="288" fill="var(--apagado)" font-size="11.5" text-anchor="end" font-family="'IBM Plex Mono',monospace">8 General cubiertoPorLago</text>
-        <rect x="272" y="279" width="118.7" height="11" rx="1.5" fill="var(--mal)"/></svg></div></figure>
-    
+        <rect x="272" y="27" width="263.1" height="11" rx="1.5" fill="var(--mal)"/><text x="264" y="57" fill="var(--apagado)" font-size="11.5" text-anchor="end" font-family="'IBM Plex Mono',monospace">1 Cañón lateral</text>
+        <rect x="272" y="48" width="256.8" height="11" rx="1.5" fill="var(--mal)"/><text x="264" y="78" fill="var(--apagado)" font-size="11.5" text-anchor="end" font-family="'IBM Plex Mono',monospace">1 Cañón cubiertoPorLago</text>
+        <rect x="272" y="69" width="218.0" height="11" rx="1.5" fill="var(--bien)"/><text x="264" y="99" fill="var(--apagado)" font-size="11.5" text-anchor="end" font-family="'IBM Plex Mono',monospace">1 Cañón cercaDeTiro</text>
+        <rect x="272" y="90" width="156.5" height="11" rx="1.5" fill="var(--bien)"/><text x="264" y="120" fill="var(--apagado)" font-size="11.5" text-anchor="end" font-family="'IBM Plex Mono',monospace">4 Sargento avance</text>
+        <rect x="272" y="111" width="155.2" height="11" rx="1.5" fill="var(--mal)"/><text x="264" y="141" fill="var(--apagado)" font-size="11.5" text-anchor="end" font-family="'IBM Plex Mono',monospace">5 Teniente avance</text>
+        <rect x="272" y="132" width="150.6" height="11" rx="1.5" fill="var(--mal)"/><text x="264" y="162" fill="var(--apagado)" font-size="11.5" text-anchor="end" font-family="'IBM Plex Mono',monospace">6 Capitán cubiertoPorLago</text>
+        <rect x="272" y="153" width="150.2" height="11" rx="1.5" fill="var(--bien)"/><text x="264" y="183" fill="var(--apagado)" font-size="11.5" text-anchor="end" font-family="'IBM Plex Mono',monospace">conjunto defensaEconomica</text>
+        <rect x="272" y="174" width="144.4" height="11" rx="1.5" fill="var(--mal)"/><text x="264" y="204" fill="var(--apagado)" font-size="11.5" text-anchor="end" font-family="'IBM Plex Mono',monospace">4 Sargento cercaDeTiro</text>
+        <rect x="272" y="195" width="143.7" height="11" rx="1.5" fill="var(--mal)"/><text x="264" y="225" fill="var(--apagado)" font-size="11.5" text-anchor="end" font-family="'IBM Plex Mono',monospace">9 Mariscal juntoABandera</text>
+        <rect x="272" y="216" width="141.9" height="11" rx="1.5" fill="var(--mal)"/><text x="264" y="246" fill="var(--apagado)" font-size="11.5" text-anchor="end" font-family="'IBM Plex Mono',monospace">7 Comandante cubiertoPorLago</text>
+        <rect x="272" y="237" width="133.3" height="11" rx="1.5" fill="var(--mal)"/><text x="264" y="267" fill="var(--apagado)" font-size="11.5" text-anchor="end" font-family="'IBM Plex Mono',monospace">3 Explorador cubiertoPorLago</text>
+        <rect x="272" y="258" width="122.7" height="11" rx="1.5" fill="var(--mal)"/><text x="264" y="288" fill="var(--apagado)" font-size="11.5" text-anchor="end" font-family="'IBM Plex Mono',monospace">1 Cañón enElBorde</text>
+        <rect x="272" y="279" width="111.4" height="11" rx="1.5" fill="var(--bien)"/></svg></div></figure>
     <div class="nota"><p><b>Un aviso sobre la pérdida:</b> apenas se despega de 0,693, que es adivinar a ciegas, y aun así en juego gana el 75%. No es contradictorio: el resultado de una partida depende de los cuatro despliegues y de todo lo jugado después, así que casi toda la varianza es irreducible. La red tiene una señal débil pero bien ordenada, y elegir el mejor de cuarenta candidatos la amplifica.</p></div>
-  </section><section>
-      <h2>Rival a rival</h2>
-      <p class="sub">Contra el panel de aperturas, que no cambia nunca. La media esconde lo que
-        importa: una red puede ir bien de promedio y perder siempre contra una apertura concreta,
-        y eso es un agujero. Ordenado de peor a mejor.</p>
-      <div class="rivales"><div class="rival">
-        <span class="nombre">humana-02</span>
-        <span class="clase">humana</span>
-        <span class="barra"><i style="width:31%"></i></span>
-        <span class="cifra">31%</span>
-      </div><div class="rival">
-        <span class="nombre">humana-02~1</span>
-        <span class="clase">variante</span>
-        <span class="barra"><i style="width:31%"></i></span>
-        <span class="cifra">31%</span>
-      </div><div class="rival">
-        <span class="nombre">humana-02~2</span>
-        <span class="clase">variante</span>
-        <span class="barra"><i style="width:56%"></i></span>
-        <span class="cifra">56%</span>
-      </div><div class="rival">
-        <span class="nombre">humana-05~2</span>
-        <span class="clase">variante</span>
-        <span class="barra"><i style="width:69%"></i></span>
-        <span class="cifra">69%</span>
-      </div><div class="rival">
-        <span class="nombre">humana-07~2</span>
-        <span class="clase">variante</span>
-        <span class="barra"><i style="width:69%"></i></span>
-        <span class="cifra">69%</span>
-      </div><div class="rival">
-        <span class="nombre">humana-08</span>
-        <span class="clase">humana</span>
-        <span class="barra"><i style="width:69%"></i></span>
-        <span class="cifra">69%</span>
-      </div><div class="rival">
-        <span class="nombre">humana-08~1</span>
-        <span class="clase">variante</span>
-        <span class="barra"><i style="width:69%"></i></span>
-        <span class="cifra">69%</span>
-      </div><div class="rival">
-        <span class="nombre">humana-09~2</span>
-        <span class="clase">variante</span>
-        <span class="barra"><i style="width:69%"></i></span>
-        <span class="cifra">69%</span>
-      </div><div class="rival">
-        <span class="nombre">humana-07</span>
-        <span class="clase">humana</span>
-        <span class="barra"><i style="width:73%"></i></span>
-        <span class="cifra">73%</span>
-      </div><div class="rival">
-        <span class="nombre">humana-11~1</span>
-        <span class="clase">variante</span>
-        <span class="barra"><i style="width:73%"></i></span>
-        <span class="cifra">73%</span>
-      </div><div class="rival">
-        <span class="nombre">humana-11~2</span>
-        <span class="clase">variante</span>
-        <span class="barra"><i style="width:73%"></i></span>
-        <span class="cifra">73%</span>
-      </div><div class="rival">
-        <span class="nombre">humana-03~1</span>
-        <span class="clase">variante</span>
-        <span class="barra"><i style="width:75%"></i></span>
-        <span class="cifra">75%</span>
-      </div><div class="rival">
-        <span class="nombre">humana-07~1</span>
-        <span class="clase">variante</span>
-        <span class="barra"><i style="width:75%"></i></span>
-        <span class="cifra">75%</span>
-      </div><div class="rival">
-        <span class="nombre">humana-09</span>
-        <span class="clase">humana</span>
-        <span class="barra"><i style="width:75%"></i></span>
-        <span class="cifra">75%</span>
-      </div><div class="rival">
-        <span class="nombre">humana-01~1</span>
-        <span class="clase">variante</span>
-        <span class="barra"><i style="width:81%"></i></span>
-        <span class="cifra">81%</span>
-      </div><div class="rival">
-        <span class="nombre">humana-05~1</span>
-        <span class="clase">variante</span>
-        <span class="barra"><i style="width:81%"></i></span>
-        <span class="cifra">81%</span>
-      </div><div class="rival">
-        <span class="nombre">humana-09~1</span>
-        <span class="clase">variante</span>
-        <span class="barra"><i style="width:81%"></i></span>
-        <span class="cifra">81%</span>
-      </div><div class="rival">
-        <span class="nombre">humana-10</span>
-        <span class="clase">humana</span>
-        <span class="barra"><i style="width:81%"></i></span>
-        <span class="cifra">81%</span>
-      </div><div class="rival">
-        <span class="nombre">humana-10~1</span>
-        <span class="clase">variante</span>
-        <span class="barra"><i style="width:81%"></i></span>
-        <span class="cifra">81%</span>
-      </div><div class="rival">
-        <span class="nombre">humana-11</span>
-        <span class="clase">humana</span>
-        <span class="barra"><i style="width:81%"></i></span>
-        <span class="cifra">81%</span>
-      </div><div class="rival">
-        <span class="nombre">guiada1</span>
-        <span class="clase">guiada</span>
-        <span class="barra"><i style="width:81%"></i></span>
-        <span class="cifra">81%</span>
-      </div><div class="rival">
-        <span class="nombre">humana-05</span>
-        <span class="clase">humana</span>
-        <span class="barra"><i style="width:86%"></i></span>
-        <span class="cifra">86%</span>
-      </div><div class="rival">
-        <span class="nombre">humana-03~2</span>
-        <span class="clase">variante</span>
-        <span class="barra"><i style="width:88%"></i></span>
-        <span class="cifra">88%</span>
-      </div><div class="rival">
-        <span class="nombre">humana-04</span>
-        <span class="clase">humana</span>
-        <span class="barra"><i style="width:88%"></i></span>
-        <span class="cifra">88%</span>
-      </div><div class="rival">
-        <span class="nombre">humana-04~2</span>
-        <span class="clase">variante</span>
-        <span class="barra"><i style="width:88%"></i></span>
-        <span class="cifra">88%</span>
-      </div><div class="rival">
-        <span class="nombre">humana-06~2</span>
-        <span class="clase">variante</span>
-        <span class="barra"><i style="width:88%"></i></span>
-        <span class="cifra">88%</span>
-      </div><div class="rival">
-        <span class="nombre">humana-06</span>
-        <span class="clase">humana</span>
-        <span class="barra"><i style="width:93%"></i></span>
-        <span class="cifra">93%</span>
-      </div><div class="rival">
-        <span class="nombre">humana-03</span>
-        <span class="clase">humana</span>
-        <span class="barra"><i style="width:94%"></i></span>
-        <span class="cifra">94%</span>
-      </div><div class="rival">
-        <span class="nombre">humana-04~1</span>
-        <span class="clase">variante</span>
-        <span class="barra"><i style="width:94%"></i></span>
-        <span class="cifra">94%</span>
-      </div><div class="rival">
-        <span class="nombre">humana-08~2</span>
-        <span class="clase">variante</span>
-        <span class="barra"><i style="width:94%"></i></span>
-        <span class="cifra">94%</span>
-      </div><div class="rival">
-        <span class="nombre">guiada3</span>
-        <span class="clase">guiada</span>
-        <span class="barra"><i style="width:94%"></i></span>
-        <span class="cifra">94%</span>
-      </div><div class="rival">
-        <span class="nombre">humana-01</span>
-        <span class="clase">humana</span>
-        <span class="barra"><i style="width:100%"></i></span>
-        <span class="cifra">100%</span>
-      </div><div class="rival">
-        <span class="nombre">humana-01~2</span>
-        <span class="clase">variante</span>
-        <span class="barra"><i style="width:100%"></i></span>
-        <span class="cifra">100%</span>
-      </div><div class="rival">
-        <span class="nombre">humana-06~1</span>
-        <span class="clase">variante</span>
-        <span class="barra"><i style="width:100%"></i></span>
-        <span class="cifra">100%</span>
-      </div><div class="rival">
-        <span class="nombre">humana-10~2</span>
-        <span class="clase">variante</span>
-        <span class="barra"><i style="width:100%"></i></span>
-        <span class="cifra">100%</span>
-      </div><div class="rival">
-        <span class="nombre">guiada2</span>
-        <span class="clase">guiada</span>
-        <span class="barra"><i style="width:100%"></i></span>
-        <span class="cifra">100%</span>
-      </div><div class="rival">
-        <span class="nombre">guiada4</span>
-        <span class="clase">guiada</span>
-        <span class="barra"><i style="width:100%"></i></span>
-        <span class="cifra">100%</span>
-      </div><div class="rival">
-        <span class="nombre">azar</span>
-        <span class="clase">azar</span>
-        <span class="barra"><i style="width:100%"></i></span>
-        <span class="cifra">100%</span>
-      </div></div>
-    </section>
-<footer>Generado el 1/9/2026, 1:41:13 · <a href="https://github.com/grutino/reuter4">github.com/grutino/reuter4</a><br>
+  </section>
+<footer>Generado el 1/9/2026, 1:46:42 · <a href="https://github.com/grutino/reuter4">github.com/grutino/reuter4</a><br>
 Motor propio sin dependencias. La red se entrena y se ejecuta en JavaScript.</footer>
 </div>
 </body></html>

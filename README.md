@@ -221,9 +221,9 @@ memoria ganan el 65% de las partidas decididas frente a los antiguos.
   ```
 
   Los parámetros `--cierre` y `--umbral` gobiernan cuánto se macizan las figuras y cuánto
-  dibujo interior se graba; los valores por defecto se eligieron mirando las nueve fichas a
-  tamaño real. Si cambias de foto, míralas a 46 px antes de dar nada por bueno: a ese tamaño
-  lo único que distingue un rango de otro es el contorno.
+  dibujo interior se graba. **Míralas a 46 px antes de dar nada por bueno**, que es el tamaño
+  real en el tablero: a ese tamaño la silueta sola no basta —está medido— y por eso la ficha
+  lleva además el galón.
 - **Tácticas que aún no tienen rasgo**: atacar por zonas donde la bolsa de rangos ocultos nos
   favorece, el señuelo del espía, explorador a distancia para revelar, bloquear los laterales,
   sacrificio para promocionar con el marcador alto, defender la bandera propia, cuidar los rangos
