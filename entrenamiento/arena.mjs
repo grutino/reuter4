@@ -23,6 +23,11 @@ import {
   EQUIPOS,
 } from "../src/motor/motor.js";
 import { accionDeBot, decisionDeRecogida, despliegueAleatorio, PESOS_BASE, DISTANCIA } from "../src/motor/bot.js";
+// `repartoDeTablas` se mudó al motor: es lógica del juego y la necesita también
+// el análisis de fin de partida, que corre en el navegador. Se reexporta desde
+// aquí porque medio `entrenamiento/` la importa de arena.
+import { repartoDeTablas } from "../src/motor/valoracion.js";
+export { repartoDeTablas };
 
 export const LIMITE_TURNOS = 4000;
 
@@ -110,42 +115,6 @@ const [EQUIPO_A, EQUIPO_B] = EQUIPOS; // [rojo,azul] y [verde,amarillo]
 // más cerca de ganar. Es lo que el propio manual llama premiar el acercarse a
 // la victoria, y es lo que da gradiente en las primeras generaciones.
 
-function distanciaDeBanderaAlCastillo(estado, equipo) {
-  let mejor = 40;
-  for (const color of equipo) {
-    const bandera = estado.banderas[color];
-    if (!bandera) continue;
-    let casilla = null;
-    if (bandera.portador && estado.piezas[bandera.portador]) casilla = estado.piezas[bandera.portador].casilla;
-    else if (bandera.casilla) casilla = bandera.casilla;
-    if (!casilla) continue;
-    const d = DISTANCIA[casilla];
-    if (d !== undefined && d < mejor) mejor = d;
-  }
-  return mejor;
-}
-
-function materialDe(estado, equipo) {
-  let total = 0;
-  for (const p of Object.values(estado.piezas)) if (equipo.includes(p.color)) total += p.rango;
-  return total;
-}
-
-function victoriasDe(estado, equipo) {
-  return equipo.reduce((s, c) => s + (estado.marcador[c] || 0), 0);
-}
-
-// Devuelve entre 0 y 1 cuánto le corresponde al equipo A de una partida sin
-// ganador: 0,5 si están igualados.
-export function repartoDeTablas(estado) {
-  const dA = distanciaDeBanderaAlCastillo(estado, EQUIPO_A);
-  const dB = distanciaDeBanderaAlCastillo(estado, EQUIPO_B);
-  const ventaja =
-    0.30 * (dB - dA) +          // quién tiene su bandera más cerca de la torre
-    0.02 * (materialDe(estado, EQUIPO_A) - materialDe(estado, EQUIPO_B)) +
-    0.25 * (victoriasDe(estado, EQUIPO_A) - victoriasDe(estado, EQUIPO_B));
-  return 0.5 + 0.5 * Math.tanh(ventaja / 3);
-}
 
 function repartir(configA, configB, invertido) {
   const primero = invertido ? configB : configA;

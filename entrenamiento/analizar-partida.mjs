@@ -18,119 +18,14 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { COLORES } from "../src/motor/tablero.js";
-import { EQUIPOS, movimientosLegales, aplicar, reclutar, recogerLaBandera, renunciarARecoger, nuevaPartida } from "../src/motor/motor.js";
-import { accionDeBot, decisionDeRecogida, despliegueAleatorio, DISTANCIA } from "../src/motor/bot.js";
-import { cargarModelos, jugadaSoloRed } from "../src/motor/bot-red.js";
-import { evaluar } from "../src/motor/red.js";
-import { analizarTurno } from "../src/motor/analisis.js";
-import { rasgosDeJugada, contextoDeTurno } from "../src/motor/rasgos-jugada.js";
-import { reproducirPartida } from "../src/motor/replay.js";
-import { generador, repartoDeTablas } from "./arena.mjs";
-import { NOMBRE_RANGO } from "../src/estilo.js";
+import { aplicar, reclutar, recogerLaBandera, renunciarARecoger, nuevaPartida } from "../src/motor/motor.js";
+import { accionDeBot, decisionDeRecogida, despliegueAleatorio } from "../src/motor/bot.js";
+import { jugadaSoloRed } from "../src/motor/bot-red.js";
+import { cargarModelos } from "../src/motor/modelos.js";
+import { analizarPartida, describir, resolver } from "../src/motor/analisis-partida.js";
+import { generador } from "./arena.mjs";
 
 const AQUI = path.dirname(fileURLToPath(import.meta.url));
-const [EQUIPO_A] = EQUIPOS;
-
-// --- Etapa 1: dónde se apartó de lo que la red habría hecho -------------------
-
-export function sospechosos(pasos, red, { cuantos = 8 } = {}) {
-  const salida = [];
-  for (const paso of pasos) {
-    if (!paso.accion) continue;
-    const { estado, color, accion } = paso;
-    const legales = movimientosLegales(estado, color);
-    if (legales.length < 3) continue;
-
-    const contexto = contextoDeTurno(estado, color, analizarTurno(estado, color, DISTANCIA));
-    let mejor = null;
-    let mejorNota = -Infinity;
-    let notaJugada = null;
-    for (const a of legales) {
-      const nota = evaluar(red, rasgosDeJugada(estado, color, a, contexto));
-      if (nota > mejorNota) { mejorNota = nota; mejor = a; }
-      if (a.tipo === accion.tipo && a.desde === accion.desde && a.hasta === accion.hasta) notaJugada = nota;
-    }
-    if (notaJugada === null) continue;
-    salida.push({ ...paso, alternativa: mejor, sospecha: mejorNota - notaJugada, notaJugada, mejorNota });
-  }
-  salida.sort((a, b) => b.sospecha - a.sospecha);
-  return salida.slice(0, cuantos);
-}
-
-// --- Etapa 2: jugarlo de verdad ------------------------------------------------
-
-const resolver = (estado) => {
-  const p = estado.pendiente;
-  return p.tipo === "recoger"
-    ? decisionDeRecogida(estado, p.color) ? recogerLaBandera(estado) : renunciarARecoger(estado)
-    : reclutar(estado, Math.max(...p.opciones));
-};
-
-function jugarDesde(estado, color, jugar, azar, limite) {
-  let e = estado;
-  let turnos = 0;
-  while (!e.fin && turnos < limite) {
-    if (e.pendiente) { e = resolver(e); continue; }
-    const a = jugar(e, e.turno, azar);
-    if (!a) break;
-    e = aplicar(e, a);
-    turnos++;
-  }
-  const valorA = e.fin && e.fin.ganador ? (EQUIPO_A.includes(e.fin.ganador) ? 1 : 0) : repartoDeTablas(e);
-  return EQUIPO_A.includes(color) ? valorA : 1 - valorA;
-}
-
-// OJO CON EL DETERMINISMO DE LAS TIRADAS, que casi me hace concluir lo contrario
-// de lo que pasa. Una política sin ruido juega SIEMPRE la misma continuación, así
-// que pedir tres tiradas calcula tres veces lo mismo: dos medidas de la misma
-// posición con semillas distintas daban correlación 1,000 y diferencia 0. La
-// política de las tiradas tiene que ser estocástica para que promediar signifique
-// algo — es la diferencia entre "cuánto vale esta jugada" y "qué pasó una vez".
-export function verificar(momento, jugar, { tiradas = 12, limite = 200, semilla = 5 } = {}) {
-  const valorDe = (accion) => {
-    const tirada = [];
-    for (let t = 0; t < tiradas; t++) {
-      // Semillas comunes entre las dos ramas: la diferencia es la jugada, no la
-      // suerte de la continuación.
-      tirada.push(jugarDesde(aplicar(momento.estado, accion), momento.color, jugar, generador(semilla + t * 104729), limite));
-    }
-    const media = tirada.reduce((a, b) => a + b, 0) / tirada.length;
-    const varianza = tirada.reduce((s, v) => s + (v - media) ** 2, 0) / Math.max(1, tirada.length - 1);
-    return { media, error: Math.sqrt(varianza / tirada.length) };
-  };
-  const jugada = valorDe(momento.accion);
-  const otra = valorDe(momento.alternativa);
-  // El error va con el número: medida sin él, esta diferencia engaña. Con 8
-  // tiradas, dos medidas de la MISMA posición solo correlacionan 0,39.
-  return {
-    ...momento,
-    valorJugada: jugada.media, valorAlternativa: otra.media,
-    medido: otra.media - jugada.media,
-    error: Math.sqrt(jugada.error ** 2 + otra.error ** 2),
-  };
-}
-
-// --- Ponerlo bonito ------------------------------------------------------------
-
-const CASILLA = (c) => (c === "ANILLO" ? "anillo" : c === "TORRE" ? "torre" : c);
-
-export function describir(momento) {
-  const pieza = momento.estado.piezas[momento.accion.pieza];
-  const quien = pieza ? NOMBRE_RANGO[pieza.rango] : "una pieza";
-  const verbo = (a) => (a.tipo === "disparar" ? "dispara a" : a.tipo === "atacar" ? "ataca" : "va a");
-  return {
-    jugada: `el ${quien} de ${CASILLA(momento.accion.desde)} ${verbo(momento.accion)} ${CASILLA(momento.accion.hasta)}`,
-    alternativa: `${CASILLA(momento.alternativa.desde)} ${verbo(momento.alternativa)} ${CASILLA(momento.alternativa.hasta)}`,
-  };
-}
-
-export function analizarPartida(despliegues, historia, { red, jugar, cuantos = 8, tiradas = 12, limite = 200 } = {}) {
-  const { pasos } = reproducirPartida(despliegues, historia);
-  const candidatos = sospechosos(pasos, red, { cuantos });
-  return candidatos
-    .map((m) => verificar(m, jugar, { tiradas, limite }))
-    .sort((a, b) => Math.abs(b.medido) - Math.abs(a.medido));
-}
 
 // --- Guion --------------------------------------------------------------------
 

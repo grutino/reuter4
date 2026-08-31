@@ -9,7 +9,8 @@
 import fs from "node:fs";
 import path from "node:path";
 import { desdeObjeto } from "../src/motor/red.js";
-import { accionConRed, cargarModelos } from "../src/motor/bot-red.js";
+import { accionConRed } from "../src/motor/bot-red.js";
+import { cargarModelos } from "../src/motor/modelos.js";
 import { accionDeBot } from "../src/motor/bot.js";
 import {
   recolectar, etiquetar, ejemplosDeEscenario, guardarBanco, leerBanco,

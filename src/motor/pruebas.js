@@ -30,7 +30,8 @@ import { accionDeBot, accionDeBotClasico, decisionDeRecogida, despliegueAleatori
 import { peligroEn, lineasAbiertasSi } from "./analisis.js";
 import { analizarTurno } from "./analisis.js";
 import { rasgosDeJugada, contextoDeTurno, NOMBRES as NOMBRES_RASGOS, TAMANO as TAMANO_JUGADA } from "./rasgos-jugada.js";
-import { cargarModelos, jugadaDeBot } from "./bot-red.js";
+import { jugadaDeBot } from "./bot-red.js";
+import { cargarModelos } from "./modelos.js";
 import { NIVELES, nivelValido, ESCALA, configuracionDeNivel } from "./dificultad.js";
 import { BATEN_ANILLO, BATEN_LA_TORRE, PASOS_A_TIRO, ANILLO as ANILLO_T } from "./tablero.js";
 import { salaParaJugador } from "../../servidor/vista.mjs";

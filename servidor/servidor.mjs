@@ -18,7 +18,8 @@ import {
   validarDespliegue,
 } from "../src/motor/motor.js";
 import { accionDeBot, decisionDeRecogida, despliegueAleatorio } from "../src/motor/bot.js";
-import { jugadaDeBot, despliegueDeBot, cargarModelos } from "../src/motor/bot-red.js";
+import { jugadaDeBot, despliegueDeBot } from "../src/motor/bot-red.js";
+import { cargarModelos } from "../src/motor/modelos.js";
 import { NIVEL_POR_DEFECTO, nivelValido, ESCALA } from "../src/motor/dificultad.js";
 
 const RAIZ = path.dirname(fileURLToPath(import.meta.url));
@@ -191,6 +192,19 @@ const TIPOS = {
 
 const servidor = http.createServer((peticion, respuesta) => {
   const url = (peticion.url || "/").split("?")[0];
+
+  // El modelo de jugada, para que el navegador pueda analizar una partida
+  // terminada. Es un JSON de números y no lleva nada oculto: son los pesos que
+  // ya usan los bots. Se sirve aparte de `dist/` para no tener que recompilar el
+  // cliente cada vez que se publica un modelo.
+  if (url === "/modelos/red-jugada.json") {
+    const modelo = path.join(RAIZ, "..", "src", "motor", "modelos", "red-jugada.json");
+    if (!fs.existsSync(modelo)) { respuesta.writeHead(404).end("no hay modelo publicado"); return; }
+    respuesta.writeHead(200, { "Content-Type": "application/json; charset=utf-8" });
+    fs.createReadStream(modelo).pipe(respuesta);
+    return;
+  }
+
   let fichero = path.join(ESTATICO, url === "/" ? "index.html" : url);
   if (!fichero.startsWith(ESTATICO)) {
     respuesta.writeHead(403).end();

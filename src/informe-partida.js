@@ -288,9 +288,49 @@ function lineaDeJugada(h, rango) {
   return partes.length ? partes.join(" · ") : h.tipo;
 }
 
+// --- El análisis: dónde se decidió ---------------------------------------------
+//
+// Solo sale si se ha calculado; el informe se puede abrir igual sin él. Cada
+// número lleva su error y se marca cuando cae dentro del ruido, porque medir el
+// impacto de una jugada suelta es muy ruidoso: la misma posición medida dos
+// veces con 8 tiradas solo correlaciona 0,39 consigo misma. Sin ese aviso el
+// listado parece decir cosas que no dice.
+function seccionDeAnalisis(analisis, hayFichas, fichita) {
+  if (!analisis || !analisis.length) return "";
+
+  const claros = analisis.filter((m) => Math.abs(m.medido) > 2 * m.error);
+  const filas = analisis.map((m) => {
+    const signo = m.medido > 0 ? "peor" : "mejor";
+    const seguro = Math.abs(m.medido) > 2 * m.error;
+    return `<tr class="${seguro ? "" : "difusa"}">
+      <td class="n">${m.n}</td>
+      <td class="quien">${fichita(m.color, m.rangoDeLaPieza)}${esc(m.color)}</td>
+      <td>${esc(m.jugada)}<div class="alternativa">en vez de: ${esc(m.alternativa)}</div></td>
+      <td class="cifra">${(m.valorJugada * 100).toFixed(0)}% <small>contra</small> ${(m.valorAlternativa * 100).toFixed(0)}%</td>
+      <td class="cifra">${signo} por ${Math.abs(m.medido * 100).toFixed(0)} <small>±${Math.round(m.error * 100)}</small></td>
+    </tr>`;
+  }).join("");
+
+  return `<section>
+    <h2>Dónde se decidió</h2>
+    <p class="sub">De cada posición dudosa se ha vuelto a jugar la partida varias veces con la
+      jugada que se hizo y con la alternativa, para ver si el resultado cambia. ${
+        claros.length
+          ? `<b>${claros.length} de ${analisis.length}</b> superan su propio margen de error; el resto están en gris.`
+          : `Ninguna supera su margen de error: en esta partida no hubo una jugada suelta que la decidiera.`
+      }</p>
+    <table>
+      <thead><tr><th>#</th><th>bando</th><th>jugada</th><th>resultado</th><th>diferencia</th></tr></thead>
+      <tbody>${filas}</tbody>
+    </table>
+    <p class="pie">Medir una jugada suelta es ruidoso: la misma posición medida dos veces solo
+      concuerda consigo misma a medias. Por eso va el error al lado y no un número a secas.</p>
+  </section>`;
+}
+
 // --- El documento entero ------------------------------------------------------
 
-export function construirInforme(sala, { fichas = null } = {}) {
+export function construirInforme(sala, { fichas = null, analisis = null } = {}) {
   const estado = sala.estado || {};
   const historia = estado.historia || [];
   const despliegues = sala.despliegues || {};
@@ -346,6 +386,10 @@ export function construirInforme(sala, { fichas = null } = {}) {
   .sello.peq { width:9px; height:9px; margin-right:6px; vertical-align:middle; }
   .fichita { width:19px; height:19px; margin-right:6px; vertical-align:-4px; }
   td.quien { white-space:nowrap; }
+  td.cifra { white-space:nowrap; font-variant-numeric:tabular-nums; }
+  td.cifra small { color:var(--tenue); }
+  tr.difusa td { color:var(--tenue); }
+  .alternativa { font-size:12px; color:var(--tenue); margin-top:2px; }
   .fichas { display:flex; flex-wrap:wrap; gap:10px; margin:0 0 8px; padding:0; }
   .ficha { border:1px solid var(--linea); border-radius:6px; padding:8px 12px; min-width:118px; }
   .ficha dt { font-size:11px; color:var(--tenue); text-transform:uppercase; letter-spacing:0.06em; }
@@ -377,6 +421,8 @@ export function construirInforme(sala, { fichas = null } = {}) {
   <h2>Los cuatro ejércitos</h2>
   ${colores.map(seccionColor).join("")}
 
+  ${seccionDeAnalisis(analisis, hayFichas, fichita)}
+
   <h2>El hilo completo</h2>
   <table><thead><tr><th>#</th><th>bando</th><th>jugada</th></tr></thead><tbody>${filas}</tbody></table>
 </body></html>`;
@@ -384,13 +430,49 @@ export function construirInforme(sala, { fichas = null } = {}) {
 
 // Abre el informe en una pestaña nueva. Devuelve false si el navegador la ha
 // bloqueado, para que quien llama pueda avisar en vez de no hacer nada.
-export function abrirInforme(sala) {
+// Analiza la partida en el propio navegador: baja el modelo, vuelve a montarla y
+// prueba las alternativas en los momentos dudosos. Tarda unos segundos, así que
+// quien llama debería avisar de que está trabajando.
+//
+// Se hace aquí y no en el servidor por una razón práctica: son varios segundos
+// de cálculo seguido, y el servidor mueve los bots de todas las partidas en un
+// temporizador. Bloquearlo las congelaría todas.
+export async function analizarEnElNavegador(sala, { cuantos = 6, tiradas = 10 } = {}) {
+  const respuesta = await fetch("/modelos/red-jugada.json");
+  if (!respuesta.ok) throw new Error("no hay modelo publicado en el servidor");
+  const guardado = await respuesta.json();
+
+  const [{ desdeObjeto }, { analizarPartida, describir }, { jugadaSoloRed }] = await Promise.all([
+    import("./motor/red.js"),
+    import("./motor/analisis-partida.js"),
+    import("./motor/bot-red.js"),
+  ]);
+  const red = desdeObjeto(guardado.red);
+  // Las tiradas llevan ruido: con una política determinista, pedir varias
+  // calcula varias veces lo mismo.
+  const jugar = (e, c, az) => jugadaSoloRed(e, c, red, { azar: az, ruido: 0.2 });
+
+  const momentos = analizarPartida(sala.despliegues, sala.estado.historia, { red, jugar, cuantos, tiradas });
+  return momentos.map((m) => {
+    const pieza = m.estado.piezas[m.accion.pieza];
+    const texto = describir(m);
+    return {
+      n: m.n, color: m.color,
+      rangoDeLaPieza: pieza ? pieza.rango : null,
+      jugada: texto.jugada, alternativa: texto.alternativa,
+      valorJugada: m.valorJugada, valorAlternativa: m.valorAlternativa,
+      medido: m.medido, error: m.error,
+    };
+  });
+}
+
+export function abrirInforme(sala, analisis = null) {
   // Las fichas se generan ANTES de abrir la ventana: hacen falta canvas del
   // documento actual, y el de la ventana nueva todavía no existe.
   const fichas = generarFichas();
   const ventana = window.open("", "_blank");
   if (!ventana) return false;
-  ventana.document.write(construirInforme(sala, { fichas }));
+  ventana.document.write(construirInforme(sala, { fichas, analisis }));
   ventana.document.close();
   return true;
 }

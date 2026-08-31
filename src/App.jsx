@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
-import { abrirInforme } from "./informe-partida.js";
+import { abrirInforme, analizarEnElNavegador } from "./informe-partida.js";
 import Tablero3D, { ESTILO, NOMBRE_RANGO, LATON_CSS } from "./Tablero3D.jsx";
 import { COLORES, ZONAS, casillasDeZona, zonaDe, coord } from "./motor/tablero.js";
 import { RANGOS, VICTORIAS_PARA_RECLUTAR, SOCIO, movimientosLegales, inventarioInicial } from "./motor/motor.js";
@@ -436,6 +436,7 @@ export default function App() {
   const [salaId, setSalaId] = useState(null);
   const [conectado, setConectado] = useState(false);
   const [aviso, setAviso] = useState("");
+  const [analizando, setAnalizando] = useState(false);
   const [creando, setCreando] = useState(false);
   const [nuevaSala, setNuevaSala] = useState({ nombre: "", privada: false, clave: "" });
   const [pidiendoClave, setPidiendoClave] = useState(null);
@@ -1057,6 +1058,30 @@ export default function App() {
                       }}
                     >
                       Informe de la partida
+                    </Boton>
+                    {/* El análisis vuelve a jugar la partida varias veces desde
+                        las posiciones dudosas, así que tarda unos segundos. Se
+                        hace aquí y no en el servidor porque bloquearlo
+                        congelaría los bots de todas las demás partidas. */}
+                    <Boton
+                      variante="secundario"
+                      disabled={analizando}
+                      onClick={async () => {
+                        setAnalizando(true);
+                        setAviso("");
+                        try {
+                          const analisis = await analizarEnElNavegador(sala);
+                          if (!abrirInforme(sala, analisis)) {
+                            setAviso("El navegador ha bloqueado la ventana del informe. Permite las ventanas emergentes de esta página.");
+                          }
+                        } catch (e) {
+                          setAviso(`No se ha podido analizar: ${e.message}`);
+                        } finally {
+                          setAnalizando(false);
+                        }
+                      }}
+                    >
+                      {analizando ? "Analizando…" : "Informe con análisis"}
                     </Boton>
                     <span style={{ fontSize: 12, color: "#C9BC9C" }}>
                       Los rangos ya están destapados en el tablero.
