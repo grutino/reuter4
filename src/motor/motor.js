@@ -35,7 +35,15 @@ export const MAX_ALTERNANCIAS = 10; // 5 idas y 5 vueltas entre las mismas dos c
 
 // Cuántas jugadas se conservan en el hilo de historia. Es lo único del estado que
 // crece sin tope natural, y el estado entero se serializa y se guarda en disco.
-export const MAX_HISTORIA = 200;
+// Antes eran 200 y se quedaban cortas. El hilo no es solo para leerlo mientras
+// se juega: es lo que permite REPRODUCIR una partida terminada, y un replay que
+// empieza por el turno 21 no puede saber de qué rango es la pieza que ya estaba
+// en F4. Pasó de verdad, en una partida de 221 turnos.
+//
+// Lo que se manda a los clientes sigue acotado aparte (`HISTORIA_ENVIADA`), así
+// que esto solo hace crecer el estado guardado: unos 200 KB por sala en el peor
+// caso, y las salas se borran a las 12 horas.
+export const MAX_HISTORIA = 1200;
 
 // Siempre se juega dos contra dos, con cada jugador enfrente de su compañero.
 export const SOCIO = { rojo: "azul", azul: "rojo", verde: "amarillo", amarillo: "verde" };
@@ -619,7 +627,11 @@ export function reclutar(estado, rango) {
   siguiente.reclutas[color] = (siguiente.reclutas[color] || 0) + 1;
   siguiente.eventos = [{ tipo: "reclutamiento", color }]; // el rango no se publica
   cerrarPendiente(siguiente);
-  anotarEnHistoria(siguiente, { color, tipo: "reclutar", eventos: [...siguiente.eventos] });
+  // El rango SÍ se guarda en el hilo, pero tapado hasta el final: sin él, una
+  // partida terminada no se puede reproducir. El replay pierde al recluta y todo
+  // lo que haga después, y sin replay no hay forma de analizar qué jugadas
+  // decidieron la partida. `historiaPublica` lo quita mientras se juega.
+  anotarEnHistoria(siguiente, { color, tipo: "reclutar", rango, eventos: [...siguiente.eventos] });
   return siguiente;
 }
 
@@ -652,6 +664,20 @@ function pasarTurno(estado) {
 // --- Vista por jugador ------------------------------------------------------
 // Lo que un jugador puede ver: sus rangos, sus bajas, y de los demás solo posición y color.
 
+// El hilo tal y como puede verse mientras la partida sigue.
+//
+// Lo único que hay que tapar es el rango de un reclutamiento: el evento publica
+// el color y nada más, y saber QUÉ pieza ha vuelto es información oculta. Se
+// guarda en el hilo igualmente porque sin él una partida terminada no se puede
+// reproducir, y al terminar se destapa como todo lo demás.
+export function historiaPublica(historia) {
+  return (historia || []).map((h) => {
+    if (h.rango === undefined) return h;
+    const { rango, ...resto } = h;
+    return resto;
+  });
+}
+
 export function vistaDe(estado, color) {
   // Ni siquiera el compañero ve tus rangos.
   const piezas = Object.values(estado.piezas).map((p) => {
@@ -672,7 +698,7 @@ export function vistaDe(estado, color) {
     banderasSueltas: { ...estado.banderasSueltas },
     // Público para todos: son rangos que ya se han visto sobre la mesa.
     rangosRevelados: { ...(estado.rangosRevelados || {}) },
-    historia: [...(estado.historia || [])],
+    historia: estado.fin ? [...(estado.historia || [])] : historiaPublica(estado.historia),
     marcador: { ...estado.marcador },
     misBajas: [...estado.bajas[color]],
     pendiente: estado.pendiente && estado.pendiente.color === color ? estado.pendiente : null,

@@ -72,6 +72,13 @@ const px = (columna, fila) => ({
 // (`el rango no se publica`, en `reclutar`). Esa casilla queda sin identificar y
 // sus jugadas salen sin ficha, que es más honesto que inventarla.
 export function reconstruirRangos(despliegues, historia) {
+  // Si al hilo le falta el principio, no se puede reconstruir nada: el replay
+  // parte del despliegue inicial y sin las primeras jugadas ya no sabe quién
+  // está dónde. Antes lo intentaba igual y devolvía rangos EQUIVOCADOS, que es
+  // peor que no devolver ninguno.
+  const primera = (historia || [])[0];
+  if (primera && primera.n > 1) return (historia || []).map(() => null);
+
   const enCasilla = new Map();
   for (const [color, piezas] of Object.entries(despliegues || {})) {
     for (const p of piezas || []) enCasilla.set(p.casilla, { color, rango: p.rango });
@@ -82,8 +89,10 @@ export function reconstruirRangos(despliegues, historia) {
     const rango = quien ? quien.rango : null;
 
     if (h.tipo === "reclutar") {
+      // El hilo destapado trae el rango del recluta; sin él, esa casilla y todo
+      // lo que haga después quedan sin identificar.
       const casilla = ZONAS[h.color] && ZONAS[h.color].reclutamiento;
-      if (casilla) enCasilla.set(casilla, { color: h.color, rango: null });
+      if (casilla) enCasilla.set(casilla, { color: h.color, rango: h.rango ?? null });
       return null;
     }
 

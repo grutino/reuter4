@@ -392,11 +392,19 @@ generado desde una prueba cae al número dentro de un disco. Las 36 fichas (9 ra
 colores) van una sola vez en `<defs>` como `<symbol>` y se referencian con `<use>`, también en
 el hilo.
 
+**Dos cosas hacen posible reproducir una partida, y las dos costaron un fallo.** El rango de un
+reclutamiento **sí** se guarda en el hilo, tapado hasta el final por `historiaPublica`: sin él
+el replay pierde al recluta y todo lo que haga después. Y `MAX_HISTORIA` subió de 200 a 1200
+porque el hilo no es solo para leerlo mientras se juega — con 200, una partida de 221 turnos
+perdía el principio y el replay hacía aparecer piezas de la nada. Lo que se manda a los clientes
+sigue acotado aparte con `HISTORIA_ENVIADA`. Si aun así el hilo llega recortado,
+`reconstruirRangos` lo detecta (`historia[0].n > 1`) y devuelve nulos en vez de rangos
+inventados.
+
 **El hilo dice de qué rango era cada jugada, y eso hay que reconstruirlo.** El registro guarda
 color, tipo, origen y destino pero no el rango de quien mueve, porque mientras se juega es
-información oculta. `reconstruirRangos` parte del despliegue inicial y aplica el hilo entero.
-Lo único irrecuperable es un recluta: su rango no se publica, así que esa casilla queda sin
-identificar y sus jugadas salen sin ficha, que es más honesto que inventarla. La reconstrucción
+información oculta. `reconstruirRangos` parte del despliegue inicial y aplica el hilo entero, y
+desde que el rango del recluta se guarda tapado, identifica **todas** las jugadas. La reconstrucción
 trae su propia vara de medir: los duelos **sí** publican los dos rangos, así que si el replay no
 coincide con lo que dice el duelo, el replay está mal — y hay una prueba que lo exige sobre
 cuatro partidas.

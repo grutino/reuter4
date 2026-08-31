@@ -182,6 +182,17 @@ memoria ganan el 65% de las partidas decididas frente a los antiguos.
 
 ## Qué falta por pulir
 
+- **El informe de seguimiento del entrenamiento sobra por la mitad**: hoy arrastra curvas del
+  evolutivo de pesos y de la heurística, que ya no se usan para nada. Debe quedarse solo con lo
+  que dice algo de la **calidad de las dos redes**: curvas de aprendizaje y validación,
+  calibración, histograma de predicciones, sensibilidad por rasgo —falta la de la red de jugada,
+  que solo existe para la de despliegue—, la curva de coevolución titular contra aspirante, y el
+  desglose rival a rival del panel.
+- **El informe de fin de partida debe llevar el análisis, no solo el relato**: ahora cuenta lo
+  que pasó (despliegues, flechas, hilo). Falta lo que se saca de analizarlo: qué jugadas fueron
+  determinantes, dónde se perdió o se ganó la partida, y la valoración de cada bando. Es la
+  misma maquinaria del detector en dos etapas, presentada para leerla.
+
 - **Entrenar con escenarios concretos, no solo partidas enteras**: hoy los ejemplos salen de
   partidas jugadas de principio a fin, y eso deja las tácticas decisivas sin aprender por pura
   rareza. Medido sobre 3.420 vectores de jugada: `tapaLineaAlAnillo` se activa en el 0,1% de los

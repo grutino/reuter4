@@ -782,7 +782,15 @@ prueba("el hilo recoge los eventos del duelo", () => {
   assert.ok(entrada.eventos.some((ev) => ev.tipo === "duelo" && ev.resultado === "atacante"));
 });
 
-prueba("el hilo no publica ningún rango oculto en un reclutamiento", () => {
+prueba("el rango de un reclutamiento no sale del servidor hasta el final", () => {
+  // Este rango SÍ se guarda en el hilo, y antes no. La razón es que sin él una
+  // partida terminada no se puede reproducir: el replay pierde al recluta y todo
+  // lo que haga después, y sin replay no hay forma de analizar qué jugadas
+  // decidieron la partida.
+  //
+  // Lo que no puede pasar es que salga mientras se juega, así que lo tapa
+  // `historiaPublica`, y esta prueba vigila las DOS censuras -la del motor y la
+  // del servidor- porque son paralelas y es fácil arreglar solo una.
   let e = estadoVacio();
   e.bajas.rojo.push(9);
   e.marcador.rojo = 5;
@@ -790,9 +798,35 @@ prueba("el hilo no publica ningún rango oculto en un reclutamiento", () => {
   colocar(e, "verde", 3, "E4");
   const tras = aplicar(e, accion(movimientosLegales(e), (a) => a.tipo === "atacar" && a.pieza === pieza.id));
   const conRecluta = reclutar(tras, 9);
+
   const entrada = conRecluta.historia[conRecluta.historia.length - 1];
   assert.strictEqual(entrada.tipo, "reclutar");
-  assert.ok(!JSON.stringify(entrada).includes('"rango"'), "el rango reclutado no puede aparecer en el hilo");
+  assert.strictEqual(entrada.rango, 9, "el estado interno sí lo guarda: es lo que permite el replay");
+
+  // Censura del motor. Se mira la ENTRADA de reclutamiento y no el hilo entero:
+  // los duelos publican los dos rangos y eso sí es público.
+  const delHilo = (historia) => historia.find((h) => h.tipo === "reclutar");
+  assert.strictEqual(delHilo(vistaDe(conRecluta, "rojo").historia).rango, undefined,
+    "vistaDe no puede publicarlo mientras se juega, ni siquiera a quien reclutó");
+  assert.strictEqual(delHilo(vistaDe(conRecluta, "verde").historia).rango, undefined, "ni al rival");
+
+  // Censura del servidor.
+  const sala = {
+    id: "s1", nombre: "p", anfitrion: "u1", privada: false, fase: "jugando", creada: Date.now(),
+    despliegues: {}, puestos: { rojo: { tipo: "humano", id: "u1" }, azul: null, verde: null, amarillo: null },
+    estado: conRecluta,
+  };
+  assert.strictEqual(
+    delHilo(salaParaJugador(sala, "u1").estado.historia).rango, undefined,
+    "el servidor tampoco, y es la censura que de verdad sale por el WebSocket"
+  );
+
+  // Y al terminar, destapado: es cuando hace falta para el informe.
+  conRecluta.fin = { ganador: "rojo", equipo: ["rojo", "azul"] };
+  assert.strictEqual(
+    salaParaJugador(sala, "u1").estado.historia.find((h) => h.tipo === "reclutar").rango, 9,
+    "terminada la partida el rango tiene que estar, o el replay se queda cojo"
+  );
 });
 
 prueba("el hilo se recorta por arriba pero la numeración sigue subiendo", () => {
@@ -1492,10 +1526,6 @@ prueba("el informe reconstruye de qué rango era cada jugada", () => {
     historia.forEach((h, i) => {
       const duelo = (h.eventos || []).find((ev) => ev.tipo === "duelo");
       if (!duelo) return;
-      // Un recluta no se puede identificar -su rango no se publica- y también
-      // pelea. Cuando el replay dice null, no hay nada que comparar; lo que no
-      // puede pasar es que diga un rango DISTINTO del que publica el duelo.
-      if (rangos[i] === null) return;
       duelosComprobados++;
       assert.strictEqual(
         rangos[i], duelo.atacante.rango,
@@ -1527,9 +1557,9 @@ prueba("el informe reconstruye de qué rango era cada jugada", () => {
   }
 
   assert.ok(duelosComprobados >= 8, `hacen falta duelos para comprobar nada; hubo ${duelosComprobados}`);
-  assert.ok(
-    identificadasTotales >= jugadasTotales * 0.6,
-    `solo se identificaron ${identificadasTotales} de ${jugadasTotales}: eso ya no lo explican los reclutas`
+  assert.strictEqual(
+    identificadasTotales, jugadasTotales,
+    `${jugadasTotales - identificadasTotales} jugadas sin identificar: el replay pierde piezas`
   );
 });
 
@@ -1729,6 +1759,29 @@ prueba("la red aprende un ORDEN con la pérdida por pares", () => {
   // como estimación de victoria, hay que mezclarla con la pérdida de valor.
   const grande = adelante(red, Float64Array.from([0.9, 0.5, 0.5])).logit;
   assert.ok(Math.abs(grande) > 5, "sin pérdida de valor la escala se dispara, y conviene saberlo");
+});
+
+
+prueba("un hilo recortado no se reconstruye a medias, se declara imposible", () => {
+  // El replay parte del despliegue inicial. Si al hilo le falta el principio no
+  // sabe quién está dónde, y antes lo intentaba igual y devolvía rangos
+  // EQUIVOCADOS: una partida de 221 turnos con el hilo recortado a 200 hacía que
+  // una pieza llegada en el turno 41 apareciera de la nada.
+  //
+  // Devolver nulos es peor servicio y mejor respuesta: el informe deja esas
+  // jugadas sin ficha en vez de mentir.
+  const completo = [
+    { n: 1, color: "rojo", tipo: "mover", desde: "H2", hasta: "H3", eventos: [] },
+    { n: 2, color: "rojo", tipo: "mover", desde: "H3", hasta: "H4", eventos: [] },
+  ];
+  const despliegues = { rojo: [{ casilla: "H2", rango: 6 }] };
+  assert.deepStrictEqual(reconstruirRangos(despliegues, completo), [6, 6], "entero sí se reconstruye");
+
+  const recortado = completo.slice(1); // empieza en n=2
+  assert.deepStrictEqual(
+    reconstruirRangos(despliegues, recortado), [null],
+    "recortado no debería inventarse nada"
+  );
 });
 
 console.log(`\n${pasadas} pruebas superadas, ${fallidas} fallidas\n`);

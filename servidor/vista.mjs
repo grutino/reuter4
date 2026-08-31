@@ -10,6 +10,7 @@
 // ahora las dos tienen prueba.
 
 import { COLORES } from "../src/motor/tablero.js";
+import { historiaPublica } from "../src/motor/motor.js";
 
 // Cuántas jugadas del hilo se mandan en juego. `repartir` reenvía todas las
 // salas a todos los clientes en cada cambio, así que el historial completo se
@@ -57,7 +58,13 @@ export function salaParaJugador(sala, idJugador) {
       // banderas. Ningún rango oculto, así que se puede mandar tal cual.
       // En juego se manda solo la cola, que es lo que el hilo enseña. Al terminar
       // va entera, porque el informe la necesita completa.
-      historia: terminada ? e.historia || [] : miColor ? (e.historia || []).slice(-HISTORIA_ENVIADA) : [],
+      // Al terminar va entera y destapada; mientras se juega, sin el rango de los
+      // reclutamientos, que es lo único oculto que lleva el hilo.
+      historia: terminada
+        ? e.historia || []
+        : miColor
+        ? historiaPublica((e.historia || []).slice(-HISTORIA_ENVIADA))
+        : [],
       // Rangos que ya ha visto toda la mesa. Es lo mismo que se deduce leyendo el
       // hilo, así que enviarlo no destapa nada; de momento el cliente no lo pinta.
       banderasSueltas: e.banderasSueltas,
