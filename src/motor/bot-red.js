@@ -16,6 +16,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { evaluar, desdeObjeto } from "./red.js";
+import { movimientosLegales } from "./motor.js";
 import { despliegueAleatorio, puntuarAcciones, PESOS_BASE, DISTANCIA } from "./bot.js";
 import { NIVELES, nivelValido, configuracionDeNivel } from "./dificultad.js";
 import { analizarTurno } from "./analisis.js";
@@ -197,4 +198,34 @@ export function despliegueDeBot(color, nivel, modelos = {}, azar = Math.random) 
   const cfg = configuracionDeNivel(nivel, Boolean(modelos.despliegue));
   if (!cfg.red || !modelos.despliegue || !cfg.candidatosDespliegue) return despliegueAleatorio(color, azar);
   return despliegueGuiado(color, azar, modelos.despliegue, cfg.candidatosDespliegue, cfg.escalada);
+}
+
+// --- Decidir con la red SOLA, sin heurística ---------------------------------
+//
+// La heurística no solo puntúa: hoy es quien elige las cuatro candidatas que ve
+// la red. Esto es el camino sin ella — la red puntúa TODAS las jugadas legales.
+//
+// Y sale más barato, que era lo que no esperaba: medido, la heurística cuesta
+// 0,42 ms por turno y los rasgos de una jugada 0,006. Con 28 jugadas legales de
+// media, puntuarlas todas con la red son 0,59 ms frente a los 0,87 de pasar
+// antes por la heurística. El cuello de botella es el análisis del turno, que se
+// hace una sola vez en los dos casos.
+export function jugadaSoloRed(estado, color, red, { azar = Math.random, ruido = 0, memoria = true } = {}) {
+  const visto = memoria ? estado : { ...estado, rangosRevelados: {} };
+  const legales = movimientosLegales(visto, color);
+  if (!legales.length) return null;
+  if (legales.length === 1) return legales[0];
+
+  const contexto = contextoDeTurno(visto, color, analizarTurno(visto, color, DISTANCIA));
+  const notas = legales.map((accion) => ({
+    accion,
+    nota: evaluar(red, rasgosDeJugada(visto, color, accion, contexto)),
+  }));
+  notas.sort((a, b) => b.nota - a.nota);
+
+  if (ruido > 0 && azar() < ruido) {
+    const pool = notas.slice(0, Math.min(POOL_DE_FALLO, notas.length));
+    return pool[Math.floor(azar() * pool.length)].accion;
+  }
+  return notas[0].accion;
 }

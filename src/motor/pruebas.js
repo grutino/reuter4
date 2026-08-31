@@ -36,6 +36,8 @@ import { BATEN_ANILLO, BATEN_LA_TORRE, PASOS_A_TIRO, ANILLO as ANILLO_T } from "
 import { salaParaJugador } from "../../servidor/vista.mjs";
 import { centro as centroEnInforme, reconstruirRangos, CELDA, MARGEN, LADO } from "../informe-partida.js";
 import { vistaDelEscenario } from "../escenario-vista.js";
+import { crearRed, evaluar, adelante } from "./red.js";
+import { entrenarPares } from "../../entrenamiento/red.mjs";
 import { propiedadesDePieza, FIRMA as FIRMA_DESPLIEGUE } from "./rasgos-despliegue.js";
 
 let pasadas = 0;
@@ -1683,6 +1685,50 @@ prueba("la sala de juicios enseña solo lo que vería quien mueve", () => {
   const serializada = JSON.stringify(ven);
   assert.ok(!serializada.includes('"rango":8'), "el 8 escondido no debería aparecer por ningún lado");
   assert.ok(!serializada.includes('"rango":9'), "ni el 9 del compañero");
+});
+
+
+prueba("la red aprende un ORDEN con la pérdida por pares", () => {
+  // Es lo que permite meter en la red cosas que no son un valor: una heurística
+  // y un juicio humano dicen "esta jugada antes que esta", y ninguna de las dos
+  // sabe decir "esta gana el 63% de las veces".
+  //
+  // La trampa que costó descubrirlo: la pérdida compara los LOGITS, y recuperar
+  // el logit invirtiendo la sigmoide no vale. Con la salida saturada las dos
+  // jugadas valen 1,0000, el recorte se come la diferencia y el gradiente pasa a
+  // ser ruido: la primera versión aprendía el orden INVERTIDO, 18% de aciertos.
+  const azar = (() => {
+    let a = 7 >>> 0;
+    return () => { a = (a * 1103515245 + 12345) % 2147483648; return a / 2147483648; };
+  })();
+  const red = crearRed([3, 6, 1], azar);
+  // El primer rasgo manda; los otros dos son ruido que hay que ignorar.
+  const par = () => {
+    const a = azar(), b = azar();
+    return {
+      mejor: Float64Array.from([Math.max(a, b), azar(), azar()]),
+      peor: Float64Array.from([Math.min(a, b), azar(), azar()]),
+    };
+  };
+  const pares = Array.from({ length: 600 }, par);
+  for (let e = 0; e < 150; e++) {
+    for (let i = 0; i < pares.length; i += 32) entrenarPares(red, pares.slice(i, i + 32), { tasa: 0.02 });
+  }
+
+  let ok = 0;
+  const n = 400;
+  for (let i = 0; i < n; i++) {
+    const p = par();
+    if (evaluar(red, p.mejor) >= evaluar(red, p.peor)) ok++;
+  }
+  assert.ok(ok / n > 0.9, `el orden debería aprenderse; salió ${Math.round((100 * ok) / n)}%`);
+
+  // Y el aviso que va con esto: la pérdida por pares SOLO mira diferencias, así
+  // que dispara la escala de la salida y deja de ser una probabilidad. Aquí los
+  // logits acaban en cientos. Por eso, cuando la red también tiene que valer
+  // como estimación de victoria, hay que mezclarla con la pérdida de valor.
+  const grande = adelante(red, Float64Array.from([0.9, 0.5, 0.5])).logit;
+  assert.ok(Math.abs(grande) > 5, "sin pérdida de valor la escala se dispara, y conviene saberlo");
 });
 
 console.log(`\n${pasadas} pruebas superadas, ${fallidas} fallidas\n`);

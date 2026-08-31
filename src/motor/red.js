@@ -25,9 +25,16 @@ const sigmoide = (x) => 1 / (1 + Math.exp(-x));
 
 // Devuelve las activaciones de todas las capas, que la retropropagación
 // necesita: sin ellas habría que volver a pasar hacia delante.
+// Devuelve las activaciones de todas las capas. Además cuelga del array el
+// LOGIT de la salida —lo que hay antes de la sigmoide—, porque hay pérdidas que
+// lo necesitan: la de orden por pares compara dos jugadas entre sí, y con la
+// sigmoide saturada las dos valen 1,0000 y la diferencia se pierde. Recuperar el
+// logit invirtiendo la sigmoide no sirve: hay que recortar para no mandar
+// infinitos, y el recorte se come justo la información que se estaba buscando.
 export function adelante(red, entrada) {
   const activaciones = [entrada];
   let actual = entrada;
+  let logitSalida = 0;
   for (let c = 0; c < red.pesos.length; c++) {
     const entradas = red.capas[c];
     const salidas = red.capas[c + 1];
@@ -38,11 +45,13 @@ export function adelante(red, entrada) {
       let suma = b[j];
       for (let i = 0; i < entradas; i++) suma += actual[i] * w[i * salidas + j];
       // Última capa: sigmoide, porque la salida es una probabilidad de ganar.
-      siguiente[j] = c === red.pesos.length - 1 ? sigmoide(suma) : Math.max(0, suma);
+      if (c === red.pesos.length - 1) { logitSalida = suma; siguiente[j] = sigmoide(suma); }
+      else siguiente[j] = Math.max(0, suma);
     }
     activaciones.push(siguiente);
     actual = siguiente;
   }
+  activaciones.logit = logitSalida;
   return activaciones;
 }
 
