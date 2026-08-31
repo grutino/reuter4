@@ -54,7 +54,15 @@ for (const { fichero, tamano, firma, etiqueta } of PIEZAS) {
   const viejo = fs.existsSync(rutaD) ? JSON.parse(fs.readFileSync(rutaD, "utf8")) : null;
   const notaN = nuevo.victoriasEnJuego;
   const notaV = viejo ? viejo.victoriasEnJuego : undefined;
-  const peor = viejo && notaN !== undefined && notaV !== undefined && notaN < notaV;
+  // Solo se comparan las notas si los dos modelos hablan el mismo idioma. Con
+  // otra firma de rasgos, el porcentaje del publicado se midió contra otro juego
+  // de entradas y no significa lo mismo: compararlos bloquearía la publicación
+  // de un modelo bueno por perder contra un número que no es del mismo mundo.
+  const comparables = viejo && viejo.firmaRasgos === firma;
+  const peor = comparables && notaN !== undefined && notaV !== undefined && notaN < notaV;
+  if (viejo && !comparables) {
+    console.log(`  ${etiqueta.padEnd(11)} el publicado tiene otra firma (${viejo.firmaRasgos || "ninguna"}): sus notas no son comparables, se sustituye`);
+  }
 
   if (peor && !forzar) {
     console.log(

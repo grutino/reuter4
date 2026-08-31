@@ -182,6 +182,16 @@ memoria ganan el 65% de las partidas decididas frente a los antiguos.
 
 ## Qué falta por pulir
 
+- **Entrenar con escenarios concretos, no solo partidas enteras**: hoy los ejemplos salen de
+  partidas jugadas de principio a fin, y eso deja las tácticas decisivas sin aprender por pura
+  rareza. Medido sobre 3.420 vectores de jugada: `tapaLineaAlAnillo` se activa en el 0,1% de los
+  casos y `disparoAlCoronador` en ninguno. Un rasgo que aparece en el 0,2% de los ejemplos no
+  aporta gradiente y la red lo ignora. La vía es sacar posiciones de los **historiales de
+  partidas terminadas** —que el informe ya reconstruye entera, con el rango de cada jugada— para
+  identificar dónde se pierde y sobremuestrear esas situaciones: finales cerca del castillo,
+  coronaciones falladas, cañonazos decisivos. Mientras tanto esas tácticas viven en la
+  heurística, con pesos deterministas, que ahí sí funcionan.
+
 - **Las siluetas salen de una foto**: `herramientas/extraer-siluetas.py` convierte una foto de
   la tarjeta de referencia en las máscaras de `src/siluetas-datos.js`. La foto no se versiona,
   solo la silueta derivada. Para rehacerlas con otra foto mejor:
