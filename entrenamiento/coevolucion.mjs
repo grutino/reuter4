@@ -45,12 +45,14 @@ import { analizarTurno } from "../src/motor/analisis.js";
 import { generador, repartoDeTablas } from "./arena.mjs";
 import { rasgosDeDespliegue, TAMANO as TAMANO_DESPLIEGUE, FIRMA as FIRMA_DESPLIEGUE } from "../src/motor/rasgos-despliegue.js";
 import { rasgosDeJugada, contextoDeTurno, TAMANO as TAMANO_JUGADA, FIRMA as FIRMA_JUGADA } from "../src/motor/rasgos-jugada.js";
-import { crearRed, entrenarLote, evaluar, aObjeto, desdeObjeto } from "./red.mjs";
+import { crearRed, entrenarLote, entrenarPares, evaluar, aObjeto, desdeObjeto } from "./red.mjs";
 import { construirPanel, medirContraPanel, cargarAperturas } from "./panel.mjs";
 import { fuenteDeDespliegues, aColocacion, aTexto } from "./aperturas.mjs";
 import { poblacionInicial, siguienteGeneracion, actualizarArchivo } from "./formaciones.mjs";
 import { despliegueGuiado } from "./entrenar-despliegue.mjs";
 import { accionConRed } from "./entrenar-jugada.mjs";
+import { jugadaSoloRed } from "../src/motor/bot-red.js";
+import { movimientosLegales } from "../src/motor/motor.js";
 import { generarInforme } from "./informe-redes.mjs";
 
 const AQUI = path.dirname(fileURLToPath(import.meta.url));
@@ -83,6 +85,17 @@ function opciones(argv) {
     // En seco no se escriben modelos ni formaciones: para probar el bucle sin
     // que un ensayo de 50 partidas pise a un modelo de 4000.
     seco: 0,
+    // SIN HEURÍSTICA DELANTE. Con esto la red puntúa TODAS las jugadas legales
+    // en vez de reordenar las cuatro que le pasa la heurística. Sale más barato
+    // -0,59 ms por turno frente a 0,87- pero exige una red destilada: la
+    // publicada, obligada a puntuarlas todas, saca 0 victorias de 72, porque
+    // nunca ha visto más que las finalistas.
+    soloRed: 0,
+    // El ancla: cada ronda se siguen metiendo pares de la heurística para que la
+    // red no olvide el orden que aprendió al destilar mientras persigue
+    // resultados. La heurística deja el camino de decisión pero se queda de
+    // andamio, que es distinto. Se puede bajar a cero para soltarla del todo.
+    anclaPares: 1, paresPorPosicion: 6, paresSueltos: 14, muestreoPares: 8,
     // Desplazamiento de las semillas del veredicto. Lo usa el proceso nocturno
     // para que cada sesión se mida en partidas distintas: si todas las sesiones
     // se midieran en las mismas, elegir la mejor sesión de la noche volvería a
@@ -119,6 +132,7 @@ function leer(nombre) {
 function jugarTanda(redD, redJ, o, semillaBase, sacarDespliegue, liga) {
   const deDespliegue = [];
   const deJugada = [];
+  const pares = [];
   let decididas = 0;
   let deLiga = 0;
 
@@ -160,9 +174,30 @@ function jugarTanda(redD, redJ, o, semillaBase, sacarDespliegue, liga) {
       const finalistas = puntuadas.slice(0, Math.min(o.candidatas, puntuadas.length));
       const contexto = contextoDeTurno(estado, color, analizarTurno(estado, color, DISTANCIA));
 
+      // Pares de la heurística para el ancla, en posiciones sorteadas. Cuestan
+      // una puntuación completa (0,42 ms), así que no en todos los turnos.
+      if (o.anclaPares && conRed(color) && turnos % o.muestreoPares === 0 && puntuadas.length >= 3) {
+        const rasgos = puntuadas.map((x) => rasgosDeJugada(estado, color, x.accion, contexto));
+        for (let k = 1; k <= Math.min(o.paresPorPosicion, rasgos.length - 1); k++) {
+          pares.push({ mejor: rasgos[0], peor: rasgos[k], peso: k === 1 ? 3 : 1 });
+        }
+        for (let k = 0; k < o.paresSueltos; k++) {
+          const i = Math.floor(azar() * rasgos.length);
+          const j = Math.floor(azar() * rasgos.length);
+          if (i === j) continue;
+          const [a, b] = i < j ? [i, j] : [j, i];
+          pares.push({ mejor: rasgos[a], peor: rasgos[b], peso: 1 });
+        }
+      }
+
       let elegida;
       if (!conRed(color)) {
         elegida = finalistas[0].accion; // el rival de liga juega la heurística
+      } else if (o.soloRed && redJ) {
+        // La red decide sobre TODAS las legales. La exploración sale de sus
+        // propias candidatas, no de las de la heurística: si explorara entre las
+        // de la heurística, seguiría atada a su criterio.
+        elegida = jugadaSoloRed(estado, color, redJ, { azar, ruido: o.exploracion });
       } else if (azar() < o.exploracion) {
         elegida = finalistas[Math.floor(azar() * finalistas.length)].accion;
       } else if (redJ) {
@@ -200,7 +235,7 @@ function jugarTanda(redD, redJ, o, semillaBase, sacarDespliegue, liga) {
     for (const color of COLORES) deDespliegue.push({ entrada: rasgosPorColor[color], objetivo: suyo(color) });
     for (const m of muestras) deJugada.push({ entrada: m.entrada, objetivo: suyo(m.color) });
   }
-  return { deDespliegue, deJugada, decididas, deLiga };
+  return { deDespliegue, deJugada, pares, decididas, deLiga };
 }
 
 // --- Continuar el entrenamiento de una red ------------------------------------
@@ -208,7 +243,7 @@ function jugarTanda(redD, redJ, o, semillaBase, sacarDespliegue, liga) {
 // `previa` es la red vigente. Se sigue desde sus pesos, no desde cero, y el
 // punto de partida entra como candidato en la parada temprana: si ninguna época
 // mejora su validación, la ronda devuelve la red tal cual estaba.
-function entrenar(ejemplos, tamano, oculta, o, azar, previa) {
+function entrenar(ejemplos, tamano, oculta, o, azar, previa, pares = null) {
   const barajado = ejemplos.slice();
   for (let i = barajado.length - 1; i > 0; i--) {
     const j = Math.floor(azar() * (i + 1));
@@ -236,6 +271,13 @@ function entrenar(ejemplos, tamano, oculta, o, azar, previa) {
   for (let epoca = 1; epoca <= o.epocas; epoca++) {
     for (let i = 0; i < entrenamiento.length; i += o.lote) {
       entrenarLote(red, entrenamiento.slice(i, i + o.lote), { tasa: o.tasa, decaimiento: o.decaimiento });
+      // El ancla, intercalada: un lote de orden por cada lote de valor. Sin
+      // esto la red persigue el resultado y olvida el orden destilado; sin los
+      // de valor, la salida se dispara y deja de ser una probabilidad.
+      if (pares && pares.length) {
+        const j = (i * 2) % Math.max(1, pares.length - o.lote);
+        entrenarPares(red, pares.slice(j, j + o.lote), { tasa: o.tasa, decaimiento: o.decaimiento });
+      }
     }
     if (epoca % 5 === 0 || epoca === o.epocas) {
       const pEnt = perdidaDe(red, entrenamiento);
@@ -280,6 +322,17 @@ async function main() {
   const sirve = (g, tamano, firma) => g && g.red && g.red.capas[0] === tamano && g.firmaRasgos === firma;
   let redD = sirve(guardadoD, TAMANO_DESPLIEGUE, FIRMA_DESPLIEGUE) ? desdeObjeto(guardadoD.red) : null;
   let redJ = sirve(guardadoJ, TAMANO_JUGADA, FIRMA_JUGADA) ? desdeObjeto(guardadoJ.red) : null;
+  // Sin heurística delante hace falta una red que sepa puntuarlo todo, y esa es
+  // la destilada. La publicada saca 0 victorias de 72 en ese papel.
+  if (o.soloRed) {
+    const destilada = leer("red-jugada-destilada.json");
+    if (sirve(destilada, TAMANO_JUGADA, FIRMA_JUGADA)) {
+      redJ = desdeObjeto(destilada.red);
+      console.log("  arranque de jugada: la red DESTILADA (decide sobre todas las jugadas)");
+    } else {
+      console.log("  ! sin red destilada válida: node entrenamiento/destilar.mjs");
+    }
+  }
 
   console.log("Coevolución: las dos redes juegan entre ellas\n");
   console.log(`  ${o.rondas} rondas · ${o.partidas} partidas por ronda · panel de ${panel.length} rivales`);
@@ -306,7 +359,9 @@ async function main() {
     const aspirante = {
       desplegar: (color, az) => (rd ? despliegueGuiado(color, az, rd, o.candidatos, o.escalada) : despliegueAleatorio(color, az)),
       jugar: (estado, color, az) =>
-        rj ? accionConRed(estado, color, rj, { candidatas: o.candidatas, azar: az }) : accionDeBot(estado, color, { azar: az }),
+        !rj ? accionDeBot(estado, color, { azar: az })
+        : o.soloRed ? jugadaSoloRed(estado, color, rj, { azar: az })
+        : accionConRed(estado, color, rj, { candidatas: o.candidatas, azar: az }),
     };
     return medirContraPanel(aspirante, panel, { parejas: o.parejasPanel, semillaBase });
   };
@@ -344,7 +399,8 @@ async function main() {
     const todosJ = deposito.flatMap((t) => t.deJugada);
 
     const nuevaD = entrenar(todosD, TAMANO_DESPLIEGUE, o.ocultaDespliegue, oRonda, azar, redD);
-    const nuevaJ = entrenar(todosJ, TAMANO_JUGADA, o.ocultaJugada, oRonda, azar, redJ);
+    const todosPares = deposito.flatMap((t) => t.pares || []);
+    const nuevaJ = entrenar(todosJ, TAMANO_JUGADA, o.ocultaJugada, oRonda, azar, redJ, o.anclaPares ? todosPares : null);
     // Partidas nuevas cada ronda, y el titular las juega también.
     const semillaMedida = 31337 + ronda * 15485863;
     const medida = medir(nuevaD.red, nuevaJ.red, semillaMedida);
