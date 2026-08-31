@@ -36,6 +36,7 @@ import { BATEN_ANILLO, BATEN_LA_TORRE, PASOS_A_TIRO, ANILLO as ANILLO_T } from "
 import { salaParaJugador } from "../../servidor/vista.mjs";
 import { centro as centroEnInforme, reconstruirRangos, CELDA, MARGEN, LADO } from "../informe-partida.js";
 import { vistaDelEscenario } from "../escenario-vista.js";
+import { reproducirPartida, ReplayImposible } from "./replay.js";
 import { crearRed, evaluar, adelante } from "./red.js";
 import { entrenarPares } from "../../entrenamiento/red.mjs";
 import { propiedadesDePieza, FIRMA as FIRMA_DESPLIEGUE } from "./rasgos-despliegue.js";
@@ -1781,6 +1782,67 @@ prueba("un hilo recortado no se reconstruye a medias, se declara imposible", () 
   assert.deepStrictEqual(
     reconstruirRangos(despliegues, recortado), [null],
     "recortado no debería inventarse nada"
+  );
+});
+
+
+prueba("una partida terminada se reproduce exactamente", () => {
+  // Es lo que hace posible analizar una partida: sin volver a montarla no se
+  // puede preguntar qué habría pasado con otra jugada. Y tiene que salir EXACTA,
+  // no parecida: si el replay se desvía, todo lo que se mida encima es de otra
+  // partida.
+  const generador = (semilla) => {
+    let a = semilla >>> 0;
+    return () => {
+      a = (a + 0x6d2b79f5) >>> 0;
+      let x = a;
+      x = Math.imul(x ^ (x >>> 15), x | 1);
+      x ^= x + Math.imul(x ^ (x >>> 7), x | 61);
+      return ((x ^ (x >>> 14)) >>> 0) / 4294967296;
+    };
+  };
+
+  for (const semilla of [8800, 15551, 42043]) {
+    const azar = generador(semilla);
+    const despliegues = {};
+    for (const color of COLORES) despliegues[color] = despliegueAleatorio(color, azar);
+    let e = nuevaPartida(despliegues, { primero: COLORES[Math.floor(azar() * 4)] });
+    let turnos = 0;
+    while (!e.fin && turnos < 300) {
+      if (e.pendiente) {
+        const p = e.pendiente;
+        e = p.tipo === "recoger"
+          ? (decisionDeRecogida(e, p.color) ? recogerLaBandera(e) : renunciarARecoger(e))
+          : reclutar(e, Math.max(...p.opciones));
+        continue;
+      }
+      const a = accionDeBot(e, e.turno, { azar });
+      if (!a) break;
+      e = aplicar(e, a);
+      turnos++;
+    }
+
+    const { pasos, estadoFinal } = reproducirPartida(despliegues, e.historia);
+    assert.strictEqual(pasos.length, e.historia.length, `semilla ${semilla}: faltan pasos`);
+    assert.deepStrictEqual(estadoFinal.tablero, e.tablero, `semilla ${semilla}: el tablero final no coincide`);
+    assert.deepStrictEqual(estadoFinal.fin, e.fin, `semilla ${semilla}: el final no coincide`);
+    assert.deepStrictEqual(estadoFinal.marcador, e.marcador, `semilla ${semilla}: el marcador no coincide`);
+  }
+});
+
+prueba("un hilo que no se puede reproducir lo dice, no lo intenta", () => {
+  const despliegues = { rojo: [{ casilla: "H2", rango: 6 }] };
+  assert.throws(() => reproducirPartida(despliegues, []), ReplayImposible, "hilo vacío");
+  assert.throws(
+    () => reproducirPartida(despliegues, [{ n: 7, color: "rojo", tipo: "mover", desde: "H2", hasta: "H3" }]),
+    ReplayImposible,
+    "hilo que empieza por la jugada 7"
+  );
+  // Y un reclutamiento sin rango: pasa si el hilo venía censurado.
+  assert.throws(
+    () => reproducirPartida(despliegues, [{ n: 1, color: "rojo", tipo: "reclutar", eventos: [] }]),
+    ReplayImposible,
+    "reclutamiento sin rango"
   );
 });
 

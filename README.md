@@ -193,6 +193,15 @@ memoria ganan el 65% de las partidas decididas frente a los antiguos.
   determinantes, dónde se perdió o se ganó la partida, y la valoración de cada bando. Es la
   misma maquinaria del detector en dos etapas, presentada para leerla.
 
+- **Medir el impacto de UNA jugada es muy ruidoso, y eso condiciona el análisis**: con tiradas
+  estocásticas, la misma posición medida dos veces con 8 tiradas solo correlaciona **0,39**
+  consigo misma, y dos medidas difieren de media 5 puntos sobre un recorrido de 35. Eso pone un
+  techo a cualquier detector barato: ninguna señal puede predecir mejor de lo que la medida se
+  predice a sí misma. Consecuencia práctica: no se pueden **ordenar** las jugadas de una partida
+  por importancia sin gastar decenas de tiradas por jugada, pero sí se puede aprender del
+  **agregado** de muchas posiciones con pocas tiradas cada una, que es lo que hace el banco de
+  escenarios. Para elegir qué posiciones merecen un juicio humano conviene un criterio robusto
+  (situaciones raras, finales cerca del castillo) antes que la estimación de impacto.
 - **Entrenar con escenarios concretos, no solo partidas enteras**: hoy los ejemplos salen de
   partidas jugadas de principio a fin, y eso deja las tácticas decisivas sin aprender por pura
   rareza. Medido sobre 3.420 vectores de jugada: `tapaLineaAlAnillo` se activa en el 0,1% de los

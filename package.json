@@ -24,7 +24,8 @@
     "nocturno": "node entrenamiento/nocturno.mjs",
     "escenarios": "node entrenamiento/construir-escenarios.mjs",
     "juzgar": "node herramientas/juzgar-escenarios.mjs",
-    "destilar": "node entrenamiento/destilar.mjs"
+    "destilar": "node entrenamiento/destilar.mjs",
+    "analizar": "node entrenamiento/analizar-partida.mjs"
   },
   "dependencies": {
     "react": "^18.3.1",
