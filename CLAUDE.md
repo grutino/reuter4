@@ -303,6 +303,37 @@ sigue metiendo pares suyos cada ronda (`--anclaPares`) para que la red no olvide
 mientras persigue resultados. Medido: con el modelo actual los dos caminos empatan a 65%, o sea
 que la heurística ya no aporta nada a la decisión — solo al arranque y a la medida.
 
+### El precio de la información, y por qué un rasgo constante no basta
+
+La red sabía que delatarse es malo, pero le pesaba **57 veces menos** que acercarse al castillo:
+
+```
+jugada · seAcerca              +0,12893
+posición · avanceDeLaPartida   +0,07267
+jugada · meDelato              -0,00226
+```
+
+Así que un capitán que se delata acercándose dos casillas salía ganando en la cuenta, y la
+heurística no lo penalizaba en absoluto. Pero el problema de fondo no era la escala: `meDelato`
+es **constante**, y no puede expresar que delatarse al principio es caro y al final da igual —
+que es como funciona de verdad. Delatar pronto a un explorador o a un capitán los convierte en
+presa de piezas medias durante el medio juego, y de paso ayuda al rival a localizar por descarte
+lo que sigue escondido.
+
+Por eso existe `delatarmeAhora`, que es `meDelato` pesado por lo pronto que sea. **Medido: el
+16,7% de las jugadas legales delatan a quien mueve y el 11,1% lo hacen en el primer tercio**, y
+el 100% de ellas son de explorador o capitán. Hay señal de sobra: el rasgo sale al 15% con 74
+valores distintos.
+
+Y `delatoParaSondear` para la excepción —delatarse amenazando a alguien sin identificar, o sea
+cambiar información por información—, que sale al **0,69%**: por debajo del umbral del 1% y
+puede que la red no llegue a aprenderlo. Se queda porque cuesta una entrada de 72 y hay que
+remedirlo cuando el banco de combate lo muestree.
+
+**Ojo con `amenazasDesde` si se toca esto**: solo devuelve enemigos de rango CONOCIDO a los que
+además se les gana, así que un desconocido no aparece ahí jamás. La primera versión del rasgo lo
+usaba y salía muerto al 0,00%.
+
 ### El techo estructural de los rasgos de combate
 
 Medido sobre 69.830 jugadas legales en 2.511 turnos:

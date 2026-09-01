@@ -17,10 +17,14 @@
 // que al final. Eso la heurística no podía expresarlo de ninguna forma.
 
 import { ANILLO, TORRE, ADYACENTES, BATEN_ANILLO, PASOS_A_TIRO } from "./tablero.js";
-import { resolverDuelo, MARISCAL, ESPIA, CANON, EXPLORADOR, CAPITAN } from "./motor.js";
+import { resolverDuelo, SOCIO, MARISCAL, ESPIA, CANON, EXPLORADOR, CAPITAN } from "./motor.js";
 import { DISTANCIA, bolsaOculta, valorEsperado, amenazasDesde } from "./bot.js";
 import { peligroEn, lineasAbiertasSi } from "./analisis.js";
 import { rasgosDePosicion, TAMANO as TAMANO_POSICION, NOMBRES as NOMBRES_POSICION } from "./rasgos-posicion.js";
+
+// Dónde vive la fase de la partida dentro del resumen de posición. Hace falta
+// para poder cruzarla con rasgos de la jugada.
+const I_AVANCE = NOMBRES_POSICION.indexOf("avanceDeLaPartida");
 import { firmaDeRasgos } from "./firma.js";
 
 export const NOMBRES_JUGADA = [
@@ -80,6 +84,22 @@ export const NOMBRES_JUGADA = [
   "anilloCubiertoTrasJugar",
   "cubroLaUltimaLinea",
   "presenciaEnElCentro",
+  // LA INFORMACIÓN ES EL RECURSO DEL JUEGO, y delatarse tiene un precio que
+  // cambia con la fase. `meDelato` existía pero es constante: no puede decir
+  // "esto es caro al principio y da igual al final", que es lo que de verdad
+  // pasa. Delatar pronto a un explorador o a un capitán los convierte en presa
+  // fácil de piezas medias durante el medio juego, y de paso ayuda al rival a
+  // localizar por descarte lo que queda escondido.
+  //
+  // Medido: el 16,7% de las jugadas legales delatan a quien mueve y el 11,1% lo
+  // hacen en el primer tercio, así que hay señal de sobra para aprenderlo. Y el
+  // 100% de las que delatan son de explorador o de capitán, que son justo las
+  // piezas que hacen falta enteras en el final.
+  "delatarmeAhora",
+  // La excepción: delatarse para averiguar algo. Si el movimiento que me delata
+  // además amenaza a una pieza que no tengo identificada, la información que
+  // gano puede compensar la que doy.
+  "delatoParaSondear",
 ];
 
 export const TAMANO = TAMANO_POSICION + NOMBRES_JUGADA.length;
@@ -92,7 +112,10 @@ const recorta = (v) => (v < 0 ? 0 : v > 1 ? 1 : v);
 
 // `analisis` y `bolsas` se pasan calculados: son por turno, no por jugada, y
 // recalcularlos para cada candidata multiplicaría el coste por doce.
-export function rasgosDeJugada(estado, color, accion, { analisis, bolsas, resumen, memoria }) {
+const memoriaDe = (contexto) => contexto.memoria || {};
+
+export function rasgosDeJugada(estado, color, accion, contexto) {
+  const { analisis, bolsas, resumen, memoria } = contexto;
   const v = new Float64Array(TAMANO);
   v.set(resumen, 0);
   let i = TAMANO_POSICION;
@@ -234,6 +257,29 @@ export function rasgosDeJugada(estado, color, accion, { analisis, bolsas, resume
   // Presencia en el centro, 0,5 = igualdad. Es lo que separa "puedo tapar lo que
   // abran" de "tapo una y me quedo sin piezas".
   pon(analisis.presencia.ventaja);
+
+  // El precio de delatarse, pesado por lo pronto que sea: 1 al principio de la
+  // partida y 0 al final. Es el cruce que `meDelato` solo no puede expresar.
+  const fase = I_AVANCE >= 0 ? resumen[I_AVANCE] : 0.5;
+  pon(delata ? 1 - fase : 0);
+  // Y delatarse amenazando a alguien sin identificar: información por
+  // información.
+  //
+  // OJO, esto no se puede sacar de `amenazasDesde`: esa función solo devuelve
+  // enemigos de rango CONOCIDO a los que además se les gana, así que un
+  // desconocido no aparece ahí jamás y el rasgo salía muerto al 0,00%. Hay que
+  // mirar los vecinos del destino a mano.
+  let sondeando = 0;
+  if (delata) {
+    for (const vecina of ADYACENTES[accion.hasta] || []) {
+      const otroId = estado.tablero[vecina];
+      if (!otroId) continue;
+      const otra = estado.piezas[otroId];
+      if (!otra || otra.color === color || otra.color === SOCIO[color]) continue;
+      if (memoria[otra.id] === undefined) { sondeando = 1; break; }
+    }
+  }
+  pon(sondeando);
 
   return v;
 }
