@@ -202,6 +202,25 @@ suelta es ruidoso y sin ese aviso el listado parece decir cosas que no dice.
 
 ## Qué falta por pulir
 
+- **Simplificar el informe de las redes: solo métricas de las dos redes y cómo mejoran**. Hoy
+  mezcla la coevolución, el panel y las redes, y de las redes enseña sobre todo el ÚLTIMO
+  entrenamiento. Lo que hace falta es ver la evolución: cómo cambian entre rondas y dentro de
+  cada una.
+
+  Ya se guarda por ronda y por red, en `modelos/coevolucion.json`: pérdida de validación,
+  acierto, `epocasUtiles` —en qué época se dejó de mejorar, que es la señal directa de
+  sobreajuste—, calibración en diez cubos, y la curva de pérdida por época (entrenamiento y
+  validación). También `perdidaDePartida`, o sea de dónde arrancaba la red vigente.
+
+  Falta registrar: **acierto por época** (solo hay pérdida por época) y **acierto de
+  entrenamiento** (solo hay el de validación). Sin esos dos no se puede pintar la pareja de
+  curvas que de verdad enseña el sobreajuste — la de entrenamiento subiendo mientras la de
+  validación se estanca.
+
+  Y falta pintarlo: hoy solo se dibuja la curva de la última ronda. Debería verse la serie
+  **entre** rondas —pérdida, acierto y época útil ronda a ronda— junto a las curvas **dentro**
+  de la ronda. Lo demás (coevolución, rival a rival) puede irse a otra página o abajo del todo.
+
 - **Un solo informe de partida, no dos**: hoy hay un botón para el relato y otro para el
   análisis. Debería ser uno con todo, y las jugadas determinantes no en un bloque aparte sino
   **sobre el hilo que ya existe**: fondo verde suave si la jugada fue buena, rojo suave si fue
