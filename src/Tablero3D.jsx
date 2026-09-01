@@ -714,16 +714,10 @@ export default function Tablero3D({
       const ardiendo = explosion.ardiendo !== false;
       const [x, , z] = posicion3D(casilla);
       if (x === undefined) continue;
-      const quemadura = new THREE.Mesh(
-        g.quemadura,
-        new THREE.MeshBasicMaterial({ color: 0x2a1d14, transparent: true, opacity: 0.72, depthWrite: false })
-      );
-      quemadura.rotation.x = -Math.PI / 2;
-      quemadura.position.set(x, 0.104, z);
-      r.grupoAvisos.add(quemadura);
-
-      // Apagado el fuego quedan unos carbones. No se van en toda la partida:
-      // una casilla donde reventó un cañón sigue contando algo mucho después.
+      // Apagado el fuego quedan solo los carbones, sin el círculo negro: la
+      // mancha acompaña a la llama mientras arde y se va con ella. Lo que queda
+      // es el rastro, y no se va en toda la partida — una casilla donde reventó
+      // un cañón sigue contando algo mucho después.
       if (!ardiendo) {
         for (let i = 0; i < 4; i++) {
           const angulo = (i / 4) * Math.PI * 2 + 0.7;
@@ -740,6 +734,14 @@ export default function Tablero3D({
         }
         continue;
       }
+
+      const quemadura = new THREE.Mesh(
+        g.quemadura,
+        new THREE.MeshBasicMaterial({ color: 0x2a1d14, transparent: true, opacity: 0.72, depthWrite: false })
+      );
+      quemadura.rotation.x = -Math.PI / 2;
+      quemadura.position.set(x, 0.104, z);
+      r.grupoAvisos.add(quemadura);
 
       for (let i = 0; i < 3; i++) {
         const llama = new THREE.Mesh(
