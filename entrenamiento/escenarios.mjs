@@ -245,3 +245,11 @@ export function resumenDelBanco(escenarios) {
   for (const e of escenarios) cuenta[e.motivo] = (cuenta[e.motivo] || 0) + 1;
   return cuenta;
 }
+
+// La clave con la que se guarda un juicio humano: identifica la POSICIÓN y la
+// JUGADA. Con índices en una lista, regenerar el banco dejaría los juicios
+// apuntando a otras posiciones sin dar ningún error — y el tiempo de quien juzga
+// es el recurso más caro de toda la tubería.
+export function claveDeJuicio(estado, color, accion) {
+  return `${firmaDePosicion(estado)}#${color}#${accion.tipo}:${accion.desde}>${accion.hasta}${accion.via ? ":" + accion.via : ""}`;
+}

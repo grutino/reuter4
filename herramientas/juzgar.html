@@ -24,6 +24,9 @@
   .pastilla { display:inline-block; padding:1px 7px; border:1px solid var(--linea); border-radius:20px; font-size:12px; }
   kbd { font:12px ui-monospace,monospace; border:1px solid var(--linea); border-bottom-width:2px;
         border-radius:4px; padding:1px 5px; background:#fff; }
+  .suyo { font-size:12px; margin-top:6px; padding:4px 8px; border-radius:4px; }
+  .suyo.ok { background:rgba(74,124,74,0.14); }
+  .suyo.no { background:rgba(150,54,44,0.14); }
 </style></head><body>
 <header>
   <h1>Sala de juicios</h1>
@@ -40,7 +43,9 @@
       visto en combate —marcados con borde punteado—. Los discos lisos son piezas tapadas, y el
       aro dorado es quien lleva bandera.<br>
       <kbd>1</kbd>…<kbd>9</kbd> elegir jugada · <kbd>B</kbd> buena · <kbd>M</kbd> mala ·
-      <kbd>I</kbd> indefinida · <kbd>←</kbd> <kbd>→</kbd> cambiar de escenario
+      <kbd>I</kbd> indefinida · <kbd>←</kbd> <kbd>→</kbd> cambiar de escenario<br>
+      Lo que piensa la red aparece <b>después</b> de que juzgues, nunca antes: verlo antes
+      convertiría tu juicio en un eco del suyo y la coincidencia dejaría de medir nada.
     </div>
   </div>
   <div>
@@ -62,27 +67,70 @@ const fichas = generarFichas();
 
 let n = 0;
 let elegida = 0;
+
+// ¿Coincide la red contigo? Se compara tu veredicto con el PUESTO que le da la
+// red entre las candidatas de esa posición: la que ella elegiría es la 0.
+//
+// Es a la vez una comprobación y una métrica: si la red va aprendiendo, la
+// coincidencia debería subir con el tiempo. Y por eso solo se enseña después de
+// juzgar — si la vieras antes, mediría lo contrario.
+function comparar(caso, k, veredicto) {
+  if (!caso.suyo) return null;
+  const puesto = caso.suyo.puesto[k];
+  const total = caso.acciones.length;
+  // Su favorita es "buena"; la última, "mala"; el resto, indefinidas.
+  const suVeredicto = puesto === 0 ? "buena" : puesto === total - 1 ? "mala" : "indefinida";
+  return { puesto, total, suVeredicto, coincide: suVeredicto === veredicto };
+}
+
+function opinionDeLaRed(caso, k, veredicto) {
+  const c = comparar(caso, k, veredicto);
+  if (!c) return "";
+  const marca = c.coincide ? "coincide" : "discrepa";
+  return `<div class="suyo ${c.coincide ? "ok" : "no"}">
+    la red la pone ${c.puesto + 1}.ª de ${c.total} · para ella es <b>${c.suVeredicto}</b> — ${marca}
+  </div>`;
+}
 const juicios = datos.juicios;
-const clave = (caso, k) => `${caso.i}:${k}`;
+// La clave viene del servidor: identifica posición y jugada, no el índice.
+const clave = (caso, k) => caso.claves[k];
 
 function pinta() {
   const caso = datos.casos[n];
   document.getElementById("donde").textContent = `escenario ${n + 1} de ${datos.casos.length} · mueve ${caso.color}`;
   document.getElementById("motivo").textContent = caso.motivo;
-  const puestos = Object.keys(juicios).length;
-  document.getElementById("cuenta").textContent = `${puestos} juicios guardados`;
+  // La coincidencia acumulada, que es la métrica de si la red está aprendiendo.
+  let juzgados = 0;
+  let coinciden = 0;
+  for (const c of datos.casos) {
+    for (let k = 0; k < c.acciones.length; k++) {
+      const v = juicios[clave(c, k)];
+      if (!v) continue;
+      juzgados++;
+      const cmp = comparar(c, k, v);
+      if (cmp && cmp.coincide) coinciden++;
+    }
+  }
+  document.getElementById("cuenta").textContent =
+    `${Object.keys(juicios).length} juicios guardados` +
+    (juzgados ? ` · la red coincide contigo en ${coinciden} de ${juzgados} (${Math.round((100 * coinciden) / juzgados)}%)` : "");
   document.getElementById("tablero").innerHTML =
     tableroDelEscenario(caso.estado, caso.color, caso.acciones[elegida], fichas);
 
+  // La opinión de la red solo se enseña DESPUÉS de haber juzgado esa jugada.
+  // Verla antes anularía el valor del juicio: dejaría de ser evidencia
+  // independiente, y la coincidencia mediría que te has dejado influir en vez de
+  // que la red ha aprendido.
   document.getElementById("jugadas").innerHTML = caso.acciones.map((a, k) => {
     const v = juicios[clave(caso, k)];
+    const suyo = caso.suyo && v ? opinionDeLaRed(caso, k, v) : "";
     return `<div class="jugada ${k === elegida ? "activa" : ""}" data-k="${k}">
       <div class="que"><b>${k + 1}.</b> ${textoDeAccion(a, caso.estado, caso.color)}</div>
       <div class="botones">
         <button data-v="buena"      class="${v === "buena" ? "puesto" : ""}">buena</button>
         <button data-v="mala"       class="${v === "mala" ? "puesto" : ""}">mala</button>
         <button data-v="indefinida" class="${v === "indefinida" ? "puesto" : ""}">indefinida</button>
-      </div></div>`;
+      </div>${suyo}</div>`;
   }).join("");
 
   for (const div of document.querySelectorAll(".jugada")) {

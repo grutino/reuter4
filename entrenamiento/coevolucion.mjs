@@ -55,6 +55,7 @@ import { jugadaSoloRed } from "../src/motor/bot-red.js";
 import { movimientosLegales } from "../src/motor/motor.js";
 import { generarInforme } from "./informe-redes.mjs";
 import { CARPETA as CARPETA_ESCENARIOS } from "./escenarios.mjs";
+import { paresDeJuicios, resumenDeJuicios } from "./juicios.mjs";
 
 const AQUI = path.dirname(fileURLToPath(import.meta.url));
 const MODELOS = path.join(AQUI, "modelos");
@@ -90,6 +91,12 @@ function opciones(argv) {
     // normal. Hay unos cientos contra cientos de miles, así que sin repetirlos
     // no se notarían — y son justamente los que enseñan las situaciones raras.
     pesoEscenarios: 40,
+    // Cuánto pesa un par salido de un juicio humano frente a uno de la
+    // heurística. Hay decenas contra cientos de miles, y además dicen algo que
+    // los rollouts no pueden: con 8 tiradas la misma posición solo correlaciona
+    // 0,39 consigo misma, así que hay decisiones que ninguna cantidad de cómputo
+    // resuelve y un juicio sí.
+    pesoJuicios: 300,
     // SIN HEURÍSTICA DELANTE. Con esto la red puntúa TODAS las jugadas legales
     // en vez de reordenar las cuatro que le pasa la heurística. Sale más barato
     // -0,59 ms por turno frente a 0,87- pero exige una red destilada: la
@@ -422,8 +429,18 @@ async function main() {
   // ganada reciban la misma etiqueta.
   const escenarios = cargarEscenarios();
   if (escenarios.length) {
-    console.log(`  banco de escenarios: ${escenarios.length} ejemplos, repetidos x${o.pesoEscenarios}\n`);
+    console.log(`  banco de escenarios: ${escenarios.length} ejemplos, repetidos x${o.pesoEscenarios}`);
   }
+
+  // Los juicios humanos, como pares de orden. Se leen una vez: son pocos y no
+  // cambian mientras entrena.
+  const juicios = paresDeJuicios({ peso: o.pesoJuicios });
+  if (juicios.pares.length) {
+    const r = resumenDeJuicios();
+    console.log(`  juicios humanos: ${r.total} sobre ${juicios.posiciones} posiciones ` +
+      `(${r.buena} buenas, ${r.mala} malas, ${r.indefinida} indefinidas) -> ${juicios.pares.length} pares con peso ${o.pesoJuicios}`);
+  }
+  console.log();
 
   // La población de formaciones. Evoluciona en paralelo a las redes: cada ronda
   // las que mejor les ganan se cruzan entre ellas. El PANEL no se toca — es la
@@ -453,7 +470,10 @@ async function main() {
     // Los del banco se repiten para que pesen: son unos cientos contra cientos
     // de miles, y sin repetirlos el gradiente ni los nota.
     const conEscenarios = todosJ.concat(...Array.from({ length: escenarios.length ? o.pesoEscenarios : 0 }, () => escenarios));
-    const nuevaJ = entrenar(conEscenarios, TAMANO_JUGADA, o.ocultaJugada, oRonda, azar, redJ, o.anclaPares ? todosPares : null);
+    // Los juicios van con los pares del ancla: los dos son restricciones de
+    // orden, solo que unas las dicta la heurística y otras una persona.
+    const paresDeLaRonda = o.anclaPares ? todosPares.concat(juicios.pares) : juicios.pares;
+    const nuevaJ = entrenar(conEscenarios, TAMANO_JUGADA, o.ocultaJugada, oRonda, azar, redJ, paresDeLaRonda.length ? paresDeLaRonda : null);
     // Partidas nuevas cada ronda, y el titular las juega también.
     const semillaMedida = 31337 + ronda * 15485863;
     const medida = medir(nuevaD.red, nuevaJ.red, semillaMedida);

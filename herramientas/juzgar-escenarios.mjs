@@ -21,14 +21,23 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { puntuarAcciones, DISTANCIA } from "../src/motor/bot.js";
+import { analizarTurno } from "../src/motor/analisis.js";
+import { rasgosDeJugada, contextoDeTurno } from "../src/motor/rasgos-jugada.js";
+import { evaluar } from "../src/motor/red.js";
+import { cargarModelos } from "../src/motor/modelos.js";
 import { generador } from "../entrenamiento/arena.mjs";
-import { leerBanco, CARPETA } from "../entrenamiento/escenarios.mjs";
+import { leerBanco, CARPETA, claveDeJuicio } from "../entrenamiento/escenarios.mjs";
 import { NOMBRE_RANGO, ESTILO } from "../src/estilo.js";
 
 const AQUI = path.dirname(fileURLToPath(import.meta.url));
 const JUICIOS = path.join(CARPETA, "juicios.json");
 const PUERTO = Number(process.env.PORT || 8123);
 const CANDIDATAS = Number(process.argv[2] || 5);
+
+const modelos = cargarModelos();
+if (!modelos.jugada) {
+  console.log("  (sin red publicada: no se podrá comparar tu juicio con el suyo)");
+}
 
 const banco = leerBanco();
 if (!banco.length) {
@@ -44,7 +53,29 @@ const casos = banco.map((esc, i) => {
   const mejores = puntuadas.slice(0, Math.max(0, CANDIDATAS - 1)).map((p) => p.accion);
   // Una del montón: sin alguna mala no hay contraste que juzgar.
   if (puntuadas.length > CANDIDATAS) mejores.push(puntuadas[puntuadas.length - 1].accion);
-  return { i, motivo: esc.motivo, color: esc.color, estado: esc.estado, acciones: mejores };
+  // La clave de cada juicio identifica la POSICIÓN y la JUGADA, no su sitio en
+  // una lista: el banco se regenera y con índices los juicios acabarían
+  // apuntando a otra cosa sin que nadie se entere.
+  // LO QUE PIENSA LA RED, calculado aquí pero que la página NO enseña hasta que
+  // hayas juzgado. Verlo antes anularía el valor del juicio: dejaría de ser
+  // evidencia independiente y la coincidencia mediría que te has dejado
+  // influir, no que la red ha aprendido.
+  let suyo = null;
+  if (modelos.jugada) {
+    const contexto = contextoDeTurno(esc.estado, esc.color, analizarTurno(esc.estado, esc.color, DISTANCIA));
+    const notas = mejores.map((a) => evaluar(modelos.jugada, rasgosDeJugada(esc.estado, esc.color, a, contexto)));
+    const orden = notas.map((n, k) => ({ n, k })).sort((a, b) => b.n - a.n).map((x) => x.k);
+    suyo = {
+      notas: notas.map((n) => Number(n.toFixed(4))),
+      // El puesto de cada candidata según la red: 0 es la que elegiría.
+      puesto: mejores.map((_, k) => orden.indexOf(k)),
+    };
+  }
+  return {
+    i, motivo: esc.motivo, color: esc.color, estado: esc.estado, acciones: mejores,
+    claves: mejores.map((a) => claveDeJuicio(esc.estado, esc.color, a)),
+    suyo,
+  };
 }).filter((c) => c.acciones.length >= 2);
 
 const leerJuicios = () => {
