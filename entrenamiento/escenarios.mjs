@@ -56,6 +56,24 @@ export function motivoDeInteres(estado, color, analisis) {
     if (p.color !== color || p.rango !== CANON) continue;
     if (analisis.tapanElAnillo.size || (DISTANCIA[p.casilla] ?? 99) <= 3) return "canon-cerca";
   }
+
+  // Y posiciones donde hay algo que decidir en combate. Sin este motivo el banco
+  // se llena de posiciones sin ataques posibles, y entonces no arregla el
+  // problema que viene a arreglar: sobre 69.830 jugadas legales, solo el 1,9%
+  // son ataques y el 0,22% disparos, así que un rasgo de combate no llega ni al
+  // 1% de los ejemplos y la red lo ignora.
+  const memoria = estado.rangosRevelados || {};
+  let combates = 0;
+  for (const accion of movimientosLegales(estado, color)) {
+    if (accion.tipo === "mover") continue;
+    combates++;
+    // Un ataque contra un rango YA CONOCIDO es una decisión de verdad: se sabe
+    // lo que pasa y hay que juzgar si compensa.
+    const objetivo = estado.piezas[estado.tablero[accion.hasta]];
+    if (accion.tipo === "disparar") return "hay-disparo";
+    if (objetivo && memoria[objetivo.id] !== undefined) return "combate-conocido";
+  }
+  if (combates >= 2) return "hay-combate";
   return null;
 }
 
@@ -150,6 +168,22 @@ export function etiquetar(escenario, { candidatas = 6, tiradas = 3, limite = 200
   // contraste, y aprender solo de jugadas razonables no enseña a descartar.
   const elegidas = puntuadas.slice(0, Math.min(candidatas - 1, puntuadas.length - 1)).map((p) => p.accion);
   elegidas.push(puntuadas[puntuadas.length - 1].accion);
+
+  // Y SIEMPRE LOS ATAQUES Y DISPAROS QUE HAYA. Medido sobre 69.830 jugadas
+  // legales: el 97,9% son movimientos, el 1,9% ataques y el 0,22% disparos. Con
+  // un muestreo uniforme, cualquier rasgo condicionado a un ataque tiene un
+  // techo del 1,9% y uno condicionado a un disparo, del 0,22% — y por debajo del
+  // 1% la red los ignora. No es que los rasgos estén mal hechos: es la forma del
+  // juego, y la única salida es muestrear las decisiones que importan en vez de
+  // todas por igual.
+  const yaEstan = new Set(elegidas.map((a) => `${a.tipo}${a.desde}${a.hasta}`));
+  for (const { accion } of puntuadas) {
+    if (accion.tipo === "mover") continue;
+    const clave = `${accion.tipo}${accion.desde}${accion.hasta}`;
+    if (yaEstan.has(clave)) continue;
+    yaEstan.add(clave);
+    elegidas.push(accion);
+  }
 
   const salida = [];
   for (const accion of elegidas) {

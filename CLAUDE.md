@@ -303,6 +303,37 @@ sigue metiendo pares suyos cada ronda (`--anclaPares`) para que la red no olvide
 mientras persigue resultados. Medido: con el modelo actual los dos caminos empatan a 65%, o sea
 que la heurística ya no aporta nada a la decisión — solo al arranque y a la medida.
 
+### El techo estructural de los rasgos de combate
+
+Medido sobre 69.830 jugadas legales en 2.511 turnos:
+
+```
+mover:     97,9%
+atacar:     1,9%
+disparar:  0,22%
+```
+
+De ahí sale un techo que no se puede saltar con más rasgos: **cualquier rasgo condicionado a un
+ataque no puede activarse en más del 1,9% de los ejemplos, y uno condicionado a un disparo, en
+más del 0,22%**. Y por debajo del 1% la red los ignora, porque no aportan gradiente.
+
+Eso explica de una vez todos los rasgos muertos que fueron apareciendo —`disparoAlCoronador` a
+0,000, `tapaLineaAlAnillo` a 0,001— y también por qué medirlo antes de escribirlos es
+obligatorio. Se probaron cinco candidatos tácticos más y solo dos pasaron el corte:
+
+```
+defiendoMiBandera     6,91%   sí
+bloqueoLateral       26,04%   sí
+zonaFavorable         0,30%   no    condicionado a un ataque
+sondeoBarato          0,15%   no    condicionado a un ataque
+victoriaQueAsciende   0,02%   no    condicionado a un ataque, y encima al marcador
+```
+
+**La salida no es escribir más rasgos, es muestrear distinto.** El banco de escenarios incluye
+ahora siempre los ataques y disparos disponibles, y tiene motivos que buscan posiciones con
+combate (`combate-conocido`, `hay-disparo`, `hay-combate`). Con eso, la proporción de ataques
+entre las candidatas etiquetadas pasa del 2,1% al 12,6%.
+
 ### Medir sin engañarse (lo que ha costado tres veces)
 
 `medirContraPanel` es determinista: misma semilla, mismas partidas. De ahí salen tres errores

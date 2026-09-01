@@ -273,16 +273,30 @@ de validación se estanca.
 
 ### 7. Tácticas que aún no tienen rasgo
 
-Atacar por zonas donde la bolsa de rangos ocultos favorece, el señuelo del espía, explorador a
-distancia para revelar, bloquear los laterales, sacrificio para promocionar con el marcador alto,
-defender la bandera propia, cuidar los rangos altos, controlar el anillo — cada una con su pareja
-defensiva.
+**Medido primero, y el resultado cambia el plan.** De cinco candidatos, solo dos se activan lo
+bastante como para que la red los aprenda:
+
+```
+defiendoMiBandera     6,91%   sí
+bloqueoLateral       26,04%   sí
+zonaFavorable         0,30%   no
+sondeoBarato          0,15%   no
+victoriaQueAsciende   0,02%   no
+```
+
+Los tres descartados son todos **condicionados a un ataque**, y ahí está la razón de fondo: de
+69.830 jugadas legales, el 97,9% son movimientos, el 1,9% ataques y el 0,22% disparos. Cualquier
+rasgo de combate tiene ese techo, por muy bien escrito que esté.
+
+**Hecho**: el banco de escenarios incluye ahora siempre los ataques y disparos disponibles y
+busca posiciones con combate, lo que sube la proporción del 2,1% al 12,6%.
+
+**Falta**: añadir los dos que pasaron el corte, y volver a medir los descartados ahora que el
+banco los muestrea. Cambiar los rasgos invalida modelos y banco, así que conviene hacerlo entre
+entrenamientos y no en medio.
 
 **Ya hechas**: cañones tras los lagos (`cubiertoPorLago`), batir el castillo y al que va a
 coronar, llevar el cañón a posición, tapar la línea de tiro rival y cubrir el anillo entero.
-
-**Depende del punto 1**: añadir tácticas raras sin resolver antes el muestreo es trabajo que la
-red no va a aprender.
 
 ### 8. Afinar la renuncia a la bandera del compañero
 
