@@ -648,25 +648,25 @@ export default function App() {
     [estado, miColor, esMiTurno, seleccion, accionesMias, enviar, salaId]
   );
 
-  // Dónde ha caído un cañonazo hace poco. El hilo guarda el evento con la
-  // casilla, así que basta con mirar las últimas jugadas: dura hasta que le
-  // vuelve el turno a quien disparó, o sea cuatro jugadas en una partida a
-  // cuatro. Es el tiempo justo para que el resto se entere de que ahí ha pasado
-  // algo, sin dejar el tablero lleno de hogueras.
+  // Dónde ha caído un cañonazo, y si todavía arde. El hilo guarda el evento con
+  // su casilla, así que basta con mirarlo.
+  //
+  // El fuego dura hasta que le vuelve el turno a quien disparó —cuatro jugadas en
+  // una partida a cuatro—, que es el tiempo justo para que el resto se entere de
+  // que ahí ha pasado algo. Después queda el carbón, y ese no se va: una casilla
+  // donde reventó un cañón sigue contando algo de la partida mucho después.
   const explosionesRecientes = (() => {
     const historia = (estado && estado.historia) || [];
     if (!historia.length) return [];
     const ultima = historia[historia.length - 1].n;
-    const casillas = [];
+    const salida = [];
     for (const entrada of historia) {
-      if (ultima - entrada.n >= 4) continue;
       for (const evento of entrada.eventos || []) {
-        if (evento.tipo === "cañonazo" && evento.objetivo && evento.objetivo.casilla) {
-          casillas.push(evento.objetivo.casilla);
-        }
+        if (evento.tipo !== "cañonazo" || !evento.objetivo || !evento.objetivo.casilla) continue;
+        salida.push({ casilla: evento.objetivo.casilla, ardiendo: ultima - entrada.n < 4 });
       }
     }
-    return casillas;
+    return salida;
   })();
 
   const resaltadas = (() => {

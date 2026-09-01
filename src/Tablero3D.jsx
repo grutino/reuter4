@@ -35,6 +35,7 @@ function geometrias() {
   GEO.numero = new THREE.PlaneGeometry(0.72, 0.72);
   GEO.quemadura = new THREE.CircleGeometry(0.46, 20);
   GEO.llama = new THREE.ConeGeometry(0.17, 0.42, 7);
+  GEO.carbon = new THREE.DodecahedronGeometry(0.075, 0);
   GEO.listo = true;
   return GEO;
 }
@@ -708,7 +709,9 @@ export default function Tablero3D({
     // El rastro del cañonazo: quemadura en el suelo y unas llamas que titilan.
     // Dura lo que tarde en volverle el turno a quien disparó, que es el tiempo
     // que a un jugador le sirve para enterarse de que ha pasado algo ahí.
-    for (const casilla of explosiones || []) {
+    for (const explosion of explosiones || []) {
+      const casilla = explosion.casilla || explosion;
+      const ardiendo = explosion.ardiendo !== false;
       const [x, , z] = posicion3D(casilla);
       if (x === undefined) continue;
       const quemadura = new THREE.Mesh(
@@ -718,6 +721,25 @@ export default function Tablero3D({
       quemadura.rotation.x = -Math.PI / 2;
       quemadura.position.set(x, 0.104, z);
       r.grupoAvisos.add(quemadura);
+
+      // Apagado el fuego quedan unos carbones. No se van en toda la partida:
+      // una casilla donde reventó un cañón sigue contando algo mucho después.
+      if (!ardiendo) {
+        for (let i = 0; i < 4; i++) {
+          const angulo = (i / 4) * Math.PI * 2 + 0.7;
+          const radio = 0.1 + (i % 2) * 0.11;
+          const trozo = new THREE.Mesh(
+            g.carbon,
+            new THREE.MeshStandardMaterial({ color: 0x1c1815, roughness: 1, metalness: 0 })
+          );
+          trozo.position.set(x + Math.cos(angulo) * radio, 0.13, z + Math.sin(angulo) * radio);
+          trozo.rotation.set(i * 0.9, i * 1.4, i * 0.5);
+          trozo.scale.setScalar(0.7 + (i % 3) * 0.25);
+          trozo.castShadow = true;
+          r.grupoAvisos.add(trozo);
+        }
+        continue;
+      }
 
       for (let i = 0; i < 3; i++) {
         const llama = new THREE.Mesh(
