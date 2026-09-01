@@ -12,8 +12,11 @@ propios y no guardan relación con Jumbo ni con la marca Stratego.
 
 ```
 src/motor/      reglas puras, sin interfaz: tablero, motor, pruebas y simulación
+src/motor/      también la inferencia de los bots: rasgos, red y modelos publicados
 src/            cliente React con el tablero en three.js
 servidor/       servidor Node con WebSocket: guarda el estado y mueve los bots
+entrenamiento/  todo lo que sirve para APRENDER; el juego no importa nada de aquí
+herramientas/   utilidades sueltas: publicar modelos, juzgar escenarios, banco 3D
 ```
 
 El servidor es la autoridad. Los clientes solo reciben los rangos de sus propias piezas,
@@ -32,7 +35,7 @@ Node 18 o superior.
 
 ```bash
 npm install
-npm test          # 60 pruebas del motor
+npm test          # 100 pruebas del motor
 npm run simular   # salud de los bots y duelo entre los nuevos y los viejos
 ```
 
@@ -164,34 +167,40 @@ git push -u origin main
 
 ## Los bots
 
-Los bots recuerdan lo que han visto. Cuando alguien sobrevive a un duelo, su rango queda a la
-vista de toda la mesa; lo mismo ocurre cuando una pieza se delata sola, porque solo el
-explorador recorre más de una casilla en línea y solo el capitán encadena dos con giro. El
-motor lo va anotando en `rangosRevelados` y los bots deciden con eso: van a por la captura
-segura, no se estrellan contra un rango que ya saben mayor, y sueltan el espía sobre el
-mariscal en cuanto lo tienen fichado. Contra un desconocido no adivinan: calculan el valor
-esperado del duelo con lo que aún puede quedarle escondido al rival.
+Deciden con **dos redes neuronales** entrenadas jugando: una monta el despliegue inicial y otra
+elige cada jugada. Están en `src/motor/modelos/` y son JSON de números —1.361 y 2.017
+parámetros— que el juego evalúa mientras juega, sin dependencias.
 
-Solo miran información pública. Corren dentro del servidor, con el estado completo delante,
-pero no leen el rango oculto de ninguna pieza ajena: hay una prueba que lo comprueba montando
-dos escenarios que solo se diferencian en ese rango escondido y exigiendo que el bot juegue
-igual en los dos.
+Si no hay modelo publicado, o si sus entradas no cuadran con los rasgos de esa versión del
+código, los bots caen a la **heurística escrita a mano** y el servidor lo dice al arrancar. Esa
+comprobación no es decorativa: un modelo viejo se carga sin dar ningún error y juega con basura.
 
-Medido con `npm run simular` sobre 2000 partidas con los bandos alternados, los bots con
-memoria ganan el 65% de las partidas decididas frente a los antiguos.
+Hay **cinco niveles de dificultad** por bot, con deslizador para quien creó la partida y
+cambiables en mitad de ella. Medidos contra el nivel 2: 35%, 50%, 69%, 83% y 95% de victorias.
+El nivel 1 se distingue por **no recordar** los rangos ya vistos, y se nota de una forma muy
+humana: vuelve a estrellarse contra el mariscal que ya le enseñaste.
+
+### Solo miran información pública
+
+Corren dentro del servidor, con el estado completo delante, pero no leen el rango oculto de
+ninguna pieza ajena —ni el del compañero—. Lo que sí usan es lo que ha quedado a la vista de la
+mesa: quien sobrevive a un duelo, y quien se delata al moverse, porque solo el explorador
+recorre más de una casilla en línea y solo el capitán encadena dos con giro.
+
+Dos pruebas lo vigilan, y la segunda hizo falta: el servidor dejó de mover con la heurística y
+pasó a mover con la red, que es otro camino entero. Compara los **rasgos** de dos escenarios que
+solo se diferencian en el rango escondido —si el vector de entrada es idéntico, ninguna red
+posible puede distinguirlos—, que es más fuerte que comparar decisiones.
+
+### Al terminar
+
+Se destapan los cuatro ejércitos en el tablero y hay un informe imprimible con los despliegues
+iniciales, un diagrama de flechas por bando y el hilo completo. Y otro botón que además
+**analiza** la partida: vuelve a jugarla desde las posiciones dudosas para ver si otra jugada
+habría cambiado el resultado. Cada cifra lleva su error, porque medir el impacto de una jugada
+suelta es ruidoso y sin ese aviso el listado parece decir cosas que no dice.
 
 ## Qué falta por pulir
-
-- **El informe de seguimiento del entrenamiento sobra por la mitad**: hoy arrastra curvas del
-  evolutivo de pesos y de la heurística, que ya no se usan para nada. Debe quedarse solo con lo
-  que dice algo de la **calidad de las dos redes**: curvas de aprendizaje y validación,
-  calibración, histograma de predicciones, sensibilidad por rasgo —falta la de la red de jugada,
-  que solo existe para la de despliegue—, la curva de coevolución titular contra aspirante, y el
-  desglose rival a rival del panel.
-- **El informe de fin de partida debe llevar el análisis, no solo el relato**: ahora cuenta lo
-  que pasó (despliegues, flechas, hilo). Falta lo que se saca de analizarlo: qué jugadas fueron
-  determinantes, dónde se perdió o se ganó la partida, y la valoración de cada bando. Es la
-  misma maquinaria del detector en dos etapas, presentada para leerla.
 
 - **Medir el impacto de UNA jugada es muy ruidoso, y eso condiciona el análisis**: con tiradas
   estocásticas, la misma posición medida dos veces con 8 tiradas solo correlaciona **0,39**
@@ -234,13 +243,6 @@ memoria ganan el 65% de las partidas decididas frente a los antiguos.
   **Antes de añadir ninguna, leer el aviso de la cobertura del anillo**: un rasgo que se activa
   en el 0,2% de los ejemplos no aporta gradiente y la red lo ignora. Añadir tácticas raras sin
   resolver antes el muestreo es trabajo que no se aprende.
-- **El evolutivo se diluye al crecer el genoma**: con 26 genes rinde peor que con 20 a igualdad
-  de presupuesto. Cada peso nuevo reparte la misma presión selectiva entre más candidatos, y
-  `npm run revisar` enseña el desequilibrio: `avanceNormal` se activa 26.000 veces por cada mil
-  jugadas y `espiaAMariscal` ninguna. En una red los rasgos son entradas que comparten gradiente
-  en vez de pesos que compiten, que es la salida natural a esto.
-- **Mejora visual del tablero 3D**: texturas de verdad, materiales, iluminación. Hoy todo son
-  colores planos con `MeshLambertMaterial` y las fichas son discos con una silueta pegada.
 - Reconexión: si te caes en mitad de una partida, la máquina juega por ti al minuto. Al volver
   con el mismo navegador recuperas tu puesto, porque el identificador vive en `localStorage`.
 - No hay reloj de turno ni límite de tiempo.

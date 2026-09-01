@@ -432,7 +432,7 @@ export default function Tablero3D({
       // ondule -no se notaría a esta escala y costaría- pero el reflejo sí se
       // mueve, que es lo que hace que parezca agua y no pintura azul.
       const t = reloj.getElapsedTime();
-      normalAgua.offset.set(t * 0.035, t * 0.021);
+      normalAgua.offset.set(t * 0.22, t * 0.14);
       render.render(escena, camara);
       requestAnimationFrame(bucle);
     };

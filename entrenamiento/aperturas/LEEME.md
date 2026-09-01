@@ -44,3 +44,14 @@ falta. No hace falta contar a mano.
 
 Ahí van las aperturas que han batido al panel. Se añaden solas y endurecen la
 batería para los modelos siguientes.
+
+## Las dos carpetas de al lado, y la diferencia importa
+
+`campeonas/` la carga `construirPanel`, así que lo que se meta ahí **entra en la vara de
+medir**. Está vacía a propósito: endurecer la vara automáticamente hace que la curva baje sin
+que se pueda distinguir «las redes empeoran» de «los rivales mejoran».
+
+`duras/` es donde el genético deja las formaciones que mejor le ganan a las redes, y **no** la
+carga nadie. Es el gimnasio, no la vara. Si alguna vez quieres que una de ellas cuente para
+medir, cópiala a mano a `campeonas/` sabiendo lo que implica: los números de antes y los de
+después dejan de ser comparables.

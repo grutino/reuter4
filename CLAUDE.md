@@ -61,13 +61,30 @@ Vive fuera de `src/` y el servidor no importa nada de ahí. Produce artefactos q
 consume, no código que el juego ejecute.
 
 ```
-arena.mjs            una partida, un enfrentamiento; todo el azar sale de una semilla
-paralelo.mjs         piscina de obreros persistente + trocear/sumar combates largos
-obrero.mjs           un hilo que juega lo que le mandan
-entrenar-pesos.mjs   estrategia evolutiva con recombinación ponderada
-informe.mjs          página de seguimiento con SVG, sin dependencias
-modelos/             artefactos generados (JSON con pesos e historia)
-informe/index.html   la página; se reescribe en cada generación
+arena.mjs              una partida, un enfrentamiento; todo el azar sale de una semilla
+paralelo.mjs           piscina de obreros persistente + trocear/sumar combates largos
+obrero.mjs             un hilo que juega lo que le mandan
+red.mjs                retropropagación con Adam y pérdida por pares; reexporta la inferencia
+
+destilar.mjs           mete el orden de la heurística en la red, sin jugar partidas
+entrenar-despliegue.mjs  la red que monta la posición inicial
+entrenar-jugada.mjs    la red que elige jugada
+coevolucion.mjs        el bucle: las dos redes contra el genético de formaciones
+formaciones.mjs        población de despliegues que evoluciona para ganarle a las redes
+nocturno.mjs           sesiones encadenadas hasta que deje de mejorar; deja diagnóstico
+
+aperturas.mjs          el formato de rejilla 3x7 y sus variaciones
+panel.mjs              la vara: 38 rivales fijos
+medir-panel.mjs        mide los modelos contra el panel, rival a rival
+sensibilidad.mjs       qué mira cada red; una función por red
+
+escenarios.mjs         banco de posiciones decisivas
+construir-escenarios.mjs  lo llena y lo etiqueta jugando
+analizar-partida.mjs   qué jugadas decidieron una partida
+
+informe-redes.mjs      la página de seguimiento; se escribe en docs/
+mirar.mjs              la sirve en el 8099
+modelos/               artefactos generados; el TALLER, no lo que juega
 ```
 
 **Cuatro cosas se descubrieron midiendo y no conviene volver a romperlas:**
@@ -247,6 +264,44 @@ pasa la heurística, así que con peso cero la jugada no asoma nunca y la red no
 cuándo conviene. Ese es el equilibrio que hay que respetar al añadir cualquier táctica nueva —
 el peso tiene que ser bastante para que la jugada aparezca entre las candidatas y poco para no
 imponer la decisión.
+
+### Quién decide la jugada, y por qué la heurística sigue ahí
+
+Hay dos caminos y conviene no confundirlos:
+
+```
+accionConRed     la heurística puntúa TODAS las legales, se queda con 4, la red las ordena
+jugadaSoloRed    la red puntúa las 28 legales de media, sin heurística delante
+```
+
+El segundo sale **más barato**, contra toda intuición: medido, la heurística cuesta 0,42 ms por
+turno y los rasgos de una jugada 0,006, así que puntuarlas todas son 0,59 ms frente a los 0,87
+de pasar antes por la heurística. El cuello de botella es el análisis del turno, que se hace una
+vez en los dos casos.
+
+Pero **una red entrenada por un camino no sirve por el otro**. La red entrenada con las cuatro
+finalistas de la heurística, obligada a puntuarlas todas, sacó **0 victorias de 72**: nunca había
+visto las otras veinticuatro. Por eso existe `npm run destilar`, que le enseña directamente el
+orden que la heurística ya sabe, con una **pérdida por pares** que no necesita jugar ninguna
+partida. De 0% pasó a jugar al nivel de la heurística, y desde ahí la coevolución con
+`--soloRed 1` la lleva por encima.
+
+Tres cosas que costó descubrir al destilar:
+
+- **El logit no se recupera invirtiendo la sigmoide.** Con la salida saturada las dos jugadas
+  valen 1,0000 y el recorte se come la diferencia: la primera versión aprendía el orden
+  INVERTIDO, 18% de aciertos. `adelante` cuelga ahora el logit del array de activaciones.
+- **Hay que mezclar las dos pérdidas.** La de pares solo mira diferencias y dispara la escala;
+  sin ejemplos de valor la salida deja de ser una probabilidad.
+- **El filtro de pares importa más que nada.** Solo con parejas de margen amplio: 98,5% de pares
+  acertados y apenas 57% de acierto en la jugada que se elige. Solo con parejas ancladas al
+  mejor: el puesto medio de su elección se fue de 1,7 a 7,5. Hacen falta las dos cosas.
+
+**La heurística sale del camino de decisión pero se queda de andamio.** Una red recién
+inicializada jugando contra sí misma da las ocho tablas de ocho de siempre, y además el bucle
+sigue metiendo pares suyos cada ronda (`--anclaPares`) para que la red no olvide el orden
+mientras persigue resultados. Medido: con el modelo actual los dos caminos empatan a 65%, o sea
+que la heurística ya no aporta nada a la decisión — solo al arranque y a la medida.
 
 ### Medir sin engañarse (lo que ha costado tres veces)
 
