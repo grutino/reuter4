@@ -25,14 +25,18 @@ for (let t = 0; t < 40 && !e.fin; t++) {
 // Todos los rangos visibles, para juzgar las fichas.
 const piezas = Object.values(e.piezas);
 
+const camara = new URLSearchParams(location.search).get("camara") || "rojo";
+
 createRoot(document.getElementById("raiz")).render(
   <div style={{ padding: 12, background: "#141110", minHeight: "100vh" }}>
     <Tablero3D
       piezas={piezas}
       banderasSueltas={e.banderasSueltas}
       resaltadas={{}}
-      zonaPropia="rojo"
-      colorCamara="rojo"
+      zonaPropia={camara}
+      colorCamara={camara}
+      marcador={{ rojo: 4, verde: 2, azul: 5, amarillo: 1 }}
+      explosiones={["H6", "F9"]}
       onCasilla={() => {}}
       alto={640}
     />

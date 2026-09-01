@@ -510,6 +510,26 @@ desincronizarse.
 
 `bot`, `librar`, `empezar`, `parar` y `borrar` exigen ser el anfitrión (`sala.anfitrion`).
 
+### La cámara de cada jugador, y hacia dónde miran las fichas
+
+`colorCamara` sitúa la órbita con `x = radio·sin(theta)` y `z = radio·cos(theta)`, así que
+`theta = +PI/2` la pone en **+x** —el este, donde está el verde— y `-PI/2` en **-x**, el oeste
+del amarillo. La tabla los tenía **cambiados**: un jugador verde miraba el tablero desde el lado
+del amarillo y veía su propio ejército al fondo. Estuvo así hasta que se fue a comprobar la
+rotación de las fichas.
+
+Y las fichas giran según **el ejército al que pertenecen** (`GIRO_DE_FICHA`), no según quién
+mire: cada una tiene la cabeza hacia el centro desde su lado, que es como están sobre la mesa.
+Antes salían todas mirando al sur.
+
+### Las alturas sobre la baldosa
+
+`posicion3D` devuelve **y = 0,1** para una casilla normal, y la baldosa es una caja de 0,1 de
+alto centrada medio grosor por debajo: su cara superior está justo en 0,10. Todo lo que se pinte
+encima —el número del contador, la quemadura de un cañonazo— tiene que ir por arriba de eso.
+Puestos a 0,055 quedaban **dentro** de la baldosa y no se veían; las llamas sí, porque iban a
+0,2. Es un fallo silencioso: no da error, simplemente no aparece nada.
+
 ### El galón de la ficha
 
 A 46 px —el tamaño real en el tablero 3D— las siluetas se vuelven manchas parecidas. Medida la

@@ -648,6 +648,27 @@ export default function App() {
     [estado, miColor, esMiTurno, seleccion, accionesMias, enviar, salaId]
   );
 
+  // Dónde ha caído un cañonazo hace poco. El hilo guarda el evento con la
+  // casilla, así que basta con mirar las últimas jugadas: dura hasta que le
+  // vuelve el turno a quien disparó, o sea cuatro jugadas en una partida a
+  // cuatro. Es el tiempo justo para que el resto se entere de que ahí ha pasado
+  // algo, sin dejar el tablero lleno de hogueras.
+  const explosionesRecientes = (() => {
+    const historia = (estado && estado.historia) || [];
+    if (!historia.length) return [];
+    const ultima = historia[historia.length - 1].n;
+    const casillas = [];
+    for (const entrada of historia) {
+      if (ultima - entrada.n >= 4) continue;
+      for (const evento of entrada.eventos || []) {
+        if (evento.tipo === "cañonazo" && evento.objetivo && evento.objetivo.casilla) {
+          casillas.push(evento.objetivo.casilla);
+        }
+      }
+    }
+    return casillas;
+  })();
+
   const resaltadas = (() => {
     if (!seleccion) return {};
     const marcas = { [seleccion.casilla]: "seleccion" };
@@ -886,6 +907,8 @@ export default function App() {
             resaltadas={sala.fase === "jugando" || sala.fase === "fin" ? resaltadas : {}}
             zonaPropia={sala.fase === "desplegando" ? miColor : null}
             colorCamara={miColor}
+            marcador={estado ? estado.marcador : null}
+            explosiones={explosionesRecientes}
             onCasilla={sala.fase === "desplegando" ? alClicarDespliegue : alClicarPartida}
             ampliado={tableroAmpliado}
             onAlternarAmpliado={() => setTableroAmpliado((v) => !v)}

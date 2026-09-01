@@ -6,7 +6,19 @@
 // El color de fondo llega como parámetro, no importado: así este módulo no
 // depende de `Tablero3D.jsx` y no se monta un ciclo de importaciones.
 
-import { dibujarSilueta, ORO } from "./siluetas.js";
+import { dibujarSilueta } from "./siluetas.js";
+
+// LA TINTA DE LA SILUETA VA OSCURA, no en oro. Medido el contraste contra los
+// cuatro ejércitos, el oro se hunde a 1,60 sobre el amarillo -prácticamente
+// invisible- mientras que el negro no baja de 2,68 en ningún caso:
+//
+//   tinta    rojo  verde  azul  amarillo   peor caso
+//   oro      4,15   3,22  4,35      1,60        1,60
+//   negro    2,81   3,62  2,68      7,27        2,68
+//
+// El oro gana en rojo y azul, pero lo que decide es el peor caso: una ficha que
+// no se ve sobre su propio color es una ficha que no sirve.
+const TINTA = "#141210";
 
 export const LADO_FICHA = 128;
 
@@ -30,8 +42,8 @@ export function pintarFicha(ctx, rango, fondoCss) {
   ctx.beginPath();
   ctx.arc(c, c, c - 6, 0, Math.PI * 2);
   ctx.clip();
-  ctx.fillStyle = ORO;
-  if (!dibujarSilueta(ctx, rango, { color: ORO, hueco: fondo, lado: LADO_FICHA })) {
+  ctx.fillStyle = TINTA;
+  if (!dibujarSilueta(ctx, rango, { color: TINTA, hueco: fondo, lado: LADO_FICHA })) {
     // Sin dibujo para ese rango se cae al número, que siempre se puede pintar.
     ctx.font = "bold 66px Georgia, serif";
     ctx.textAlign = "center";

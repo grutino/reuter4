@@ -1,6 +1,6 @@
 import React, { useRef, useEffect, useState } from "react";
 import * as THREE from "three";
-import { CASILLAS, LAGOS, CASTILLO_HUELLA, ANILLO, TORRE, ZONAS, coord, zonaDe, casillasDeZona } from "./motor/tablero.js";
+import { CASILLAS, COLORES, LAGOS, CASTILLO_HUELLA, ANILLO, TORRE, ZONAS, coord, zonaDe, casillasDeZona } from "./motor/tablero.js";
 import { pintarFicha } from "./ficha.js";
 
 import { ESTILO, NOMBRE_RANGO } from "./estilo.js";
@@ -10,6 +10,15 @@ export const LATON_CSS = "#C08A2E";
 const PERGAMINO = "#E8DCC2";
 
 // === Tablero 3D =============================================================
+
+// Cuánto se gira la cara de la ficha según el ejército al que pertenece. El
+// plano está tumbado (rotación -PI/2 en X), así que el giro va en Z.
+const GIRO_DE_FICHA = {
+  rojo: Math.PI,        // norte: la cabeza hacia el sur, o sea al centro
+  azul: 0,              // sur
+  verde: Math.PI / 2,   // este
+  amarillo: -Math.PI / 2, // oeste
+};
 
 const GEO = {};
 function geometrias() {
@@ -23,11 +32,42 @@ function geometrias() {
   GEO.pano = new THREE.PlaneGeometry(0.42, 0.26);
   GEO.marca = new THREE.TorusGeometry(0.38, 0.045, 8, 20);
   GEO.aroSuelta = new THREE.TorusGeometry(0.3, 0.05, 8, 20);
+  GEO.numero = new THREE.PlaneGeometry(0.72, 0.72);
+  GEO.quemadura = new THREE.CircleGeometry(0.46, 20);
+  GEO.llama = new THREE.ConeGeometry(0.17, 0.42, 7);
   GEO.listo = true;
   return GEO;
 }
 
 const CACHE_TEXTURAS = {};
+const CACHE_NUMEROS = {};
+
+// El contador de victorias camino del reclutamiento, escrito sobre la casilla de
+// reclutamiento de cada ejército. Estaba solo en el panel lateral, y es un dato
+// que se mira constantemente mientras se juega: tenerlo en el tablero ahorra
+// apartar la vista.
+function texturaNumero(n, colorCss) {
+  const clave = `${n}-${colorCss}`;
+  if (CACHE_NUMEROS[clave]) return CACHE_NUMEROS[clave];
+  const lado = 128;
+  const lienzo = document.createElement("canvas");
+  lienzo.width = lienzo.height = lado;
+  const ctx = lienzo.getContext("2d");
+  ctx.font = "bold 92px Georgia, serif";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  // Halo claro debajo: el número tiene que leerse sobre la arena y sobre el
+  // tinte del ejército, que son fondos distintos.
+  ctx.lineWidth = 12;
+  ctx.strokeStyle = "rgba(255, 248, 232, 0.92)";
+  ctx.strokeText(String(n), lado / 2, lado / 2 + 4);
+  ctx.fillStyle = colorCss;
+  ctx.fillText(String(n), lado / 2, lado / 2 + 4);
+  const textura = new THREE.CanvasTexture(lienzo);
+  textura.colorSpace = THREE.SRGBColorSpace;
+  CACHE_NUMEROS[clave] = textura;
+  return textura;
+}
 // La ficha lleva la silueta del rango en oro sobre el color de su ejército, como
 // en el tablero de cartón. Solo se pinta para las piezas propias: los rangos
 // ajenos no se enseñan nunca sobre el tablero, ni siquiera los que ya se han
@@ -58,6 +98,8 @@ export default function Tablero3D({
   resaltadas,
   zonaPropia,
   colorCamara,
+  marcador,
+  explosiones,
   onCasilla,
   alto = 540,
   ampliado = false,
@@ -422,6 +464,10 @@ export default function Tablero3D({
     escena.add(grupoPiezas);
     const grupoMarcas = new THREE.Group();
     escena.add(grupoMarcas);
+    // Avisos: el contador de cada ejército y el fuego de los cañonazos. Grupo
+    // aparte porque se repinta por razones distintas que las piezas.
+    const grupoAvisos = new THREE.Group();
+    escena.add(grupoAvisos);
 
     let vivo = true;
     const reloj = new THREE.Clock();
@@ -432,7 +478,13 @@ export default function Tablero3D({
       // ondule -no se notaría a esta escala y costaría- pero el reflejo sí se
       // mueve, que es lo que hace que parezca agua y no pintura azul.
       const t = reloj.getElapsedTime();
-      normalAgua.offset.set(t * 0.22, t * 0.14);
+        normalAgua.offset.set(t * 0.22, t * 0.14);
+      // Las llamas titilan: sin movimiento parecen conos naranjas clavados.
+      for (const llama of (ref.current && ref.current.llamas) || []) {
+        const p = Math.sin(t * 7 + llama.userData.fase);
+        llama.scale.set(1 + p * 0.18, 1 + p * 0.3, 1 + p * 0.18);
+        llama.material.emissiveIntensity = 1.3 + p * 0.5;
+      }
       render.render(escena, camara);
       requestAnimationFrame(bucle);
     };
@@ -449,7 +501,7 @@ export default function Tablero3D({
     const observador = new ResizeObserver(alRedimensionar);
     observador.observe(nodo);
 
-    ref.current = { escena, grupoPiezas, grupoMarcas, casillasMesh, orbita, situarCamara, centrarVista };
+    ref.current = { escena, grupoPiezas, grupoMarcas, grupoAvisos, llamas: [], casillasMesh, orbita, situarCamara, centrarVista };
 
     return () => {
       vivo = false;
@@ -469,7 +521,12 @@ export default function Tablero3D({
   useEffect(() => {
     const r = ref.current;
     if (!r || !colorCamara) return;
-    const angulo = { rojo: Math.PI, verde: -Math.PI / 2, azul: 0, amarillo: Math.PI / 2 };
+    // VERDE Y AMARILLO ESTABAN CAMBIADOS. La cámara se sitúa con
+    // x = radio·sin(theta) y z = radio·cos(theta), así que theta = +PI/2 la pone
+    // en +x —el este, donde está el verde— y -PI/2 en -x, el oeste del amarillo.
+    // Con la tabla al revés, un jugador verde miraba el tablero desde el lado
+    // del amarillo y al revés: veía su propio ejército al fondo.
+    const angulo = { rojo: Math.PI, verde: Math.PI / 2, azul: 0, amarillo: -Math.PI / 2 };
     r.orbita.theta = angulo[colorCamara];
     r.situarCamara();
   }, [colorCamara]);
@@ -547,6 +604,10 @@ export default function Tablero3D({
           : new THREE.MeshLambertMaterial({ color: 0x8d7742 })
       );
       tapa.rotation.x = -Math.PI / 2;
+      // Cada ficha mira hacia el centro desde el lado de SU ejército, en vez de
+      // salir todas giradas al sur. Así cada jugador ve sus piezas derechas sin
+      // rodear el tablero, que es como están las de verdad sobre la mesa.
+      tapa.rotation.z = GIRO_DE_FICHA[pieza.color] || 0;
       tapa.position.y = 0.505;
       grupo.add(tapa);
 
@@ -556,7 +617,16 @@ export default function Tablero3D({
         grupo.add(asta);
         const pano = new THREE.Mesh(
           g.pano,
-          new THREE.MeshLambertMaterial({ color: ESTILO[pieza.bandera].hex, side: THREE.DoubleSide })
+          // Con emisión propia: el paño es un plano, y la cara que da la espalda
+          // al sol se quedaba negra desde que la escena tiene iluminación de
+          // verdad. Una bandera tiene que leerse de su color por los dos lados.
+          new THREE.MeshStandardMaterial({
+            color: ESTILO[pieza.bandera].hex,
+            emissive: ESTILO[pieza.bandera].hex,
+            emissiveIntensity: 0.45,
+            roughness: 0.85,
+            side: THREE.DoubleSide,
+          })
         );
         pano.position.set(0.4, 1.22, 0);
         grupo.add(pano);
@@ -586,7 +656,13 @@ export default function Tablero3D({
 
       const pano = new THREE.Mesh(
         g.pano,
-        new THREE.MeshLambertMaterial({ color: ESTILO[color].hex, side: THREE.DoubleSide })
+        new THREE.MeshStandardMaterial({
+          color: ESTILO[color].hex,
+          emissive: ESTILO[color].hex,
+          emissiveIntensity: 0.45,
+          roughness: 0.85,
+          side: THREE.DoubleSide,
+        })
       );
       pano.position.set(0.12, 0.76, 0);
       grupo.add(pano);
@@ -596,6 +672,73 @@ export default function Tablero3D({
       r.grupoPiezas.add(grupo);
     }
   }, [piezas, banderasSueltas]);
+
+  // El contador de cada ejército sobre su casilla de reclutamiento, y el fuego
+  // que deja un cañonazo. Van en su propio grupo y su propio efecto porque
+  // cambian por razones distintas que las piezas.
+  useEffect(() => {
+    const r = ref.current;
+    if (!r) return;
+    const g = geometrias();
+    while (r.grupoAvisos.children.length) {
+      const hijo = r.grupoAvisos.children.pop();
+      if (hijo.material) hijo.material.dispose();
+    }
+    r.llamas = [];
+
+    for (const color of COLORES) {
+      const cuenta = marcador ? marcador[color] : 0;
+      if (!cuenta) continue; // a cero no se pinta: sería ruido en 165 casillas
+      const casilla = ZONAS[color].reclutamiento;
+      const [x, , z] = posicion3D(casilla);
+      const numero = new THREE.Mesh(
+        g.numero,
+        new THREE.MeshBasicMaterial({ map: texturaNumero(cuenta, ESTILO[color].css), transparent: true, depthWrite: false })
+      );
+      numero.rotation.x = -Math.PI / 2;
+      numero.rotation.z = GIRO_DE_FICHA[color] || 0;
+      // ALTURAS: la cara de la baldosa está en y = 0,10 -`posicion3D` devuelve
+      // 0,1 y la caja se centra medio grosor por debajo-, así que todo lo que se
+      // pinte encima va por arriba de eso. Puesto a 0,055 el número quedaba
+      // DENTRO de la baldosa y no se veía; las llamas sí, porque iban a 0,2.
+      numero.position.set(x, 0.108, z);
+      r.grupoAvisos.add(numero);
+    }
+
+    // El rastro del cañonazo: quemadura en el suelo y unas llamas que titilan.
+    // Dura lo que tarde en volverle el turno a quien disparó, que es el tiempo
+    // que a un jugador le sirve para enterarse de que ha pasado algo ahí.
+    for (const casilla of explosiones || []) {
+      const [x, , z] = posicion3D(casilla);
+      if (x === undefined) continue;
+      const quemadura = new THREE.Mesh(
+        g.quemadura,
+        new THREE.MeshBasicMaterial({ color: 0x2a1d14, transparent: true, opacity: 0.72, depthWrite: false })
+      );
+      quemadura.rotation.x = -Math.PI / 2;
+      quemadura.position.set(x, 0.104, z);
+      r.grupoAvisos.add(quemadura);
+
+      for (let i = 0; i < 3; i++) {
+        const llama = new THREE.Mesh(
+          g.llama,
+          new THREE.MeshStandardMaterial({
+            color: i === 0 ? 0xffb03a : 0xd8471f,
+            emissive: i === 0 ? 0xffa22a : 0xc63c14,
+            emissiveIntensity: 1.6,
+            transparent: true,
+            opacity: 0.85,
+            roughness: 1,
+          })
+        );
+        const angulo = (i / 3) * Math.PI * 2;
+        llama.position.set(x + Math.cos(angulo) * 0.15, 0.32 + i * 0.03, z + Math.sin(angulo) * 0.15);
+        llama.userData.fase = i * 1.7;
+        r.grupoAvisos.add(llama);
+        r.llamas.push(llama);
+      }
+    }
+  }, [marcador, explosiones]);
 
   const botonEscena = {
     background: "rgba(28,20,13,0.78)",
