@@ -39,6 +39,15 @@
 //   con red    0,00 -> 75%   0,20 -> 73%   0,35 -> 64%   0,50 -> 54%   0,70 -> 38%
 //   sin red    0,00 -> 48%   0,30 -> 45%   0,60 -> 28%
 //
+// OJO: esa curva se midió cuando el ruido PODÍA tirar una victoria inmediata.
+// Desde que las jugadas que ganan están protegidas, la misma dosis hace mucho
+// menos daño -los niveles 3 y 4 saltaron de 69% y 83% a 83% y 93%- y hubo que
+// subirla para recuperar el espaciado. Es la consecuencia de arreglar el fallo,
+// no un ajuste caprichoso.
+//
+// Escalera medida con los valores actuales: 38-50-74-82-95. El salto grande del
+// 2 al 3 es estructural, ahí es donde entra la red.
+//
 // La curva es plana hasta 0,2 y luego cae: elegir entre las seis mejores una de
 // cada cinco veces casi no duele, porque las seis son razonables. De ahí salen
 // los cinco peldaños, espaciados de verdad.
@@ -61,12 +70,12 @@ export const NIVELES = {
   3: {
     nombre: "Oficial",
     descripcion: "Usa la red entrenada y despliega con ella, aunque se equivoca la mitad de las veces.",
-    red: true, candidatas: CANDIDATAS_UTILES, ruido: 0.5, memoria: true, ruidoSinRed: 0.2, ...DESPLIEGUE_UTIL,
+    red: true, candidatas: CANDIDATAS_UTILES, ruido: 0.64, memoria: true, ruidoSinRed: 0.2, ...DESPLIEGUE_UTIL,
   },
   4: {
     nombre: "Coronel",
     descripcion: "La red entrenada con pocos despistes.",
-    red: true, candidatas: CANDIDATAS_UTILES, ruido: 0.28, memoria: true, ruidoSinRed: 0.08, ...DESPLIEGUE_UTIL,
+    red: true, candidatas: CANDIDATAS_UTILES, ruido: 0.5, memoria: true, ruidoSinRed: 0.08, ...DESPLIEGUE_UTIL,
   },
   5: {
     nombre: "Mariscal",

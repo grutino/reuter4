@@ -13,7 +13,8 @@
 // juega con basura.
 
 import { evaluar } from "./red.js";
-import { movimientosLegales } from "./motor.js";
+import { movimientosLegales, banderaQueCorona } from "./motor.js";
+import { TORRE } from "./tablero.js";
 import { despliegueAleatorio, puntuarAcciones, PESOS_BASE, DISTANCIA } from "./bot.js";
 import { NIVELES, nivelValido, configuracionDeNivel } from "./dificultad.js";
 import { analizarTurno } from "./analisis.js";
@@ -98,6 +99,22 @@ export function accionConRed(estado, color, red, { candidatas = 12, azar = Math.
 // un bot que juega cualquier cosa no es más fácil, es otro juego.
 const POOL_DE_FALLO = 6;
 
+// EL RUIDO NUNCA TIRA UNA VICTORIA. Un nivel bajo debe jugar peor, no regalar
+// partidas ganadas: medido, el nivel 3 dejaba de coronar el 42% de las veces que
+// podía hacerlo, y el 4 el 25%. Un humano flojo hace jugadas mediocres, no pasa
+// de largo por delante de la torre con la bandera en la mano.
+//
+// Se mira antes de cualquier otra cosa, así que también salta por encima de la
+// red: la red no sabe que esto GANA, solo estima probabilidades, y no hay
+// probabilidad que valga cuando la partida se acaba aquí.
+function jugadaQueGana(estado, color, acciones) {
+  return acciones.find((a) => {
+    if (a.hasta !== TORRE) return false;
+    const pieza = estado.piezas[a.pieza];
+    return pieza && pieza.color === color && banderaQueCorona(estado, pieza);
+  });
+}
+
 // Un bot sin memoria no ve `rangosRevelados`. Se le pasa una vista con la
 // memoria vacía en vez de usar `accionDeBotClasico`, que se conserva como vara
 // de medir del duelo de `npm run simular` y no debe acabar atada a esto: si un
@@ -111,6 +128,9 @@ export function jugadaDeBot(estado, color, nivel, modelos = {}, azar = Math.rand
   const visto = vistaSegunNivel(estado, cfg);
   const puntuadas = puntuarAcciones(visto, color, { azar });
   if (!puntuadas.length) return null;
+
+  const ganadora = jugadaQueGana(visto, color, puntuadas.map((p) => p.accion));
+  if (ganadora) return ganadora;
 
   if (cfg.ruido > 0 && azar() < cfg.ruido) {
     const pool = puntuadas.slice(0, Math.min(POOL_DE_FALLO, puntuadas.length));
@@ -151,6 +171,9 @@ export function jugadaSoloRed(estado, color, red, { azar = Math.random, ruido = 
   const legales = movimientosLegales(visto, color);
   if (!legales.length) return null;
   if (legales.length === 1) return legales[0];
+
+  const ganadora = jugadaQueGana(visto, color, legales);
+  if (ganadora) return ganadora;
 
   const contexto = contextoDeTurno(visto, color, analizarTurno(visto, color, DISTANCIA));
   const notas = legales.map((accion) => ({

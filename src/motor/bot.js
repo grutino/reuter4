@@ -478,9 +478,21 @@ export function decisionDeRecogida(estado, color) {
   const pieza = estado.piezas[pendiente.pieza];
   if (!pieza) return false;
 
-  // La bandera del propio bando se recoge siempre: es la que corona, y dejarla
-  // en el suelo es servírsela al rival.
-  if (!esEnemigo(color, pendiente.bandera)) return true;
+  // La propia se recoge siempre: es la única que uno puede coronar, y dejarla en
+  // el suelo es servírsela al rival.
+  if (pendiente.bandera === color) return true;
+
+  // LA DEL COMPAÑERO, NO. Y esto cambió el día que se fijó que una bandera solo
+  // la corona una pieza de su color: al recogerla queda congelada, porque quien
+  // la lleva no puede coronarla y su dueño ya no puede recuperarla salvo que
+  // caiga en combate. O sea que cargarla le quita al equipo una de sus dos vías
+  // de ganar.
+  //
+  // Renunciar tampoco es gratis -quien renuncia se queda encima de ella y la
+  // tapa mientras siga ahí- pero al menos puede apartarse después y dejar que su
+  // dueño la recoja. Queda pendiente afinarlo: si un enemigo está a punto de
+  // llevársela, cargarla y negársela puede compensar.
+  if (!esEnemigo(color, pendiente.bandera)) return false;
 
   const bandera = estado.banderas[pendiente.bandera];
   const daPromocion = Boolean(bandera) && bandera.ultimoDueño === pendiente.bandera;

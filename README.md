@@ -176,7 +176,7 @@ código, los bots caen a la **heurística escrita a mano** y el servidor lo dice
 comprobación no es decorativa: un modelo viejo se carga sin dar ningún error y juega con basura.
 
 Hay **cinco niveles de dificultad** por bot, con deslizador para quien creó la partida y
-cambiables en mitad de ella. Medidos contra el nivel 2: 35%, 50%, 69%, 83% y 95% de victorias.
+cambiables en mitad de ella. Medidos contra el nivel 2: 38%, 50%, 74%, 82% y 95% de victorias.
 El nivel 1 se distingue por **no recordar** los rangos ya vistos, y se nota de una forma muy
 humana: vuelve a estrellarse contra el mariscal que ya le enseñaste.
 
@@ -201,6 +201,17 @@ habría cambiado el resultado. Cada cifra lleva su error, porque medir el impact
 suelta es ruidoso y sin ese aviso el listado parece decir cosas que no dice.
 
 ## Qué falta por pulir
+
+- **Un solo informe de partida, no dos**: hoy hay un botón para el relato y otro para el
+  análisis. Debería ser uno con todo, y las jugadas determinantes no en un bloque aparte sino
+  **sobre el hilo que ya existe**: fondo verde suave si la jugada fue buena, rojo suave si fue
+  mala, con la evaluación que ya se calcula. El hilo es la línea de tiempo natural de la
+  partida; duplicarla en una tabla al lado obliga a leer dos veces lo mismo.
+- **Un cañonazo sobre un explorador es tirar el cañón**: se ha visto en partida. El disparo se
+  valora por el rango del objetivo (`disparoConocidoBase + rango x factor`) pero no descuenta lo
+  que vale el cañón que se gasta, así que batir a un explorador ya identificado —41 puntos—
+  sale a cuenta cuando no debería. Hace falta un suelo: por debajo de cierto rango, no compensa
+  gastar la pieza. Ojo al medirlo, que subir pesos de cañón ya costó bajar del 52% al 37% una vez.
 
 - **Medir el impacto de UNA jugada es muy ruidoso, y eso condiciona el análisis**: con tiradas
   estocásticas, la misma posición medida dos veces con 8 tiradas solo correlaciona **0,39**

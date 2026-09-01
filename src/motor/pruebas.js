@@ -30,7 +30,7 @@ import { accionDeBot, accionDeBotClasico, decisionDeRecogida, despliegueAleatori
 import { peligroEn, lineasAbiertasSi } from "./analisis.js";
 import { analizarTurno } from "./analisis.js";
 import { rasgosDeJugada, contextoDeTurno, NOMBRES as NOMBRES_RASGOS, TAMANO as TAMANO_JUGADA } from "./rasgos-jugada.js";
-import { jugadaDeBot } from "./bot-red.js";
+import { jugadaDeBot, jugadaSoloRed } from "./bot-red.js";
 import { cargarModelos } from "./modelos.js";
 import { NIVELES, nivelValido, ESCALA, configuracionDeNivel } from "./dificultad.js";
 import { BATEN_ANILLO, BATEN_LA_TORRE, PASOS_A_TIRO, ANILLO as ANILLO_T } from "./tablero.js";
@@ -1845,6 +1845,67 @@ prueba("un hilo que no se puede reproducir lo dice, no lo intenta", () => {
     ReplayImposible,
     "reclutamiento sin rango"
   );
+});
+
+
+prueba("ningún nivel tira una victoria inmediata por el ruido", () => {
+  // Visto jugando: un bot que podía coronar movió otra pieza y ganó un turno más
+  // tarde. No era la red ni la heurística: era el RUIDO de la dificultad. Medido
+  // antes del arreglo, el nivel 3 dejaba de coronar el 42% de las veces y el 4
+  // el 25%.
+  //
+  // Un nivel bajo tiene que jugar peor, no regalar partidas ganadas. Un humano
+  // flojo hace jugadas mediocres; no pasa de largo por delante de la torre con
+  // la bandera en la mano.
+  const sembrado = (semilla) => {
+    let a = semilla >>> 0;
+    return () => {
+      a = (a + 0x6d2b79f5) >>> 0;
+      let x = a;
+      x = Math.imul(x ^ (x >>> 15), x | 1);
+      x ^= x + Math.imul(x ^ (x >>> 7), x | 61);
+      return ((x ^ (x >>> 14)) >>> 0) / 4294967296;
+    };
+  };
+  const escenario = () => {
+    const e = estadoVacio();
+    const portador = colocar(e, "rojo", 5, ANILLO_T);
+    portador.bandera = "rojo";
+    e.banderas.rojo = { portador: portador.id, casilla: null, ultimoDueño: "rojo" };
+    colocar(e, "rojo", 4, "D4");
+    colocar(e, "rojo", 6, "E5");
+    colocar(e, "rojo", 3, "F6");
+    colocar(e, "verde", 7, "K8");
+    return e;
+  };
+
+  for (const nivel of [1, 2, 3, 4, 5]) {
+    for (let i = 0; i < 60; i++) {
+      const elegida = jugadaDeBot(escenario(), "rojo", nivel, {}, sembrado(i + 1));
+      assert.strictEqual(
+        elegida && elegida.hasta, TORRE,
+        `nivel ${nivel}, azar ${i}: podía coronar y jugó otra cosa`
+      );
+    }
+  }
+});
+
+prueba("un bot no carga la bandera de su compañero", () => {
+  // Desde que una bandera solo la corona una pieza de su color, cargar la del
+  // compañero la CONGELA: quien la lleva no puede coronarla y su dueño ya no
+  // puede recuperarla salvo que caiga en combate. Le quita al equipo una de sus
+  // dos vías de ganar, y se vio pasar en una partida.
+  const escenario = (deQuien) => {
+    const e = estadoVacio();
+    const pieza = colocar(e, "rojo", 5, "H4");
+    e.banderasSueltas.H4 = deQuien;
+    e.banderas[deQuien] = { portador: null, casilla: "H4", ultimoDueño: deQuien };
+    e.pendiente = { tipo: "recoger", color: "rojo", pieza: pieza.id, casilla: "H4", bandera: deQuien };
+    return e;
+  };
+  assert.strictEqual(decisionDeRecogida(escenario("rojo"), "rojo"), true, "la propia sí: es la que uno corona");
+  assert.strictEqual(decisionDeRecogida(escenario("azul"), "rojo"), false, "la del compañero NO: la dejaría inservible");
+  assert.strictEqual(decisionDeRecogida(escenario("verde"), "rojo"), true, "una enemiga sí: da promoción");
 });
 
 console.log(`\n${pasadas} pruebas superadas, ${fallidas} fallidas\n`);
