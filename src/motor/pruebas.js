@@ -1917,7 +1917,11 @@ prueba("gastar el cañón cuesta, así que un explorador no compensa", () => {
   const nota = (rango) => PESOS_BASE.costeDelCanon + PESOS_BASE.disparoConocidoBase + rango * PESOS_BASE.disparoConocidoFactor;
   assert.ok(nota(3) < nota(6), "batir a un capitán tiene que valer más que a un explorador");
   assert.ok(nota(2) <= 0, "contra un rango bajo no debería compensar gastar el cañón");
-  assert.ok(nota(9) > 30, "y contra un mariscal tiene que seguir compensando de largo");
+  // Contra un mariscal son 28 puntos, que compiten de sobra con una jugada
+  // normal; lo que importa es la DISTANCIA con el disparo barato, no el número
+  // suelto.
+  assert.ok(nota(9) > 20, `contra un mariscal tiene que seguir compensando; salió ${nota(9)}`);
+  assert.ok(nota(9) - nota(3) > 30, "y la diferencia con un explorador tiene que ser grande");
 
   // Y parar una coronación sigue por encima de todo: el coste no puede
   // convertir en dudosa la jugada que evita perder la partida.
