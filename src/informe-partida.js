@@ -288,44 +288,33 @@ function lineaDeJugada(h, rango) {
   return partes.length ? partes.join(" · ") : h.tipo;
 }
 
-// --- El análisis: dónde se decidió ---------------------------------------------
+// --- El análisis, resumido sobre el hilo ------------------------------------
 //
-// Solo sale si se ha calculado; el informe se puede abrir igual sin él. Cada
-// número lleva su error y se marca cuando cae dentro del ruido, porque medir el
-// impacto de una jugada suelta es muy ruidoso: la misma posición medida dos
-// veces con 8 tiradas solo correlaciona 0,39 consigo misma. Sin ese aviso el
-// listado parece decir cosas que no dice.
-function seccionDeAnalisis(analisis, hayFichas, fichita) {
-  if (!analisis || !analisis.length) return "";
-
+// De cada posición dudosa se ha vuelto a jugar la partida varias veces con la
+// jugada que se hizo y con la alternativa. Lo que sale se marca en el propio
+// hilo -verde si la jugada fue buena, rojo si fue mala- en vez de en una tabla
+// aparte: el hilo ya es la línea de tiempo, y tenerlo dos veces obliga a
+// cruzarlo a mano.
+//
+// Solo se colorea lo que supera su propio error. Medir el impacto de una jugada
+// suelta es muy ruidoso -la misma posición medida dos veces con 8 tiradas solo
+// correlaciona 0,39 consigo misma- y pintar de rojo algo que cae dentro del
+// ruido sería afirmar más de lo que se sabe.
+function resumenDelAnalisis(analisis) {
+  if (!analisis || !analisis.length) {
+    return `<p class="sub">Sin análisis: se abrió el informe sin volver a jugar las posiciones dudosas.</p>`;
+  }
   const claros = analisis.filter((m) => Math.abs(m.medido) > 2 * m.error);
-  const filas = analisis.map((m) => {
-    const signo = m.medido > 0 ? "peor" : "mejor";
-    const seguro = Math.abs(m.medido) > 2 * m.error;
-    return `<tr class="${seguro ? "" : "difusa"}">
-      <td class="n">${m.n}</td>
-      <td class="quien">${fichita(m.color, m.rangoDeLaPieza)}${esc(m.color)}</td>
-      <td>${esc(m.jugada)}<div class="alternativa">en vez de: ${esc(m.alternativa)}</div></td>
-      <td class="cifra">${(m.valorJugada * 100).toFixed(0)}% <small>contra</small> ${(m.valorAlternativa * 100).toFixed(0)}%</td>
-      <td class="cifra">${signo} por ${Math.abs(m.medido * 100).toFixed(0)} <small>±${Math.round(m.error * 100)}</small></td>
-    </tr>`;
-  }).join("");
-
-  return `<section>
-    <h2>Dónde se decidió</h2>
-    <p class="sub">De cada posición dudosa se ha vuelto a jugar la partida varias veces con la
-      jugada que se hizo y con la alternativa, para ver si el resultado cambia. ${
-        claros.length
-          ? `<b>${claros.length} de ${analisis.length}</b> superan su propio margen de error; el resto están en gris.`
-          : `Ninguna supera su margen de error: en esta partida no hubo una jugada suelta que la decidiera.`
-      }</p>
-    <table>
-      <thead><tr><th>#</th><th>bando</th><th>jugada</th><th>resultado</th><th>diferencia</th></tr></thead>
-      <tbody>${filas}</tbody>
-    </table>
-    <p class="pie">Medir una jugada suelta es ruidoso: la misma posición medida dos veces solo
-      concuerda consigo misma a medias. Por eso va el error al lado y no un número a secas.</p>
-  </section>`;
+  const malas = claros.filter((m) => m.medido > 0).length;
+  const buenas = claros.length - malas;
+  return `<p class="sub">Se han probado alternativas en ${analisis.length} posiciones dudosas.
+    ${
+      claros.length
+        ? `<b>${claros.length}</b> dan una diferencia mayor que su margen de error y van marcadas abajo:
+           ${buenas ? `<span class="pastilla buena">${buenas} acertada${buenas > 1 ? "s" : ""}</span>` : ""}
+           ${malas ? `<span class="pastilla mala">${malas} errada${malas > 1 ? "s" : ""}</span>` : ""}`
+        : `Ninguna supera su margen de error: en esta partida no hubo una jugada suelta que la decidiera.`
+    }</p>`;
 }
 
 // --- El documento entero ------------------------------------------------------
@@ -364,8 +353,29 @@ export function construirInforme(sala, { fichas = null, analisis = null } = {}) 
       </div>
     </section>`;
 
+  // Las jugadas analizadas se marcan SOBRE EL HILO, no en una tabla aparte: el
+  // hilo ya es la línea de tiempo de la partida, y duplicarla al lado obliga a
+  // leer dos veces lo mismo para cruzar los datos a mano.
+  const porJugada = new Map();
+  for (const m of analisis || []) porJugada.set(m.n, m);
+
   const filas = historia
-    .map((h, i) => `<tr><td class="n">${h.n}</td><td class="quien">${fichita(h.color, rangos[i])}${esc(h.color)}</td><td>${esc(lineaDeJugada(h, rangos[i]))}</td></tr>`)
+    .map((h, i) => {
+      const juicio = porJugada.get(h.n);
+      // Solo se colorea lo que supera su propio error. Medir el impacto de una
+      // jugada suelta es ruidoso, y pintar de rojo algo que cae dentro del ruido
+      // sería afirmar más de lo que se sabe.
+      const claro = juicio && Math.abs(juicio.medido) > 2 * juicio.error;
+      const clase = claro ? (juicio.medido > 0 ? " class=\"mala\"" : " class=\"buena\"") : "";
+      const nota = claro
+        ? `<div class="juicio">${juicio.medido > 0 ? "perdió" : "ganó"} ${Math.abs(juicio.medido * 100).toFixed(0)} puntos
+             <small>±${Math.round(juicio.error * 100)}</small> · mejor: ${esc(juicio.alternativa)}</div>`
+        : juicio
+        ? `<div class="juicio tenue">se probó la alternativa y la diferencia queda dentro del ruido</div>`
+        : "";
+      return `<tr${clase}><td class="n">${h.n}</td><td class="quien">${fichita(h.color, rangos[i])}${esc(h.color)}</td>` +
+        `<td>${esc(lineaDeJugada(h, rangos[i]))}${nota}</td></tr>`;
+    })
     .join("");
 
   return `<!doctype html>
@@ -388,7 +398,15 @@ export function construirInforme(sala, { fichas = null, analisis = null } = {}) 
   td.quien { white-space:nowrap; }
   td.cifra { white-space:nowrap; font-variant-numeric:tabular-nums; }
   td.cifra small { color:var(--tenue); }
-  tr.difusa td { color:var(--tenue); }
+  tr.buena td { background:rgba(74, 124, 74, 0.12); }
+  tr.mala td { background:rgba(150, 54, 44, 0.12); }
+  tr.buena td:first-child { box-shadow:inset 3px 0 0 #4A7C4A; }
+  tr.mala td:first-child { box-shadow:inset 3px 0 0 #96362C; }
+  .juicio { font-size:12px; color:var(--tenue); margin-top:3px; }
+  .juicio.tenue { opacity:0.62; }
+  .pastilla { display:inline-block; padding:1px 8px; border-radius:20px; font-size:12px; margin-left:4px; }
+  .pastilla.buena { background:rgba(74, 124, 74, 0.18); }
+  .pastilla.mala { background:rgba(150, 54, 44, 0.18); }
   .alternativa { font-size:12px; color:var(--tenue); margin-top:2px; }
   .fichas { display:flex; flex-wrap:wrap; gap:10px; margin:0 0 8px; padding:0; }
   .ficha { border:1px solid var(--linea); border-radius:6px; padding:8px 12px; min-width:118px; }
@@ -421,9 +439,8 @@ export function construirInforme(sala, { fichas = null, analisis = null } = {}) 
   <h2>Los cuatro ejércitos</h2>
   ${colores.map(seccionColor).join("")}
 
-  ${seccionDeAnalisis(analisis, hayFichas, fichita)}
-
   <h2>El hilo completo</h2>
+  ${resumenDelAnalisis(analisis)}
   <table><thead><tr><th>#</th><th>bando</th><th>jugada</th></tr></thead><tbody>${filas}</tbody></table>
 </body></html>`;
 }

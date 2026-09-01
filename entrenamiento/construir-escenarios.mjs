@@ -12,6 +12,7 @@ import { desdeObjeto } from "../src/motor/red.js";
 import { accionConRed } from "../src/motor/bot-red.js";
 import { cargarModelos } from "../src/motor/modelos.js";
 import { accionDeBot } from "../src/motor/bot.js";
+import { FIRMA as FIRMA_JUGADA, TAMANO as TAMANO_JUGADA } from "../src/motor/rasgos-jugada.js";
 import {
   recolectar, etiquetar, ejemplosDeEscenario, guardarBanco, leerBanco,
   resumenDelBanco, firmaDePosicion, CARPETA,
@@ -73,6 +74,10 @@ banco.forEach((esc, i) => {
 
 const salida = path.join(CARPETA, "ejemplos.json");
 fs.writeFileSync(salida, JSON.stringify({
+  // La firma va con los ejemplos por la misma razón que va con los modelos: si
+  // los rasgos cambian, estos vectores dejan de significar lo que decían y se
+  // cargarían como basura sin dar ningún error.
+  firmaRasgos: FIRMA_JUGADA, entradas: TAMANO_JUGADA,
   creado: new Date().toISOString(), opciones: o,
   ejemplos: ejemplos.map((e) => ({ entrada: Array.from(e.entrada), objetivo: e.objetivo, motivo: e.motivo })),
 }, null, 1));

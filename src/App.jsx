@@ -1074,37 +1074,38 @@ export default function App() {
                       ejércitos y los despliegues iniciales, así que el tablero
                       se destapa solo y el informe ya tiene todo lo que necesita. */}
                   <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 10, flexWrap: "wrap" }}>
-                    <Boton
-                      variante="secundario"
-                      onClick={() => {
-                        if (!abrirInforme(sala)) setAviso("El navegador ha bloqueado la ventana del informe. Permite las ventanas emergentes de esta página.");
-                      }}
-                    >
-                      Informe de la partida
-                    </Boton>
-                    {/* El análisis vuelve a jugar la partida varias veces desde
-                        las posiciones dudosas, así que tarda unos segundos. Se
-                        hace aquí y no en el servidor porque bloquearlo
-                        congelaría los bots de todas las demás partidas. */}
+                    {/* UN SOLO INFORME. Antes había dos botones, uno para el
+                        relato y otro para el análisis, y el segundo repetía el
+                        primero con una tabla más. Ahora es uno: analiza -unos
+                        segundos, vuelve a jugar la partida desde las posiciones
+                        dudosas- y abre el informe con las jugadas marcadas sobre
+                        el propio hilo.
+
+                        Se analiza en el navegador y no en el servidor porque son
+                        varios segundos de cálculo seguido y el servidor mueve los
+                        bots de todas las partidas en un temporizador: bloquearlo
+                        las congelaría todas. */}
                     <Boton
                       variante="secundario"
                       disabled={analizando}
                       onClick={async () => {
                         setAnalizando(true);
                         setAviso("");
+                        let analisis = null;
                         try {
-                          const analisis = await analizarEnElNavegador(sala);
-                          if (!abrirInforme(sala, analisis)) {
-                            setAviso("El navegador ha bloqueado la ventana del informe. Permite las ventanas emergentes de esta página.");
-                          }
+                          analisis = await analizarEnElNavegador(sala);
                         } catch (e) {
-                          setAviso(`No se ha podido analizar: ${e.message}`);
-                        } finally {
-                          setAnalizando(false);
+                          // Sin análisis el informe sigue valiendo: se abre igual
+                          // con el relato y se avisa de por qué falta lo otro.
+                          setAviso(`El informe va sin análisis: ${e.message}`);
+                        }
+                        setAnalizando(false);
+                        if (!abrirInforme(sala, analisis)) {
+                          setAviso("El navegador ha bloqueado la ventana del informe. Permite las ventanas emergentes de esta página.");
                         }
                       }}
                     >
-                      {analizando ? "Analizando…" : "Informe con análisis"}
+                      {analizando ? "Analizando la partida…" : "Informe de la partida"}
                     </Boton>
                     <span style={{ fontSize: 12, color: "#C9BC9C" }}>
                       Los rangos ya están destapados en el tablero.

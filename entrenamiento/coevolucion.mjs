@@ -54,6 +54,7 @@ import { accionConRed } from "./entrenar-jugada.mjs";
 import { jugadaSoloRed } from "../src/motor/bot-red.js";
 import { movimientosLegales } from "../src/motor/motor.js";
 import { generarInforme } from "./informe-redes.mjs";
+import { CARPETA as CARPETA_ESCENARIOS } from "./escenarios.mjs";
 
 const AQUI = path.dirname(fileURLToPath(import.meta.url));
 const MODELOS = path.join(AQUI, "modelos");
@@ -85,6 +86,10 @@ function opciones(argv) {
     // En seco no se escriben modelos ni formaciones: para probar el bucle sin
     // que un ensayo de 50 partidas pise a un modelo de 4000.
     seco: 0,
+    // Cuántas veces se repite cada ejemplo del banco de escenarios frente a uno
+    // normal. Hay unos cientos contra cientos de miles, así que sin repetirlos
+    // no se notarían — y son justamente los que enseñan las situaciones raras.
+    pesoEscenarios: 40,
     // SIN HEURÍSTICA DELANTE. Con esto la red puntúa TODAS las jugadas legales
     // en vez de reordenar las cuatro que le pasa la heurística. Sale más barato
     // -0,59 ms por turno frente a 0,87- pero exige una red destilada: la
@@ -121,6 +126,28 @@ const resolverPendiente = (estado) => {
     ? decisionDeRecogida(estado, p.color) ? recogerLaBandera(estado) : renunciarARecoger(estado)
     : reclutar(estado, Math.max(...p.opciones));
 };
+
+// Los ejemplos del banco, si los hay y si hablan el mismo idioma que los rasgos
+// de ahora. La firma se comprueba igual que en los modelos: unos vectores
+// guardados con otro juego de rasgos se cargarían como basura sin dar error.
+function cargarEscenarios() {
+  const ruta = path.join(CARPETA_ESCENARIOS, "ejemplos.json");
+  if (!fs.existsSync(ruta)) return [];
+  let guardado;
+  try {
+    guardado = JSON.parse(fs.readFileSync(ruta, "utf8"));
+  } catch (e) {
+    console.log(`  ! el banco de escenarios no se puede leer (${e.message}), se sigue sin él`);
+    return [];
+  }
+  if (guardado.firmaRasgos !== FIRMA_JUGADA) {
+    console.log(`  ! el banco de escenarios se hizo con otros rasgos (${guardado.firmaRasgos || "sin firma"}, ahora ${FIRMA_JUGADA}). Rehazlo: npm run escenarios`);
+    return [];
+  }
+  return (guardado.ejemplos || [])
+    .filter((e) => e.entrada && e.entrada.length === TAMANO_JUGADA)
+    .map((e) => ({ entrada: Float64Array.from(e.entrada), objetivo: e.objetivo }));
+}
 
 function leer(nombre) {
   const f = path.join(MODELOS, nombre);
@@ -375,6 +402,15 @@ async function main() {
   // ronda recién jugada da muy pocos datos y el ajuste va a bandazos.
   const deposito = [];
 
+  // El banco de escenarios: posiciones donde la partida se decide, con una
+  // etiqueta POR JUGADA sacada de jugarla de verdad varias veces. Es lo que
+  // arregla que una jugada decisiva y una intrascendente de la misma partida
+  // ganada reciban la misma etiqueta.
+  const escenarios = cargarEscenarios();
+  if (escenarios.length) {
+    console.log(`  banco de escenarios: ${escenarios.length} ejemplos, repetidos x${o.pesoEscenarios}\n`);
+  }
+
   // La población de formaciones. Evoluciona en paralelo a las redes: cada ronda
   // las que mejor les ganan se cruzan entre ellas. El PANEL no se toca — es la
   // vara y tiene que seguir siendo el mismo para que la curva signifique algo.
@@ -400,7 +436,10 @@ async function main() {
 
     const nuevaD = entrenar(todosD, TAMANO_DESPLIEGUE, o.ocultaDespliegue, oRonda, azar, redD);
     const todosPares = deposito.flatMap((t) => t.pares || []);
-    const nuevaJ = entrenar(todosJ, TAMANO_JUGADA, o.ocultaJugada, oRonda, azar, redJ, o.anclaPares ? todosPares : null);
+    // Los del banco se repiten para que pesen: son unos cientos contra cientos
+    // de miles, y sin repetirlos el gradiente ni los nota.
+    const conEscenarios = todosJ.concat(...Array.from({ length: escenarios.length ? o.pesoEscenarios : 0 }, () => escenarios));
+    const nuevaJ = entrenar(conEscenarios, TAMANO_JUGADA, o.ocultaJugada, oRonda, azar, redJ, o.anclaPares ? todosPares : null);
     // Partidas nuevas cada ronda, y el titular las juega también.
     const semillaMedida = 31337 + ronda * 15485863;
     const medida = medir(nuevaD.red, nuevaJ.red, semillaMedida);
