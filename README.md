@@ -271,15 +271,7 @@ calibración en diez cubos y la curva de pérdida por época.
 pintar la pareja de curvas que enseña el sobreajuste, la de entrenamiento subiendo mientras la
 de validación se estanca.
 
-### 7. El cañonazo que no descuenta el cañón
-
-Visto en partida: un cañón gastado sobre un explorador ya identificado. El disparo se valora por
-el rango del objetivo (`disparoConocidoBase + rango x factor` = 41 para un explorador) pero no
-descuenta lo que vale la pieza que se gasta. Hace falta un suelo por debajo del cual no compense.
-
-**Cuidado al medirlo**: subir pesos de cañón ya costó bajar del 52% al 37% una vez, por tempo.
-
-### 8. Tácticas que aún no tienen rasgo
+### 7. Tácticas que aún no tienen rasgo
 
 Atacar por zonas donde la bolsa de rangos ocultos favorece, el señuelo del espía, explorador a
 distancia para revelar, bloquear los laterales, sacrificio para promocionar con el marcador alto,
@@ -292,14 +284,14 @@ coronar, llevar el cañón a posición, tapar la línea de tiro rival y cubrir e
 **Depende del punto 1**: añadir tácticas raras sin resolver antes el muestreo es trabajo que la
 red no va a aprender.
 
-### 9. Afinar la renuncia a la bandera del compañero
+### 8. Afinar la renuncia a la bandera del compañero
 
 Ahora un bot nunca carga la bandera de su compañero, porque cargarla la congela: quien la lleva
 no puede coronarla y su dueño ya no la recupera salvo que caiga en combate. Pero renunciar
 tampoco es gratis —quien renuncia se queda encima y la tapa— y **si un enemigo está a punto de
 llevársela, cargarla y negársela puede compensar**. Falta ese matiz.
 
-### 10. Siluetas: hace falta una foto tuya
+### 9. Siluetas: hace falta una foto tuya
 
 `src/siluetas-datos.js` está **generado** por `herramientas/extraer-siluetas.py` a partir de una
 foto de la tarjeta de referencia que **no está en el repositorio** —solo se versiona la silueta

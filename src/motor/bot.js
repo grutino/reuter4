@@ -175,6 +175,25 @@ export const PESOS_BASE = {
   amenazaFactor: 1,            // ...y cuánto pesa el rango de esa amenaza
 
   // Cañonazo
+  // Lo que cuesta gastar el cañón, se acierte a quien se acierte. Sin esto,
+  // batir a un explorador ya identificado salía a 41 puntos y compensaba, cuando
+  // es tirar la única pieza que se lleva por delante cualquier cosa y la única
+  // que alcanza el castillo desde fuera. Se ha visto pasar en partida.
+  //
+  // El valor sale de barrerlo, no de estimarlo: con -32 no cambiaba nada porque
+  // el disparo compite con otras jugadas y seguía ganando. Contra el mismo bot
+  // sin suelo, y contando a quién le dispara:
+  //
+  //   coste   disparos   contra 1-3   contra 6-9   fuerza
+  //       0        171           38          116     50%
+  //     -32        167           33          119     51%
+  //     -55        135           14          106     55%   <- el elegido
+  //     -85        100           15           68     53%
+  //    -130         41           10           22     54%
+  //
+  // En -55 los baratos caen a un tercio y los caros apenas se tocan. Más allá
+  // empieza a perder también los buenos sin ganar nada.
+  costeDelCanon: -55,
   disparoConocidoBase: 20,
   disparoConocidoFactor: 7,
   disparoDesconocido: 45,
@@ -400,6 +419,11 @@ export function accionDeBot(estado, color, { pesos = PESOS_BASE, azar = Math.ran
       // por delante. Contra un rango conocido se puede afinar; si no, media.
       const objetivo = estado.piezas[estado.tablero[a.hasta]];
       const conocido = objetivo ? memoria[objetivo.id] : undefined;
+      // El coste va aparte y siempre: es de la pieza que se gasta, no del
+      // blanco. Lo que decide es si lo que se lleva por delante lo compensa, y
+      // los extras de parar una coronación o batir el castillo se suman encima.
+      nota += pesos.costeDelCanon;
+      apuntar("costeDelCanon");
       if (conocido !== undefined) { nota += pesos.disparoConocidoBase + conocido * pesos.disparoConocidoFactor; apuntar("disparoConocidoBase"); apuntar("disparoConocidoFactor"); }
       else { nota += pesos.disparoDesconocido; apuntar("disparoDesconocido"); }
       if (objetivo && objetivo.bandera) { nota += pesos.disparoABandera; apuntar("disparoABandera"); }

@@ -26,7 +26,7 @@ import {
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import { accionDeBot, accionDeBotClasico, decisionDeRecogida, despliegueAleatorio, DISTANCIA } from "./bot.js";
+import { accionDeBot, accionDeBotClasico, decisionDeRecogida, despliegueAleatorio, DISTANCIA, PESOS_BASE } from "./bot.js";
 import { peligroEn, lineasAbiertasSi } from "./analisis.js";
 import { analizarTurno } from "./analisis.js";
 import { rasgosDeJugada, contextoDeTurno, NOMBRES as NOMBRES_RASGOS, TAMANO as TAMANO_JUGADA } from "./rasgos-jugada.js";
@@ -1906,6 +1906,22 @@ prueba("un bot no carga la bandera de su compañero", () => {
   assert.strictEqual(decisionDeRecogida(escenario("rojo"), "rojo"), true, "la propia sí: es la que uno corona");
   assert.strictEqual(decisionDeRecogida(escenario("azul"), "rojo"), false, "la del compañero NO: la dejaría inservible");
   assert.strictEqual(decisionDeRecogida(escenario("verde"), "rojo"), true, "una enemiga sí: da promoción");
+});
+
+
+prueba("gastar el cañón cuesta, así que un explorador no compensa", () => {
+  // Visto en partida: un cañón gastado sobre un explorador ya identificado. El
+  // disparo se valoraba por el rango del objetivo y no descontaba lo que vale la
+  // pieza que se gasta, que es la única capaz de llevarse por delante cualquier
+  // cosa y la única que alcanza el castillo desde fuera.
+  const nota = (rango) => PESOS_BASE.costeDelCanon + PESOS_BASE.disparoConocidoBase + rango * PESOS_BASE.disparoConocidoFactor;
+  assert.ok(nota(3) < nota(6), "batir a un capitán tiene que valer más que a un explorador");
+  assert.ok(nota(2) <= 0, "contra un rango bajo no debería compensar gastar el cañón");
+  assert.ok(nota(9) > 30, "y contra un mariscal tiene que seguir compensando de largo");
+
+  // Y parar una coronación sigue por encima de todo: el coste no puede
+  // convertir en dudosa la jugada que evita perder la partida.
+  assert.ok(PESOS_BASE.disparoAlCoronador + nota(3) > 300, "parar una coronación manda sobre el coste");
 });
 
 console.log(`\n${pasadas} pruebas superadas, ${fallidas} fallidas\n`);
