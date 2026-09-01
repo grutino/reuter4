@@ -1,9 +1,10 @@
 import React, { useRef, useEffect, useState } from "react";
 import * as THREE from "three";
-import { CASILLAS, LAGOS, ANILLO, TORRE, ZONAS, coord, zonaDe, casillasDeZona } from "./motor/tablero.js";
+import { CASILLAS, LAGOS, CASTILLO_HUELLA, ANILLO, TORRE, ZONAS, coord, zonaDe, casillasDeZona } from "./motor/tablero.js";
 import { pintarFicha } from "./ficha.js";
 
 import { ESTILO, NOMBRE_RANGO } from "./estilo.js";
+import { madera, arena, piedra, ladrillo, cielo, normalDeAgua } from "./texturas.js";
 export { ESTILO, NOMBRE_RANGO };
 export const LATON_CSS = "#C08A2E";
 const PERGAMINO = "#E8DCC2";
@@ -77,23 +78,62 @@ export default function Tablero3D({
     const g = geometrias();
 
     const escena = new THREE.Scene();
-    escena.background = new THREE.Color(0x1d2b23);
-    const camara = new THREE.PerspectiveCamera(45, nodo.clientWidth / nodo.clientHeight, 0.1, 200);
+    const camara = new THREE.PerspectiveCamera(45, nodo.clientWidth / nodo.clientHeight, 0.1, 400);
     const render = new THREE.WebGLRenderer({ antialias: true });
     render.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     render.setSize(nodo.clientWidth, nodo.clientHeight);
+    // Sombras y mapeo de tonos: es lo que convierte los colores planos en una
+    // escena con volumen. ACES comprime las luces altas para que el sol no queme
+    // la madera clara.
+    render.shadowMap.enabled = true;
+    render.shadowMap.type = THREE.PCFSoftShadowMap;
+    render.toneMapping = THREE.ACESFilmicToneMapping;
+    render.toneMappingExposure = 1.05;
     nodo.appendChild(render.domElement);
 
-    escena.add(new THREE.HemisphereLight(0xf3e7cd, 0x2b3327, 0.9));
-    const sol = new THREE.DirectionalLight(0xfff2d8, 0.7);
-    sol.position.set(9, 16, 7);
+    // Cielo con nubes de fondo y como reflejo del entorno: los materiales de
+    // piedra y agua lo usan para no verse muertos en las zonas de sombra.
+    const textoCielo = cielo();
+    escena.background = textoCielo;
+    // Como iluminación de entorno se usa una versión prefiltrada, no la textura
+    // cruda: three tendría que filtrarla al vuelo en cada material, y así se
+    // hace una vez y se reparte. Es lo que le da al agua y a la piedra un
+    // reflejo del cielo en vez de un gris muerto.
+    const pmrem = new THREE.PMREMGenerator(render);
+    const entorno = pmrem.fromEquirectangular(textoCielo).texture;
+    escena.environment = entorno;
+    pmrem.dispose();
+    escena.fog = new THREE.Fog(0xb9d3e4, 46, 130);
+
+    escena.add(new THREE.HemisphereLight(0xcfe3f2, 0x5a5540, 0.55));
+    const sol = new THREE.DirectionalLight(0xfff1d6, 2.1);
+    sol.position.set(11, 18, 8);
+    sol.castShadow = true;
+    sol.shadow.mapSize.set(2048, 2048);
+    sol.shadow.camera.near = 4;
+    sol.shadow.camera.far = 60;
+    // El encuadre de la sombra se ajusta al tablero: más ancho y se ve dentada,
+    // más estrecho y las piezas del borde se quedan sin sombra.
+    for (const [lado, valor] of [["left", -13], ["right", 13], ["top", 13], ["bottom", -13]]) {
+      sol.shadow.camera[lado] = valor;
+    }
+    sol.shadow.bias = -0.0006;
     escena.add(sol);
 
-    const marco = new THREE.Mesh(new THREE.BoxGeometry(19.5, 0.6, 19.5), new THREE.MeshLambertMaterial({ color: 0x3a2a1c }));
+    const marco = new THREE.Mesh(
+      new THREE.BoxGeometry(19.5, 0.6, 19.5),
+      new THREE.MeshStandardMaterial({ map: madera({ semilla: 11 }), roughness: 0.72, metalness: 0.02 })
+    );
     marco.position.y = -0.35;
+    marco.receiveShadow = true;
     escena.add(marco);
-    const fieltro = new THREE.Mesh(new THREE.BoxGeometry(17.6, 0.1, 17.6), new THREE.MeshLambertMaterial({ color: 0x2f4436 }));
+
+    const fieltro = new THREE.Mesh(
+      new THREE.BoxGeometry(17.6, 0.1, 17.6),
+      new THREE.MeshStandardMaterial({ map: madera({ semilla: 29, claro: [96, 66, 38], oscuro: [58, 38, 20] }), roughness: 0.85 })
+    );
     fieltro.position.y = -0.02;
+    fieltro.receiveShadow = true;
     escena.add(fieltro);
 
     const clicables = [];
@@ -104,7 +144,11 @@ export default function Tablero3D({
       const base = zc
         ? new THREE.Color(ESTILO[zc].hex).lerp(new THREE.Color(0xc2ab7e), 0.55)
         : new THREE.Color(0xc2ab7e);
-      const malla = new THREE.Mesh(g.casilla, new THREE.MeshLambertMaterial({ color: base }));
+      const malla = new THREE.Mesh(
+        g.casilla,
+        new THREE.MeshStandardMaterial({ map: arena(), color: base, roughness: 0.95, metalness: 0 })
+      );
+      malla.receiveShadow = true;
       const [x, y, z] = posicion3D(casilla);
       malla.position.set(x, y - 0.05, z);
       malla.userData = { casilla, base: base.clone() };
@@ -113,23 +157,122 @@ export default function Tablero3D({
       clicables.push(malla);
     }
 
+    // El agua: transparente, brillante y con el mapa de normales moviéndose. No
+    // hay geometría que ondule —sería caro y no se notaría a esta escala— pero
+    // el reflejo sí se mueve, y eso es lo que hace que parezca agua.
+    const normalAgua = normalDeAgua();
+    const materialAgua = new THREE.MeshStandardMaterial({
+      color: 0x255a78,
+      transparent: true,
+      opacity: 0.86,
+      roughness: 0.06,
+      metalness: 0.15,
+      normalMap: normalAgua,
+      normalScale: new THREE.Vector2(1.7, 1.7),
+      envMapIntensity: 2.2,
+    });
     for (const lago of LAGOS) {
-      const malla = new THREE.Mesh(g.lago, new THREE.MeshLambertMaterial({ color: 0x3f6f8f }));
+      const malla = new THREE.Mesh(g.lago, materialAgua);
       const [c, f] = coord(lago);
       malla.position.set(c - 7, 0.02, f - 8);
       escena.add(malla);
     }
 
+    // --- Bosque y montañas en lo que no se pisa -------------------------------
+    //
+    // Las 60 casillas de fuera de juego eran madera lisa, y eso hacía que el
+    // tablero pareciera acabarse antes de tiempo. Con árboles y rocas se lee de
+    // un vistazo por dónde NO se puede pasar, que es información de juego y no
+    // solo decoración.
+    //
+    // Van en mallas instanciadas: 60 casillas por dos o tres piezas cada una
+    // serían casi doscientos objetos, y así son cuatro.
+    {
+      const jugables = new Set(CASILLAS);
+      const huecos = [];
+      for (let fila = 1; fila <= 15; fila++) {
+        for (let col = 1; col <= 15; col++) {
+          const casilla = String.fromCharCode(64 + col) + fila;
+          if (jugables.has(casilla) || LAGOS.has(casilla) || CASTILLO_HUELLA.has(casilla)) continue;
+          // OJO: se posiciona con `coord`, como todo lo demás de la escena. Su
+          // convención es MIXTA -columna en base 0, fila en base 1- así que
+          // usar aquí el contador del bucle, que va de 1 a 15, desplazaba el
+          // bosque entero una columna. Es el mismo tropiezo que ya se dio al
+          // dibujar el informe: si se posiciona con `coord` en un sitio, hay que
+          // posicionar con `coord` en todos.
+          const [cx, cf] = coord(casilla);
+          huecos.push([cx - 7, cf - 8]);
+        }
+      }
+
+      // Azar sembrado: el bosque tiene que salir igual en cada partida, o el
+      // tablero parecería otro cada vez que se recarga.
+      let semilla = 20260901 >>> 0;
+      const azarBosque = () => {
+        semilla = (semilla + 0x6d2b79f5) >>> 0;
+        let x = semilla;
+        x = Math.imul(x ^ (x >>> 15), x | 1);
+        x ^= x + Math.imul(x ^ (x >>> 7), x | 61);
+        return ((x ^ (x >>> 14)) >>> 0) / 4294967296;
+      };
+
+      const arboles = [];
+      const rocas = [];
+      for (const [x, z] of huecos) {
+        // Dos o tres cosas por casilla, desperdigadas: en rejilla se vería la
+        // cuadrícula y quedaría un huerto, no un bosque.
+        const cuantos = 2 + Math.floor(azarBosque() * 2);
+        for (let i = 0; i < cuantos; i++) {
+          const dx = (azarBosque() - 0.5) * 0.8;
+          const dz = (azarBosque() - 0.5) * 0.8;
+          const escala = 0.55 + azarBosque() * 0.7;
+          (azarBosque() < 0.78 ? arboles : rocas).push([x + dx, z + dz, escala, azarBosque() * Math.PI * 2]);
+        }
+      }
+
+      const colocar = (lista, geometria, material, alturaBase) => {
+        const malla = new THREE.InstancedMesh(geometria, material, lista.length);
+        malla.castShadow = true;
+        malla.receiveShadow = true;
+        const m = new THREE.Matrix4();
+        const q = new THREE.Quaternion();
+        const eje = new THREE.Vector3(0, 1, 0);
+        lista.forEach(([x, z, escala, giro], i) => {
+          q.setFromAxisAngle(eje, giro);
+          m.compose(
+            new THREE.Vector3(x, alturaBase * escala, z),
+            q,
+            new THREE.Vector3(escala, escala, escala)
+          );
+          malla.setMatrixAt(i, m);
+        });
+        malla.instanceMatrix.needsUpdate = true;
+        escena.add(malla);
+        return malla;
+      };
+
+      const tronco = new THREE.CylinderGeometry(0.055, 0.085, 0.45, 5);
+      const copa = new THREE.ConeGeometry(0.3, 0.85, 7);
+      const canto = new THREE.DodecahedronGeometry(0.22, 0);
+      const matTronco = new THREE.MeshStandardMaterial({ map: madera({ semilla: 61, claro: [92, 66, 42], oscuro: [54, 38, 24] }), roughness: 0.95 });
+      const matCopa = new THREE.MeshStandardMaterial({ color: 0x3f6b3c, roughness: 0.95, metalness: 0 });
+      const matRoca = new THREE.MeshStandardMaterial({ map: piedra({ semilla: 83, base: [120, 116, 108] }), roughness: 0.95, flatShading: true });
+
+      colocar(arboles, tronco, matTronco, 0.22);
+      colocar(arboles, copa, matCopa, 0.72);
+      colocar(rocas, canto, matRoca, 0.14);
+    }
+
     const baseCastillo = new THREE.Mesh(
       new THREE.CylinderGeometry(1.5, 1.6, 0.35, 24),
-      new THREE.MeshLambertMaterial({ color: 0x8d8878 })
+      new THREE.MeshStandardMaterial({ map: piedra(), roughness: 0.9, metalness: 0.02 })
     );
     baseCastillo.position.y = 0.175;
     escena.add(baseCastillo);
 
     const anilloMesh = new THREE.Mesh(
       new THREE.RingGeometry(0.66, 1.42, 28),
-      new THREE.MeshLambertMaterial({ color: 0x9b968a, side: THREE.DoubleSide })
+      new THREE.MeshStandardMaterial({ map: piedra({ semilla: 55 }), roughness: 0.88, side: THREE.DoubleSide })
     );
     anilloMesh.rotation.x = -Math.PI / 2;
     anilloMesh.position.y = 0.36;
@@ -140,14 +283,14 @@ export default function Tablero3D({
 
     const torreMesh = new THREE.Mesh(
       new THREE.CylinderGeometry(0.55, 0.62, 1.0, 20),
-      new THREE.MeshLambertMaterial({ color: 0x7e7a6d })
+      new THREE.MeshStandardMaterial({ map: ladrillo(), roughness: 0.85, metalness: 0.02 })
     );
     torreMesh.position.y = 0.85;
     escena.add(torreMesh);
 
     const cima = new THREE.Mesh(
       new THREE.CircleGeometry(0.52, 22),
-      new THREE.MeshLambertMaterial({ color: 0x9b968a, side: THREE.DoubleSide })
+      new THREE.MeshStandardMaterial({ map: piedra({ semilla: 71 }), roughness: 0.9, side: THREE.DoubleSide })
     );
     cima.rotation.x = -Math.PI / 2;
     cima.position.y = 1.355;
@@ -281,8 +424,15 @@ export default function Tablero3D({
     escena.add(grupoMarcas);
 
     let vivo = true;
+    const reloj = new THREE.Clock();
     const bucle = () => {
       if (!vivo) return;
+      // El agua: se desplaza el mapa de normales en dos direcciones distintas
+      // para que no se vea un patrón deslizando en bloque. No hay geometría que
+      // ondule -no se notaría a esta escala y costaría- pero el reflejo sí se
+      // mueve, que es lo que hace que parezca agua y no pintura azul.
+      const t = reloj.getElapsedTime();
+      normalAgua.offset.set(t * 0.035, t * 0.021);
       render.render(escena, camara);
       requestAnimationFrame(bucle);
     };
@@ -377,10 +527,15 @@ export default function Tablero3D({
     for (const pieza of piezas || []) {
       const hex = ESTILO[pieza.color].hex;
       const grupo = new THREE.Group();
-      const cuerpo = new THREE.Mesh(g.cuerpo, new THREE.MeshLambertMaterial({ color: hex }));
+      const cuerpo = new THREE.Mesh(
+        g.cuerpo,
+        new THREE.MeshStandardMaterial({ map: piedra({ semilla: 41 }), color: hex, roughness: 0.78, metalness: 0.05 })
+      );
+      cuerpo.castShadow = true;
+      cuerpo.receiveShadow = true;
       cuerpo.position.y = 0.25;
       grupo.add(cuerpo);
-      const aro = new THREE.Mesh(g.aro, new THREE.MeshLambertMaterial({ color: 0xb08d3f }));
+      const aro = new THREE.Mesh(g.aro, new THREE.MeshStandardMaterial({ color: 0xb08d3f, roughness: 0.35, metalness: 0.75 }));
       aro.rotation.x = Math.PI / 2;
       aro.position.y = 0.42;
       grupo.add(aro);

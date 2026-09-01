@@ -470,6 +470,44 @@ ahora 2-3, 5-6 y 7-9, todas adyacentes.
 
 `pintarFichaTapada` no lo lleva, claro: una pieza enemiga no enseña su rango.
 
+### El aspecto de la escena 3D
+
+Todas las texturas son **procedurales**: se pintan en un canvas al arrancar y se cachean, en
+`src/texturas.js`. Ni un fichero de imagen, por la misma razón que las siluetas —el proyecto no
+arrastra descargas— y además cada material se ajusta con números.
+
+```
+madera          vetas: anillos deformados por ruido, no una diana
+arena           grano fino sobre manchas grandes, para las casillas
+piedra          manchas y poros; la usan el castillo, las rocas y las piezas
+ladrillo        dibujado con rectángulos, no con ruido: un aparejo es una rejilla
+cielo           degradado con nubes; va de fondo Y de iluminación de entorno
+normalDeAgua    un mapa de NORMALES, no un color: el agua se ve por cómo dobla la luz
+```
+
+El ruido es un value noise cíclico con varias octavas —treinta líneas en vez de una
+biblioteca—, y es cíclico a propósito para que las texturas se repitan sin costura.
+
+Cuatro cosas que se descubrieron mirando:
+
+- **El agua necesita que la normal se repita varias veces por casilla.** Con una sola onda por
+  lago la normal varía tan despacio que no hay reflejo que rompa, y se lee como pintura azul.
+- **Las nubes van bajas.** La cámara mira el tablero desde arriba, así que del cielo solo se ve
+  la franja del horizonte: puestas altas no las ve nadie.
+- **El entorno se prefiltra con `PMREMGenerator`.** Pasarle a `scene.environment` la textura
+  cruda obliga a filtrarla al vuelo en cada material.
+- **Y el bosque se posiciona con `coord`, como todo lo demás.** Usar el contador del bucle
+  (1..15) en vez de `coord` (columna en base 0) desplazaba las sesenta casillas de bosque una
+  columna. Es el MISMO tropiezo que ya se dio dibujando el informe: si una escena posiciona con
+  `coord`, hay que posicionar con `coord` en todos los sitios.
+
+Los árboles y las rocas van en mallas instanciadas: sesenta casillas por dos o tres piezas cada
+una serían casi doscientos objetos, y así son cuatro. El azar del bosque está sembrado, para
+que el tablero no cambie de aspecto en cada recarga.
+
+`herramientas/banco-3d.html` monta la escena con una partida inventada, para poder mirar los
+cambios sin levantar servidor ni jugar nada.
+
 ### Controles de la escena 3D
 
 La cámara orbita alrededor de `objetivo`, un punto que además se desplaza por el plano del
