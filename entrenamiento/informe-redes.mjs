@@ -159,7 +159,7 @@ function leer(nombre) {
   return fs.existsSync(f) ? JSON.parse(fs.readFileSync(f, "utf8")) : null;
 }
 
-function bloqueRed({ titulo, resumen, curva, calib, capas, victorias, error, perdida, acierto, rasgos, rasgos2, titulo2, nota }) {
+function bloqueRed({ titulo, resumen, curva, curvaAcierto, porRonda, calib, capas, victorias, error, perdida, acierto, rasgos, rasgos2, titulo2, nota }) {
   const fichas = [
     ["victorias en juego", victorias === undefined ? "—" : `${pct(victorias)}${error ? ` <small>±${Math.round(error * 100)}</small>` : ""}`],
     ["pérdida validación", perdida === undefined ? "—" : perdida.toFixed(4)],
@@ -173,7 +173,11 @@ function bloqueRed({ titulo, resumen, curva, calib, capas, victorias, error, per
     <h2>${esc(titulo)}</h2>
     <p class="sub">${resumen}</p>
     <dl class="fichas">${fichas}</dl>
-    ${curva ? `<figure><figcaption>Curvas de aprendizaje. Si la de validación sube mientras la otra baja, está memorizando.</figcaption><div class="lienzo">${curva}</div></figure>` : ""}
+    ${porRonda ? `<figure><figcaption>ENTRE RONDAS: cómo va cambiando de un entrenamiento al siguiente. Es la vista de "va mejorando" o no.</figcaption><div class="lienzo">${porRonda}</div></figure>` : ""}
+    <div class="par">
+      ${curva ? `<figure><figcaption>Dentro de la última ronda: pérdida. Si la de validación sube mientras la otra baja, está memorizando.</figcaption><div class="lienzo">${curva}</div></figure>` : ""}
+      ${curvaAcierto ? `<figure><figcaption>Y el acierto. La distancia entre las dos líneas ES el sobreajuste: cuanto más se separan, más se ha aprendido de memoria.</figcaption><div class="lienzo">${curvaAcierto}</div></figure>` : ""}
+    </div>
     <div class="par">
       ${calib ? `<figure><figcaption>Calibración: predicho contra observado. La diagonal es la perfección; el tamaño de cada bola es cuántos casos hay.</figcaption><div class="lienzo">${calib.grafico}</div></figure>` : ""}
       ${calib ? `<figure><figcaption>Distribución de lo que predice. Todo amontonado en el centro sería una red que no se moja.</figcaption><div class="lienzo">${calib.histograma}</div></figure>` : ""}
@@ -282,6 +286,15 @@ export function construir({ despliegue, jugada, coevolucion, panel, sensibilidad
         error: ultima.errorEnJuego,
         perdida: ultima.perdidaValidacion,
         acierto: ultima.acierto,
+        curvaAcierto: ultima.curva && ultima.curva[0] && ultima.curva[0].aciertoValidacion !== undefined
+          ? lineas({
+              series: [
+                { nombre: "entrenamiento", color: "var(--dato)", puntos: ultima.curva.map((p) => ({ x: p.epoca, y: p.aciertoEntrenamiento })) },
+                { nombre: "validación", color: "var(--laton)", puntos: ultima.curva.map((p) => ({ x: p.epoca, y: p.aciertoValidacion })) },
+              ],
+              min: 0.5, max: 1, formato: (v) => `${Math.round(v * 100)}%`, etiquetaX: "época",
+            })
+          : null,
         // La sensibilidad de esta red va PARTIDA en dos, y la separación dice
         // algo: los rasgos de posición pesan un orden de magnitud más que los de
         // jugada, o sea que la red valora sobre todo DÓNDE se está y no tanto

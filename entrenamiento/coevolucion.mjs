@@ -280,14 +280,22 @@ function entrenar(ejemplos, tamano, oculta, o, azar, previa, pares = null) {
   const entrenamiento = barajado.slice(0, corte);
   const validacion = barajado.slice(corte);
 
-  const perdidaDe = (red, conjunto) => {
-    let s = 0;
+  // Pérdida Y ACIERTO, y de los dos conjuntos. Antes solo se guardaba la pérdida
+  // por época y el acierto final de validación, y con eso no se puede pintar la
+  // pareja de curvas que enseña el sobreajuste: la de entrenamiento subiendo
+  // mientras la de validación se estanca.
+  const medirEn = (red, conjunto) => {
+    let perdida = 0;
+    let aciertos = 0;
     for (const ej of conjunto) {
       const p = evaluar(red, ej.entrada);
-      s += -(ej.objetivo * Math.log(p + 1e-9) + (1 - ej.objetivo) * Math.log(1 - p + 1e-9));
+      perdida += -(ej.objetivo * Math.log(p + 1e-9) + (1 - ej.objetivo) * Math.log(1 - p + 1e-9));
+      if ((p > 0.5 ? 1 : 0) === (ej.objetivo > 0.5 ? 1 : 0)) aciertos++;
     }
-    return s / (conjunto.length || 1);
+    const n = conjunto.length || 1;
+    return { perdida: perdida / n, acierto: aciertos / n };
   };
+  const perdidaDe = (red, conjunto) => medirEn(red, conjunto).perdida;
 
   const red = previa ? desdeObjeto(aObjeto(previa)) : crearRed([tamano, oculta, 1], azar);
   let mejor = previa ? perdidaDe(red, validacion) : Infinity;
@@ -307,10 +315,16 @@ function entrenar(ejemplos, tamano, oculta, o, azar, previa, pares = null) {
       }
     }
     if (epoca % 5 === 0 || epoca === o.epocas) {
-      const pEnt = perdidaDe(red, entrenamiento);
-      const pVal = perdidaDe(red, validacion);
-      curva.push({ epoca, entrenamiento: Number(pEnt.toFixed(5)), validacion: Number(pVal.toFixed(5)) });
-      if (pVal < mejor) { mejor = pVal; mejorPesos = aObjeto(red); epocasUtiles = epoca; }
+      const ent = medirEn(red, entrenamiento);
+      const val = medirEn(red, validacion);
+      curva.push({
+        epoca,
+        entrenamiento: Number(ent.perdida.toFixed(5)),
+        validacion: Number(val.perdida.toFixed(5)),
+        aciertoEntrenamiento: Number(ent.acierto.toFixed(4)),
+        aciertoValidacion: Number(val.acierto.toFixed(4)),
+      });
+      if (val.perdida < mejor) { mejor = val.perdida; mejorPesos = aObjeto(red); epocasUtiles = epoca; }
     }
   }
   const buena = desdeObjeto(mejorPesos);
