@@ -202,77 +202,125 @@ suelta es ruidoso y sin ese aviso el listado parece decir cosas que no dice.
 
 ## Qué falta por pulir
 
-- **Simplificar el informe de las redes: solo métricas de las dos redes y cómo mejoran**. Hoy
-  mezcla la coevolución, el panel y las redes, y de las redes enseña sobre todo el ÚLTIMO
-  entrenamiento. Lo que hace falta es ver la evolución: cómo cambian entre rondas y dentro de
-  cada una.
+Ordenado por lo que desbloquea a lo demás. Cada punto dice qué hay hecho, qué falta y con qué
+cuidado, para poder retomarlo sin volver a averiguarlo.
 
-  Ya se guarda por ronda y por red, en `modelos/coevolucion.json`: pérdida de validación,
-  acierto, `epocasUtiles` —en qué época se dejó de mejorar, que es la señal directa de
-  sobreajuste—, calibración en diez cubos, y la curva de pérdida por época (entrenamiento y
-  validación). También `perdidaDePartida`, o sea de dónde arrancaba la red vigente.
+### 1. Muestreo por escenarios: que se aprendan las tácticas raras
 
-  Falta registrar: **acierto por época** (solo hay pérdida por época) y **acierto de
-  entrenamiento** (solo hay el de validación). Sin esos dos no se puede pintar la pareja de
-  curvas que de verdad enseña el sobreajuste — la de entrenamiento subiendo mientras la de
-  validación se estanca.
+Es el cuello de botella de todo lo demás. Los ejemplos salen de partidas enteras etiquetadas con
+el resultado final, así que una jugada decisiva y una intrascendente de la misma partida ganada
+reciben la **misma** etiqueta. Medido sobre 3.420 vectores: `tapaLineaAlAnillo` se activa en el
+0,1% de los casos y `disparoAlCoronador` en ninguno. Un rasgo así no aporta gradiente por muchas
+horas que entrene.
 
-  Y falta pintarlo: hoy solo se dibuja la curva de la última ronda. Debería verse la serie
-  **entre** rondas —pérdida, acierto y época útil ronda a ronda— junto a las curvas **dentro**
-  de la ronda. Lo demás (coevolución, rival a rival) puede irse a otra página o abajo del todo.
+**Hecho**: el banco de escenarios (`npm run escenarios`) guarda posiciones donde la cosa está en
+juego y las etiqueta jugando cada candidata hasta el final — una etiqueta por JUGADA, no por
+partida. El replay reproduce una partida terminada exactamente, y `npm run analizar` busca los
+momentos decisivos.
 
-- **Un solo informe de partida, no dos**: hoy hay un botón para el relato y otro para el
-  análisis. Debería ser uno con todo, y las jugadas determinantes no en un bloque aparte sino
-  **sobre el hilo que ya existe**: fondo verde suave si la jugada fue buena, rojo suave si fue
-  mala, con la evaluación que ya se calcula. El hilo es la línea de tiempo natural de la
-  partida; duplicarla en una tabla al lado obliga a leer dos veces lo mismo.
-- **Un cañonazo sobre un explorador es tirar el cañón**: se ha visto en partida. El disparo se
-  valora por el rango del objetivo (`disparoConocidoBase + rango x factor`) pero no descuenta lo
-  que vale el cañón que se gasta, así que batir a un explorador ya identificado —41 puntos—
-  sale a cuenta cuando no debería. Hace falta un suelo: por debajo de cierto rango, no compensa
-  gastar la pieza. Ojo al medirlo, que subir pesos de cañón ya costó bajar del 52% al 37% una vez.
+**Falta**: alimentar el banco con partidas reales y mezclar esos ejemplos en el entrenamiento.
 
-- **Medir el impacto de UNA jugada es muy ruidoso, y eso condiciona el análisis**: con tiradas
-  estocásticas, la misma posición medida dos veces con 8 tiradas solo correlaciona **0,39**
-  consigo misma, y dos medidas difieren de media 5 puntos sobre un recorrido de 35. Eso pone un
-  techo a cualquier detector barato: ninguna señal puede predecir mejor de lo que la medida se
-  predice a sí misma. Consecuencia práctica: no se pueden **ordenar** las jugadas de una partida
-  por importancia sin gastar decenas de tiradas por jugada, pero sí se puede aprender del
-  **agregado** de muchas posiciones con pocas tiradas cada una, que es lo que hace el banco de
-  escenarios. Para elegir qué posiciones merecen un juicio humano conviene un criterio robusto
-  (situaciones raras, finales cerca del castillo) antes que la estimación de impacto.
-- **Entrenar con escenarios concretos, no solo partidas enteras**: hoy los ejemplos salen de
-  partidas jugadas de principio a fin, y eso deja las tácticas decisivas sin aprender por pura
-  rareza. Medido sobre 3.420 vectores de jugada: `tapaLineaAlAnillo` se activa en el 0,1% de los
-  casos y `disparoAlCoronador` en ninguno. Un rasgo que aparece en el 0,2% de los ejemplos no
-  aporta gradiente y la red lo ignora. La vía es sacar posiciones de los **historiales de
-  partidas terminadas** —que el informe ya reconstruye entera, con el rango de cada jugada— para
-  identificar dónde se pierde y sobremuestrear esas situaciones: finales cerca del castillo,
-  coronaciones falladas, cañonazos decisivos. Mientras tanto esas tácticas viven en la
-  heurística, con pesos deterministas, que ahí sí funcionan.
+**Cuidado**: medir el impacto de una jugada suelta es muy ruidoso. La misma posición medida dos
+veces con 8 tiradas solo correlaciona **0,39** consigo misma. Eso pone un techo a cualquier
+detector barato —ninguna señal puede predecir mejor de lo que la medida se predice a sí misma—
+así que **no se pueden ordenar las jugadas de una partida por importancia** sin gastar decenas
+de tiradas por jugada. Del agregado de muchas posiciones con pocas tiradas sí se aprende.
 
-- **Las siluetas salen de una foto**: `herramientas/extraer-siluetas.py` convierte una foto de
-  la tarjeta de referencia en las máscaras de `src/siluetas-datos.js`. La foto no se versiona,
-  solo la silueta derivada. Para rehacerlas con otra foto mejor:
+### 2. Mezclar los juicios humanos en el entrenamiento
 
-  ```bash
-  python3 herramientas/extraer-siluetas.py TU_FOTO.png > src/siluetas-datos.js
-  ```
+`npm run juzgar` levanta la sala donde se marcan candidatas buena/mala/indefinida, respetando la
+regla de información —se ve lo que vería quien mueve—. La pérdida por pares que hace falta ya
+existe y está probada.
 
-  Los parámetros `--cierre` y `--umbral` gobiernan cuánto se macizan las figuras y cuánto
-  dibujo interior se graba. **Míralas a 46 px antes de dar nada por bueno**, que es el tamaño
-  real en el tablero: a ese tamaño la silueta sola no basta —está medido— y por eso la ficha
-  lleva además el galón.
-- **Tácticas que aún no tienen rasgo**: atacar por zonas donde la bolsa de rangos ocultos nos
-  favorece, el señuelo del espía, explorador a distancia para revelar, bloquear los laterales,
-  sacrificio para promocionar con el marcador alto, defender la bandera propia, cuidar los rangos
-  altos, controlar el anillo — y cada una con su pareja defensiva. Ya están hechas: cañones tras
-  los lagos (`cubiertoPorLago`), batir el castillo y al que va a coronar, llevar el cañón a
-  posición, y tapar la línea de tiro rival.
+**Falta**: leer `escenarios/juicios.json` y mezclarlo, y **calibrar cuánto pesa un juicio** frente
+a un par de la heurística. Eso quiero hacerlo con juicios reales, no inventando el número, así
+que espera a que haya unos cuantos.
 
-  **Antes de añadir ninguna, leer el aviso de la cobertura del anillo**: un rasgo que se activa
-  en el 0,2% de los ejemplos no aporta gradiente y la red lo ignora. Añadir tácticas raras sin
-  resolver antes el muestreo es trabajo que no se aprende.
+### 3. Soltar el ancla de la heurística
+
+`--anclaPares 0`. Medido: con el modelo actual, decidir con la red sola sobre todas las jugadas
+y decidir con la heurística cribando cuatro **empatan a 65%**. O sea que la heurística ya no
+aporta a la decisión, solo al arranque y a la medida. Falta comprobar si las redes aguantan sin
+sus pares de anclaje.
+
+### 4. Correr el nocturno una noche entera
+
+`npm run nocturno -- --horas 8`. Está construido y probado en corto, pero nunca ha corrido de
+verdad. No sabemos dónde está el techo: la última tirada de diez rondas subió de 50% a 90%.
+
+### 5. Un solo informe de partida
+
+Hoy hay un botón para el relato y otro para el análisis. Debería ser **uno con todo**, y las
+jugadas determinantes no en un bloque aparte sino **sobre el hilo que ya existe**: fondo verde
+suave si la jugada fue buena, rojo suave si fue mala, con la evaluación que ya se calcula. El
+hilo es la línea de tiempo natural de la partida; duplicarla en una tabla al lado obliga a leer
+dos veces lo mismo.
+
+### 6. Simplificar el informe de las redes
+
+Hoy mezcla coevolución, panel y redes, y de las redes enseña sobre todo el **último**
+entrenamiento en vez de la evolución. Se quiere ver dos planos: **entre rondas** (pérdida,
+acierto y época útil ronda a ronda) y **dentro de la ronda** (las curvas por época). Lo demás,
+abajo o en otra página.
+
+**Ya se guarda** por ronda y por red, en `modelos/coevolucion.json`: pérdida de validación,
+acierto, `epocasUtiles` —en qué época se dejó de mejorar, la señal directa de sobreajuste—,
+calibración en diez cubos y la curva de pérdida por época.
+
+**Falta registrar**: acierto por época y acierto de entrenamiento. Sin esos dos no se puede
+pintar la pareja de curvas que enseña el sobreajuste, la de entrenamiento subiendo mientras la
+de validación se estanca.
+
+### 7. El cañonazo que no descuenta el cañón
+
+Visto en partida: un cañón gastado sobre un explorador ya identificado. El disparo se valora por
+el rango del objetivo (`disparoConocidoBase + rango x factor` = 41 para un explorador) pero no
+descuenta lo que vale la pieza que se gasta. Hace falta un suelo por debajo del cual no compense.
+
+**Cuidado al medirlo**: subir pesos de cañón ya costó bajar del 52% al 37% una vez, por tempo.
+
+### 8. Tácticas que aún no tienen rasgo
+
+Atacar por zonas donde la bolsa de rangos ocultos favorece, el señuelo del espía, explorador a
+distancia para revelar, bloquear los laterales, sacrificio para promocionar con el marcador alto,
+defender la bandera propia, cuidar los rangos altos, controlar el anillo — cada una con su pareja
+defensiva.
+
+**Ya hechas**: cañones tras los lagos (`cubiertoPorLago`), batir el castillo y al que va a
+coronar, llevar el cañón a posición, tapar la línea de tiro rival y cubrir el anillo entero.
+
+**Depende del punto 1**: añadir tácticas raras sin resolver antes el muestreo es trabajo que la
+red no va a aprender.
+
+### 9. Afinar la renuncia a la bandera del compañero
+
+Ahora un bot nunca carga la bandera de su compañero, porque cargarla la congela: quien la lleva
+no puede coronarla y su dueño ya no la recupera salvo que caiga en combate. Pero renunciar
+tampoco es gratis —quien renuncia se queda encima y la tapa— y **si un enemigo está a punto de
+llevársela, cargarla y negársela puede compensar**. Falta ese matiz.
+
+### 10. Siluetas: hace falta una foto tuya
+
+`src/siluetas-datos.js` está **generado** por `herramientas/extraer-siluetas.py` a partir de una
+foto de la tarjeta de referencia que **no está en el repositorio** —solo se versiona la silueta
+derivada—. Así que esto no lo puede hacer nadie más: hay que aportar una foto mejor y
+regenerarlas.
+
+```bash
+python3 herramientas/extraer-siluetas.py TU_FOTO.png > src/siluetas-datos.js
+```
+
+`--cierre` y `--umbral` gobiernan cuánto se macizan las figuras y cuánto dibujo interior se
+graba. Míralas a 46 px antes de dar nada por bueno, que es el tamaño real en el tablero.
+
+**Urgencia baja**: a ese tamaño la silueta sola no basta —está medido, las dos más confundibles
+eran explorador y general— y por eso la ficha lleva el galón, que ya lo resuelve. Con él, la
+distancia visual entre dos fichas correlaciona 0,85 con su distancia de rango.
+
+## Lo que hay y no se toca
+
 - Reconexión: si te caes en mitad de una partida, la máquina juega por ti al minuto. Al volver
   con el mismo navegador recuperas tu puesto, porque el identificador vive en `localStorage`.
 - No hay reloj de turno ni límite de tiempo.
+- Una sala sin humanos se borra sola, así que no se puede montar una partida de cuatro bots para
+  verla jugar. Y quien deja su asiento pierde el papel de anfitrión, que pasa al siguiente humano.
