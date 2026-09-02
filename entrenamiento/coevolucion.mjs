@@ -102,9 +102,21 @@ function opciones(argv) {
     // -la fuerza cayó del 84% al 6% en dos rondas mientras la pérdida de
     // validación ni se movía-. Repetir es estable; multiplicar el gradiente, no.
     //
-    // Con 590 pares de juicio contra unos 30.000 de heurística, repetirlos 100
-    // veces los deja pesando el doble en el total.
-    repetirJuicios: 100,
+    // MEDIDO, PORQUE HAY UN ACANTILADO. Repitiéndolos x100 la red se hunde al
+    // 0-4% de fuerza; a x40 va perfectamente (87%, 82%). El salto es estrecho y
+    // no está claro qué se rompe exactamente: lo que sí se puede es medir dónde
+    // está y quedarse lejos.
+    //
+    //   x0   85%, 82%      x10  81%, 87%
+    //   x1   83%, 87%      x40  87%, 82%
+    //   x3   80%, 89%      x100  2%, 10%   <- se hunde
+    //
+    // Con 590 pares de juicio contra unos 30.000 de heurística, x10 los deja en
+    // el 16% del objetivo: influencia real y lejos del borde. La lección es que
+    // 103 posiciones juzgadas no pueden gobernar el entrenamiento por muchas
+    // veces que se repitan — la red las satisface memorizándolas y destroza el
+    // resto.
+    repetirJuicios: 10,
     // SIN HEURÍSTICA DELANTE. Con esto la red puntúa TODAS las jugadas legales
     // en vez de reordenar las cuatro que le pasa la heurística. Sale más barato
     // -0,59 ms por turno frente a 0,87- pero exige una red destilada: la
