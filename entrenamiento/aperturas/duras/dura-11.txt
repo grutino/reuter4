@@ -1,6 +1,6 @@
-# dura 11 · le saca 67% a las redes en 6 partidas
-# salida de: sangre nueva×sangre nueva×humana-11·espe · ronda 5
+# dura 11 · le saca 74% a las redes en 6 partidas
+# salida de: sangre nueva×humana-06×humana-11·espejo× · ronda 7
 # NO forma parte del panel a propósito: el panel es la vara y no se mueve.
-4 3 4 5 8 3 4
-5 2 5 . 3 6 6
-9 7 1 1 6 3 7
+3 9 4 7 7 3 3
+5 6 6 . 8 5 6
+5 3 1 1 4 4 2

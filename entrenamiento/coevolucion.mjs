@@ -96,11 +96,15 @@ function opciones(argv) {
     // los rollouts no pueden: con 8 tiradas la misma posición solo correlaciona
     // 0,39 consigo misma, así que hay decisiones que ninguna cantidad de cómputo
     // resuelve y un juicio sí.
-    // Calibrado con los primeros 740 juicios: a peso 300 pesaban DIEZ veces toda
-    // la heurística junta, y eso no es supervisar sino sustituirla — con 103
-    // posiciones juzgadas se sobreajustaría a ellas. A 60 pesan el doble que la
-    // heurística: autoridad clara sin borrar lo demás.
-    pesoJuicios: 60,
+    // Cuántas VECES se repiten los pares de los juicios, no cuánto multiplican el
+    // gradiente. La primera versión los pesaba y salió mal: con peso 60 los
+    // gradientes eran sesenta veces mayores y el entrenamiento se desestabilizó
+    // -la fuerza cayó del 84% al 6% en dos rondas mientras la pérdida de
+    // validación ni se movía-. Repetir es estable; multiplicar el gradiente, no.
+    //
+    // Con 590 pares de juicio contra unos 30.000 de heurística, repetirlos 100
+    // veces los deja pesando el doble en el total.
+    repetirJuicios: 100,
     // SIN HEURÍSTICA DELANTE. Con esto la red puntúa TODAS las jugadas legales
     // en vez de reordenar las cuatro que le pasa la heurística. Sale más barato
     // -0,59 ms por turno frente a 0,87- pero exige una red destilada: la
@@ -438,11 +442,11 @@ async function main() {
 
   // Los juicios humanos, como pares de orden. Se leen una vez: son pocos y no
   // cambian mientras entrena.
-  const juicios = paresDeJuicios({ peso: o.pesoJuicios });
+  const juicios = paresDeJuicios({ peso: 1 });
   if (juicios.pares.length) {
     const r = resumenDeJuicios();
     console.log(`  juicios humanos: ${r.total} sobre ${juicios.posiciones} posiciones ` +
-      `(${r.buena} buenas, ${r.mala} malas, ${r.indefinida} indefinidas) -> ${juicios.pares.length} pares con peso ${o.pesoJuicios}`);
+      `(${r.buena} buenas, ${r.mala} malas, ${r.indefinida} indefinidas) -> ${juicios.pares.length} pares, repetidos x${o.repetirJuicios}`);
   }
   console.log();
 
@@ -476,7 +480,10 @@ async function main() {
     const conEscenarios = todosJ.concat(...Array.from({ length: escenarios.length ? o.pesoEscenarios : 0 }, () => escenarios));
     // Los juicios van con los pares del ancla: los dos son restricciones de
     // orden, solo que unas las dicta la heurística y otras una persona.
-    const paresDeLaRonda = o.anclaPares ? todosPares.concat(juicios.pares) : juicios.pares;
+    // Los juicios se repiten para que pesen, en vez de multiplicar su gradiente.
+    const repetidos = [];
+    for (let k = 0; k < o.repetirJuicios; k++) repetidos.push(...juicios.pares);
+    const paresDeLaRonda = o.anclaPares ? todosPares.concat(repetidos) : repetidos;
     const nuevaJ = entrenar(conEscenarios, TAMANO_JUGADA, o.ocultaJugada, oRonda, azar, redJ, paresDeLaRonda.length ? paresDeLaRonda : null);
     // Partidas nuevas cada ronda, y el titular las juega también.
     const semillaMedida = 31337 + ronda * 15485863;

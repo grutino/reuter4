@@ -126,9 +126,11 @@ export function entrenarPares(red, pares, { tasa = 0.01, b1 = 0.9, b2 = 0.999, e
   const gb = red.sesgos.map((b) => new Float64Array(b.length));
   let perdida = 0;
   let aciertos = 0;
+  let pesoTotal = 0;
 
   for (const par of pares) {
     const peso = par.peso === undefined ? 1 : par.peso;
+    pesoTotal += peso;
     const actA = adelante(red, par.mejor);
     const actB = adelante(red, par.peor);
     // El logit viene de `adelante`, no de invertir la sigmoide: con la salida
@@ -144,6 +146,18 @@ export function entrenarPares(red, pares, { tasa = 0.01, b1 = 0.9, b2 = 0.999, e
     retropropagar(red, actB, g, gw, gb);
   }
 
-  aplicarAdam(red, gw, gb, pares.length || 1, { tasa, b1, b2, eps, decaimiento });
-  return { perdida: perdida / (pares.length || 1), acierto: aciertos / (pares.length || 1) };
+  // SE DIVIDE POR LA SUMA DE PESOS, no por el número de pares. Dividiendo por el
+  // número, un lote de pares con peso 60 producía gradientes sesenta veces
+  // mayores que uno de peso 1: el paso de Adam se disparaba y el entrenamiento
+  // se volvía inestable. Pasó de verdad — con los juicios humanos a peso 60, la
+  // fuerza de juego se desplomó del 84% al 6% en dos rondas mientras la pérdida
+  // de validación ni se movía, porque el daño no estaba en lo que esa pérdida
+  // mide.
+  //
+  // Así el peso es lo que debe ser: cuánto cuenta un par frente a otro DENTRO
+  // del lote, no un multiplicador del gradiente. Para que un conjunto pese más
+  // en el total hay que repetirlo, que es estable y es lo que ya se hace con los
+  // ejemplos del banco de escenarios.
+  aplicarAdam(red, gw, gb, pesoTotal || 1, { tasa, b1, b2, eps, decaimiento });
+  return { perdida: perdida / (pesoTotal || 1), acierto: aciertos / (pares.length || 1) };
 }
