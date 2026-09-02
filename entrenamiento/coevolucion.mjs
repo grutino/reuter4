@@ -96,7 +96,11 @@ function opciones(argv) {
     // los rollouts no pueden: con 8 tiradas la misma posición solo correlaciona
     // 0,39 consigo misma, así que hay decisiones que ninguna cantidad de cómputo
     // resuelve y un juicio sí.
-    pesoJuicios: 300,
+    // Calibrado con los primeros 740 juicios: a peso 300 pesaban DIEZ veces toda
+    // la heurística junta, y eso no es supervisar sino sustituirla — con 103
+    // posiciones juzgadas se sobreajustaría a ellas. A 60 pesan el doble que la
+    // heurística: autoridad clara sin borrar lo demás.
+    pesoJuicios: 60,
     // SIN HEURÍSTICA DELANTE. Con esto la red puntúa TODAS las jugadas legales
     // en vez de reordenar las cuatro que le pasa la heurística. Sale más barato
     // -0,59 ms por turno frente a 0,87- pero exige una red destilada: la
