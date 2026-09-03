@@ -712,8 +712,13 @@ export default function Tablero3D({
     for (const explosion of explosiones || []) {
       const casilla = explosion.casilla || explosion;
       const ardiendo = explosion.ardiendo !== false;
-      const [x, , z] = posicion3D(casilla);
+      // LA ALTURA IMPORTA: el anillo está a 0,5 y la torre a 1,35 sobre el
+      // tablero. Antes se descartaba la que devuelve `posicion3D` y se pintaba
+      // todo a ras de suelo, así que un cañonazo sobre el castillo quedaba
+      // enterrado dentro de la piedra y no se veía.
+      const [x, alturaCasilla, z] = posicion3D(casilla);
       if (x === undefined) continue;
+      const suelo = alturaCasilla === undefined ? 0.1 : alturaCasilla;
       // Apagado el fuego quedan solo los carbones, sin el círculo negro: la
       // mancha acompaña a la llama mientras arde y se va con ella. Lo que queda
       // es el rastro, y no se va en toda la partida — una casilla donde reventó
@@ -726,7 +731,7 @@ export default function Tablero3D({
             g.carbon,
             new THREE.MeshStandardMaterial({ color: 0x1c1815, roughness: 1, metalness: 0 })
           );
-          trozo.position.set(x + Math.cos(angulo) * radio, 0.13, z + Math.sin(angulo) * radio);
+          trozo.position.set(x + Math.cos(angulo) * radio, suelo + 0.03, z + Math.sin(angulo) * radio);
           trozo.rotation.set(i * 0.9, i * 1.4, i * 0.5);
           trozo.scale.setScalar(0.7 + (i % 3) * 0.25);
           trozo.castShadow = true;
@@ -740,7 +745,7 @@ export default function Tablero3D({
         new THREE.MeshBasicMaterial({ color: 0x2a1d14, transparent: true, opacity: 0.72, depthWrite: false })
       );
       quemadura.rotation.x = -Math.PI / 2;
-      quemadura.position.set(x, 0.104, z);
+      quemadura.position.set(x, suelo + 0.004, z);
       r.grupoAvisos.add(quemadura);
 
       for (let i = 0; i < 3; i++) {
@@ -756,7 +761,7 @@ export default function Tablero3D({
           })
         );
         const angulo = (i / 3) * Math.PI * 2;
-        llama.position.set(x + Math.cos(angulo) * 0.15, 0.32 + i * 0.03, z + Math.sin(angulo) * 0.15);
+        llama.position.set(x + Math.cos(angulo) * 0.15, suelo + 0.22 + i * 0.03, z + Math.sin(angulo) * 0.15);
         llama.userData.fase = i * 1.7;
         r.grupoAvisos.add(llama);
         r.llamas.push(llama);

@@ -36,7 +36,8 @@ createRoot(document.getElementById("raiz")).render(
       zonaPropia={camara}
       colorCamara={camara}
       marcador={{ rojo: 4, verde: 2, azul: 5, amarillo: 1 }}
-      explosiones={[{ casilla: "H6", ardiendo: true }, { casilla: "F9", ardiendo: false }]}
+      explosiones={[{ casilla: "H6", ardiendo: true }, { casilla: "F9", ardiendo: false },
+                    { casilla: "ANILLO", ardiendo: true }, { casilla: "TORRE", ardiendo: false }]}
       onCasilla={() => {}}
       alto={640}
     />
