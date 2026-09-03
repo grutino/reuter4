@@ -51,6 +51,50 @@ const FICHERO_ESTADO = process.env.R4_ESTADO || path.join(RAIZ, "salas.json");
 
 // --- Salas ------------------------------------------------------------------
 
+// --- Archivo de partidas terminadas ------------------------------------------
+//
+// Una partida jugada es el material más caro que produce el proyecto: cuatro
+// despliegues y un hilo entero de decisiones con su resultado. Hasta ahora se
+// perdía al cerrar la pestaña. Se guarda para que la cosecha pueda sacar de ahí
+// despliegues que juzgar y posiciones que estudiar.
+//
+// Se archiva la partida CRUDA, con los rangos: es un fichero local del que la
+// entrena, no algo que se reparta a los clientes. La censura vive en vista.mjs
+// y sigue intacta.
+const ARCHIVO = path.join(RAIZ, "..", "partidas");
+
+function archivar(sala) {
+  // Una partida abandonada no enseña nada: no tiene resultado que explique las
+  // decisiones que la llevaron ahí.
+  if (!sala.estado || !sala.estado.fin || !sala.estado.fin.ganador) return;
+  if (sala.archivada) return;
+  try {
+    fs.mkdirSync(ARCHIVO, { recursive: true });
+    const sello = new Date().toISOString().replace(/[:.]/g, "-").slice(0, 19);
+    fs.writeFileSync(
+      path.join(ARCHIVO, `${sello}-${sala.id}.json`),
+      JSON.stringify({
+        creada: new Date().toISOString(),
+        sala: sala.id,
+        nivel: sala.nivel,
+        puestos: Object.fromEntries(COLORES.map((c) => [c, sala.puestos[c] ? sala.puestos[c].tipo : "vacio"])),
+        despliegues: sala.despliegues,
+        historia: sala.estado.historia,
+        fin: sala.estado.fin,
+      })
+    );
+    sala.archivada = true;
+  } catch (e) {
+    // Que no se pueda archivar no puede tumbar la partida de nadie.
+    console.error("no se ha podido archivar la partida:", e.message);
+  }
+}
+
+function darPorTerminada(sala) {
+  sala.fase = "fin";
+  archivar(sala);
+}
+
 let salas = {};
 try {
   if (fs.existsSync(FICHERO_ESTADO)) salas = JSON.parse(fs.readFileSync(FICHERO_ESTADO, "utf8"));
@@ -155,7 +199,7 @@ setInterval(() => {
         if (!accion) continue;
         sala.estado = resolverPendientesDeBots(sala, aplicar(sala.estado, accion));
       }
-      if (sala.estado.fin) sala.fase = "fin";
+      if (sala.estado.fin) darPorTerminada(sala);
       sala.actualizada = Date.now();
       cambios = true;
     } catch (e) {
@@ -354,7 +398,7 @@ wss.on("connection", (socket) => {
       if (!miColor || !sala.estado || sala.estado.turno !== miColor) return error(socket, "No es tu turno.");
       try {
         sala.estado = aplicar(sala.estado, mensaje.accion);
-        if (sala.estado.fin) sala.fase = "fin";
+        if (sala.estado.fin) darPorTerminada(sala);
         sala.actualizada = Date.now();
         repartir();
       } catch (e) {
@@ -368,7 +412,7 @@ wss.on("connection", (socket) => {
       if (!miColor || !pendiente || pendiente.tipo !== "recoger" || pendiente.color !== miColor) return;
       try {
         sala.estado = mensaje.recoge ? recogerLaBandera(sala.estado) : renunciarARecoger(sala.estado);
-        if (sala.estado.fin) sala.fase = "fin";
+        if (sala.estado.fin) darPorTerminada(sala);
         sala.actualizada = Date.now();
         repartir();
       } catch (e) {

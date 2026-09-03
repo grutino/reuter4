@@ -7,3 +7,6 @@ servidor/salas.json
 # El banco de escenarios y sus etiquetas: se regeneran y pesan.
 entrenamiento/escenarios/ejemplos.json
 entrenamiento/modelos/red-jugada-destilada.json
+
+# Partidas archivadas: material local de entrenamiento, no código.
+partidas/
