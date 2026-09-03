@@ -580,9 +580,36 @@ export function decisionDeRecogida(estado, color) {
   //
   // Renunciar tampoco es gratis -quien renuncia se queda encima de ella y la
   // tapa mientras siga ahí- pero al menos puede apartarse después y dejar que su
-  // dueño la recoja. Queda pendiente afinarlo: si un enemigo está a punto de
-  // llevársela, cargarla y negársela puede compensar.
-  if (!esEnemigo(color, pendiente.bandera)) return false;
+  // dueño la recoja.
+  //
+  // EL MATIZ: eso vale mientras el que la tapa aguante. Si aquí me matan, quien
+  // gana el duelo avanza a mi casilla, cae sobre la bandera y se la lleva: mi
+  // renuncia no la ha protegido, la ha entregado con mi cadáver. Cargarla es
+  // malo -queda congelada, porque solo su dueño puede coronarla- pero es menos
+  // malo que regalársela al enemigo, porque cargándola me la puedo llevar lejos.
+  //
+  // Solo se mira el cuerpo a cuerpo, no el cañón: un cañonazo me mata pero deja
+  // la bandera donde está, y el que disparó sigue lejos de ella.
+  if (!esEnemigo(color, pendiente.bandera)) {
+    const analisis = analizarTurno(estado, color, DISTANCIA);
+    const riesgo = peligroEn(analisis, pieza.casilla, pieza.rango);
+    if (riesgo.pierde) return true;
+    // Con un desconocido al lado no hay certeza, pero sí una probabilidad: se
+    // cuenta qué parte de la bolsa oculta me ganaría. Es la misma cuenta que
+    // `valorEsperadoDelDuelo` hace para atacar, del otro lado del tablero.
+    if (riesgo.hayDesconocido) {
+      const bolsa = bolsaOculta(estado, color);
+      let total = 0;
+      let meGanan = 0;
+      for (const [rango, cuantas] of Object.entries(bolsa)) {
+        if (!cuantas) continue;
+        total += cuantas;
+        if (resolverDuelo(Number(rango), pieza.rango) === "atacante") meGanan += cuantas;
+      }
+      if (total && meGanan / total > 0.5) return true;
+    }
+    return false;
+  }
 
   const bandera = estado.banderas[pendiente.bandera];
   const daPromocion = Boolean(bandera) && bandera.ultimoDueño === pendiente.bandera;

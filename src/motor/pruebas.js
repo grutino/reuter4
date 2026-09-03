@@ -1907,6 +1907,29 @@ prueba("un bot no carga la bandera de su compañero", () => {
   assert.strictEqual(decisionDeRecogida(escenario("rojo"), "rojo"), true, "la propia sí: es la que uno corona");
   assert.strictEqual(decisionDeRecogida(escenario("azul"), "rojo"), false, "la del compañero NO: la dejaría inservible");
   assert.strictEqual(decisionDeRecogida(escenario("verde"), "rojo"), true, "una enemiga sí: da promoción");
+
+  // EL MATIZ: renunciar solo protege la bandera mientras el que la tapa aguante.
+  // Con un enemigo al lado que me gana, quien vence avanza a mi casilla, cae
+  // sobre la bandera y se la lleva; la renuncia no la ha protegido, la ha
+  // entregado. Cargarla es malo -queda congelada- pero se la puede llevar lejos.
+  const conAmenaza = escenario("azul");
+  const general = colocar(conAmenaza, "verde", 8, "I4");
+  conAmenaza.rangosRevelados = { [general.id]: 8 };
+  assert.strictEqual(
+    decisionDeRecogida(conAmenaza, "rojo"),
+    true,
+    "con un general enemigo revelado al lado que se lleva por delante a mi 5, cargarla es menos malo que regalarla"
+  );
+
+  // Y si el enemigo de al lado NO me gana, se mantiene la regla: no se carga.
+  const sinAmenaza = escenario("azul");
+  const explorador = colocar(sinAmenaza, "verde", 2, "I4");
+  sinAmenaza.rangosRevelados = { [explorador.id]: 2 };
+  assert.strictEqual(
+    decisionDeRecogida(sinAmenaza, "rojo"),
+    false,
+    "contra un enemigo revelado que pierde, el 5 aguanta encima y la bandera sigue viva para su dueño"
+  );
 });
 
 
@@ -1992,6 +2015,31 @@ prueba("la clave de un juicio de despliegue se vuelve a leer sin ambigüedad", a
   }
 });
 
+
+prueba("los rasgos de defensa no salen muertos ni constantes", async () => {
+  // EL FALLO RECURRENTE del proyecto: un rasgo que se calcula mal no da error,
+  // no rompe nada y se queda a cero para siempre. Ya pasó con `juntoALago`
+  // (nueve veces muerto), con `zonaFavorable`, y con estos tres, que salieron al
+  // 0,0% por usar DISTANCIA -que mide al CASTILLO, no entre dos casillas- y por
+  // leer coord() como si devolviera {columna,fila} cuando devuelve un array.
+  //
+  // Un rasgo por debajo del 1% no da gradiente y la red lo ignora, así que
+  // "vivo" es un umbral, no una comprobación de que no sea cero.
+  const { entradasDeJugada } = await import("../../entrenamiento/sensibilidad.mjs");
+  const { NOMBRES } = await import("./rasgos-jugada.js");
+  const vectores = entradasDeJugada({ partidas: 4, cadaTurnos: 5, porTurno: 8 });
+  assert.ok(vectores.length > 200, `hacen falta jugadas para medir; salieron ${vectores.length}`);
+
+  for (const nombre of ["riesgoConDesconocido", "defiendoMiBandera", "bloqueoLateral"]) {
+    const i = NOMBRES.indexOf(`jugada · ${nombre}`);
+    assert.ok(i >= 0, `${nombre} tiene que estar en NOMBRES`);
+    const valores = vectores.map((v) => v[i]);
+    const activas = valores.filter((x) => x !== 0).length / valores.length;
+    assert.ok(activas > 0.01, `${nombre} se activa en el ${(activas * 100).toFixed(2)}%, por debajo del 1% la red lo ignora`);
+    assert.ok(activas < 0.95, `${nombre} se activa en el ${(activas * 100).toFixed(1)}%: casi constante, tampoco distingue`);
+    assert.ok(valores.every((x) => x >= 0 && x <= 1), `${nombre} tiene que estar normalizado a [0,1]`);
+  }
+});
 
 console.log(`\n${pasadas} pruebas superadas, ${fallidas} fallidas\n`);
 process.exit(fallidas ? 1 : 0);

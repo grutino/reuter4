@@ -105,6 +105,7 @@ export default function Tablero3D({
   colorCamara,
   marcador,
   explosiones,
+  ultimaCasilla,
   onCasilla,
   alto = 540,
   ampliado = false,
@@ -333,6 +334,9 @@ export default function Tablero3D({
       new THREE.MeshStandardMaterial({ map: ladrillo(), roughness: 0.85, metalness: 0.02 })
     );
     torreMesh.position.y = 0.85;
+    // El fuste no es clicable -se pulsa la cima- pero sí se ilumina: cuando el
+    // último lance ha sido en la torre, se enciende la torre ENTERA, no su tapa.
+    torreMesh.userData = { casilla: TORRE, base: new THREE.Color(0xffffff), soloLuz: true };
     escena.add(torreMesh);
 
     const cima = new THREE.Mesh(
@@ -345,6 +349,7 @@ export default function Tablero3D({
     escena.add(cima);
     clicables.push(cima);
     casillasMesh.push(cima);
+    casillasMesh.push(torreMesh);
 
     const corona = new THREE.Mesh(new THREE.TorusGeometry(0.6, 0.06, 8, 24), new THREE.MeshLambertMaterial({ color: 0xb08d3f }));
     corona.rotation.x = Math.PI / 2;
@@ -490,6 +495,12 @@ export default function Tablero3D({
         llama.scale.set(1 + p * 0.18, 1 + p * 0.3, 1 + p * 0.18);
         llama.material.emissiveIntensity = 1.3 + p * 0.5;
       }
+      // La casilla del último lance late despacio. Fija se confunde con una
+      // baldosa clara; latiendo se ve que está señalando algo, y despacio para
+      // que no compita con las llamas, que titilan a 7 Hz.
+      for (const material of (ref.current && ref.current.iluminadas) || []) {
+        material.emissiveIntensity = 1.15 + Math.sin(t * 2.2) * 0.4;
+      }
       render.render(escena, camara);
       requestAnimationFrame(bucle);
     };
@@ -506,7 +517,7 @@ export default function Tablero3D({
     const observador = new ResizeObserver(alRedimensionar);
     observador.observe(nodo);
 
-    ref.current = { escena, grupoPiezas, grupoMarcas, grupoAvisos, llamas: [], casillasMesh, orbita, situarCamara, centrarVista };
+    ref.current = { escena, grupoPiezas, grupoMarcas, grupoAvisos, llamas: [], iluminadas: [], casillasMesh, orbita, situarCamara, centrarVista };
 
     return () => {
       vivo = false;
@@ -542,6 +553,9 @@ export default function Tablero3D({
     const marcas = resaltadas || {};
     const zona = zonaPropia ? new Set(casillasDeZona(zonaPropia)) : null;
     const g = geometrias();
+    // Las que quedan encendidas laten despacio en el bucle de animación, así que
+    // el bucle necesita saber cuáles son.
+    r.iluminadas = [];
 
     while (r.grupoMarcas.children.length) {
       const hijo = r.grupoMarcas.children.pop();
@@ -549,9 +563,32 @@ export default function Tablero3D({
     }
 
     for (const malla of r.casillasMesh) {
-      const { casilla, base } = malla.userData;
+      const { casilla, base, soloLuz } = malla.userData;
       const tono = base.clone();
       const marca = marcas[casilla];
+
+      // DÓNDE PASÓ LO ÚLTIMO. Con cuatro ejércitos moviendo, entre que te toca y
+      // te vuelve a tocar han pasado tres jugadas que no has visto: sin esta
+      // marca hay que reconstruirlas leyendo el hilo. El anillo y la torre se
+      // encienden ENTEROS porque son una casilla lógica aunque ocupen varias
+      // piezas de geometría: media torre iluminada se leería como otra cosa.
+      const esLaUltima = ultimaCasilla && casilla === ultimaCasilla;
+      if (malla.material.emissive) {
+        malla.material.emissive.setHex(esLaUltima ? 0xffffff : 0x000000);
+        malla.material.emissiveIntensity = esLaUltima ? 1.0 : 0;
+        // La emisión con su propia textura como mapa: sin esto la torre se
+        // convierte en un cilindro blanco liso y se pierde el ladrillo. Con el
+        // mapa, lo que se ve es piedra ILUMINADA, que es lo que se pedía.
+        malla.material.emissiveMap = esLaUltima ? malla.material.map || null : null;
+        malla.material.needsUpdate = true;
+        if (esLaUltima) r.iluminadas.push(malla.material);
+      }
+      if (soloLuz) {
+        // El fuste de la torre conserva su ladrillo: solo aporta la luz.
+        continue;
+      }
+      if (esLaUltima) tono.lerp(new THREE.Color(0xffffff), 0.55);
+
       if (zona) {
         if (casilla === ZONAS[zonaPropia].reclutamiento) tono.lerp(new THREE.Color(0x000000), 0.45);
         else if (casilla === ZONAS[zonaPropia].bandera) tono.lerp(new THREE.Color(0xf0e0b0), 0.5);
@@ -562,6 +599,14 @@ export default function Tablero3D({
       if (marca === "mover") tono.lerp(new THREE.Color(0xd8e8c0), 0.45);
       if (marca === "atacar" || marca === "disparar") tono.lerp(new THREE.Color(0xe8938c), 0.55);
       malla.material.color.copy(tono);
+
+      if (esLaUltima && casilla !== ANILLO && casilla !== TORRE) {
+        const halo = new THREE.Mesh(g.marca, new THREE.MeshBasicMaterial({ color: 0xffffff }));
+        const [hx, hy, hz] = posicion3D(casilla);
+        halo.rotation.x = Math.PI / 2;
+        halo.position.set(hx, hy + 0.025, hz);
+        r.grupoMarcas.add(halo);
+      }
 
       if (marca && marca !== "seleccion") {
         const anillo = new THREE.Mesh(
@@ -574,7 +619,10 @@ export default function Tablero3D({
         r.grupoMarcas.add(anillo);
       }
     }
-  }, [resaltadas, zonaPropia]);
+    // Sonda para el banco de pruebas: sin esto, comprobar que una casilla queda
+    // encendida obliga a fiarse de la captura, y a esta escala no se distingue.
+    if (typeof window !== "undefined") window.__tablero3d = r;
+  }, [resaltadas, zonaPropia, ultimaCasilla]);
 
   useEffect(() => {
     const r = ref.current;
@@ -706,7 +754,11 @@ export default function Tablero3D({
       // 0,1 y la caja se centra medio grosor por debajo-, así que todo lo que se
       // pinte encima va por arriba de eso. Puesto a 0,055 el número quedaba
       // DENTRO de la baldosa y no se veía; las llamas sí, porque iban a 0,2.
-      numero.position.set(x, 0.108, z);
+      // Si hay una pieza encima, el número a ras de baldosa queda DEBAJO del
+      // disco, que es opaco: se pinta y no se ve. En ese caso sube por encima de
+      // la ficha, que es donde de verdad se lee.
+      const ocupada = (piezas || []).some((p) => p.casilla === casilla);
+      numero.position.set(x, ocupada ? 0.56 : 0.108, z);
       r.grupoAvisos.add(numero);
     }
 
@@ -793,7 +845,7 @@ export default function Tablero3D({
         }
       }
     }
-  }, [marcador, explosiones]);
+  }, [marcador, explosiones, piezas]);
 
   const botonEscena = {
     background: "rgba(28,20,13,0.78)",

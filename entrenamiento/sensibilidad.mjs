@@ -37,13 +37,20 @@ function efectoPorEntrada(red, vectores, paso) {
   return Array.from(efecto, (v) => v / vectores.length);
 }
 
-export function sensibilidadDeDespliegue(red, { muestras = 400, paso = 0.15, semilla = 97 } = {}) {
+// Los vectores, sueltos: los usa la sensibilidad y también la ablación, y
+// generarlos dos veces cuesta jugar las partidas dos veces.
+export function entradasDeDespliegue({ muestras = 400, semilla = 97 } = {}) {
   const azar = generador(semilla);
   const vectores = [];
   for (let i = 0; i < muestras; i++) {
     const color = COLORES[i % 4];
     vectores.push(rasgosDeDespliegue(color, despliegueAleatorio(color, azar)));
   }
+  return vectores;
+}
+
+export function sensibilidadDeDespliegue(red, { muestras = 400, paso = 0.15, semilla = 97 } = {}) {
+  const vectores = entradasDeDespliegue({ muestras, semilla });
   return efectoPorEntrada(red, vectores, paso).map((efecto, indice) => ({
     indice, efecto, nombre: nombreDeRasgo(indice),
   }));
@@ -53,7 +60,7 @@ export function sensibilidadDeDespliegue(red, { muestras = 400, paso = 0.15, sem
 // existe dentro de una posición. Se muestrea a lo largo de la partida para que
 // entren aperturas, medio juego y finales, que es donde los rasgos del castillo
 // cobran valores distintos de cero.
-export function sensibilidadDeJugada(red, { partidas = 24, paso = 0.15, semilla = 5150, cadaTurnos = 7, porTurno = 6 } = {}) {
+export function entradasDeJugada({ partidas = 24, semilla = 5150, cadaTurnos = 7, porTurno = 6 } = {}) {
   const vectores = [];
   for (let p = 0; p < partidas; p++) {
     const azar = generador(semilla + p * 7919);
@@ -82,6 +89,11 @@ export function sensibilidadDeJugada(red, { partidas = 24, paso = 0.15, semilla 
       turnos++;
     }
   }
+  return vectores;
+}
+
+export function sensibilidadDeJugada(red, { partidas = 24, paso = 0.15, semilla = 5150, cadaTurnos = 7, porTurno = 6 } = {}) {
+  const vectores = entradasDeJugada({ partidas, semilla, cadaTurnos, porTurno });
   return efectoPorEntrada(red, vectores, paso).map((efecto, indice) => ({
     indice, efecto, nombre: NOMBRES_JUGADA[indice] || `rasgo ${indice}`,
   }));

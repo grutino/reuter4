@@ -28,6 +28,15 @@
  .ficha dt{font:500 10px/1.3 "IBM Plex Mono",monospace;letter-spacing:.09em;text-transform:uppercase;color:var(--tenue)}
  .ficha dd{margin:5px 0 0;font:500 23px/1 "IBM Plex Mono",monospace;font-variant-numeric:tabular-nums}
  .ficha dd small{font-size:12px;color:var(--apagado)}
+ .tabla{width:100%;border-collapse:collapse;margin:0 0 18px;font:400 14px/1.4 "IBM Plex Mono",monospace}
+ .tabla th{font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--tenue);
+           text-align:right;font-weight:500;padding:0 0 7px;border-bottom:1px solid var(--filo)}
+ .tabla th:first-child{text-align:left}
+ .tabla td{padding:11px 0;border-bottom:1px solid var(--filo);vertical-align:top}
+ .tabla td.num{text-align:right;font-variant-numeric:tabular-nums;padding-left:16px;white-space:nowrap}
+ .tabla small{color:var(--apagado);font-size:11.5px}
+ .barrita{height:3px;background:var(--suelo);border-radius:2px;margin-top:5px;overflow:hidden}
+ .barrita i{display:block;height:100%}
  figure{margin:0 0 18px}
  figcaption{font-size:13px;color:var(--tenue);margin-bottom:7px;max-width:64ch}
  .lienzo{background:var(--suelo);border:1px solid var(--filo);border-radius:3px;padding:10px;overflow-x:auto}
@@ -53,6 +62,41 @@
 Una elige la posición inicial y otra decide cada jugada. <b>La medida que manda es la última:
 victorias contra la heurística escrita a mano</b>; lo demás es diagnóstico.</p>
 <section>
+    <h2>Cuánta red se está usando</h2>
+    <p class="sub">Las curvas de pérdida dicen si la red predice; esto dice si <b>aprovecha lo que
+    tiene</b>. Una neurona cuenta como útil si <b>quitarla</b> —poner su salida a cero— mueve la
+    predicción más de 0,01 de media. Es la única prueba que no depende de la escala de los pesos:
+    con leaky ReLU una neurona siempre negativa sigue pasando señal, y una salida diminuta
+    multiplicada por un peso grande mueve tanto como una grande por uno pequeño.</p>
+    <table class="tabla">
+      <thead><tr><th>red</th><th>útiles</th><th>inertes</th><th>la mayor</th><th>R² lineal</th><th>ordena como una recta</th></tr></thead>
+      <tbody><tr>
+      <td><b>jugada</b><br><small>72-28-1</small></td>
+      <td class="num">4<small> de 28</small><div class="barrita"><i style="width:14%;background:var(--bien)"></i></div></td>
+      <td class="num">24<small> de 28</small><div class="barrita"><i style="width:86%;background:var(--mal)"></i></div></td>
+      <td class="num">0.419</td>
+      <td class="num">0.9450</td>
+      <td class="num">93.2%<div class="barrita"><i style="width:93%;background:var(--laton)"></i></div></td>
+    </tr><tr>
+      <td><b>despliegue</b><br><small>83-16-1</small></td>
+      <td class="num">2<small> de 16</small><div class="barrita"><i style="width:13%;background:var(--bien)"></i></div></td>
+      <td class="num">11<small> de 16</small><div class="barrita"><i style="width:69%;background:var(--mal)"></i></div></td>
+      <td class="num">0.409</td>
+      <td class="num">1.0000</td>
+      <td class="num">99.9%<div class="barrita"><i style="width:100%;background:var(--mal)"></i></div></td>
+    </tr></tbody>
+    </table>
+    <p class="sub">Las dos últimas columnas son la prueba de fuego: se ajusta la mejor función
+    <b>lineal</b> a los propios logits de la red y se mira si ordena igual que ella. Si ordena
+    igual, las capas ocultas no están comprando nada — la red podría ser una suma ponderada de sus
+    entradas y nadie notaría la diferencia. <b>Al 100% no es una red, es una recta con pasos
+    intermedios.</b></p>
+    <div class="nota">Que salga lineal no es un fallo de la red: es lo que se le ha enseñado. La
+    heurística es una suma ponderada de rasgos, o sea lineal por construcción, y destilar su orden
+    enseña exactamente eso. Por eso el barrido de capacidad salió plano —2, 8, 28 y 64 neuronas
+    ocultas daban el mismo acierto—: no faltaba capacidad, faltaba señal no lineal. Soltar el ancla
+    de la heurística y meter juicios humanos son las dos vías que pueden romperlo.</div>
+  </section><section>
       <h2>Coevolución</h2>
       <p class="sub">Las dos redes juegan entre ellas y se reentrenan con esas partidas, contra una
       población de formaciones que evoluciona a la vez para ganarles. Se miden contra el panel de
@@ -725,7 +769,7 @@ victorias contra la heurística escrita a mano</b>; lo demás es diagnóstico.</
         <span class="cifra">100%</span>
       </div></div>
     </section>
-<footer>Generado el 3/9/2026, 14:41:25 · <a href="https://github.com/grutino/reuter4">github.com/grutino/reuter4</a><br>
+<footer>Generado el 3/9/2026, 15:03:33 · <a href="https://github.com/grutino/reuter4">github.com/grutino/reuter4</a><br>
 Motor propio sin dependencias. La red se entrena y se ejecuta en JavaScript.</footer>
 </div>
 </body></html>

@@ -669,6 +669,20 @@ export default function App() {
     return salida;
   })();
 
+  // Dónde ha pasado lo último. Se busca hacia atrás porque el hilo también
+  // lleva entradas sin casilla -reclutamientos, decisiones de recogida- y lo que
+  // interesa es el último sitio del tablero donde ocurrió algo.
+  const ultimaCasilla = (() => {
+    const historia = (estado && estado.historia) || [];
+    for (let i = historia.length - 1; i >= 0; i--) {
+      const h = historia[i];
+      // En un cañonazo la casilla que importa es la que recibe, no la del cañón.
+      if (h.tipo === "disparar" && h.hasta) return h.hasta;
+      if (h.hasta) return h.hasta;
+    }
+    return null;
+  })();
+
   const resaltadas = (() => {
     if (!seleccion) return {};
     const marcas = { [seleccion.casilla]: "seleccion" };
@@ -909,6 +923,7 @@ export default function App() {
             colorCamara={miColor}
             marcador={estado ? estado.marcador : null}
             explosiones={explosionesRecientes}
+            ultimaCasilla={sala.fase === "jugando" || sala.fase === "fin" ? ultimaCasilla : null}
             onCasilla={sala.fase === "desplegando" ? alClicarDespliegue : alClicarPartida}
             ampliado={tableroAmpliado}
             onAlternarAmpliado={() => setTableroAmpliado((v) => !v)}

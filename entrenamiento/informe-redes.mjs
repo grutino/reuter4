@@ -278,8 +278,53 @@ function bloqueRed({ titulo, resumen, curva, curvaAcierto, porRonda, calib, capa
   </section>`;
 }
 
-export function construir({ despliegue, jugada, coevolucion, panel, sensibilidadDespliegue, sensibilidadJugada, nombresJugada, nombresDespliegue, desdeObjetoLocal }) {
+// CUÁNTA RED SE USA DE VERDAD. Dos medidas que responden a la pregunta que las
+// curvas de pérdida no contestan: si la red aprovecha lo que tiene.
+function bloqueDeUso(usos) {
+  if (!usos || !usos.length) return "";
+  const filas = usos.map(({ nombre, capas, ablacion: a, linealidad: l }) => {
+    const barra = (v, max, color) => {
+      const ancho = Math.max(2, Math.round((v / max) * 100));
+      return `<div class="barrita"><i style="width:${ancho}%;background:${color}"></i></div>`;
+    };
+    return `<tr>
+      <td><b>${esc(nombre)}</b><br><small>${capas.join("-")}</small></td>
+      <td class="num">${a.utiles}<small> de ${a.ocultas}</small>${barra(a.utiles, a.ocultas, "var(--bien)")}</td>
+      <td class="num">${a.inertes}<small> de ${a.ocultas}</small>${barra(a.inertes, a.ocultas, "var(--mal)")}</td>
+      <td class="num">${a.orden[0] ? a.orden[0].efecto.toFixed(3) : "—"}</td>
+      <td class="num">${l.r2.toFixed(4)}</td>
+      <td class="num">${(l.ordenIgual * 100).toFixed(1)}%${barra(l.ordenIgual, 1, l.ordenIgual > 0.98 ? "var(--mal)" : "var(--laton)")}</td>
+    </tr>`;
+  }).join("");
+
+  return `<section>
+    <h2>Cuánta red se está usando</h2>
+    <p class="sub">Las curvas de pérdida dicen si la red predice; esto dice si <b>aprovecha lo que
+    tiene</b>. Una neurona cuenta como útil si <b>quitarla</b> —poner su salida a cero— mueve la
+    predicción más de 0,01 de media. Es la única prueba que no depende de la escala de los pesos:
+    con leaky ReLU una neurona siempre negativa sigue pasando señal, y una salida diminuta
+    multiplicada por un peso grande mueve tanto como una grande por uno pequeño.</p>
+    <table class="tabla">
+      <thead><tr><th>red</th><th>útiles</th><th>inertes</th><th>la mayor</th><th>R² lineal</th><th>ordena como una recta</th></tr></thead>
+      <tbody>${filas}</tbody>
+    </table>
+    <p class="sub">Las dos últimas columnas son la prueba de fuego: se ajusta la mejor función
+    <b>lineal</b> a los propios logits de la red y se mira si ordena igual que ella. Si ordena
+    igual, las capas ocultas no están comprando nada — la red podría ser una suma ponderada de sus
+    entradas y nadie notaría la diferencia. <b>Al 100% no es una red, es una recta con pasos
+    intermedios.</b></p>
+    <div class="nota">Que salga lineal no es un fallo de la red: es lo que se le ha enseñado. La
+    heurística es una suma ponderada de rasgos, o sea lineal por construcción, y destilar su orden
+    enseña exactamente eso. Por eso el barrido de capacidad salió plano —2, 8, 28 y 64 neuronas
+    ocultas daban el mismo acierto—: no faltaba capacidad, faltaba señal no lineal. Soltar el ancla
+    de la heurística y meter juicios humanos son las dos vías que pueden romperlo.</div>
+  </section>`;
+}
+
+export function construir({ despliegue, jugada, coevolucion, panel, sensibilidadDespliegue, sensibilidadJugada, usos, nombresJugada, nombresDespliegue, desdeObjetoLocal }) {
   const bloques = [];
+  const bloqueUso = bloqueDeUso(usos);
+  if (bloqueUso) bloques.push(bloqueUso);
 
   if (coevolucion && coevolucion.historia && coevolucion.historia.length > 1) {
     // La entrada "final" no es una ronda: lleva el veredicto en semillas frescas
@@ -495,6 +540,15 @@ export function construir({ despliegue, jugada, coevolucion, panel, sensibilidad
  .ficha dt{font:500 10px/1.3 "IBM Plex Mono",monospace;letter-spacing:.09em;text-transform:uppercase;color:var(--tenue)}
  .ficha dd{margin:5px 0 0;font:500 23px/1 "IBM Plex Mono",monospace;font-variant-numeric:tabular-nums}
  .ficha dd small{font-size:12px;color:var(--apagado)}
+ .tabla{width:100%;border-collapse:collapse;margin:0 0 18px;font:400 14px/1.4 "IBM Plex Mono",monospace}
+ .tabla th{font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--tenue);
+           text-align:right;font-weight:500;padding:0 0 7px;border-bottom:1px solid var(--filo)}
+ .tabla th:first-child{text-align:left}
+ .tabla td{padding:11px 0;border-bottom:1px solid var(--filo);vertical-align:top}
+ .tabla td.num{text-align:right;font-variant-numeric:tabular-nums;padding-left:16px;white-space:nowrap}
+ .tabla small{color:var(--apagado);font-size:11.5px}
+ .barrita{height:3px;background:var(--suelo);border-radius:2px;margin-top:5px;overflow:hidden}
+ .barrita i{display:block;height:100%}
  figure{margin:0 0 18px}
  figcaption{font-size:13px;color:var(--tenue);margin-bottom:7px;max-width:64ch}
  .lienzo{background:var(--suelo);border:1px solid var(--filo);border-radius:3px;padding:10px;overflow-x:auto}
@@ -532,7 +586,7 @@ Motor propio sin dependencias. La red se entrena y se ejecuta en JavaScript.</fo
 // de despliegue salen de posiciones iniciales y los de jugada de jugadas
 // concretas en partidas en curso. Es accesoria: si falla, el informe sigue.
 async function calcularSensibilidades(despliegue, jugada) {
-  const salida = { sensibilidadDespliegue: null, sensibilidadJugada: null };
+  const salida = { sensibilidadDespliegue: null, sensibilidadJugada: null, usos: [] };
   try {
     const { sensibilidadDeDespliegue, sensibilidadDeJugada } = await import("./sensibilidad.mjs");
     const { desdeObjeto } = await import("../src/motor/red.js");
@@ -544,8 +598,26 @@ async function calcularSensibilidades(despliegue, jugada) {
       salida.sensibilidadJugada = sensibilidadDeJugada(desdeObjeto(jugada.red), { partidas: 14 })
         .map((r) => ({ nombre: r.nombre, efecto: r.efecto }));
     }
-  } catch {
-    // accesoria
+    // Cuánta red se usa: ablación y linealidad, sobre los MISMOS vectores que
+    // la sensibilidad para no volver a jugar las partidas.
+    const { ablacion, linealidad } = await import("./uso-de-red.mjs");
+    const { entradasDeJugada, entradasDeDespliegue } = await import("./sensibilidad.mjs");
+    for (const [nombre, modelo, entradas] of [
+      ["jugada", jugada, () => entradasDeJugada({ partidas: 14 })],
+      ["despliegue", despliegue, () => entradasDeDespliegue({ muestras: 400 })],
+    ]) {
+      if (!modelo || !modelo.red || modelo.red.capas.length !== 3) continue;
+      const red = desdeObjeto(modelo.red);
+      const vectores = entradas();
+      salida.usos.push({
+        nombre, capas: modelo.red.capas,
+        ablacion: ablacion(red, vectores),
+        linealidad: linealidad(red, vectores),
+      });
+    }
+  } catch (e) {
+    // accesoria: el informe tiene que salir aunque esto falle
+    if (process.env.REUTER_VERBOSO) console.error(e);
   }
   return salida;
 }
@@ -555,7 +627,7 @@ export async function generarInforme() {
   const jugada = leer("red-jugada.json");
   const coevolucion = leer("coevolucion.json");
   const panel = leer("panel.json");
-  const { sensibilidadDespliegue, sensibilidadJugada } = await calcularSensibilidades(despliegue, jugada);
+  const { sensibilidadDespliegue, sensibilidadJugada, usos } = await calcularSensibilidades(despliegue, jugada);
   fs.mkdirSync(path.dirname(DESTINO), { recursive: true });
   // Los nombres de los rasgos y el deserializador se pasan desde fuera para que
   // `construir` siga siendo una función pura de datos a HTML, sin importar el
@@ -567,7 +639,7 @@ export async function generarInforme() {
   const nombresDespliegue = Array.from({ length: tamanoDespliegue }, (_, i) => nombreDeRasgo(i));
 
   fs.writeFileSync(DESTINO, construir({
-    despliegue, jugada, coevolucion, panel, sensibilidadDespliegue, sensibilidadJugada,
+    despliegue, jugada, coevolucion, panel, sensibilidadDespliegue, sensibilidadJugada, usos,
     nombresJugada, nombresDespliegue, desdeObjetoLocal,
   }));
   return DESTINO;

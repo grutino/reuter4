@@ -27,6 +27,13 @@ const piezas = Object.values(e.piezas);
 
 const camara = new URLSearchParams(location.search).get("camara") || "rojo";
 
+// Sonda del banco: deja mirar desde la consola qué mallas están encendidas.
+window.__mirarEscena = () => {
+  const out = [];
+  for (const canvas of document.querySelectorAll("canvas")) void canvas;
+  return out;
+};
+
 createRoot(document.getElementById("raiz")).render(
   <div style={{ padding: 12, background: "#141110", minHeight: "100vh" }}>
     <Tablero3D
@@ -38,8 +45,9 @@ createRoot(document.getElementById("raiz")).render(
       marcador={{ rojo: 4, verde: 2, azul: 5, amarillo: 1 }}
       explosiones={[{ casilla: "H6", ardiendo: true }, { casilla: "F9", ardiendo: false },
                     { casilla: "ANILLO", ardiendo: true }, { casilla: "TORRE", ardiendo: false }]}
+      ultimaCasilla={new URLSearchParams(location.search).get("ultima") || "ANILLO"}
       onCasilla={() => {}}
-      alto={640}
+      alto={Number(new URLSearchParams(location.search).get("alto") || 640)}
     />
   </div>
 );

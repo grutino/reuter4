@@ -16,7 +16,7 @@
 // misma jugada no vale igual yendo por delante que por detrás, ni al principio
 // que al final. Eso la heurística no podía expresarlo de ninguna forma.
 
-import { ANILLO, TORRE, ADYACENTES, BATEN_ANILLO, PASOS_A_TIRO } from "./tablero.js";
+import { ANILLO, TORRE, ADYACENTES, BATEN_ANILLO, PASOS_A_TIRO, coord } from "./tablero.js";
 import { resolverDuelo, SOCIO, MARISCAL, ESPIA, CANON, EXPLORADOR, CAPITAN } from "./motor.js";
 import { DISTANCIA, bolsaOculta, valorEsperado, amenazasDesde } from "./bot.js";
 import { peligroEn, lineasAbiertasSi } from "./analisis.js";
@@ -100,6 +100,22 @@ export const NOMBRES_JUGADA = [
   // además amenaza a una pieza que no tengo identificada, la información que
   // gano puede compensar la que doy.
   "delatoParaSondear",
+  // LA ASIMETRÍA QUE FALTABA. Para ATACAR hay `valorEsperadoDelDuelo`, que es
+  // una probabilidad sobre la bolsa. Para DEFENDER solo había `hayDesconocido`,
+  // un booleano: todos los peligros desconocidos le parecían iguales al bot, y
+  // no lo son. Con el mariscal enemigo ya localizado en el otro flanco, un
+  // desconocido junto a mi general apenas puede hacerle nada; al principio de la
+  // partida, ese mismo desconocido puede ser cualquier cosa.
+  //
+  // Aquí está la mitad del precio de revelar que no se estaba contando: lo que
+  // cuesta que te identifiquen es que el rival sepa a QUIÉN puede atacarte.
+  "riesgoConDesconocido",
+  // Quedarme al lado de mi bandera. Medido: se activa en el 6,9% de las jugadas
+  // legales, muy por encima del 1% en que la red deja de ver gradiente.
+  "defiendoMiBandera",
+  // Ponerme por medio: quedar entre un enemigo y mi bandera. El 26,0% de las
+  // jugadas, el más frecuente de los tres.
+  "bloqueoLateral",
 ];
 
 export const TAMANO = TAMANO_POSICION + NOMBRES_JUGADA.length;
@@ -281,10 +297,117 @@ export function rasgosDeJugada(estado, color, accion, contexto) {
   }
   pon(sondeando);
 
+  // 1. EL RIESGO CON DESCONOCIDO, en probabilidad y no en booleano.
+  //
+  // `riesgo.hayDesconocido` dice que en el destino me bate alguien sin
+  // identificar; lo que no dice es cuánto puede hacerme. Se resuelve con la
+  // misma cuenta que ya se hace para atacar, pero del otro lado: qué parte de lo
+  // que le queda escondido a ese color ganaría el duelo contra mí.
+  //
+  // La bolsa se cachea por color en el contexto: hay una por turno, no una por
+  // jugada, y con cincuenta jugadas legales por turno la diferencia se nota.
+  let riesgoDesconocido = 0;
+  if (pieza && riesgo.hayDesconocido) {
+    const quienes = (analisis.peligro[accion.hasta] || {}).quienes || [];
+    // De los que baten el destino, el color de los que NO tengo identificados.
+    for (const otroId of quienes) {
+      if (memoria[otroId] !== undefined) continue;
+      const otra = estado.piezas[otroId];
+      if (!otra) continue;
+      if (!bolsas[otra.color]) bolsas[otra.color] = bolsaOculta(estado, otra.color);
+      const bolsa = bolsas[otra.color];
+      let total = 0;
+      let meGanan = 0;
+      for (const [rango, cuantas] of Object.entries(bolsa)) {
+        if (!cuantas) continue;
+        total += cuantas;
+        if (resolverDuelo(Number(rango), pieza.rango) === "atacante") meGanan += cuantas;
+      }
+      if (total) riesgoDesconocido = Math.max(riesgoDesconocido, meGanan / total);
+    }
+  }
+  pon(riesgoDesconocido);
+
+  // 2. DEFENDER MI BANDERA: quedarme a su lado, o encima de ella.
+  //
+  // Cuenta la casilla donde de verdad está: si la lleva alguien, la que ocupa su
+  // portador; si está suelta o sin tocar, la suya. Sin esto, "defiendo la
+  // bandera" apuntaría a una casilla vacía media partida.
+  const miBandera = estado.banderas && estado.banderas[color];
+  let casillaBandera = null;
+  if (miBandera) {
+    if (miBandera.casilla) casillaBandera = miBandera.casilla;
+    else if (miBandera.portador && estado.piezas[miBandera.portador]) {
+      casillaBandera = estado.piezas[miBandera.portador].casilla;
+    }
+  }
+  let defiendo = 0;
+  if (casillaBandera && accion.tipo !== "disparar") {
+    if (accion.hasta === casillaBandera) defiendo = 1;
+    else if ((ADYACENTES[casillaBandera] || []).includes(accion.hasta)) defiendo = 1;
+    // Acercarse cuenta a medias: la defensa se monta en varios turnos y sin
+    // gradiente ningún movimiento suelto la expresaría.
+    else {
+      // Solo el entorno inmediato. Con "me acerco desde donde sea" se activaba
+      // en el 46% de las jugadas -que es casi decir "me muevo hacia atrás"- y un
+      // rasgo que vale para media tabla no distingue nada.
+      const despues = pasosEntre(accion.hasta, casillaBandera);
+      if (despues !== undefined && despues <= 2) defiendo = 0.5;
+    }
+  }
+  pon(defiendo);
+
+  // 3. PONERME POR MEDIO: quedar entre un enemigo y mi bandera.
+  //
+  // No es "tapar una línea de tiro" -eso ya lo cubre `tapaLineaAlAnillo`- sino
+  // interponer el cuerpo en el camino: tras mover, algún enemigo tiene que pasar
+  // más cerca de mí para llegar a la bandera de lo que tendría que pasar antes.
+  // Se aproxima con la desigualdad triangular sobre la tabla de distancias, que
+  // ya está calculada.
+  let bloqueo = 0;
+  if (casillaBandera && accion.tipo === "mover") {
+    const deMiALaBandera = pasosEntre(accion.hasta, casillaBandera);
+    if (deMiALaBandera !== undefined) {
+      for (const otra of Object.values(estado.piezas)) {
+        if (otra.color === color || otra.color === SOCIO[color]) continue;
+        const aLaBandera = pasosEntre(otra.casilla, casillaBandera);
+        const aMi = pasosEntre(accion.hasta, otra.casilla);
+        // Solo los que ya están encima. Con el radio a diez casillas entraba
+        // medio tablero y el rasgo se activaba en el 54% de las jugadas.
+        if (aLaBandera === undefined || aMi === undefined || aLaBandera > 6) continue;
+        // Interpuesto de verdad: pasar por mi casilla no le alarga NADA el
+        // camino. Con una casilla de holgura, el rectángulo de Manhattan entre
+        // los dos se ensancha tanto que deja de significar "estoy en medio".
+        if (aMi + deMiALaBandera === aLaBandera) {
+          bloqueo = Math.max(bloqueo, 1 - Math.min(1, (aLaBandera - 1) / 6));
+        }
+      }
+    }
+  }
+  pon(bloqueo);
+
   return v;
 }
 
 // Prepara de una vez lo que comparten todas las jugadas de un mismo turno.
+// Pasos entre dos casillas. `DISTANCIA` no vale para esto: mide la distancia al
+// CASTILLO, no entre dos casillas cualesquiera, y usarla aquí dejó los dos
+// primeros rasgos muertos al 0%. Se usa Manhattan sobre coordenadas porque el
+// movimiento es ortogonal —`ADYACENTES` no trae diagonales—; es cota inferior
+// del camino real, que puede ser más largo si hay lago o bosque en medio, y
+// para "¿estoy cerca?" y "¿estoy en medio?" es aproximación de sobra.
+// `coord` devuelve un ARRAY [columna, fila], no un objeto: con `.columna` salía
+// undefined, la resta daba NaN y los dos rasgos quedaban muertos al 0%.
+const CENTRO = [7, 8];
+const puntoDe = (casilla) => (casilla === ANILLO || casilla === TORRE ? CENTRO : coord(casilla));
+
+export function pasosEntre(a, b) {
+  const pa = puntoDe(a);
+  const pb = puntoDe(b);
+  if (!pa || !pb) return undefined;
+  return Math.abs(pa[0] - pb[0]) + Math.abs(pa[1] - pb[1]);
+}
+
 export function contextoDeTurno(estado, color, analisis) {
   return {
     analisis,

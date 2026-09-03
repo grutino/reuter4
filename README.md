@@ -266,20 +266,28 @@ de sus rasgos.
 Se comparan de dos en dos y no se puntúan de uno en uno a propósito: dar notas absolutas deriva
 con el cansancio, elegir entre dos no. Y «parecidos» es información, no pereza.
 
-### 3. Los tres rasgos que ya están medidos
+### 3. Los tres rasgos de defensa — HECHO
 
-Van **juntos**, porque cambiar la firma invalida modelos y banco.
+Escritos y medidos. La firma de rasgos pasa a `94ad006f` y el tamaño a **75**, así que **todo
+modelo anterior queda invalidado** y hay que reentrenar de cero: es justo por eso que este punto
+iba el último.
 
 ```
-riesgoConDesconocido   4,2% de las jugadas · 49 valores    la defensa, con probabilidad
-defiendoMiBandera      6,9%
-bloqueoLateral        26,0%
+                        activas   valores   qué mide
+riesgoConDesconocido      2,9%       83     qué parte de la bolsa oculta me gana en el destino
+defiendoMiBandera        30,2%        3     quedo encima, al lado, o a dos pasos de mi bandera
+bloqueoLateral           14,2%        6     quedo interpuesto entre un enemigo y mi bandera
 ```
 
-El primero sale de una asimetría real: para **atacar** hay `valorEsperadoDelDuelo`, que es una
-probabilidad sobre la bolsa; para **defender** solo hay `hayDesconocido`, un booleano. Todos los
-peligros desconocidos le parecen iguales al bot, y no lo son: con el mariscal enemigo localizado
-en el otro flanco, un desconocido junto a mi general apenas puede hacerle nada.
+El primero cierra una asimetría real: para **atacar** había `valorEsperadoDelDuelo`, una
+probabilidad sobre la bolsa; para **defender** solo `hayDesconocido`, un booleano. Todos los
+peligros desconocidos le parecían iguales al bot, y no lo son: con el mariscal enemigo ya
+localizado en el otro flanco, un desconocido junto a mi general apenas puede hacerle nada.
+
+Los otros dos salieron **muertos al 0,0%** en el primer intento, por dos motivos que no dan
+error: `DISTANCIA` mide al **castillo**, no entre dos casillas, y `coord()` devuelve un **array**,
+no `{columna, fila}`. Hay ahora una prueba que falla si cualquiera de los tres baja del 1% de
+activación o pasa del 95%.
 
 ### 4. El desacuerdo sobre el precio de la información
 
@@ -292,27 +300,27 @@ Tres lecturas posibles: que el entorno siga sin castigar bastante la fuga, que s
 —esas piezas mueren por exponerse, no por estar identificadas— o que la red tenga razón dentro de
 este juego y el consejo humano valga para partidas entre personas.
 
-### 5. Pulir el visor 3D
+### 5. Pulir el visor 3D — HECHO
 
-Anotado y sin hacer:
+- **La última casilla queda iluminada**: emisión blanca con la propia textura como mapa, para que
+  se vea *piedra iluminada* y no un cilindro blanco, y latiendo despacio (2,2 Hz, para no competir
+  con las llamas, que titilan a 7). El anillo y la torre se encienden **enteros** aunque sean
+  varias piezas de geometría; el fuste de la torre no era ni siquiera una casilla registrada y
+  ahora lo es, solo a efectos de luz.
+- El contador de promoción sube por encima de la ficha cuando su casilla está ocupada: a ras de
+  baldosa quedaba **debajo** de un disco opaco, o sea pintado y no visible.
+- Las banderas ya iban a doble cara con emisión propia, y las siluetas ya giran hacia el lado de
+  su ejército.
+- Las siluetas van en **blanco** en informes y herramientas y en **negro** en el visor.
 
-- **Iluminar la última casilla** donde hubo movimiento o combate, con luz blanca. Si fue el
-  anillo, el anillo entero; si fue la torre, la torre entera.
-- El contador de promoción, escrito sobre la casilla de promoción de cada ejército.
-- Las banderas salen de color por una cara y negras por la otra.
-- Las siluetas, giradas hacia cada jugador en vez de todas al sur.
+### 6. El informe de las redes — HECHO
 
-Hecho hoy: las siluetas van en **blanco** en informes y herramientas y en **negro** en el visor,
-que es como se leen mejor en cada sitio.
-
-### 6. Terminar de limpiar el informe de las redes
-
-**Hecho**: pérdida y acierto de entrenamiento y validación en cada punto de la curva —la
-distancia entre las dos líneas de acierto *es* el sobreajuste— y separa **entre rondas** de
-**dentro de la ronda**.
-
-**Falta**: la limpieza visual, y meter la medida del punto 0 (ablación y linealidad), que hoy
-está en un script suelto y debería salir en el informe con cada entrenamiento.
+Pérdida y acierto de entrenamiento y validación en cada punto de la curva —la distancia entre las
+dos líneas de acierto *es* el sobreajuste—, separación entre **entre rondas** y **dentro de la
+ronda**, y ahora **abre con «Cuánta red se está usando»**: neuronas útiles por ablación, inertes,
+la mayor, R² del ajuste lineal y en qué porcentaje de pares ordena como una recta. Se calcula en
+cada `npm run informe-redes` sobre los mismos vectores que la sensibilidad, sin volver a jugar las
+partidas.
 
 ### 7. Los juicios de jugada, segunda versión
 
@@ -323,11 +331,15 @@ rápidas, y la red generalizó «no te delates» a los 400 turnos.
 Hacen falta **muchas más y repartidas por toda la partida**. `npm run cosechar` ya mete en el
 banco las posiciones donde la red discrepa de lo que se jugó, que es donde un juicio vale más.
 
-### 8. Afinar la renuncia a la bandera del compañero
+### 8. La renuncia a la bandera del compañero — HECHO
 
-Ahora un bot nunca la carga, porque cargarla la congela. Pero renunciar tampoco es gratis —quien
-renuncia se queda encima y la tapa— y **si un enemigo está a punto de llevársela, cargarla y
-negársela puede compensar**. Falta ese matiz.
+Por defecto no se carga, porque cargarla la congela. El matiz nuevo: renunciar solo la protege
+**mientras el que la tapa aguante**. Si ahí me matan, quien gana el duelo avanza a mi casilla, cae
+sobre la bandera y se la lleva — mi renuncia no la ha protegido, la ha entregado con mi cadáver.
+
+Se carga entonces si un enemigo **conocido** que me gana está al lado, o si hay un desconocido y
+más de la mitad de su bolsa oculta me ganaría. Solo cuerpo a cuerpo: un cañonazo me mata pero deja
+la bandera donde está y el que disparó sigue lejos.
 
 ### 9. Siluetas: hace falta una foto tuya
 
