@@ -18,6 +18,33 @@
       "subio": false,
       "minutos": 59,
       "cuando": "2026-09-03 18:05:22"
+    },
+    {
+      "sesion": 3,
+      "veredicto": 0.851,
+      "adoptadas": 0,
+      "mejor": 0.8590000000000001,
+      "subio": false,
+      "minutos": 65,
+      "cuando": "2026-09-03 19:10:38"
+    },
+    {
+      "sesion": 4,
+      "veredicto": 0.8540000000000001,
+      "adoptadas": 0,
+      "mejor": 0.8590000000000001,
+      "subio": false,
+      "minutos": 62,
+      "cuando": "2026-09-03 20:12:32"
+    },
+    {
+      "sesion": 5,
+      "veredicto": 0.871,
+      "adoptadas": 0,
+      "mejor": 0.8590000000000001,
+      "subio": false,
+      "minutos": 62,
+      "cuando": "2026-09-03 21:14:50"
     }
   ],
   "mejor": 0.8590000000000001

@@ -106,9 +106,13 @@ function jugar(despliegues, jugadaDe, semilla, limite) {
 
 // `aspirante` describe al bando que se está evaluando: cómo despliega y cómo
 // juega. El rival del panel despliega lo suyo y juega con la heurística.
-export function medirContraPanel(aspirante, panel, { parejas = 12, limite = 400, semillaBase = 31337 } = {}) {
-  const porRival = [];
-  for (const rival of panel) {
+// UN rival del panel. Es la unidad natural de reparto: los rivales no dependen
+// unos de otros y lo único que devuelve cada uno es un marcador de tres números,
+// así que repartirlos entre hilos no cuesta casi nada en serializar. Eso lo hace
+// muy distinto de repartir la tanda de coevolución, que devuelve cien mil
+// vectores y donde mover los datos sale más caro que jugar las partidas.
+export function medirContraUnRival(aspirante, rival, { parejas = 12, limite = 400, semillaBase = 31337 } = {}) {
+  {
     let gana = 0;
     let pierde = 0;
     let tablas = 0;
@@ -138,11 +142,21 @@ export function medirContraPanel(aspirante, panel, { parejas = 12, limite = 400,
       }
     }
     const n = gana + pierde;
-    porRival.push({
+    return {
       rival: rival.nombre, clase: rival.clase, gana, pierde, tablas,
       tasa: n ? gana / n : 0.5, error: Math.sqrt(0.25 / Math.max(1, n)),
-    });
+    };
   }
+}
+
+export function medirContraPanel(aspirante, panel, opciones = {}) {
+  const porRival = panel.map((rival) => medirContraUnRival(aspirante, rival, opciones));
+  return resumirPanel(porRival);
+}
+
+// El resumen, aparte: lo usan la versión de un hilo y la repartida, que junta
+// los marcadores que le devuelven los obreros.
+export function resumirPanel(porRival) {
   const totalG = porRival.reduce((s, r) => s + r.gana, 0);
   const totalP = porRival.reduce((s, r) => s + r.pierde, 0);
   const n = totalG + totalP;

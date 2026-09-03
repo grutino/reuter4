@@ -14,7 +14,11 @@ import { enfrentar } from "./arena.mjs";
 const AQUI = path.dirname(fileURLToPath(import.meta.url));
 export const NUCLEOS = Math.max(1, os.cpus().length - 1); // uno se deja libre
 
-export function crearPiscina(nucleos = NUCLEOS) {
+// `guion` dice qué obrero se levanta. "obrero.mjs" juega enfrentamientos y
+// devuelve marcadores; "obrero-tanda.mjs" juega la tanda de coevolución y
+// devuelve los ejemplos de entrenamiento. El reparto de encargos es el mismo,
+// solo cambia lo que va y lo que vuelve.
+export function crearPiscina(nucleos = NUCLEOS, guion = "obrero.mjs") {
   if (nucleos <= 1) {
     return {
       nucleos: 1,
@@ -23,7 +27,7 @@ export function crearPiscina(nucleos = NUCLEOS) {
     };
   }
 
-  const obreros = Array.from({ length: nucleos }, () => new Worker(path.join(AQUI, "obrero.mjs")));
+  const obreros = Array.from({ length: nucleos }, () => new Worker(path.join(AQUI, guion)));
   const libres = [...obreros];
   const cola = [];
   const pendientes = new Map();

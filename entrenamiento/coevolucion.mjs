@@ -46,7 +46,8 @@ import { generador, repartoDeTablas } from "./arena.mjs";
 import { rasgosDeDespliegue, TAMANO as TAMANO_DESPLIEGUE, FIRMA as FIRMA_DESPLIEGUE } from "../src/motor/rasgos-despliegue.js";
 import { rasgosDeJugada, contextoDeTurno, TAMANO as TAMANO_JUGADA, FIRMA as FIRMA_JUGADA } from "../src/motor/rasgos-jugada.js";
 import { crearRed, entrenarLote, entrenarPares, evaluar, aObjeto, desdeObjeto, ACTIVACION } from "./red.mjs";
-import { construirPanel, medirContraPanel, cargarAperturas } from "./panel.mjs";
+import { construirPanel, medirContraPanel, resumirPanel, cargarAperturas } from "./panel.mjs";
+import { crearPiscina, NUCLEOS } from "./paralelo.mjs";
 import { fuenteDeDespliegues, aColocacion, aTexto } from "./aperturas.mjs";
 import { poblacionInicial, siguienteGeneracion, actualizarArchivo } from "./formaciones.mjs";
 import { despliegueGuiado } from "./entrenar-despliegue.mjs";
@@ -145,6 +146,10 @@ function opciones(argv) {
     // victorias intactas-. Un despliegue es un objeto completo que se juzga en
     // abstracto; una jugada arrastra toda su posición detrás.
     pasadasJuiciosDespliegue: 8,
+    // Cuántos hilos juegan las partidas. 0 = todos los que haya menos uno, que
+    // se deja libre para que la máquina siga respondiendo. 1 fuerza el camino de
+    // siempre, que es el que permite comprobar que repartir no cambia nada.
+    nucleos: 0,
     // SIN HEURÍSTICA DELANTE. Con esto la red puntúa TODAS las jugadas legales
     // en vez de reordenar las cuatro que le pasa la heurística. Sale más barato
     // -0,59 ms por turno frente a 0,87- pero exige una red destilada: la
@@ -211,25 +216,110 @@ function leer(nombre) {
 
 // --- Una tanda de partidas ----------------------------------------------------
 
-function jugarTanda(redD, redJ, o, semillaBase, sacarDespliegue, liga) {
+// LA TANDA, REPARTIDA ENTRE NÚCLEOS.
+//
+// El 80% del tiempo de una ronda es jugar estas partidas, y son independientes
+// entre sí: el candidato obvio para repartir. La máquina tiene diez núcleos y
+// hasta ahora se usaba uno.
+//
+// Lo que NO es independiente es el reparto de formaciones: en el bucle
+// secuencial, a cada partida de liga le toca la siguiente formación de la lista,
+// y ese "siguiente" depende de cuántas partidas de liga hayan salido antes. Se
+// resuelve decidiéndolo TODO en el padre antes de repartir: saber si una partida
+// es de liga cuesta un solo número del generador, así que el padre recorre las
+// cuatrocientas, asigna formaciones en el mismo orden que el bucle secuencial, y
+// cada obrero recibe su lista ya decidida. El reparto sale idéntico.
+async function jugarTanda(redD, redJ, o, semillaBase, sacarDespliegue, liga, piscina) {
+  // Quién juega contra quién, decidido aquí para que el orden no dependa de en
+  // qué hilo caiga cada partida.
+  const plan = [];
+  let deLiga = 0;
+  for (let i = 0; i < o.partidas; i++) {
+    const esLiga = generador(semillaBase + i * 7919)() < o.liga;
+    let formacion = null;
+    if (esLiga && liga && liga.length) {
+      const indice = deLiga % liga.length;
+      formacion = { indice, rejilla: liga[indice].rejilla };
+      deLiga++;
+    } else if (esLiga) {
+      deLiga++;
+    }
+    plan.push({ i, formacion });
+  }
+
+  const juntar = (trozos) => {
+    const deDespliegue = [];
+    const deJugada = [];
+    const pares = [];
+    let decididas = 0;
+    for (const t of trozos) {
+      for (const x of t.deDespliegue) deDespliegue.push(x);
+      for (const x of t.deJugada) deJugada.push(x);
+      for (const x of t.pares) pares.push(x);
+      decididas += t.decididas;
+      for (const [indice, g] of t.ganancias) {
+        if (!liga || !liga[indice]) continue;
+        liga[indice].gana += g.gana;
+        liga[indice].juega += g.juega;
+      }
+    }
+    return { deDespliegue, deJugada, pares, decididas, deLiga };
+  };
+
+  // Sin piscina se juega aquí mismo, que es como se jugó siempre: hace falta
+  // para poder comparar que el reparto no cambia los resultados.
+  if (!piscina || piscina.nucleos <= 1) {
+    const ganancias = new Map();
+    let decididas = 0;
+    const trozo = { deDespliegue: [], deJugada: [], pares: [], decididas: 0, ganancias: [] };
+    for (const { i, formacion } of plan) {
+      const r = jugarUna(i, redD, redJ, o, semillaBase, sacarDespliegue, formacion);
+      for (const x of r.deDespliegue) trozo.deDespliegue.push(x);
+      for (const x of r.deJugada) trozo.deJugada.push(x);
+      for (const x of r.pares) trozo.pares.push(x);
+      decididas += r.decidida;
+      if (formacion) {
+        const previo = ganancias.get(formacion.indice) || { gana: 0, juega: 0 };
+        ganancias.set(formacion.indice, { gana: previo.gana + r.gana, juega: previo.juega + 1 });
+      }
+    }
+    trozo.decididas = decididas;
+    trozo.ganancias = [...ganancias];
+    return juntar([trozo]);
+  }
+
+  // Se reparte en más trozos que núcleos: las partidas no duran lo mismo -unas
+  // se deciden en cien turnos y otras llegan al límite de cuatrocientos- y con
+  // un trozo por núcleo el hilo que pille las lentas hace esperar a los demás.
+  const trozos = piscina.nucleos * 3;
+  const porTrozo = Math.ceil(plan.length / trozos);
+  const tareas = [];
+  const objD = redD ? aObjeto(redD) : null;
+  const objJ = redJ ? aObjeto(redJ) : null;
+  for (let k = 0; k < plan.length; k += porTrozo) {
+    tareas.push({ redD: objD, redJ: objJ, o, semillaBase, partidas: plan.slice(k, k + porTrozo) });
+  }
+  return juntar(await piscina.ejecutar(tareas));
+}
+
+// UNA partida de la tanda, aislada para poder repartirlas entre núcleos. Todo
+// lo que necesita entra por parámetros y todo lo que produce sale por el
+// resultado: no toca nada de fuera salvo la aptitud de su formación, que se
+// devuelve aparte en vez de sumarse in situ.
+export function jugarUna(i, redD, redJ, o, semillaBase, sacarDespliegue, formacion) {
   const deDespliegue = [];
   const deJugada = [];
   const pares = [];
-  let decididas = 0;
-  let deLiga = 0;
+  let decidida = 0;
 
-  for (let i = 0; i < o.partidas; i++) {
+  {
     const azar = generador(semillaBase + i * 7919);
-    // En las partidas de liga las redes ocupan un equipo y la mezcla el otro. Se
-    // alterna el lado, porque el tablero no es simétrico y si las redes jugaran
-    // siempre de A la red de despliegue aprendería el sesgo del lado.
-    const esLiga = azar() < o.liga;
+    // El primer número decide si es de liga. Se consume aquí aunque la decisión
+    // venga ya tomada de fuera: si no, todos los sorteos siguientes de la
+    // partida se desplazarían y saldría otra partida distinta.
+    azar();
     const ladoRed = i % 2 === 0 ? EQUIPO_A : EQUIPO_B;
-    const conRed = (color) => !esLiga || ladoRed.includes(color);
-    // Turno rotatorio, no sorteo: así todas las formaciones juegan el mismo
-    // número de partidas y sus aptitudes son comparables entre sí.
-    const formacion = esLiga && liga && liga.length ? liga[deLiga % liga.length] : null;
-    if (esLiga) deLiga++;
+    const conRed = (color) => !formacion || ladoRed.includes(color);
 
     const despliegues = {};
     const rasgosPorColor = {};
@@ -303,21 +393,21 @@ function jugarTanda(redD, redJ, o, semillaBase, sacarDespliegue, liga) {
     let valorA;
     if (fin && fin.ganador) {
       valorA = EQUIPO_A.includes(fin.ganador) ? 1 : 0;
-      decididas++;
+      decidida = 1;
     } else {
       valorA = repartoDeTablas(estado);
     }
     const suyo = (color) => (EQUIPO_A.includes(color) ? valorA : 1 - valorA);
-    // La aptitud de la formación es lo que le saca a las redes. Las tablas
-    // cuentan en fracción, que es más información que tirarlas.
-    if (formacion) {
-      formacion.gana += ladoRed === EQUIPO_A ? 1 - valorA : valorA;
-      formacion.juega += 1;
-    }
     for (const color of COLORES) deDespliegue.push({ entrada: rasgosPorColor[color], objetivo: suyo(color) });
     for (const m of muestras) deJugada.push({ entrada: m.entrada, objetivo: suyo(m.color) });
+
+    // La aptitud de la formación es lo que le saca a las redes. Las tablas
+    // cuentan en fracción, que es más información que tirarlas. Sale por el
+    // resultado y no se suma aquí: en paralelo cada hilo tiene su copia del
+    // objeto y las sumas se perderían.
+    const gana = formacion ? (ladoRed === EQUIPO_A ? 1 - valorA : valorA) : 0;
+    return { deDespliegue, deJugada, pares, decidida, gana };
   }
-  return { deDespliegue, deJugada, pares, decididas, deLiga };
 }
 
 // --- Continuar el entrenamiento de una red ------------------------------------
@@ -474,6 +564,14 @@ async function main() {
 
   const historia = [];
   const arranque = Date.now();
+  // SE REPARTE LA MEDIDA DEL PANEL, NO LA TANDA. Medido: de una ronda de 63s,
+  // la tanda son 17s, entrenar 8s y el panel 38s. Y repartir la tanda se probó
+  // y salió PEOR -9:24 contra 2:00-, porque devuelve cien mil vectores de
+  // rasgos y moverlos entre hilos cuesta más que jugar las partidas. El panel
+  // devuelve tres números por rival.
+  const cuantosNucleos = o.nucleos === 1 ? 1 : (o.nucleos || NUCLEOS);
+  const piscina = crearPiscina(cuantosNucleos, "obrero-panel.mjs");
+  if (piscina.nucleos > 1) console.log(`  midiendo el panel en ${piscina.nucleos} hilos (de ${NUCLEOS + 1} núcleos, uno se deja libre)`);
 
   // OJO CON ESTO, que costó doce rondas tiradas. `medirContraPanel` es
   // determinista: con la misma semilla juega exactamente las mismas partidas. Si
@@ -486,18 +584,29 @@ async function main() {
   // Así que cada ronda se remide también al titular, en las MISMAS partidas que
   // al aspirante. La comparación queda emparejada y el titular tiene que
   // revalidar su puesto en vez de heredarlo.
-  const medir = (rd, rj, semillaBase = 31337) => {
-    const aspirante = {
-      desplegar: (color, az) => (rd ? despliegueGuiado(color, az, rd, o.candidatos, o.escalada) : despliegueAleatorio(color, az)),
-      jugar: (estado, color, az) =>
-        !rj ? accionDeBot(estado, color, { azar: az })
-        : o.soloRed ? jugadaSoloRed(estado, color, rj, { azar: az })
-        : accionConRed(estado, color, rj, { candidatas: o.candidatas, azar: az }),
-    };
-    return medirContraPanel(aspirante, panel, { parejas: o.parejasPanel, semillaBase });
+  const medir = async (rd, rj, semillaBase = 31337) => {
+    if (piscina.nucleos <= 1) {
+      const aspirante = {
+        desplegar: (color, az) => (rd ? despliegueGuiado(color, az, rd, o.candidatos, o.escalada) : despliegueAleatorio(color, az)),
+        jugar: (estado, color, az) =>
+          !rj ? accionDeBot(estado, color, { azar: az })
+          : o.soloRed ? jugadaSoloRed(estado, color, rj, { azar: az })
+          : accionConRed(estado, color, rj, { candidatas: o.candidatas, azar: az }),
+      };
+      return medirContraPanel(aspirante, panel, { parejas: o.parejasPanel, semillaBase });
+    }
+    // Un encargo por rival. Cada uno lleva las redes serializadas y las opciones
+    // con las que el obrero reconstruye el mismo aspirante.
+    const objD = rd ? aObjeto(rd) : null;
+    const objJ = rj ? aObjeto(rj) : null;
+    const tareas = panel.map((rival) => ({
+      redD: objD, redJ: objJ, rival, parejas: o.parejasPanel, semillaBase, limite: o.limite,
+      o: { candidatos: o.candidatos, escalada: o.escalada, soloRed: o.soloRed, candidatas: o.candidatas },
+    }));
+    return resumirPanel(await piscina.ejecutar(tareas));
   };
 
-  const partida = medir(redD, redJ);
+  const partida = await medir(redD, redJ);
   console.log(`  Punto de partida contra el panel: ${(partida.tasa * 100).toFixed(0)}% ±${Math.round(partida.error * 100)} (semilla de referencia)\n`);
   historia.push({ ronda: 0, panel: partida.tasa, error: partida.error, segundos: Math.round((Date.now() - arranque) / 1000) });
   await publicar(historia, o);
@@ -549,7 +658,9 @@ async function main() {
       exploracion: enfriar(o.exploracion, o.exploracionFinal, ronda),
       tasa: enfriar(o.tasa, o.tasaFinal, ronda),
     };
-    const tanda = jugarTanda(redD, redJ, oRonda, o.semilla + ronda * 104729, sacarDespliegue, poblacion);
+    const tTanda = Date.now();
+    const tanda = await jugarTanda(redD, redJ, oRonda, o.semilla + ronda * 104729, sacarDespliegue, poblacion, null);
+    const msTanda = Date.now() - tTanda;
     deposito.push(tanda);
     while (deposito.length > o.memoria) deposito.shift();
     const todosD = deposito.flatMap((t) => t.deDespliegue);
@@ -559,6 +670,7 @@ async function main() {
     // parte: solo los leía entrenar-despliegue.mjs, que no forma parte del
     // nocturno. O sea que la coevolución reentrenaba la red de despliegue cada
     // ronda y se llevaba por delante lo aprendido de ellos sin haberlos visto.
+    const tEntrenar = Date.now();
     const nuevaD = entrenar(todosD, TAMANO_DESPLIEGUE, o.ocultaDespliegue,
       { ...oRonda, pasadasDeEstosJuicios: o.pasadasJuiciosDespliegue, juiciosEnUnPaso: true }, azar, redD, null, juiciosDespliegue);
     const todosPares = deposito.flatMap((t) => t.pares || []);
@@ -572,10 +684,15 @@ async function main() {
       o.anclaPares && todosPares.length ? todosPares : null,
       juicios.pares.length ? juicios.pares : null
     );
+    const msEntrenar = Date.now() - tEntrenar;
     // Partidas nuevas cada ronda, y el titular las juega también.
+    const tMedir = Date.now();
     const semillaMedida = 31337 + ronda * 15485863;
-    const medida = medir(nuevaD.red, nuevaJ.red, semillaMedida);
-    const titular = medir(redD, redJ, semillaMedida);
+    const [medida, titular] = await Promise.all([
+      medir(nuevaD.red, nuevaJ.red, semillaMedida),
+      medir(redD, redJ, semillaMedida),
+    ]);
+    const msMedir = Date.now() - tMedir;
 
     // Las formaciones se reproducen con la aptitud que acaban de sacar contra
     // las redes de ESTA ronda, antes de decidir si las redes se adoptan.
@@ -598,7 +715,8 @@ async function main() {
         `panel ${(medida.tasa * 100).toFixed(0)}% vs titular ${(titular.tasa * 100).toFixed(0)}% ±${Math.round(medida.error * 100)} · ` +
         `peor ${medida.peor.rival} (${(medida.peor.tasa * 100).toFixed(0)}%)` +
         (mejora ? "  <- adoptadas" : `  (descartadas, hacía falta ${(listón * 100).toFixed(0)}%)`) +
-        `  ${Math.round((Date.now() - t0) / 1000)}s`
+        `  ${Math.round((Date.now() - t0) / 1000)}s` +
+        ` [tanda ${Math.round(msTanda / 1000)}s · entrenar ${Math.round(msEntrenar / 1000)}s · panel ${Math.round(msMedir / 1000)}s]`
     );
     console.log(
       `           formación más dura: ${dura.origen} le saca ${(dura.aptitud * 100).toFixed(0)}% ` +
@@ -638,7 +756,7 @@ async function main() {
   console.log("\n  Veredicto en semillas frescas (ninguna ronda las ha usado):");
   const finales = [];
   for (const s of [77003, 91117, 20261]) {
-    const r = medir(redD, redJ, s + o.veredictoBase);
+    const r = await medir(redD, redJ, s + o.veredictoBase);
     finales.push(r.tasa);
     console.log(`    semilla ${s}: ${(r.tasa * 100).toFixed(0)}% ±${Math.round(r.error * 100)} · peor ${r.peor.rival} (${(r.peor.tasa * 100).toFixed(0)}%)`);
   }
@@ -647,6 +765,9 @@ async function main() {
   console.log(`  Informe: docs/index.html`);
   historia.push({ ronda: "final", veredicto: media, semillas: finales });
   await publicar(historia, o);
+  // Los hilos no se mueren solos: sin esto el proceso se queda colgado al final
+  // y el nocturno nunca vería terminar la sesión.
+  await piscina.cerrar();
 }
 
 // Las formaciones duras van a `aperturas/duras/`, NO a `aperturas/campeonas/`.
