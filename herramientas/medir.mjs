@@ -3,13 +3,18 @@
 // semillas convierte cualquier selección en sesgo del máximo, y hace falta poder
 // pedir un juego de partidas que no haya visto nadie.
 //
-//   node herramientas/medir.mjs [semillaBase] [parejas] [carpeta]
+//   node herramientas/medir.mjs [semillaBase] [parejas] [carpeta] [camino]
+//
+// `camino` es "solo" (la red puntúa todas las jugadas legales, que es como se
+// entrena hoy) o "criba" (la heurística elige cuatro y la red las ordena, que es
+// como juega el servidor). NO son comparables entre sí, y confundirlos ya costó
+// anunciar un +3 que no existía.
 
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { despliegueAleatorio } from "../src/motor/bot.js";
-import { accionConRed, despliegueGuiado } from "../src/motor/bot-red.js";
+import { accionConRed, jugadaSoloRed, despliegueGuiado } from "../src/motor/bot-red.js";
 import { desdeObjeto } from "../src/motor/red.js";
 import { generador } from "../entrenamiento/arena.mjs";
 import { construirPanel, medirContraPanel } from "../entrenamiento/panel.mjs";
@@ -18,6 +23,7 @@ const AQUI = path.dirname(fileURLToPath(import.meta.url));
 const semillaBase = Number(process.argv[2] ?? 31337);
 const parejas = Number(process.argv[3] ?? 8);
 const carpeta = process.argv[4] || path.join(AQUI, "..", "entrenamiento", "modelos");
+const camino = process.argv[5] || "criba";
 
 const leer = (f) => {
   const r = path.join(carpeta, f);
@@ -32,14 +38,15 @@ const panel = construirPanel({ azar: generador(2024) });
 const r = medirContraPanel(
   {
     desplegar: (c, az) => (rd ? despliegueGuiado(c, az, rd, 30, 200) : despliegueAleatorio(c, az)),
-    jugar: (e, c, az) => (rj ? accionConRed(e, c, rj, { candidatas: 12, azar: az }) : null),
+    jugar: (e, c, az) =>
+      !rj ? null : camino === "solo" ? jugadaSoloRed(e, c, rj, { azar: az }) : accionConRed(e, c, rj, { candidatas: 12, azar: az }),
   },
   panel,
   { parejas, semillaBase }
 );
 
 console.log(JSON.stringify({
-  semillaBase, parejas,
+  semillaBase, parejas, camino,
   tasa: r.tasa, error: r.error, gana: r.gana, pierde: r.pierde, tablas: r.tablas,
   peor: { rival: r.peor.rival, tasa: r.peor.tasa },
   porRival: r.porRival.slice().sort((a, b) => a.tasa - b.tasa).slice(0, 8).map((x) => ({ rival: x.rival, clase: x.clase, tasa: x.tasa })),

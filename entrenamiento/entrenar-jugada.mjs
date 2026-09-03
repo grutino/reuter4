@@ -26,7 +26,7 @@ import { analizarTurno } from "../src/motor/analisis.js";
 import { generador, repartoDeTablas } from "./arena.mjs";
 import { rasgosDeJugada, contextoDeTurno, TAMANO, NOMBRES } from "../src/motor/rasgos-jugada.js";
 import { FIRMA } from "../src/motor/rasgos-jugada.js";
-import { crearRed, entrenarLote, evaluar, aObjeto, desdeObjeto } from "./red.mjs";
+import { crearRed, entrenarLote, evaluar, aObjeto, desdeObjeto, ACTIVACION } from "./red.mjs";
 import { accionConRed } from "../src/motor/bot-red.js";
 export { accionConRed };
 
@@ -35,6 +35,9 @@ const [EQUIPO_A] = EQUIPOS;
 
 function opciones(argv) {
   const o = {
+    // En seco no se escribe el modelo: para probar sin que un ensayo de 300
+    // partidas pise uno de 4000. Ya ha pasado tres veces.
+    seco: 0,
     partidas: 800, epocas: 200, lote: 64, tasa: 0.006, oculta: 28, decaimiento: 0.0008,
     semilla: 1, limite: 400, candidatas: 12, exploracion: 0.25, medir: 80, rondas: 1,
   };
@@ -242,7 +245,8 @@ async function main() {
 
   const salida = path.join(AQUI, "modelos", "red-jugada.json");
   fs.mkdirSync(path.dirname(salida), { recursive: true });
-  fs.writeFileSync(salida, JSON.stringify({
+  if (!o.seco) fs.writeFileSync(salida, JSON.stringify({
+    activacion: ACTIVACION,
     firmaRasgos: FIRMA,
     creado: new Date().toISOString(), opciones: o, nombres: NOMBRES,
     mejorVictorias, rondas, red: mejorPesosGlobal,

@@ -25,13 +25,15 @@ import { despliegueGuiado } from "../src/motor/bot-red.js";
 export { despliegueGuiado };
 import { fuenteDeDespliegues } from "./aperturas.mjs";
 import { cargarAperturas } from "./panel.mjs";
-import { crearRed, entrenarLote, evaluar, aObjeto } from "./red.mjs";
+import { crearRed, entrenarLote, evaluar, aObjeto, ACTIVACION } from "./red.mjs";
 
 const AQUI = path.dirname(fileURLToPath(import.meta.url));
 const [EQUIPO_A] = EQUIPOS;
 
 function opciones(argv) {
-  const o = { partidas: 1500, epocas: 300, lote: 64, tasa: 0.01, oculta: 10, decaimiento: 0.0015, semilla: 1, limite: 400, candidatos: 40, medir: 60 };
+  // `seco` no escribe el modelo: para probar sin que un ensayo pise uno bueno.
+  // Ya ha pasado tres veces, la última con mi propio experimento de capacidad.
+  const o = { partidas: 1500, epocas: 300, lote: 64, tasa: 0.01, oculta: 10, decaimiento: 0.0015, semilla: 1, limite: 400, candidatos: 40, medir: 60, seco: 0 };
   for (let i = 2; i < argv.length; i += 2) {
     const clave = argv[i].replace(/^--/, "");
     if (!(clave in o)) throw new Error(`opción desconocida: ${argv[i]}`);
@@ -217,10 +219,14 @@ async function main() {
 
   const salida = path.join(AQUI, "modelos", "red-despliegue.json");
   fs.mkdirSync(path.dirname(salida), { recursive: true });
+  if (o.seco) {
+    console.log("\n  (en seco: no se ha guardado nada)");
+    return;
+  }
   fs.writeFileSync(
     salida,
     JSON.stringify(
-      { firmaRasgos: FIRMA, creado: new Date().toISOString(), opciones: o, perdidaValidacion: mejorValidacion, victoriasEnJuego: medida.tasa, curva, red: mejorPesos },
+      { firmaRasgos: FIRMA, activacion: ACTIVACION, creado: new Date().toISOString(), opciones: o, perdidaValidacion: mejorValidacion, victoriasEnJuego: medida.tasa, curva, red: mejorPesos },
       null,
       2
     )

@@ -53,6 +53,39 @@
 Una elige la posición inicial y otra decide cada jugada. <b>La medida que manda es la última:
 victorias contra la heurística escrita a mano</b>; lo demás es diagnóstico.</p>
 <section>
+      <h2>Coevolución</h2>
+      <p class="sub">Las dos redes juegan entre ellas y se reentrenan con esas partidas, contra una
+      población de formaciones que evoluciona a la vez para ganarles. Se miden contra el panel de
+      aperturas humanas, que no cambia: las redes pueden derivar hacia adaptarse a lo que tienen
+      enfrente, y la vara externa es lo que impide confundir eso con mejorar.</p>
+      <p class="sub">Cada ronda el titular vuelve a jugar, en las mismas partidas que el aspirante y
+      con semillas nuevas. Conservar la nota con la que fue elegido lo hacía competir con una nota
+      inflada -fue elegido justamente por tener suerte en esas partidas- y el listón se volvía
+      inalcanzable: doce rondas seguidas descartadas.</p>
+      <dl class="fichas"><div class="ficha"><dt>veredicto en semillas frescas</dt><dd>88%</dd></div><div class="ficha"><dt>titular en la última ronda</dt><dd>91%</dd></div><div class="ficha"><dt>rondas</dt><dd>8</dd></div><div class="ficha"><dt>adoptadas</dt><dd>3<small> de 8</small></dd></div><div class="ficha"><dt>formaciones archivadas</dt><dd>30</dd></div><div class="ficha"><dt>tiempo</dt><dd>65 min</dd></div></dl>
+      <p class="sub">Veredicto medido en 3 juegos de partidas que ninguna ronda ha usado:
+         86% · 87% · 90%. El máximo de las medidas por ronda no vale como
+         resumen: elegir el máximo de una tanda de medidas ruidosas sesga al alza.</p>
+      <figure><figcaption>Verde: el titular, remedido en partidas nuevas cada ronda. Azul: el aspirante de esa ronda.</figcaption><div class="lienzo"><svg viewBox="0 0 700 190" role="img"><g><line x1="50" y1="164" x2="686" y2="164" stroke="var(--filo)" opacity=".45"/>
+        <text x="43" y="167.5" fill="var(--tenue)" font-size="10" text-anchor="end" font-family="'IBM Plex Mono',monospace">0%</text><line x1="50" y1="126.5" x2="686" y2="126.5" stroke="var(--filo)" opacity=".45"/>
+        <text x="43" y="130" fill="var(--tenue)" font-size="10" text-anchor="end" font-family="'IBM Plex Mono',monospace">25%</text><line x1="50" y1="89" x2="686" y2="89" stroke="var(--filo)" opacity=".45"/>
+        <text x="43" y="92.5" fill="var(--tenue)" font-size="10" text-anchor="end" font-family="'IBM Plex Mono',monospace">50%</text><line x1="50" y1="51.5" x2="686" y2="51.5" stroke="var(--filo)" opacity=".45"/>
+        <text x="43" y="55" fill="var(--tenue)" font-size="10" text-anchor="end" font-family="'IBM Plex Mono',monospace">75%</text><line x1="50" y1="14" x2="686" y2="14" stroke="var(--filo)" opacity=".45"/>
+        <text x="43" y="17.5" fill="var(--tenue)" font-size="10" text-anchor="end" font-family="'IBM Plex Mono',monospace">100%</text></g><path d="M50.0,41.2 L140.9,40.1 L231.7,50.7 L322.6,38.0 L413.4,27.9 L504.3,29.0 L595.1,34.2 L686.0,27.0" fill="none" stroke="var(--bien)" stroke-width="2"  stroke-linejoin="round"/><path d="M50.0,59.9 L140.9,39.5 L231.7,38.4 L322.6,31.6 L413.4,50.1 L504.3,32.4 L595.1,28.4 L686.0,26.1" fill="none" stroke="var(--dato)" stroke-width="1.5"  stroke-linejoin="round"/><rect x="56" y="14" width="10" height="3" fill="var(--bien)"/>
+      <text x="71" y="18" fill="var(--tenue)" font-size="11" font-family="'IBM Plex Mono',monospace">titular, remedido cada ronda</text><rect x="204" y="14" width="10" height="3" fill="var(--dato)"/>
+      <text x="219" y="18" fill="var(--tenue)" font-size="11" font-family="'IBM Plex Mono',monospace">aspirante de la ronda</text>
+    <text x="686" y="184" fill="var(--tenue)" font-size="10" text-anchor="end" font-family="'IBM Plex Mono',monospace">ronda</text></svg></div></figure>
+      <figure><figcaption>La carrera vista desde el otro lado: cuánto le sacan las formaciones a las redes. Si sube sola, el otro corredor está parado.</figcaption><div class="lienzo"><svg viewBox="0 0 700 190" role="img"><g><line x1="50" y1="164" x2="686" y2="164" stroke="var(--filo)" opacity=".45"/>
+        <text x="43" y="167.5" fill="var(--tenue)" font-size="10" text-anchor="end" font-family="'IBM Plex Mono',monospace">0%</text><line x1="50" y1="126.5" x2="686" y2="126.5" stroke="var(--filo)" opacity=".45"/>
+        <text x="43" y="130" fill="var(--tenue)" font-size="10" text-anchor="end" font-family="'IBM Plex Mono',monospace">25%</text><line x1="50" y1="89" x2="686" y2="89" stroke="var(--filo)" opacity=".45"/>
+        <text x="43" y="92.5" fill="var(--tenue)" font-size="10" text-anchor="end" font-family="'IBM Plex Mono',monospace">50%</text><line x1="50" y1="51.5" x2="686" y2="51.5" stroke="var(--filo)" opacity=".45"/>
+        <text x="43" y="55" fill="var(--tenue)" font-size="10" text-anchor="end" font-family="'IBM Plex Mono',monospace">75%</text><line x1="50" y1="14" x2="686" y2="14" stroke="var(--filo)" opacity=".45"/>
+        <text x="43" y="17.5" fill="var(--tenue)" font-size="10" text-anchor="end" font-family="'IBM Plex Mono',monospace">100%</text></g><path d="M50.0,35.4 L140.9,39.0 L231.7,37.6 L322.6,66.2 L413.4,65.6 L504.3,99.7 L595.1,63.6 L686.0,79.6" fill="none" stroke="var(--mal)" stroke-width="2"  stroke-linejoin="round"/><path d="M50.0,113.2 L140.9,108.0 L231.7,105.8 L322.6,108.8 L413.4,126.4 L504.3,126.9 L595.1,125.2 L686.0,136.4" fill="none" stroke="var(--laton)" stroke-width="1.5"  stroke-linejoin="round"/><path d="M50.0,89.0 L140.9,89.0 L231.7,89.0 L322.6,89.0 L413.4,89.0 L504.3,89.0 L595.1,89.0 L686.0,89.0" fill="none" stroke="var(--tenue)" stroke-width="1.5" stroke-dasharray="4 4" stroke-linejoin="round"/><rect x="56" y="14" width="10" height="3" fill="var(--mal)"/>
+      <text x="71" y="18" fill="var(--tenue)" font-size="11" font-family="'IBM Plex Mono',monospace">la formación más dura</text><rect x="204" y="14" width="10" height="3" fill="var(--laton)"/>
+      <text x="219" y="18" fill="var(--tenue)" font-size="11" font-family="'IBM Plex Mono',monospace">media de la población</text><rect x="352" y="14" width="10" height="3" fill="var(--tenue)"/>
+      <text x="367" y="18" fill="var(--tenue)" font-size="11" font-family="'IBM Plex Mono',monospace">paridad</text>
+    <text x="686" y="184" fill="var(--tenue)" font-size="10" text-anchor="end" font-family="'IBM Plex Mono',monospace">ronda</text></svg></div></figure>
+    </section><section>
     <h2>Evaluador de jugadas</h2>
     <p class="sub">Decide qué jugada hacer. Ve la posición y la jugada en sí, y estima la probabilidad de acabar ganando. Cada ronda genera partidas nuevas jugando con la red de la ronda anterior y reentrena desde cero.</p>
     <dl class="fichas"><div class="ficha"><dt>victorias en juego</dt><dd>41% <small>±4</small></dd></div><div class="ficha"><dt>pérdida validación</dt><dd>0.6604</dd></div><div class="ficha"><dt>acierto</dt><dd>60%</dd></div><div class="ficha"><dt>entradas</dt><dd>72</dd></div></dl>
@@ -96,98 +129,98 @@ victorias contra la heurística escrita a mano</b>; lo demás es diagnóstico.</
     </div>
     <figure><figcaption>La red con sus pesos. Cada franja de la izquierda es una entrada, tanto más oscura cuanto más reparte. Los círculos son las neuronas ocultas: el <b>color</b> es lo que les entra —cuánto miran— y el <b>tamaño</b> lo que sacan hacia la salida —cuánto se les hace caso—. Una grande y pálida mira poco pero decide mucho. Solo se dibujan las conexiones más fuertes: con 2016 hay demasiadas y el dibujo se vuelve un borrón.</figcaption><div class="lienzo"><svg viewBox="0 0 700 300" role="img">
     <path d="M 67 165.6 C 144 165.6, 322 166.7, 381 166.7"
-      fill="none" stroke="var(--mal)" stroke-width="1.85" opacity="0.540"/><path d="M 67 219.1 C 144 219.1, 322 239.5, 381 239.5"
-      fill="none" stroke="var(--mal)" stroke-width="1.41" opacity="0.416"/><path d="M 67 68.1 C 144 68.1, 322 69.7, 381 69.7"
-      fill="none" stroke="var(--bien)" stroke-width="1.39" opacity="0.411"/><path d="M 67 168.7 C 144 168.7, 322 166.7, 381 166.7"
-      fill="none" stroke="var(--bien)" stroke-width="1.30" opacity="0.385"/><path d="M 67 168.7 C 144 168.7, 322 182.9, 381 182.9"
-      fill="none" stroke="var(--mal)" stroke-width="1.27" opacity="0.378"/><path d="M 67 165.6 C 144 165.6, 322 239.5, 381 239.5"
-      fill="none" stroke="var(--mal)" stroke-width="1.23" opacity="0.366"/><path d="M 67 219.1 C 144 219.1, 322 166.7, 381 166.7"
-      fill="none" stroke="var(--mal)" stroke-width="1.20" opacity="0.359"/><path d="M 67 162.5 C 144 162.5, 322 255.7, 381 255.7"
-      fill="none" stroke="var(--mal)" stroke-width="1.19" opacity="0.356"/><path d="M 67 65.0 C 144 65.0, 322 182.9, 381 182.9"
-      fill="none" stroke="var(--bien)" stroke-width="1.06" opacity="0.319"/><path d="M 67 168.7 C 144 168.7, 322 255.7, 381 255.7"
-      fill="none" stroke="var(--mal)" stroke-width="1.03" opacity="0.310"/><path d="M 67 237.9 C 144 237.9, 322 239.5, 381 239.5"
-      fill="none" stroke="var(--mal)" stroke-width="1.01" opacity="0.304"/><path d="M 67 61.8 C 144 61.8, 322 182.9, 381 182.9"
-      fill="none" stroke="var(--bien)" stroke-width="1.00" opacity="0.302"/><path d="M 67 197.0 C 144 197.0, 322 182.9, 381 182.9"
-      fill="none" stroke="var(--mal)" stroke-width="0.96" opacity="0.292"/><path d="M 67 68.1 C 144 68.1, 322 182.9, 381 182.9"
-      fill="none" stroke="var(--mal)" stroke-width="0.96" opacity="0.291"/><path d="M 67 250.5 C 144 250.5, 322 239.5, 381 239.5"
-      fill="none" stroke="var(--mal)" stroke-width="0.90" opacity="0.274"/><path d="M 67 96.4 C 144 96.4, 322 69.7, 381 69.7"
-      fill="none" stroke="var(--bien)" stroke-width="0.87" opacity="0.267"/><path d="M 67 175.0 C 144 175.0, 322 239.5, 381 239.5"
+      fill="none" stroke="var(--mal)" stroke-width="1.85" opacity="0.540"/><path d="M 67 219.1 C 144 219.1, 322 166.7, 381 166.7"
+      fill="none" stroke="var(--mal)" stroke-width="1.24" opacity="0.368"/><path d="M 67 168.7 C 144 168.7, 322 182.9, 381 182.9"
+      fill="none" stroke="var(--mal)" stroke-width="1.13" opacity="0.337"/><path d="M 67 68.1 C 144 68.1, 322 239.5, 381 239.5"
+      fill="none" stroke="var(--bien)" stroke-width="1.09" opacity="0.328"/><path d="M 67 168.7 C 144 168.7, 322 166.7, 381 166.7"
+      fill="none" stroke="var(--bien)" stroke-width="1.04" opacity="0.314"/><path d="M 67 93.3 C 144 93.3, 322 239.5, 381 239.5"
+      fill="none" stroke="var(--mal)" stroke-width="0.89" opacity="0.272"/><path d="M 67 162.5 C 144 162.5, 322 239.5, 381 239.5"
       fill="none" stroke="var(--mal)" stroke-width="0.86" opacity="0.262"/><path d="M 67 175.0 C 144 175.0, 322 166.7, 381 166.7"
-      fill="none" stroke="var(--mal)" stroke-width="0.84" opacity="0.258"/><path d="M 67 253.6 C 144 253.6, 322 69.7, 381 69.7"
-      fill="none" stroke="var(--mal)" stroke-width="0.82" opacity="0.252"/><path d="M 67 234.8 C 144 234.8, 322 239.5, 381 239.5"
-      fill="none" stroke="var(--bien)" stroke-width="0.81" opacity="0.248"/><path d="M 67 93.3 C 144 93.3, 322 255.7, 381 255.7"
-      fill="none" stroke="var(--mal)" stroke-width="0.80" opacity="0.247"/><path d="M 67 93.3 C 144 93.3, 322 239.5, 381 239.5"
-      fill="none" stroke="var(--mal)" stroke-width="0.79" opacity="0.243"/><path d="M 67 168.7 C 144 168.7, 322 239.5, 381 239.5"
-      fill="none" stroke="var(--bien)" stroke-width="0.79" opacity="0.243"/><path d="M 67 197.0 C 144 197.0, 322 69.7, 381 69.7"
-      fill="none" stroke="var(--bien)" stroke-width="0.79" opacity="0.242"/><path d="M 67 146.7 C 144 146.7, 322 182.9, 381 182.9"
-      fill="none" stroke="var(--bien)" stroke-width="0.78" opacity="0.240"/><path d="M 67 68.1 C 144 68.1, 322 239.5, 381 239.5"
-      fill="none" stroke="var(--bien)" stroke-width="0.76" opacity="0.234"/><path d="M 67 237.9 C 144 237.9, 322 166.7, 381 166.7"
-      fill="none" stroke="var(--mal)" stroke-width="0.75" opacity="0.233"/><path d="M 67 96.4 C 144 96.4, 322 182.9, 381 182.9"
-      fill="none" stroke="var(--mal)" stroke-width="0.75" opacity="0.233"/><path d="M 67 115.3 C 144 115.3, 322 69.7, 381 69.7"
-      fill="none" stroke="var(--bien)" stroke-width="0.74" opacity="0.230"/><path d="M 67 165.6 C 144 165.6, 322 182.9, 381 182.9"
-      fill="none" stroke="var(--bien)" stroke-width="0.73" opacity="0.226"/><path d="M 67 65.0 C 144 65.0, 322 255.7, 381 255.7"
-      fill="none" stroke="var(--mal)" stroke-width="0.73" opacity="0.226"/><path d="M 67 146.7 C 144 146.7, 322 69.7, 381 69.7"
-      fill="none" stroke="var(--bien)" stroke-width="0.72" opacity="0.223"/><path d="M 67 250.5 C 144 250.5, 322 166.7, 381 166.7"
-      fill="none" stroke="var(--mal)" stroke-width="0.72" opacity="0.222"/><path d="M 67 171.9 C 144 171.9, 322 166.7, 381 166.7"
-      fill="none" stroke="var(--mal)" stroke-width="0.71" opacity="0.220"/><path d="M 67 112.1 C 144 112.1, 322 182.9, 381 182.9"
-      fill="none" stroke="var(--bien)" stroke-width="0.70" opacity="0.218"/><path d="M 67 93.3 C 144 93.3, 322 182.9, 381 182.9"
-      fill="none" stroke="var(--bien)" stroke-width="0.70" opacity="0.217"/><path d="M 67 159.3 C 144 159.3, 322 182.9, 381 182.9"
-      fill="none" stroke="var(--bien)" stroke-width="0.69" opacity="0.216"/><path d="M 67 109.0 C 144 109.0, 322 69.7, 381 69.7"
-      fill="none" stroke="var(--bien)" stroke-width="0.68" opacity="0.214"/><path d="M 67 68.1 C 144 68.1, 322 255.7, 381 255.7"
-      fill="none" stroke="var(--bien)" stroke-width="0.68" opacity="0.212"/><path d="M 67 112.1 C 144 112.1, 322 69.7, 381 69.7"
-      fill="none" stroke="var(--bien)" stroke-width="0.67" opacity="0.211"/><path d="M 67 68.1 C 144 68.1, 322 166.7, 381 166.7"
-      fill="none" stroke="var(--bien)" stroke-width="0.67" opacity="0.209"/><path d="M 67 250.5 C 144 250.5, 322 255.7, 381 255.7"
-      fill="none" stroke="var(--mal)" stroke-width="0.67" opacity="0.209"/><path d="M 67 140.4 C 144 140.4, 322 182.9, 381 182.9"
-      fill="none" stroke="var(--mal)" stroke-width="0.65" opacity="0.204"/><path d="M 67 162.5 C 144 162.5, 322 239.5, 381 239.5"
-      fill="none" stroke="var(--mal)" stroke-width="0.65" opacity="0.203"/><path d="M 67 105.9 C 144 105.9, 322 69.7, 381 69.7"
-      fill="none" stroke="var(--bien)" stroke-width="0.64" opacity="0.202"/><path d="M 67 237.9 C 144 237.9, 322 182.9, 381 182.9"
-      fill="none" stroke="var(--bien)" stroke-width="0.64" opacity="0.201"/><path d="M 67 241.1 C 144 241.1, 322 239.5, 381 239.5"
-      fill="none" stroke="var(--bien)" stroke-width="0.64" opacity="0.201"/><path d="M 67 228.5 C 144 228.5, 322 166.7, 381 166.7"
-      fill="none" stroke="var(--mal)" stroke-width="0.63" opacity="0.198"/><path d="M 67 178.2 C 144 178.2, 322 255.7, 381 255.7"
-      fill="none" stroke="var(--bien)" stroke-width="0.63" opacity="0.197"/><path d="M 67 197.0 C 144 197.0, 322 255.7, 381 255.7"
-      fill="none" stroke="var(--bien)" stroke-width="0.62" opacity="0.197"/><path d="M 67 234.8 C 144 234.8, 322 166.7, 381 166.7"
-      fill="none" stroke="var(--bien)" stroke-width="0.61" opacity="0.194"/><path d="M 67 231.6 C 144 231.6, 322 239.5, 381 239.5"
-      fill="none" stroke="var(--bien)" stroke-width="0.61" opacity="0.193"/><path d="M 67 219.1 C 144 219.1, 322 69.7, 381 69.7"
-      fill="none" stroke="var(--mal)" stroke-width="0.60" opacity="0.189"/><path d="M 67 127.9 C 144 127.9, 322 69.7, 381 69.7"
-      fill="none" stroke="var(--mal)" stroke-width="0.58" opacity="0.185"/><path d="M 67 159.3 C 144 159.3, 322 166.7, 381 166.7"
-      fill="none" stroke="var(--bien)" stroke-width="0.58" opacity="0.185"/><path d="M 67 178.2 C 144 178.2, 322 182.9, 381 182.9"
-      fill="none" stroke="var(--bien)" stroke-width="0.58" opacity="0.184"/><path d="M 67 61.8 C 144 61.8, 322 255.7, 381 255.7"
-      fill="none" stroke="var(--mal)" stroke-width="0.58" opacity="0.183"/><path d="M 67 247.4 C 144 247.4, 322 239.5, 381 239.5"
-      fill="none" stroke="var(--mal)" stroke-width="0.58" opacity="0.183"/><path d="M 67 222.2 C 144 222.2, 322 69.7, 381 69.7"
-      fill="none" stroke="var(--mal)" stroke-width="0.57" opacity="0.182"/><path d="M 67 115.3 C 144 115.3, 322 182.9, 381 182.9"
-      fill="none" stroke="var(--mal)" stroke-width="0.57" opacity="0.182"/><path d="M 67 146.7 C 144 146.7, 322 239.5, 381 239.5"
-      fill="none" stroke="var(--mal)" stroke-width="0.57" opacity="0.182"/><path d="M 67 65.0 C 144 65.0, 322 69.7, 381 69.7"
-      fill="none" stroke="var(--mal)" stroke-width="0.57" opacity="0.181"/><path d="M 67 234.8 C 144 234.8, 322 69.7, 381 69.7"
-      fill="none" stroke="var(--bien)" stroke-width="0.57" opacity="0.181"/><path d="M 67 90.1 C 144 90.1, 322 182.9, 381 182.9"
-      fill="none" stroke="var(--mal)" stroke-width="0.57" opacity="0.181"/><path d="M 67 131.0 C 144 131.0, 322 182.9, 381 182.9"
-      fill="none" stroke="var(--mal)" stroke-width="0.57" opacity="0.180"/><path d="M 67 162.5 C 144 162.5, 322 166.7, 381 166.7"
-      fill="none" stroke="var(--bien)" stroke-width="0.56" opacity="0.179"/><path d="M 67 225.3 C 144 225.3, 322 239.5, 381 239.5"
-      fill="none" stroke="var(--mal)" stroke-width="0.56" opacity="0.179"/><path d="M 67 250.5 C 144 250.5, 322 182.9, 381 182.9"
-      fill="none" stroke="var(--bien)" stroke-width="0.56" opacity="0.178"/><path d="M 67 193.9 C 144 193.9, 322 239.5, 381 239.5"
-      fill="none" stroke="var(--bien)" stroke-width="0.55" opacity="0.177"/><path d="M 67 247.4 C 144 247.4, 322 182.9, 381 182.9"
-      fill="none" stroke="var(--bien)" stroke-width="0.55" opacity="0.177"/><path d="M 67 234.8 C 144 234.8, 322 255.7, 381 255.7"
-      fill="none" stroke="var(--bien)" stroke-width="0.55" opacity="0.177"/><path d="M 67 234.8 C 144 234.8, 322 182.9, 381 182.9"
-      fill="none" stroke="var(--mal)" stroke-width="0.55" opacity="0.176"/><path d="M 67 162.5 C 144 162.5, 322 69.7, 381 69.7"
-      fill="none" stroke="var(--bien)" stroke-width="0.55" opacity="0.176"/><path d="M 67 159.3 C 144 159.3, 322 255.7, 381 255.7"
-      fill="none" stroke="var(--mal)" stroke-width="0.55" opacity="0.175"/><path d="M 67 49.3 C 144 49.3, 322 239.5, 381 239.5"
-      fill="none" stroke="var(--mal)" stroke-width="0.55" opacity="0.175"/><path d="M 67 149.9 C 144 149.9, 322 166.7, 381 166.7"
-      fill="none" stroke="var(--bien)" stroke-width="0.55" opacity="0.175"/><path d="M 67 140.4 C 144 140.4, 322 69.7, 381 69.7"
-      fill="none" stroke="var(--bien)" stroke-width="0.54" opacity="0.174"/><path d="M 67 143.6 C 144 143.6, 322 182.9, 381 182.9"
-      fill="none" stroke="var(--mal)" stroke-width="0.54" opacity="0.173"/><path d="M 67 80.7 C 144 80.7, 322 182.9, 381 182.9"
-      fill="none" stroke="var(--bien)" stroke-width="0.54" opacity="0.172"/><path d="M 67 181.3 C 144 181.3, 322 166.7, 381 166.7"
-      fill="none" stroke="var(--mal)" stroke-width="0.54" opacity="0.172"/><path d="M 67 231.6 C 144 231.6, 322 182.9, 381 182.9"
-      fill="none" stroke="var(--mal)" stroke-width="0.53" opacity="0.172"/><path d="M 67 93.3 C 144 93.3, 322 166.7, 381 166.7"
-      fill="none" stroke="var(--mal)" stroke-width="0.53" opacity="0.172"/><path d="M 67 190.8 C 144 190.8, 322 182.9, 381 182.9"
-      fill="none" stroke="var(--bien)" stroke-width="0.53" opacity="0.171"/><path d="M 67 49.3 C 144 49.3, 322 69.7, 381 69.7"
-      fill="none" stroke="var(--mal)" stroke-width="0.53" opacity="0.171"/><path d="M 67 131.0 C 144 131.0, 322 239.5, 381 239.5"
-      fill="none" stroke="var(--mal)" stroke-width="0.53" opacity="0.171"/><path d="M 67 184.5 C 144 184.5, 322 182.9, 381 182.9"
-      fill="none" stroke="var(--mal)" stroke-width="0.53" opacity="0.170"/><path d="M 67 71.3 C 144 71.3, 322 69.7, 381 69.7"
-      fill="none" stroke="var(--mal)" stroke-width="0.53" opacity="0.170"/><path d="M 67 146.7 C 144 146.7, 322 255.7, 381 255.7"
-      fill="none" stroke="var(--mal)" stroke-width="0.53" opacity="0.170"/><path d="M 67 153.0 C 144 153.0, 322 166.7, 381 166.7"
-      fill="none" stroke="var(--mal)" stroke-width="0.53" opacity="0.170"/><path d="M 67 206.5 C 144 206.5, 322 239.5, 381 239.5"
-      fill="none" stroke="var(--mal)" stroke-width="0.53" opacity="0.169"/><rect x="41" y="41.40" width="26" height="2.79" fill="var(--dato)" opacity="0.190"><title>posición · misPiezas · fuerza 8%</title></rect><rect x="41" y="44.54" width="26" height="2.79" fill="var(--dato)" opacity="0.172"><title>posición · miFuerza · fuerza 6%</title></rect><rect x="41" y="47.69" width="26" height="2.79" fill="var(--dato)" opacity="0.266"><title>posición · piezasDelSocio · fuerza 17%</title></rect><rect x="41" y="50.83" width="26" height="2.79" fill="var(--dato)" opacity="0.245"><title>posición · piezasEnemigas · fuerza 14%</title></rect><rect x="41" y="53.98" width="26" height="2.79" fill="var(--dato)" opacity="0.172"><title>posición · ventajaDePiezas · fuerza 6%</title></rect><rect x="41" y="57.12" width="26" height="2.79" fill="var(--dato)" opacity="0.228"><title>posición · misBajas · fuerza 12%</title></rect><rect x="41" y="60.27" width="26" height="2.79" fill="var(--dato)" opacity="0.464"><title>posición · miBanderaAlCastillo · fuerza 39%</title></rect><rect x="41" y="63.41" width="26" height="2.79" fill="var(--dato)" opacity="0.547"><title>posición · banderaDelSocioAlCastillo · fuerza 49%</title></rect><rect x="41" y="66.56" width="26" height="2.79" fill="var(--dato)" opacity="0.907"><title>posición · banderaEnemigaAlCastillo · fuerza 89%</title></rect><rect x="41" y="69.70" width="26" height="2.79" fill="var(--dato)" opacity="0.239"><title>posición · llevoMiBandera · fuerza 13%</title></rect><rect x="41" y="72.84" width="26" height="2.79" fill="var(--dato)" opacity="0.221"><title>posición · elSocioLlevaBandera · fuerza 11%</title></rect><rect x="41" y="75.99" width="26" height="2.79" fill="var(--dato)" opacity="0.247"><title>posición · algunEnemigoLlevaBandera · fuerza 14%</title></rect><rect x="41" y="79.13" width="26" height="2.79" fill="var(--dato)" opacity="0.235"><title>posición · hayBanderaEnElSuelo · fuerza 13%</title></rect><rect x="41" y="82.28" width="26" height="2.79" fill="var(--dato)" opacity="0.204"><title>posición · ocupoElAnillo · fuerza 10%</title></rect><rect x="41" y="85.42" width="26" height="2.79" fill="var(--dato)" opacity="0.181"><title>posición · ocupoLaTorre · fuerza 7%</title></rect><rect x="41" y="88.57" width="26" height="2.79" fill="var(--dato)" opacity="0.258"><title>posición · elEnemigoOcupaElCastillo · fuerza 16%</title></rect><rect x="41" y="91.71" width="26" height="2.79" fill="var(--dato)" opacity="0.549"><title>posición · miPiezaMasCerca · fuerza 49%</title></rect><rect x="41" y="94.86" width="26" height="2.79" fill="var(--dato)" opacity="0.429"><title>posición · suPiezaMasCerca · fuerza 35%</title></rect><rect x="41" y="98.00" width="26" height="2.79" fill="var(--dato)" opacity="0.181"><title>posición · misPiezasEnElCastillo · fuerza 7%</title></rect><rect x="41" y="101.14" width="26" height="2.79" fill="var(--dato)" opacity="0.267"><title>posición · susPiezasEnElCastillo · fuerza 17%</title></rect><rect x="41" y="104.29" width="26" height="2.79" fill="var(--dato)" opacity="0.265"><title>posición · miMarcador · fuerza 17%</title></rect><rect x="41" y="107.43" width="26" height="2.79" fill="var(--dato)" opacity="0.289"><title>posición · marcadorDelSocio · fuerza 19%</title></rect><rect x="41" y="110.58" width="26" height="2.79" fill="var(--dato)" opacity="0.365"><title>posición · marcadorEnemigo · fuerza 28%</title></rect><rect x="41" y="113.72" width="26" height="2.79" fill="var(--dato)" opacity="0.389"><title>posición · rangosQueLesHeVisto · fuerza 31%</title></rect><rect x="41" y="116.87" width="26" height="2.79" fill="var(--dato)" opacity="0.320"><title>posición · rangosQueMeHanVisto · fuerza 23%</title></rect><rect x="41" y="120.01" width="26" height="2.79" fill="var(--dato)" opacity="0.158"><title>posición · miMariscalVivo · fuerza 4%</title></rect><rect x="41" y="123.16" width="26" height="2.79" fill="var(--dato)" opacity="0.192"><title>posición · miEspiaVivo · fuerza 8%</title></rect><rect x="41" y="126.30" width="26" height="2.79" fill="var(--dato)" opacity="0.265"><title>posición · misCanonesVivos · fuerza 16%</title></rect><rect x="41" y="129.44" width="26" height="2.79" fill="var(--dato)" opacity="0.308"><title>posición · misExploradoresVivos · fuerza 21%</title></rect><rect x="41" y="132.59" width="26" height="2.79" fill="var(--dato)" opacity="0.236"><title>posición · miasEnPeligro · fuerza 13%</title></rect><rect x="41" y="135.73" width="26" height="2.79" fill="var(--dato)" opacity="0.185"><title>posición · delSocioEnPeligro · fuerza 7%</title></rect><rect x="41" y="138.88" width="26" height="2.79" fill="var(--dato)" opacity="0.322"><title>posición · queAmenazo · fuerza 23%</title></rect><rect x="41" y="142.02" width="26" height="2.79" fill="var(--dato)" opacity="0.330"><title>posición · amenazasCombinadas · fuerza 24%</title></rect><rect x="41" y="145.17" width="26" height="2.79" fill="var(--dato)" opacity="0.496"><title>posición · avanceDeLaPartida · fuerza 43%</title></rect><rect x="41" y="148.31" width="26" height="2.79" fill="var(--dato)" opacity="0.291"><title>jugada · esMovimiento · fuerza 19%</title></rect><rect x="41" y="151.46" width="26" height="2.79" fill="var(--dato)" opacity="0.283"><title>jugada · esAtaque · fuerza 19%</title></rect><rect x="41" y="154.60" width="26" height="2.79" fill="var(--dato)" opacity="0.201"><title>jugada · esDisparo · fuerza 9%</title></rect><rect x="41" y="157.74" width="26" height="2.79" fill="var(--dato)" opacity="0.379"><title>jugada · miRango · fuerza 29%</title></rect><rect x="41" y="160.89" width="26" height="2.79" fill="var(--dato)" opacity="0.580"><title>jugada · soyElPortador · fuerza 52%</title></rect><rect x="41" y="164.03" width="26" height="2.79" fill="var(--dato)" opacity="0.965"><title>jugada · seAcerca · fuerza 96%</title></rect><rect x="41" y="167.18" width="26" height="2.79" fill="var(--dato)" opacity="1.000"><title>jugada · seAleja · fuerza 100%</title></rect><rect x="41" y="170.32" width="26" height="2.79" fill="var(--dato)" opacity="0.325"><title>jugada · vaAlCastillo · fuerza 23%</title></rect><rect x="41" y="173.47" width="26" height="2.79" fill="var(--dato)" opacity="0.497"><title>jugada · pisaBanderaSuelta · fuerza 43%</title></rect><rect x="41" y="176.61" width="26" height="2.79" fill="var(--dato)" opacity="0.315"><title>jugada · conGiro · fuerza 22%</title></rect><rect x="41" y="179.76" width="26" height="2.79" fill="var(--dato)" opacity="0.227"><title>jugada · meDelato · fuerza 12%</title></rect><rect x="41" y="182.90" width="26" height="2.79" fill="var(--dato)" opacity="0.225"><title>jugada · objetivoConocido · fuerza 12%</title></rect><rect x="41" y="186.04" width="26" height="2.79" fill="var(--dato)" opacity="0.197"><title>jugada · rangoDelObjetivo · fuerza 9%</title></rect><rect x="41" y="189.19" width="26" height="2.79" fill="var(--dato)" opacity="0.260"><title>jugada · dueloGanado · fuerza 16%</title></rect><rect x="41" y="192.33" width="26" height="2.79" fill="var(--dato)" opacity="0.219"><title>jugada · dueloEmpatado · fuerza 11%</title></rect><rect x="41" y="195.48" width="26" height="2.79" fill="var(--dato)" opacity="0.555"><title>jugada · dueloPerdido · fuerza 49%</title></rect><rect x="41" y="198.62" width="26" height="2.79" fill="var(--dato)" opacity="0.125"><title>jugada · espiaContraMariscal · fuerza 1%</title></rect><rect x="41" y="201.77" width="26" height="2.79" fill="var(--dato)" opacity="0.253"><title>jugada · valorEsperadoDelDuelo · fuerza 15%</title></rect><rect x="41" y="204.91" width="26" height="2.79" fill="var(--dato)" opacity="0.313"><title>jugada · objetivoConBandera · fuerza 22%</title></rect><rect x="41" y="208.06" width="26" height="2.79" fill="var(--dato)" opacity="0.174"><title>jugada · economiaDelAtaque · fuerza 6%</title></rect><rect x="41" y="211.20" width="26" height="2.79" fill="var(--dato)" opacity="0.142"><title>jugada · revelaPiezaAlta · fuerza 3%</title></rect><rect x="41" y="214.34" width="26" height="2.79" fill="var(--dato)" opacity="0.144"><title>jugada · recapturaAlQueMato · fuerza 3%</title></rect><rect x="41" y="217.49" width="26" height="2.79" fill="var(--dato)" opacity="0.807"><title>jugada · amenazasQueDejo · fuerza 78%</title></rect><rect x="41" y="220.63" width="26" height="2.79" fill="var(--dato)" opacity="0.264"><title>jugada · amenazaCombinada · fuerza 16%</title></rect><rect x="41" y="223.78" width="26" height="2.79" fill="var(--dato)" opacity="0.247"><title>jugada · contraAmenaza · fuerza 14%</title></rect><rect x="41" y="226.92" width="26" height="2.79" fill="var(--dato)" opacity="0.309"><title>jugada · peligroConocidoEnDestino · fuerza 21%</title></rect><rect x="41" y="230.07" width="26" height="2.79" fill="var(--dato)" opacity="0.331"><title>jugada · pierdoEnDestino · fuerza 24%</title></rect><rect x="41" y="233.21" width="26" height="2.79" fill="var(--dato)" opacity="0.510"><title>jugada · riesgoDeCanonEnDestino · fuerza 44%</title></rect><rect x="41" y="236.36" width="26" height="2.79" fill="var(--dato)" opacity="0.533"><title>jugada · salgoDePeligro · fuerza 47%</title></rect><rect x="41" y="239.50" width="26" height="2.79" fill="var(--dato)" opacity="0.230"><title>jugada · estorboEnLaTorre · fuerza 12%</title></rect><rect x="41" y="242.64" width="26" height="2.79" fill="var(--dato)" opacity="0.136"><title>jugada · disparoAlCoronador · fuerza 2%</title></rect><rect x="41" y="245.79" width="26" height="2.79" fill="var(--dato)" opacity="0.340"><title>jugada · canonHaciaElTiro · fuerza 25%</title></rect><rect x="41" y="248.93" width="26" height="2.79" fill="var(--dato)" opacity="0.577"><title>jugada · tapaLineaAlAnillo · fuerza 52%</title></rect><rect x="41" y="252.08" width="26" height="2.79" fill="var(--dato)" opacity="0.321"><title>jugada · anilloCubiertoTrasJugar · fuerza 23%</title></rect><rect x="41" y="255.22" width="26" height="2.79" fill="var(--dato)" opacity="0.206"><title>jugada · cubroLaUltimaLinea · fuerza 10%</title></rect><rect x="41" y="258.37" width="26" height="2.79" fill="var(--dato)" opacity="0.271"><title>jugada · presenciaEnElCentro · fuerza 17%</title></rect><rect x="41" y="261.51" width="26" height="2.79" fill="var(--dato)" opacity="0.259"><title>jugada · delatarmeAhora · fuerza 16%</title></rect><rect x="41" y="264.66" width="26" height="2.79" fill="var(--dato)" opacity="0.238"><title>jugada · delatoParaSondear · fuerza 13%</title></rect><line x1="39" y1="168.7" x2="30" y2="168.7" stroke="var(--laton)" stroke-width="1"/>
-      <text x="27" y="171.7" text-anchor="end" font-size="9" fill="var(--laton)" font-family="'IBM Plex Mono',monospace">seAleja</text><line x1="39" y1="165.6" x2="30" y2="165.6" stroke="var(--laton)" stroke-width="1"/>
-      <text x="27" y="168.6" text-anchor="end" font-size="9" fill="var(--laton)" font-family="'IBM Plex Mono',monospace">seAcerca</text><line x1="39" y1="68.1" x2="30" y2="68.1" stroke="var(--laton)" stroke-width="1"/>
+      fill="none" stroke="var(--mal)" stroke-width="0.86" opacity="0.262"/><path d="M 67 68.1 C 144 68.1, 322 182.9, 381 182.9"
+      fill="none" stroke="var(--mal)" stroke-width="0.79" opacity="0.243"/><path d="M 67 219.1 C 144 219.1, 322 239.5, 381 239.5"
+      fill="none" stroke="var(--mal)" stroke-width="0.78" opacity="0.241"/><path d="M 67 237.9 C 144 237.9, 322 166.7, 381 166.7"
+      fill="none" stroke="var(--mal)" stroke-width="0.78" opacity="0.239"/><path d="M 67 234.8 C 144 234.8, 322 166.7, 381 166.7"
+      fill="none" stroke="var(--bien)" stroke-width="0.77" opacity="0.239"/><path d="M 67 68.1 C 144 68.1, 322 255.7, 381 255.7"
+      fill="none" stroke="var(--bien)" stroke-width="0.76" opacity="0.235"/><path d="M 67 159.3 C 144 159.3, 322 182.9, 381 182.9"
+      fill="none" stroke="var(--bien)" stroke-width="0.75" opacity="0.233"/><path d="M 67 250.5 C 144 250.5, 322 239.5, 381 239.5"
+      fill="none" stroke="var(--mal)" stroke-width="0.73" opacity="0.228"/><path d="M 67 65.0 C 144 65.0, 322 182.9, 381 182.9"
+      fill="none" stroke="var(--bien)" stroke-width="0.73" opacity="0.226"/><path d="M 67 250.5 C 144 250.5, 322 166.7, 381 166.7"
+      fill="none" stroke="var(--mal)" stroke-width="0.72" opacity="0.222"/><path d="M 67 237.9 C 144 237.9, 322 239.5, 381 239.5"
+      fill="none" stroke="var(--mal)" stroke-width="0.71" opacity="0.221"/><path d="M 67 197.0 C 144 197.0, 322 239.5, 381 239.5"
+      fill="none" stroke="var(--bien)" stroke-width="0.69" opacity="0.216"/><path d="M 67 171.9 C 144 171.9, 322 166.7, 381 166.7"
+      fill="none" stroke="var(--mal)" stroke-width="0.69" opacity="0.215"/><path d="M 67 65.0 C 144 65.0, 322 239.5, 381 239.5"
+      fill="none" stroke="var(--mal)" stroke-width="0.67" opacity="0.211"/><path d="M 67 197.0 C 144 197.0, 322 182.9, 381 182.9"
+      fill="none" stroke="var(--mal)" stroke-width="0.67" opacity="0.210"/><path d="M 67 175.0 C 144 175.0, 322 239.5, 381 239.5"
+      fill="none" stroke="var(--mal)" stroke-width="0.67" opacity="0.209"/><path d="M 67 96.4 C 144 96.4, 322 182.9, 381 182.9"
+      fill="none" stroke="var(--mal)" stroke-width="0.66" opacity="0.208"/><path d="M 67 61.8 C 144 61.8, 322 182.9, 381 182.9"
+      fill="none" stroke="var(--bien)" stroke-width="0.64" opacity="0.200"/><path d="M 67 165.6 C 144 165.6, 322 182.9, 381 182.9"
+      fill="none" stroke="var(--bien)" stroke-width="0.63" opacity="0.198"/><path d="M 67 93.3 C 144 93.3, 322 182.9, 381 182.9"
+      fill="none" stroke="var(--bien)" stroke-width="0.61" opacity="0.194"/><path d="M 67 112.1 C 144 112.1, 322 182.9, 381 182.9"
+      fill="none" stroke="var(--bien)" stroke-width="0.61" opacity="0.193"/><path d="M 67 96.4 C 144 96.4, 322 255.7, 381 255.7"
+      fill="none" stroke="var(--bien)" stroke-width="0.61" opacity="0.193"/><path d="M 67 168.7 C 144 168.7, 322 239.5, 381 239.5"
+      fill="none" stroke="var(--mal)" stroke-width="0.61" opacity="0.192"/><path d="M 67 115.3 C 144 115.3, 322 166.7, 381 166.7"
+      fill="none" stroke="var(--mal)" stroke-width="0.59" opacity="0.188"/><path d="M 67 61.8 C 144 61.8, 322 239.5, 381 239.5"
+      fill="none" stroke="var(--mal)" stroke-width="0.59" opacity="0.187"/><path d="M 67 149.9 C 144 149.9, 322 239.5, 381 239.5"
+      fill="none" stroke="var(--bien)" stroke-width="0.59" opacity="0.187"/><path d="M 67 247.4 C 144 247.4, 322 239.5, 381 239.5"
+      fill="none" stroke="var(--mal)" stroke-width="0.59" opacity="0.186"/><path d="M 67 247.4 C 144 247.4, 322 182.9, 381 182.9"
+      fill="none" stroke="var(--bien)" stroke-width="0.58" opacity="0.185"/><path d="M 67 146.7 C 144 146.7, 322 182.9, 381 182.9"
+      fill="none" stroke="var(--bien)" stroke-width="0.58" opacity="0.185"/><path d="M 67 197.0 C 144 197.0, 322 255.7, 381 255.7"
+      fill="none" stroke="var(--bien)" stroke-width="0.58" opacity="0.183"/><path d="M 67 253.6 C 144 253.6, 322 239.5, 381 239.5"
+      fill="none" stroke="var(--mal)" stroke-width="0.57" opacity="0.182"/><path d="M 67 231.6 C 144 231.6, 322 182.9, 381 182.9"
+      fill="none" stroke="var(--mal)" stroke-width="0.57" opacity="0.182"/><path d="M 67 68.1 C 144 68.1, 322 166.7, 381 166.7"
+      fill="none" stroke="var(--bien)" stroke-width="0.57" opacity="0.182"/><path d="M 67 263.1 C 144 263.1, 322 239.5, 381 239.5"
+      fill="none" stroke="var(--mal)" stroke-width="0.56" opacity="0.180"/><path d="M 67 263.1 C 144 263.1, 322 182.9, 381 182.9"
+      fill="none" stroke="var(--mal)" stroke-width="0.56" opacity="0.179"/><path d="M 67 165.6 C 144 165.6, 322 239.5, 381 239.5"
+      fill="none" stroke="var(--mal)" stroke-width="0.56" opacity="0.179"/><path d="M 67 159.3 C 144 159.3, 322 166.7, 381 166.7"
+      fill="none" stroke="var(--bien)" stroke-width="0.56" opacity="0.179"/><path d="M 67 171.9 C 144 171.9, 322 255.7, 381 255.7"
+      fill="none" stroke="var(--mal)" stroke-width="0.55" opacity="0.177"/><path d="M 67 118.4 C 144 118.4, 322 166.7, 381 166.7"
+      fill="none" stroke="var(--mal)" stroke-width="0.55" opacity="0.176"/><path d="M 67 222.2 C 144 222.2, 322 255.7, 381 255.7"
+      fill="none" stroke="var(--mal)" stroke-width="0.55" opacity="0.176"/><path d="M 67 149.9 C 144 149.9, 322 166.7, 381 166.7"
+      fill="none" stroke="var(--bien)" stroke-width="0.55" opacity="0.176"/><path d="M 67 140.4 C 144 140.4, 322 182.9, 381 182.9"
+      fill="none" stroke="var(--mal)" stroke-width="0.54" opacity="0.174"/><path d="M 67 190.8 C 144 190.8, 322 255.7, 381 255.7"
+      fill="none" stroke="var(--mal)" stroke-width="0.54" opacity="0.174"/><path d="M 67 234.8 C 144 234.8, 322 182.9, 381 182.9"
+      fill="none" stroke="var(--mal)" stroke-width="0.54" opacity="0.173"/><path d="M 67 143.6 C 144 143.6, 322 239.5, 381 239.5"
+      fill="none" stroke="var(--bien)" stroke-width="0.54" opacity="0.173"/><path d="M 67 162.5 C 144 162.5, 322 255.7, 381 255.7"
+      fill="none" stroke="var(--bien)" stroke-width="0.53" opacity="0.170"/><path d="M 67 237.9 C 144 237.9, 322 255.7, 381 255.7"
+      fill="none" stroke="var(--bien)" stroke-width="0.53" opacity="0.170"/><path d="M 67 96.4 C 144 96.4, 322 239.5, 381 239.5"
+      fill="none" stroke="var(--bien)" stroke-width="0.53" opacity="0.169"/><path d="M 67 228.5 C 144 228.5, 322 166.7, 381 166.7"
+      fill="none" stroke="var(--mal)" stroke-width="0.52" opacity="0.169"/><path d="M 67 80.7 C 144 80.7, 322 255.7, 381 255.7"
+      fill="none" stroke="var(--bien)" stroke-width="0.52" opacity="0.169"/><path d="M 67 253.6 C 144 253.6, 322 255.7, 381 255.7"
+      fill="none" stroke="var(--mal)" stroke-width="0.52" opacity="0.168"/><path d="M 67 140.4 C 144 140.4, 322 239.5, 381 239.5"
+      fill="none" stroke="var(--bien)" stroke-width="0.52" opacity="0.168"/><path d="M 67 234.8 C 144 234.8, 322 239.5, 381 239.5"
+      fill="none" stroke="var(--bien)" stroke-width="0.52" opacity="0.167"/><path d="M 67 112.1 C 144 112.1, 322 255.7, 381 255.7"
+      fill="none" stroke="var(--bien)" stroke-width="0.52" opacity="0.166"/><path d="M 67 178.2 C 144 178.2, 322 182.9, 381 182.9"
+      fill="none" stroke="var(--bien)" stroke-width="0.51" opacity="0.166"/><path d="M 67 153.0 C 144 153.0, 322 182.9, 381 182.9"
+      fill="none" stroke="var(--mal)" stroke-width="0.51" opacity="0.166"/><path d="M 67 206.5 C 144 206.5, 322 255.7, 381 255.7"
+      fill="none" stroke="var(--mal)" stroke-width="0.51" opacity="0.166"/><path d="M 67 112.1 C 144 112.1, 322 239.5, 381 239.5"
+      fill="none" stroke="var(--bien)" stroke-width="0.51" opacity="0.165"/><path d="M 67 231.6 C 144 231.6, 322 166.7, 381 166.7"
+      fill="none" stroke="var(--bien)" stroke-width="0.51" opacity="0.165"/><path d="M 67 146.7 C 144 146.7, 322 255.7, 381 255.7"
+      fill="none" stroke="var(--bien)" stroke-width="0.51" opacity="0.164"/><path d="M 67 115.3 C 144 115.3, 322 239.5, 381 239.5"
+      fill="none" stroke="var(--mal)" stroke-width="0.51" opacity="0.164"/><path d="M 67 178.2 C 144 178.2, 322 239.5, 381 239.5"
+      fill="none" stroke="var(--bien)" stroke-width="0.50" opacity="0.163"/><path d="M 67 153.0 C 144 153.0, 322 166.7, 381 166.7"
+      fill="none" stroke="var(--mal)" stroke-width="0.50" opacity="0.163"/><path d="M 67 93.3 C 144 93.3, 322 166.7, 381 166.7"
+      fill="none" stroke="var(--mal)" stroke-width="0.50" opacity="0.163"/><path d="M 67 206.5 C 144 206.5, 322 239.5, 381 239.5"
+      fill="none" stroke="var(--mal)" stroke-width="0.50" opacity="0.162"/><path d="M 67 143.6 C 144 143.6, 322 182.9, 381 182.9"
+      fill="none" stroke="var(--mal)" stroke-width="0.50" opacity="0.161"/><path d="M 67 241.1 C 144 241.1, 322 239.5, 381 239.5"
+      fill="none" stroke="var(--bien)" stroke-width="0.50" opacity="0.161"/><path d="M 67 149.9 C 144 149.9, 322 255.7, 381 255.7"
+      fill="none" stroke="var(--mal)" stroke-width="0.49" opacity="0.159"/><path d="M 67 90.1 C 144 90.1, 322 182.9, 381 182.9"
+      fill="none" stroke="var(--mal)" stroke-width="0.49" opacity="0.159"/><path d="M 67 83.8 C 144 83.8, 322 182.9, 381 182.9"
+      fill="none" stroke="var(--bien)" stroke-width="0.48" opacity="0.158"/><path d="M 67 162.5 C 144 162.5, 322 166.7, 381 166.7"
+      fill="none" stroke="var(--bien)" stroke-width="0.48" opacity="0.157"/><path d="M 67 102.7 C 144 102.7, 322 239.5, 381 239.5"
+      fill="none" stroke="var(--mal)" stroke-width="0.48" opacity="0.157"/><path d="M 67 74.4 C 144 74.4, 322 255.7, 381 255.7"
+      fill="none" stroke="var(--mal)" stroke-width="0.48" opacity="0.156"/><path d="M 67 149.9 C 144 149.9, 322 182.9, 381 182.9"
+      fill="none" stroke="var(--bien)" stroke-width="0.48" opacity="0.156"/><path d="M 67 219.1 C 144 219.1, 322 182.9, 381 182.9"
+      fill="none" stroke="var(--bien)" stroke-width="0.48" opacity="0.155"/><path d="M 67 222.2 C 144 222.2, 322 239.5, 381 239.5"
+      fill="none" stroke="var(--mal)" stroke-width="0.47" opacity="0.154"/><path d="M 67 234.8 C 144 234.8, 322 255.7, 381 255.7"
+      fill="none" stroke="var(--bien)" stroke-width="0.47" opacity="0.153"/><path d="M 67 156.2 C 144 156.2, 322 255.7, 381 255.7"
+      fill="none" stroke="var(--bien)" stroke-width="0.47" opacity="0.153"/><path d="M 67 241.1 C 144 241.1, 322 182.9, 381 182.9"
+      fill="none" stroke="var(--mal)" stroke-width="0.47" opacity="0.153"/><path d="M 67 80.7 C 144 80.7, 322 182.9, 381 182.9"
+      fill="none" stroke="var(--bien)" stroke-width="0.47" opacity="0.153"/><path d="M 67 253.6 C 144 253.6, 322 182.9, 381 182.9"
+      fill="none" stroke="var(--mal)" stroke-width="0.47" opacity="0.153"/><path d="M 67 225.3 C 144 225.3, 322 166.7, 381 166.7"
+      fill="none" stroke="var(--mal)" stroke-width="0.46" opacity="0.152"/><path d="M 67 109.0 C 144 109.0, 322 255.7, 381 255.7"
+      fill="none" stroke="var(--bien)" stroke-width="0.46" opacity="0.151"/><rect x="41" y="41.40" width="26" height="2.79" fill="var(--dato)" opacity="0.179"><title>posición · misPiezas · fuerza 7%</title></rect><rect x="41" y="44.54" width="26" height="2.79" fill="var(--dato)" opacity="0.160"><title>posición · miFuerza · fuerza 5%</title></rect><rect x="41" y="47.69" width="26" height="2.79" fill="var(--dato)" opacity="0.224"><title>posición · piezasDelSocio · fuerza 12%</title></rect><rect x="41" y="50.83" width="26" height="2.79" fill="var(--dato)" opacity="0.193"><title>posición · piezasEnemigas · fuerza 8%</title></rect><rect x="41" y="53.98" width="26" height="2.79" fill="var(--dato)" opacity="0.141"><title>posición · ventajaDePiezas · fuerza 2%</title></rect><rect x="41" y="57.12" width="26" height="2.79" fill="var(--dato)" opacity="0.199"><title>posición · misBajas · fuerza 9%</title></rect><rect x="41" y="60.27" width="26" height="2.79" fill="var(--dato)" opacity="0.355"><title>posición · miBanderaAlCastillo · fuerza 27%</title></rect><rect x="41" y="63.41" width="26" height="2.79" fill="var(--dato)" opacity="0.458"><title>posición · banderaDelSocioAlCastillo · fuerza 38%</title></rect><rect x="41" y="66.56" width="26" height="2.79" fill="var(--dato)" opacity="0.888"><title>posición · banderaEnemigaAlCastillo · fuerza 87%</title></rect><rect x="41" y="69.70" width="26" height="2.79" fill="var(--dato)" opacity="0.203"><title>posición · llevoMiBandera · fuerza 9%</title></rect><rect x="41" y="72.84" width="26" height="2.79" fill="var(--dato)" opacity="0.219"><title>posición · elSocioLlevaBandera · fuerza 11%</title></rect><rect x="41" y="75.99" width="26" height="2.79" fill="var(--dato)" opacity="0.244"><title>posición · algunEnemigoLlevaBandera · fuerza 14%</title></rect><rect x="41" y="79.13" width="26" height="2.79" fill="var(--dato)" opacity="0.252"><title>posición · hayBanderaEnElSuelo · fuerza 15%</title></rect><rect x="41" y="82.28" width="26" height="2.79" fill="var(--dato)" opacity="0.188"><title>posición · ocupoElAnillo · fuerza 8%</title></rect><rect x="41" y="85.42" width="26" height="2.79" fill="var(--dato)" opacity="0.164"><title>posición · ocupoLaTorre · fuerza 5%</title></rect><rect x="41" y="88.57" width="26" height="2.79" fill="var(--dato)" opacity="0.202"><title>posición · elEnemigoOcupaElCastillo · fuerza 9%</title></rect><rect x="41" y="91.71" width="26" height="2.79" fill="var(--dato)" opacity="0.530"><title>posición · miPiezaMasCerca · fuerza 47%</title></rect><rect x="41" y="94.86" width="26" height="2.79" fill="var(--dato)" opacity="0.446"><title>posición · suPiezaMasCerca · fuerza 37%</title></rect><rect x="41" y="98.00" width="26" height="2.79" fill="var(--dato)" opacity="0.146"><title>posición · misPiezasEnElCastillo · fuerza 3%</title></rect><rect x="41" y="101.14" width="26" height="2.79" fill="var(--dato)" opacity="0.257"><title>posición · susPiezasEnElCastillo · fuerza 16%</title></rect><rect x="41" y="104.29" width="26" height="2.79" fill="var(--dato)" opacity="0.234"><title>posición · miMarcador · fuerza 13%</title></rect><rect x="41" y="107.43" width="26" height="2.79" fill="var(--dato)" opacity="0.240"><title>posición · marcadorDelSocio · fuerza 14%</title></rect><rect x="41" y="110.58" width="26" height="2.79" fill="var(--dato)" opacity="0.400"><title>posición · marcadorEnemigo · fuerza 32%</title></rect><rect x="41" y="113.72" width="26" height="2.79" fill="var(--dato)" opacity="0.349"><title>posición · rangosQueLesHeVisto · fuerza 26%</title></rect><rect x="41" y="116.87" width="26" height="2.79" fill="var(--dato)" opacity="0.296"><title>posición · rangosQueMeHanVisto · fuerza 20%</title></rect><rect x="41" y="120.01" width="26" height="2.79" fill="var(--dato)" opacity="0.151"><title>posición · miMariscalVivo · fuerza 3%</title></rect><rect x="41" y="123.16" width="26" height="2.79" fill="var(--dato)" opacity="0.208"><title>posición · miEspiaVivo · fuerza 10%</title></rect><rect x="41" y="126.30" width="26" height="2.79" fill="var(--dato)" opacity="0.235"><title>posición · misCanonesVivos · fuerza 13%</title></rect><rect x="41" y="129.44" width="26" height="2.79" fill="var(--dato)" opacity="0.194"><title>posición · misExploradoresVivos · fuerza 8%</title></rect><rect x="41" y="132.59" width="26" height="2.79" fill="var(--dato)" opacity="0.208"><title>posición · miasEnPeligro · fuerza 10%</title></rect><rect x="41" y="135.73" width="26" height="2.79" fill="var(--dato)" opacity="0.192"><title>posición · delSocioEnPeligro · fuerza 8%</title></rect><rect x="41" y="138.88" width="26" height="2.79" fill="var(--dato)" opacity="0.350"><title>posición · queAmenazo · fuerza 26%</title></rect><rect x="41" y="142.02" width="26" height="2.79" fill="var(--dato)" opacity="0.322"><title>posición · amenazasCombinadas · fuerza 23%</title></rect><rect x="41" y="145.17" width="26" height="2.79" fill="var(--dato)" opacity="0.347"><title>posición · avanceDeLaPartida · fuerza 26%</title></rect><rect x="41" y="148.31" width="26" height="2.79" fill="var(--dato)" opacity="0.418"><title>jugada · esMovimiento · fuerza 34%</title></rect><rect x="41" y="151.46" width="26" height="2.79" fill="var(--dato)" opacity="0.265"><title>jugada · esAtaque · fuerza 17%</title></rect><rect x="41" y="154.60" width="26" height="2.79" fill="var(--dato)" opacity="0.208"><title>jugada · esDisparo · fuerza 10%</title></rect><rect x="41" y="157.74" width="26" height="2.79" fill="var(--dato)" opacity="0.408"><title>jugada · miRango · fuerza 33%</title></rect><rect x="41" y="160.89" width="26" height="2.79" fill="var(--dato)" opacity="0.513"><title>jugada · soyElPortador · fuerza 45%</title></rect><rect x="41" y="164.03" width="26" height="2.79" fill="var(--dato)" opacity="1.000"><title>jugada · seAcerca · fuerza 100%</title></rect><rect x="41" y="167.18" width="26" height="2.79" fill="var(--dato)" opacity="0.891"><title>jugada · seAleja · fuerza 88%</title></rect><rect x="41" y="170.32" width="26" height="2.79" fill="var(--dato)" opacity="0.420"><title>jugada · vaAlCastillo · fuerza 34%</title></rect><rect x="41" y="173.47" width="26" height="2.79" fill="var(--dato)" opacity="0.491"><title>jugada · pisaBanderaSuelta · fuerza 42%</title></rect><rect x="41" y="176.61" width="26" height="2.79" fill="var(--dato)" opacity="0.295"><title>jugada · conGiro · fuerza 20%</title></rect><rect x="41" y="179.76" width="26" height="2.79" fill="var(--dato)" opacity="0.177"><title>jugada · meDelato · fuerza 7%</title></rect><rect x="41" y="182.90" width="26" height="2.79" fill="var(--dato)" opacity="0.204"><title>jugada · objetivoConocido · fuerza 10%</title></rect><rect x="41" y="186.04" width="26" height="2.79" fill="var(--dato)" opacity="0.146"><title>jugada · rangoDelObjetivo · fuerza 3%</title></rect><rect x="41" y="189.19" width="26" height="2.79" fill="var(--dato)" opacity="0.256"><title>jugada · dueloGanado · fuerza 15%</title></rect><rect x="41" y="192.33" width="26" height="2.79" fill="var(--dato)" opacity="0.199"><title>jugada · dueloEmpatado · fuerza 9%</title></rect><rect x="41" y="195.48" width="26" height="2.79" fill="var(--dato)" opacity="0.506"><title>jugada · dueloPerdido · fuerza 44%</title></rect><rect x="41" y="198.62" width="26" height="2.79" fill="var(--dato)" opacity="0.136"><title>jugada · espiaContraMariscal · fuerza 2%</title></rect><rect x="41" y="201.77" width="26" height="2.79" fill="var(--dato)" opacity="0.219"><title>jugada · valorEsperadoDelDuelo · fuerza 11%</title></rect><rect x="41" y="204.91" width="26" height="2.79" fill="var(--dato)" opacity="0.303"><title>jugada · objetivoConBandera · fuerza 21%</title></rect><rect x="41" y="208.06" width="26" height="2.79" fill="var(--dato)" opacity="0.190"><title>jugada · economiaDelAtaque · fuerza 8%</title></rect><rect x="41" y="211.20" width="26" height="2.79" fill="var(--dato)" opacity="0.151"><title>jugada · revelaPiezaAlta · fuerza 3%</title></rect><rect x="41" y="214.34" width="26" height="2.79" fill="var(--dato)" opacity="0.145"><title>jugada · recapturaAlQueMato · fuerza 3%</title></rect><rect x="41" y="217.49" width="26" height="2.79" fill="var(--dato)" opacity="0.774"><title>jugada · amenazasQueDejo · fuerza 74%</title></rect><rect x="41" y="220.63" width="26" height="2.79" fill="var(--dato)" opacity="0.326"><title>jugada · amenazaCombinada · fuerza 23%</title></rect><rect x="41" y="223.78" width="26" height="2.79" fill="var(--dato)" opacity="0.183"><title>jugada · contraAmenaza · fuerza 7%</title></rect><rect x="41" y="226.92" width="26" height="2.79" fill="var(--dato)" opacity="0.268"><title>jugada · peligroConocidoEnDestino · fuerza 17%</title></rect><rect x="41" y="230.07" width="26" height="2.79" fill="var(--dato)" opacity="0.294"><title>jugada · pierdoEnDestino · fuerza 20%</title></rect><rect x="41" y="233.21" width="26" height="2.79" fill="var(--dato)" opacity="0.500"><title>jugada · riesgoDeCanonEnDestino · fuerza 43%</title></rect><rect x="41" y="236.36" width="26" height="2.79" fill="var(--dato)" opacity="0.566"><title>jugada · salgoDePeligro · fuerza 51%</title></rect><rect x="41" y="239.50" width="26" height="2.79" fill="var(--dato)" opacity="0.281"><title>jugada · estorboEnLaTorre · fuerza 18%</title></rect><rect x="41" y="242.64" width="26" height="2.79" fill="var(--dato)" opacity="0.138"><title>jugada · disparoAlCoronador · fuerza 2%</title></rect><rect x="41" y="245.79" width="26" height="2.79" fill="var(--dato)" opacity="0.333"><title>jugada · canonHaciaElTiro · fuerza 24%</title></rect><rect x="41" y="248.93" width="26" height="2.79" fill="var(--dato)" opacity="0.467"><title>jugada · tapaLineaAlAnillo · fuerza 39%</title></rect><rect x="41" y="252.08" width="26" height="2.79" fill="var(--dato)" opacity="0.355"><title>jugada · anilloCubiertoTrasJugar · fuerza 27%</title></rect><rect x="41" y="255.22" width="26" height="2.79" fill="var(--dato)" opacity="0.205"><title>jugada · cubroLaUltimaLinea · fuerza 10%</title></rect><rect x="41" y="258.37" width="26" height="2.79" fill="var(--dato)" opacity="0.250"><title>jugada · presenciaEnElCentro · fuerza 15%</title></rect><rect x="41" y="261.51" width="26" height="2.79" fill="var(--dato)" opacity="0.317"><title>jugada · delatarmeAhora · fuerza 22%</title></rect><rect x="41" y="264.66" width="26" height="2.79" fill="var(--dato)" opacity="0.226"><title>jugada · delatoParaSondear · fuerza 12%</title></rect><line x1="39" y1="165.6" x2="30" y2="165.6" stroke="var(--laton)" stroke-width="1"/>
+      <text x="27" y="168.6" text-anchor="end" font-size="9" fill="var(--laton)" font-family="'IBM Plex Mono',monospace">seAcerca</text><line x1="39" y1="168.7" x2="30" y2="168.7" stroke="var(--laton)" stroke-width="1"/>
+      <text x="27" y="171.7" text-anchor="end" font-size="9" fill="var(--laton)" font-family="'IBM Plex Mono',monospace">seAleja</text><line x1="39" y1="68.1" x2="30" y2="68.1" stroke="var(--laton)" stroke-width="1"/>
       <text x="27" y="71.1" text-anchor="end" font-size="9" fill="var(--laton)" font-family="'IBM Plex Mono',monospace">banderaEnemigaAlCa</text><path d="M 394.6 45.4 L 645 150.0"
         fill="none" stroke="var(--mal)" stroke-width="0.40" opacity="0.45"/>
       <circle cx="392.00000000000006" cy="45.4" r="2.60" fill="var(--laton)" opacity="0.200">
@@ -197,52 +230,52 @@ victorias contra la heurística escrita a mano</b>; lo demás es diagnóstico.</
         <title>oculta 1 · le entra 0% · sale 0%</title></circle><path d="M 394.6 61.6 L 645 150.0"
         fill="none" stroke="var(--mal)" stroke-width="0.40" opacity="0.45"/>
       <circle cx="392.00000000000006" cy="61.6" r="2.60" fill="var(--laton)" opacity="0.200">
-        <title>oculta 2 · le entra 0% · sale 0%</title></circle><path d="M 400.0 69.7 L 645 150.0"
-        fill="none" stroke="var(--mal)" stroke-width="2.29" opacity="0.45"/>
-      <circle cx="392.00000000000006" cy="69.7" r="8.05" fill="var(--laton)" opacity="0.878">
-        <title>oculta 3 · le entra 85% · sale 73%</title></circle><path d="M 394.6 77.8 L 645 150.0"
+        <title>oculta 2 · le entra 0% · sale 0%</title></circle><path d="M 394.6 69.7 L 645 150.0"
+        fill="none" stroke="var(--mal)" stroke-width="0.40" opacity="0.45"/>
+      <circle cx="392.00000000000006" cy="69.7" r="2.60" fill="var(--laton)" opacity="0.200">
+        <title>oculta 3 · le entra 0% · sale 0%</title></circle><path d="M 394.6 77.8 L 645 150.0"
         fill="none" stroke="var(--mal)" stroke-width="0.40" opacity="0.45"/>
       <circle cx="392.00000000000006" cy="77.8" r="2.60" fill="var(--laton)" opacity="0.200">
         <title>oculta 4 · le entra 0% · sale 0%</title></circle><path d="M 394.6 85.9 L 645 150.0"
         fill="none" stroke="var(--mal)" stroke-width="0.40" opacity="0.45"/>
       <circle cx="392.00000000000006" cy="85.9" r="2.60" fill="var(--laton)" opacity="0.200">
         <title>oculta 5 · le entra 0% · sale 0%</title></circle><path d="M 394.6 94.0 L 645 150.0"
-        fill="none" stroke="var(--mal)" stroke-width="0.40" opacity="0.45"/>
+        fill="none" stroke="var(--bien)" stroke-width="0.40" opacity="0.45"/>
       <circle cx="392.00000000000006" cy="94.0" r="2.60" fill="var(--laton)" opacity="0.200">
         <title>oculta 6 · le entra 0% · sale 0%</title></circle><path d="M 394.6 102.0 L 645 150.0"
-        fill="none" stroke="var(--mal)" stroke-width="0.40" opacity="0.45"/>
+        fill="none" stroke="var(--bien)" stroke-width="0.40" opacity="0.45"/>
       <circle cx="392.00000000000006" cy="102.0" r="2.60" fill="var(--laton)" opacity="0.200">
         <title>oculta 7 · le entra 0% · sale 0%</title></circle><path d="M 394.6 110.1 L 645 150.0"
         fill="none" stroke="var(--mal)" stroke-width="0.40" opacity="0.45"/>
       <circle cx="392.00000000000006" cy="110.1" r="2.60" fill="var(--laton)" opacity="0.200">
         <title>oculta 8 · le entra 0% · sale 0%</title></circle><path d="M 394.6 118.2 L 645 150.0"
-        fill="none" stroke="var(--mal)" stroke-width="0.40" opacity="0.45"/>
-      <circle cx="392.00000000000006" cy="118.2" r="2.60" fill="var(--laton)" opacity="0.200">
+        fill="none" stroke="var(--mal)" stroke-width="0.41" opacity="0.45"/>
+      <circle cx="392.00000000000006" cy="118.2" r="2.62" fill="var(--laton)" opacity="0.202">
         <title>oculta 9 · le entra 0% · sale 0%</title></circle><path d="M 394.6 126.3 L 645 150.0"
         fill="none" stroke="var(--mal)" stroke-width="0.40" opacity="0.45"/>
       <circle cx="392.00000000000006" cy="126.3" r="2.60" fill="var(--laton)" opacity="0.200">
         <title>oculta 10 · le entra 0% · sale 0%</title></circle><path d="M 394.6 134.4 L 645 150.0"
-        fill="none" stroke="var(--mal)" stroke-width="0.40" opacity="0.45"/>
+        fill="none" stroke="var(--bien)" stroke-width="0.40" opacity="0.45"/>
       <circle cx="392.00000000000006" cy="134.4" r="2.60" fill="var(--laton)" opacity="0.200">
         <title>oculta 11 · le entra 0% · sale 0%</title></circle><path d="M 394.6 142.5 L 645 150.0"
         fill="none" stroke="var(--mal)" stroke-width="0.40" opacity="0.45"/>
       <circle cx="392.00000000000006" cy="142.5" r="2.60" fill="var(--laton)" opacity="0.200">
         <title>oculta 12 · le entra 0% · sale 0%</title></circle><path d="M 394.6 150.6 L 645 150.0"
         fill="none" stroke="var(--mal)" stroke-width="0.40" opacity="0.45"/>
-      <circle cx="392.00000000000006" cy="150.6" r="2.60" fill="var(--laton)" opacity="0.200">
+      <circle cx="392.00000000000006" cy="150.6" r="2.61" fill="var(--laton)" opacity="0.200">
         <title>oculta 13 · le entra 0% · sale 0%</title></circle><path d="M 394.6 158.6 L 645 150.0"
-        fill="none" stroke="var(--mal)" stroke-width="0.40" opacity="0.45"/>
+        fill="none" stroke="var(--bien)" stroke-width="0.40" opacity="0.45"/>
       <circle cx="392.00000000000006" cy="158.6" r="2.60" fill="var(--laton)" opacity="0.200">
         <title>oculta 14 · le entra 0% · sale 0%</title></circle><path d="M 402.1 166.7 L 645 150.0"
         fill="none" stroke="var(--mal)" stroke-width="3.00" opacity="0.45"/>
-      <circle cx="392.00000000000006" cy="166.7" r="10.10" fill="var(--laton)" opacity="0.835">
-        <title>oculta 15 · le entra 79% · sale 100%</title></circle><path d="M 394.6 174.8 L 645 150.0"
+      <circle cx="392.00000000000006" cy="166.7" r="10.10" fill="var(--laton)" opacity="0.969">
+        <title>oculta 15 · le entra 96% · sale 100%</title></circle><path d="M 394.6 174.8 L 645 150.0"
         fill="none" stroke="var(--mal)" stroke-width="0.40" opacity="0.45"/>
       <circle cx="392.00000000000006" cy="174.8" r="2.60" fill="var(--laton)" opacity="0.200">
-        <title>oculta 16 · le entra 0% · sale 0%</title></circle><path d="M 401.0 182.9 L 645 150.0"
-        fill="none" stroke="var(--bien)" stroke-width="2.61" opacity="0.45"/>
-      <circle cx="392.00000000000006" cy="182.9" r="8.97" fill="var(--laton)" opacity="1.000">
-        <title>oculta 17 · le entra 100% · sale 85%</title></circle><path d="M 394.6 191.0 L 645 150.0"
+        <title>oculta 16 · le entra 0% · sale 0%</title></circle><path d="M 399.1 182.9 L 645 150.0"
+        fill="none" stroke="var(--bien)" stroke-width="1.95" opacity="0.45"/>
+      <circle cx="392.00000000000006" cy="182.9" r="7.07" fill="var(--laton)" opacity="0.963">
+        <title>oculta 17 · le entra 95% · sale 60%</title></circle><path d="M 394.6 191.0 L 645 150.0"
         fill="none" stroke="var(--mal)" stroke-width="0.40" opacity="0.45"/>
       <circle cx="392.00000000000006" cy="191.0" r="2.60" fill="var(--laton)" opacity="0.200">
         <title>oculta 18 · le entra 0% · sale 0%</title></circle><path d="M 394.6 199.1 L 645 150.0"
@@ -260,16 +293,16 @@ victorias contra la heurística escrita a mano</b>; lo demás es diagnóstico.</
         <title>oculta 22 · le entra 0% · sale 0%</title></circle><path d="M 394.6 231.4 L 645 150.0"
         fill="none" stroke="var(--mal)" stroke-width="0.40" opacity="0.45"/>
       <circle cx="392.00000000000006" cy="231.4" r="2.60" fill="var(--laton)" opacity="0.200">
-        <title>oculta 23 · le entra 0% · sale 0%</title></circle><path d="M 401.3 239.5 L 645 150.0"
-        fill="none" stroke="var(--mal)" stroke-width="2.71" opacity="0.45"/>
-      <circle cx="392.00000000000006" cy="239.5" r="9.26" fill="var(--laton)" opacity="0.913">
-        <title>oculta 24 · le entra 89% · sale 89%</title></circle><path d="M 394.6 247.6 L 645 150.0"
+        <title>oculta 23 · le entra 0% · sale 0%</title></circle><path d="M 399.7 239.5 L 645 150.0"
+        fill="none" stroke="var(--mal)" stroke-width="2.16" opacity="0.45"/>
+      <circle cx="392.00000000000006" cy="239.5" r="7.69" fill="var(--laton)" opacity="1.000">
+        <title>oculta 24 · le entra 100% · sale 68%</title></circle><path d="M 394.6 247.6 L 645 150.0"
         fill="none" stroke="var(--mal)" stroke-width="0.40" opacity="0.45"/>
       <circle cx="392.00000000000006" cy="247.6" r="2.60" fill="var(--laton)" opacity="0.200">
-        <title>oculta 25 · le entra 0% · sale 0%</title></circle><path d="M 399.1 255.7 L 645 150.0"
-        fill="none" stroke="var(--mal)" stroke-width="1.96" opacity="0.45"/>
-      <circle cx="392.00000000000006" cy="255.7" r="7.09" fill="var(--laton)" opacity="0.716">
-        <title>oculta 26 · le entra 64% · sale 60%</title></circle><path d="M 394.6 263.8 L 645 150.0"
+        <title>oculta 25 · le entra 0% · sale 0%</title></circle><path d="M 397.2 255.7 L 645 150.0"
+        fill="none" stroke="var(--mal)" stroke-width="1.30" opacity="0.45"/>
+      <circle cx="392.00000000000006" cy="255.7" r="5.19" fill="var(--laton)" opacity="0.689">
+        <title>oculta 26 · le entra 61% · sale 35%</title></circle><path d="M 394.6 263.8 L 645 150.0"
         fill="none" stroke="var(--mal)" stroke-width="0.40" opacity="0.45"/>
       <circle cx="392.00000000000006" cy="263.8" r="2.60" fill="var(--laton)" opacity="0.200">
         <title>oculta 27 · le entra 0% · sale 0%</title></circle>
@@ -281,47 +314,47 @@ victorias contra la heurística escrita a mano</b>; lo demás es diagnóstico.</
   </svg></div></figure>
     <figure><figcaption>Qué mira: efecto de cada rasgo sobre la predicción.</figcaption><div class="lienzo"><svg viewBox="0 0 700 304" role="img"><text x="264" y="15" fill="var(--apagado)" font-size="11.5" text-anchor="end" font-family="'IBM Plex Mono',monospace">seAcerca</text>
         <rect x="272" y="6" width="300.0" height="11" rx="1.5" fill="var(--bien)"/><text x="264" y="36" fill="var(--apagado)" font-size="11.5" text-anchor="end" font-family="'IBM Plex Mono',monospace">amenazasQueDejo</text>
-        <rect x="272" y="27" width="215.5" height="11" rx="1.5" fill="var(--bien)"/><text x="264" y="57" fill="var(--apagado)" font-size="11.5" text-anchor="end" font-family="'IBM Plex Mono',monospace">seAleja</text>
-        <rect x="272" y="48" width="197.4" height="11" rx="1.5" fill="var(--mal)"/><text x="264" y="78" fill="var(--apagado)" font-size="11.5" text-anchor="end" font-family="'IBM Plex Mono',monospace">tapaLineaAlAnillo</text>
-        <rect x="272" y="69" width="138.6" height="11" rx="1.5" fill="var(--bien)"/><text x="264" y="99" fill="var(--apagado)" font-size="11.5" text-anchor="end" font-family="'IBM Plex Mono',monospace">salgoDePeligro</text>
-        <rect x="272" y="90" width="122.6" height="11" rx="1.5" fill="var(--bien)"/><text x="264" y="120" fill="var(--apagado)" font-size="11.5" text-anchor="end" font-family="'IBM Plex Mono',monospace">riesgoDeCanonEnDestino</text>
-        <rect x="272" y="111" width="118.8" height="11" rx="1.5" fill="var(--mal)"/><text x="264" y="141" fill="var(--apagado)" font-size="11.5" text-anchor="end" font-family="'IBM Plex Mono',monospace">pisaBanderaSuelta</text>
-        <rect x="272" y="132" width="108.5" height="11" rx="1.5" fill="var(--bien)"/><text x="264" y="162" fill="var(--apagado)" font-size="11.5" text-anchor="end" font-family="'IBM Plex Mono',monospace">dueloPerdido</text>
-        <rect x="272" y="153" width="90.7" height="11" rx="1.5" fill="var(--mal)"/><text x="264" y="183" fill="var(--apagado)" font-size="11.5" text-anchor="end" font-family="'IBM Plex Mono',monospace">valorEsperadoDelDuelo</text>
-        <rect x="272" y="174" width="79.2" height="11" rx="1.5" fill="var(--bien)"/><text x="264" y="204" fill="var(--apagado)" font-size="11.5" text-anchor="end" font-family="'IBM Plex Mono',monospace">miRango</text>
-        <rect x="272" y="195" width="68.9" height="11" rx="1.5" fill="var(--bien)"/><text x="264" y="225" fill="var(--apagado)" font-size="11.5" text-anchor="end" font-family="'IBM Plex Mono',monospace">soyElPortador</text>
-        <rect x="272" y="216" width="65.0" height="11" rx="1.5" fill="var(--bien)"/><text x="264" y="246" fill="var(--apagado)" font-size="11.5" text-anchor="end" font-family="'IBM Plex Mono',monospace">objetivoConBandera</text>
-        <rect x="272" y="237" width="55.7" height="11" rx="1.5" fill="var(--bien)"/><text x="264" y="267" fill="var(--apagado)" font-size="11.5" text-anchor="end" font-family="'IBM Plex Mono',monospace">canonHaciaElTiro</text>
-        <rect x="272" y="258" width="55.3" height="11" rx="1.5" fill="var(--bien)"/><text x="264" y="288" fill="var(--apagado)" font-size="11.5" text-anchor="end" font-family="'IBM Plex Mono',monospace">anilloCubiertoTrasJugar</text>
-        <rect x="272" y="279" width="52.1" height="11" rx="1.5" fill="var(--bien)"/></svg></div></figure>
+        <rect x="272" y="27" width="193.0" height="11" rx="1.5" fill="var(--bien)"/><text x="264" y="57" fill="var(--apagado)" font-size="11.5" text-anchor="end" font-family="'IBM Plex Mono',monospace">seAleja</text>
+        <rect x="272" y="48" width="172.5" height="11" rx="1.5" fill="var(--mal)"/><text x="264" y="78" fill="var(--apagado)" font-size="11.5" text-anchor="end" font-family="'IBM Plex Mono',monospace">pisaBanderaSuelta</text>
+        <rect x="272" y="69" width="105.9" height="11" rx="1.5" fill="var(--bien)"/><text x="264" y="99" fill="var(--apagado)" font-size="11.5" text-anchor="end" font-family="'IBM Plex Mono',monospace">tapaLineaAlAnillo</text>
+        <rect x="272" y="90" width="103.5" height="11" rx="1.5" fill="var(--bien)"/><text x="264" y="120" fill="var(--apagado)" font-size="11.5" text-anchor="end" font-family="'IBM Plex Mono',monospace">salgoDePeligro</text>
+        <rect x="272" y="111" width="99.2" height="11" rx="1.5" fill="var(--bien)"/><text x="264" y="141" fill="var(--apagado)" font-size="11.5" text-anchor="end" font-family="'IBM Plex Mono',monospace">dueloPerdido</text>
+        <rect x="272" y="132" width="99.1" height="11" rx="1.5" fill="var(--mal)"/><text x="264" y="162" fill="var(--apagado)" font-size="11.5" text-anchor="end" font-family="'IBM Plex Mono',monospace">riesgoDeCanonEnDestino</text>
+        <rect x="272" y="153" width="94.0" height="11" rx="1.5" fill="var(--mal)"/><text x="264" y="183" fill="var(--apagado)" font-size="11.5" text-anchor="end" font-family="'IBM Plex Mono',monospace">miRango</text>
+        <rect x="272" y="174" width="78.0" height="11" rx="1.5" fill="var(--bien)"/><text x="264" y="204" fill="var(--apagado)" font-size="11.5" text-anchor="end" font-family="'IBM Plex Mono',monospace">canonHaciaElTiro</text>
+        <rect x="272" y="195" width="68.2" height="11" rx="1.5" fill="var(--bien)"/><text x="264" y="225" fill="var(--apagado)" font-size="11.5" text-anchor="end" font-family="'IBM Plex Mono',monospace">valorEsperadoDelDuelo</text>
+        <rect x="272" y="216" width="53.2" height="11" rx="1.5" fill="var(--bien)"/><text x="264" y="246" fill="var(--apagado)" font-size="11.5" text-anchor="end" font-family="'IBM Plex Mono',monospace">anilloCubiertoTrasJugar</text>
+        <rect x="272" y="237" width="52.5" height="11" rx="1.5" fill="var(--bien)"/><text x="264" y="267" fill="var(--apagado)" font-size="11.5" text-anchor="end" font-family="'IBM Plex Mono',monospace">soyElPortador</text>
+        <rect x="272" y="258" width="46.1" height="11" rx="1.5" fill="var(--bien)"/><text x="264" y="288" fill="var(--apagado)" font-size="11.5" text-anchor="end" font-family="'IBM Plex Mono',monospace">objetivoConBandera</text>
+        <rect x="272" y="279" width="40.7" height="11" rx="1.5" fill="var(--bien)"/></svg></div></figure>
     <figure><figcaption>Y qué mira de la POSICIÓN. Si estas barras son mucho más largas que las de arriba, la red está juzgando dónde se está más que qué se hace.</figcaption><div class="lienzo"><svg viewBox="0 0 700 304" role="img"><text x="264" y="15" fill="var(--apagado)" font-size="11.5" text-anchor="end" font-family="'IBM Plex Mono',monospace">banderaEnemigaAlCastillo</text>
-        <rect x="272" y="6" width="300.0" height="11" rx="1.5" fill="var(--mal)"/><text x="264" y="36" fill="var(--apagado)" font-size="11.5" text-anchor="end" font-family="'IBM Plex Mono',monospace">banderaDelSocioAlCastillo</text>
-        <rect x="272" y="27" width="171.4" height="11" rx="1.5" fill="var(--bien)"/><text x="264" y="57" fill="var(--apagado)" font-size="11.5" text-anchor="end" font-family="'IBM Plex Mono',monospace">miBanderaAlCastillo</text>
-        <rect x="272" y="48" width="136.6" height="11" rx="1.5" fill="var(--bien)"/><text x="264" y="78" fill="var(--apagado)" font-size="11.5" text-anchor="end" font-family="'IBM Plex Mono',monospace">miPiezaMasCerca</text>
-        <rect x="272" y="69" width="130.6" height="11" rx="1.5" fill="var(--bien)"/><text x="264" y="99" fill="var(--apagado)" font-size="11.5" text-anchor="end" font-family="'IBM Plex Mono',monospace">suPiezaMasCerca</text>
-        <rect x="272" y="90" width="91.7" height="11" rx="1.5" fill="var(--mal)"/><text x="264" y="120" fill="var(--apagado)" font-size="11.5" text-anchor="end" font-family="'IBM Plex Mono',monospace">avanceDeLaPartida</text>
-        <rect x="272" y="111" width="65.5" height="11" rx="1.5" fill="var(--bien)"/><text x="264" y="141" fill="var(--apagado)" font-size="11.5" text-anchor="end" font-family="'IBM Plex Mono',monospace">amenazasCombinadas</text>
-        <rect x="272" y="132" width="43.6" height="11" rx="1.5" fill="var(--mal)"/><text x="264" y="162" fill="var(--apagado)" font-size="11.5" text-anchor="end" font-family="'IBM Plex Mono',monospace">queAmenazo</text>
-        <rect x="272" y="153" width="43.3" height="11" rx="1.5" fill="var(--mal)"/><text x="264" y="183" fill="var(--apagado)" font-size="11.5" text-anchor="end" font-family="'IBM Plex Mono',monospace">rangosQueLesHeVisto</text>
-        <rect x="272" y="174" width="42.8" height="11" rx="1.5" fill="var(--mal)"/><text x="264" y="204" fill="var(--apagado)" font-size="11.5" text-anchor="end" font-family="'IBM Plex Mono',monospace">susPiezasEnElCastillo</text>
-        <rect x="272" y="195" width="33.0" height="11" rx="1.5" fill="var(--bien)"/><text x="264" y="225" fill="var(--apagado)" font-size="11.5" text-anchor="end" font-family="'IBM Plex Mono',monospace">piezasDelSocio</text>
-        <rect x="272" y="216" width="28.9" height="11" rx="1.5" fill="var(--bien)"/><text x="264" y="246" fill="var(--apagado)" font-size="11.5" text-anchor="end" font-family="'IBM Plex Mono',monospace">rangosQueMeHanVisto</text>
-        <rect x="272" y="237" width="25.1" height="11" rx="1.5" fill="var(--bien)"/><text x="264" y="267" fill="var(--apagado)" font-size="11.5" text-anchor="end" font-family="'IBM Plex Mono',monospace">miasEnPeligro</text>
-        <rect x="272" y="258" width="20.6" height="11" rx="1.5" fill="var(--mal)"/><text x="264" y="288" fill="var(--apagado)" font-size="11.5" text-anchor="end" font-family="'IBM Plex Mono',monospace">algunEnemigoLlevaBandera</text>
-        <rect x="272" y="279" width="19.6" height="11" rx="1.5" fill="var(--mal)"/></svg></div></figure>
+        <rect x="272" y="6" width="300.0" height="11" rx="1.5" fill="var(--mal)"/><text x="264" y="36" fill="var(--apagado)" font-size="11.5" text-anchor="end" font-family="'IBM Plex Mono',monospace">miPiezaMasCerca</text>
+        <rect x="272" y="27" width="148.2" height="11" rx="1.5" fill="var(--bien)"/><text x="264" y="57" fill="var(--apagado)" font-size="11.5" text-anchor="end" font-family="'IBM Plex Mono',monospace">banderaDelSocioAlCastillo</text>
+        <rect x="272" y="48" width="138.3" height="11" rx="1.5" fill="var(--bien)"/><text x="264" y="78" fill="var(--apagado)" font-size="11.5" text-anchor="end" font-family="'IBM Plex Mono',monospace">miBanderaAlCastillo</text>
+        <rect x="272" y="69" width="102.4" height="11" rx="1.5" fill="var(--bien)"/><text x="264" y="99" fill="var(--apagado)" font-size="11.5" text-anchor="end" font-family="'IBM Plex Mono',monospace">suPiezaMasCerca</text>
+        <rect x="272" y="90" width="94.6" height="11" rx="1.5" fill="var(--mal)"/><text x="264" y="120" fill="var(--apagado)" font-size="11.5" text-anchor="end" font-family="'IBM Plex Mono',monospace">rangosQueLesHeVisto</text>
+        <rect x="272" y="111" width="53.6" height="11" rx="1.5" fill="var(--bien)"/><text x="264" y="141" fill="var(--apagado)" font-size="11.5" text-anchor="end" font-family="'IBM Plex Mono',monospace">avanceDeLaPartida</text>
+        <rect x="272" y="132" width="49.0" height="11" rx="1.5" fill="var(--bien)"/><text x="264" y="162" fill="var(--apagado)" font-size="11.5" text-anchor="end" font-family="'IBM Plex Mono',monospace">amenazasCombinadas</text>
+        <rect x="272" y="153" width="44.1" height="11" rx="1.5" fill="var(--mal)"/><text x="264" y="183" fill="var(--apagado)" font-size="11.5" text-anchor="end" font-family="'IBM Plex Mono',monospace">queAmenazo</text>
+        <rect x="272" y="174" width="39.0" height="11" rx="1.5" fill="var(--mal)"/><text x="264" y="204" fill="var(--apagado)" font-size="11.5" text-anchor="end" font-family="'IBM Plex Mono',monospace">susPiezasEnElCastillo</text>
+        <rect x="272" y="195" width="33.0" height="11" rx="1.5" fill="var(--bien)"/><text x="264" y="225" fill="var(--apagado)" font-size="11.5" text-anchor="end" font-family="'IBM Plex Mono',monospace">rangosQueMeHanVisto</text>
+        <rect x="272" y="216" width="29.9" height="11" rx="1.5" fill="var(--bien)"/><text x="264" y="246" fill="var(--apagado)" font-size="11.5" text-anchor="end" font-family="'IBM Plex Mono',monospace">algunEnemigoLlevaBandera</text>
+        <rect x="272" y="237" width="27.1" height="11" rx="1.5" fill="var(--mal)"/><text x="264" y="267" fill="var(--apagado)" font-size="11.5" text-anchor="end" font-family="'IBM Plex Mono',monospace">piezasDelSocio</text>
+        <rect x="272" y="258" width="26.0" height="11" rx="1.5" fill="var(--bien)"/><text x="264" y="288" fill="var(--apagado)" font-size="11.5" text-anchor="end" font-family="'IBM Plex Mono',monospace">miMarcador</text>
+        <rect x="272" y="279" width="18.4" height="11" rx="1.5" fill="var(--mal)"/></svg></div></figure>
     
   </section><section>
     <h2>Red de la posición de salida</h2>
     <p class="sub">Juzga un despliegue inicial antes de empezar. Al desplegar se generan cuarenta candidatos al azar y se elige el que mejor puntúa. Es el modelo que más gana de los dos.</p>
-    <dl class="fichas"><div class="ficha"><dt>victorias en juego</dt><dd>79%</dd></div><div class="ficha"><dt>pérdida validación</dt><dd>0.6622</dd></div><div class="ficha"><dt>acierto</dt><dd>—</dd></div><div class="ficha"><dt>entradas</dt><dd>83</dd></div></dl>
+    <dl class="fichas"><div class="ficha"><dt>victorias en juego</dt><dd>90%</dd></div><div class="ficha"><dt>pérdida validación</dt><dd>0.6235</dd></div><div class="ficha"><dt>acierto</dt><dd>—</dd></div><div class="ficha"><dt>entradas</dt><dd>83</dd></div></dl>
     
     <div class="par">
       <figure><figcaption>Dentro de la última ronda: pérdida. Si la de validación sube mientras la otra baja, está memorizando.</figcaption><div class="lienzo"><svg viewBox="0 0 700 200" role="img"><g><line x1="50" y1="174" x2="686" y2="174" stroke="var(--filo)" opacity=".45"/>
-        <text x="43" y="177.5" fill="var(--tenue)" font-size="10" text-anchor="end" font-family="'IBM Plex Mono',monospace">0.662</text><line x1="50" y1="134" x2="686" y2="134" stroke="var(--filo)" opacity=".45"/>
-        <text x="43" y="137.5" fill="var(--tenue)" font-size="10" text-anchor="end" font-family="'IBM Plex Mono',monospace">0.664</text><line x1="50" y1="94" x2="686" y2="94" stroke="var(--filo)" opacity=".45"/>
-        <text x="43" y="97.5" fill="var(--tenue)" font-size="10" text-anchor="end" font-family="'IBM Plex Mono',monospace">0.666</text><line x1="50" y1="54" x2="686" y2="54" stroke="var(--filo)" opacity=".45"/>
-        <text x="43" y="57.5" fill="var(--tenue)" font-size="10" text-anchor="end" font-family="'IBM Plex Mono',monospace">0.668</text><line x1="50" y1="14" x2="686" y2="14" stroke="var(--filo)" opacity=".45"/>
-        <text x="43" y="17.5" fill="var(--tenue)" font-size="10" text-anchor="end" font-family="'IBM Plex Mono',monospace">0.670</text></g><path d="M50.0,14.0 L107.8,45.7 L165.6,68.3 L223.5,85.7 L281.3,95.9 L339.1,106.8 L396.9,114.5 L454.7,123.9 L512.5,133.4 L570.4,139.3 L628.2,146.6 L686.0,153.3" fill="none" stroke="var(--dato)" stroke-width="2"  stroke-linejoin="round"/><path d="M50.0,174.0 L107.8,164.4 L165.6,170.4 L223.5,167.6 L281.3,164.4 L339.1,156.0 L396.9,149.8 L454.7,142.6 L512.5,135.7 L570.4,128.2 L628.2,118.6 L686.0,111.3" fill="none" stroke="var(--laton)" stroke-width="2"  stroke-linejoin="round"/><rect x="56" y="14" width="10" height="3" fill="var(--dato)"/>
+        <text x="43" y="177.5" fill="var(--tenue)" font-size="10" text-anchor="end" font-family="'IBM Plex Mono',monospace">0.623</text><line x1="50" y1="134" x2="686" y2="134" stroke="var(--filo)" opacity=".45"/>
+        <text x="43" y="137.5" fill="var(--tenue)" font-size="10" text-anchor="end" font-family="'IBM Plex Mono',monospace">0.626</text><line x1="50" y1="94" x2="686" y2="94" stroke="var(--filo)" opacity=".45"/>
+        <text x="43" y="97.5" fill="var(--tenue)" font-size="10" text-anchor="end" font-family="'IBM Plex Mono',monospace">0.629</text><line x1="50" y1="54" x2="686" y2="54" stroke="var(--filo)" opacity=".45"/>
+        <text x="43" y="57.5" fill="var(--tenue)" font-size="10" text-anchor="end" font-family="'IBM Plex Mono',monospace">0.631</text><line x1="50" y1="14" x2="686" y2="14" stroke="var(--filo)" opacity=".45"/>
+        <text x="43" y="17.5" fill="var(--tenue)" font-size="10" text-anchor="end" font-family="'IBM Plex Mono',monospace">0.634</text></g><path d="M50.0,14.0 L107.8,53.5 L165.6,75.9 L223.5,91.3 L281.3,101.8 L339.1,110.6 L396.9,117.8 L454.7,122.5 L512.5,127.2 L570.4,133.1 L628.2,137.9 L686.0,142.1" fill="none" stroke="var(--dato)" stroke-width="2"  stroke-linejoin="round"/><path d="M50.0,170.6 L107.8,174.0 L165.6,172.0 L223.5,165.5 L281.3,161.2 L339.1,164.9 L396.9,167.7 L454.7,164.0 L512.5,161.0 L570.4,154.3 L628.2,154.1 L686.0,154.4" fill="none" stroke="var(--laton)" stroke-width="2"  stroke-linejoin="round"/><rect x="56" y="14" width="10" height="3" fill="var(--dato)"/>
       <text x="71" y="18" fill="var(--tenue)" font-size="11" font-family="'IBM Plex Mono',monospace">entrenamiento</text><rect x="204" y="14" width="10" height="3" fill="var(--laton)"/>
       <text x="219" y="18" fill="var(--tenue)" font-size="11" font-family="'IBM Plex Mono',monospace">validación</text>
     <text x="686" y="194" fill="var(--tenue)" font-size="10" text-anchor="end" font-family="'IBM Plex Mono',monospace">época</text></svg></div></figure>
@@ -332,148 +365,148 @@ victorias contra la heurística escrita a mano</b>; lo demás es diagnóstico.</
       
     </div>
     <figure><figcaption>La red con sus pesos. Cada franja de la izquierda es una entrada, tanto más oscura cuanto más reparte. Los círculos son las neuronas ocultas: el <b>color</b> es lo que les entra —cuánto miran— y el <b>tamaño</b> lo que sacan hacia la salida —cuánto se les hace caso—. Una grande y pálida mira poco pero decide mucho. Solo se dibujan las conexiones más fuertes: con 1328 hay demasiadas y el dibujo se vuelve un borrón.</figcaption><div class="lienzo"><svg viewBox="0 0 700 300" role="img">
-    <path d="M 67 220.1 C 144 220.1, 322 260.7, 381 260.7"
-      fill="none" stroke="var(--bien)" stroke-width="1.85" opacity="0.540"/><path d="M 67 241.9 C 144 241.9, 322 260.7, 381 260.7"
-      fill="none" stroke="var(--mal)" stroke-width="1.70" opacity="0.499"/><path d="M 67 138.2 C 144 138.2, 322 260.7, 381 260.7"
-      fill="none" stroke="var(--bien)" stroke-width="1.69" opacity="0.496"/><path d="M 67 231.0 C 144 231.0, 322 260.7, 381 260.7"
-      fill="none" stroke="var(--mal)" stroke-width="1.68" opacity="0.492"/><path d="M 67 100.0 C 144 100.0, 322 260.7, 381 260.7"
-      fill="none" stroke="var(--bien)" stroke-width="1.18" opacity="0.351"/><path d="M 67 261.0 C 144 261.0, 322 260.7, 381 260.7"
-      fill="none" stroke="var(--mal)" stroke-width="1.14" opacity="0.341"/><path d="M 67 151.9 C 144 151.9, 322 260.7, 381 260.7"
-      fill="none" stroke="var(--bien)" stroke-width="1.11" opacity="0.333"/><path d="M 67 233.7 C 144 233.7, 322 260.7, 381 260.7"
-      fill="none" stroke="var(--mal)" stroke-width="1.06" opacity="0.318"/><path d="M 67 168.2 C 144 168.2, 322 260.7, 381 260.7"
-      fill="none" stroke="var(--bien)" stroke-width="1.02" opacity="0.307"/><path d="M 67 78.2 C 144 78.2, 322 260.7, 381 260.7"
-      fill="none" stroke="var(--bien)" stroke-width="0.90" opacity="0.275"/><path d="M 67 250.1 C 144 250.1, 322 260.7, 381 260.7"
-      fill="none" stroke="var(--bien)" stroke-width="0.90" opacity="0.275"/><path d="M 67 255.5 C 144 255.5, 322 260.7, 381 260.7"
-      fill="none" stroke="var(--mal)" stroke-width="0.90" opacity="0.274"/><path d="M 67 121.9 C 144 121.9, 322 260.7, 381 260.7"
-      fill="none" stroke="var(--mal)" stroke-width="0.90" opacity="0.273"/><path d="M 67 53.7 C 144 53.7, 322 260.7, 381 260.7"
-      fill="none" stroke="var(--mal)" stroke-width="0.84" opacity="0.257"/><path d="M 67 119.1 C 144 119.1, 322 260.7, 381 260.7"
-      fill="none" stroke="var(--bien)" stroke-width="0.84" opacity="0.257"/><path d="M 67 187.3 C 144 187.3, 322 260.7, 381 260.7"
-      fill="none" stroke="var(--bien)" stroke-width="0.84" opacity="0.257"/><path d="M 67 97.3 C 144 97.3, 322 260.7, 381 260.7"
-      fill="none" stroke="var(--bien)" stroke-width="0.83" opacity="0.256"/><path d="M 67 86.4 C 144 86.4, 322 260.7, 381 260.7"
-      fill="none" stroke="var(--bien)" stroke-width="0.83" opacity="0.255"/><path d="M 67 135.5 C 144 135.5, 322 260.7, 381 260.7"
-      fill="none" stroke="var(--mal)" stroke-width="0.83" opacity="0.255"/><path d="M 67 50.9 C 144 50.9, 322 260.7, 381 260.7"
-      fill="none" stroke="var(--mal)" stroke-width="0.82" opacity="0.252"/><path d="M 67 146.4 C 144 146.4, 322 260.7, 381 260.7"
-      fill="none" stroke="var(--bien)" stroke-width="0.81" opacity="0.249"/><path d="M 67 141.0 C 144 141.0, 322 260.7, 381 260.7"
-      fill="none" stroke="var(--mal)" stroke-width="0.81" opacity="0.248"/><path d="M 67 228.2 C 144 228.2, 322 260.7, 381 260.7"
-      fill="none" stroke="var(--mal)" stroke-width="0.80" opacity="0.246"/><path d="M 67 266.4 C 144 266.4, 322 260.7, 381 260.7"
-      fill="none" stroke="var(--bien)" stroke-width="0.77" opacity="0.238"/><path d="M 67 160.1 C 144 160.1, 322 260.7, 381 260.7"
-      fill="none" stroke="var(--bien)" stroke-width="0.76" opacity="0.234"/><path d="M 67 171.0 C 144 171.0, 322 260.7, 381 260.7"
-      fill="none" stroke="var(--bien)" stroke-width="0.74" opacity="0.230"/><path d="M 67 130.1 C 144 130.1, 322 260.7, 381 260.7"
-      fill="none" stroke="var(--bien)" stroke-width="0.74" opacity="0.229"/><path d="M 67 108.2 C 144 108.2, 322 260.7, 381 260.7"
-      fill="none" stroke="var(--mal)" stroke-width="0.74" opacity="0.228"/><path d="M 67 116.4 C 144 116.4, 322 260.7, 381 260.7"
-      fill="none" stroke="var(--mal)" stroke-width="0.73" opacity="0.228"/><path d="M 67 162.8 C 144 162.8, 322 260.7, 381 260.7"
-      fill="none" stroke="var(--bien)" stroke-width="0.69" opacity="0.216"/><path d="M 67 45.5 C 144 45.5, 322 260.7, 381 260.7"
-      fill="none" stroke="var(--bien)" stroke-width="0.67" opacity="0.209"/><path d="M 67 102.8 C 144 102.8, 322 260.7, 381 260.7"
-      fill="none" stroke="var(--bien)" stroke-width="0.66" opacity="0.207"/><path d="M 67 124.6 C 144 124.6, 322 260.7, 381 260.7"
-      fill="none" stroke="var(--mal)" stroke-width="0.65" opacity="0.205"/><path d="M 67 222.8 C 144 222.8, 322 260.7, 381 260.7"
-      fill="none" stroke="var(--bien)" stroke-width="0.65" opacity="0.205"/><path d="M 67 42.8 C 144 42.8, 322 260.7, 381 260.7"
-      fill="none" stroke="var(--bien)" stroke-width="0.64" opacity="0.202"/><path d="M 67 70.0 C 144 70.0, 322 260.7, 381 260.7"
-      fill="none" stroke="var(--mal)" stroke-width="0.64" opacity="0.201"/><path d="M 67 203.7 C 144 203.7, 322 260.7, 381 260.7"
-      fill="none" stroke="var(--mal)" stroke-width="0.64" opacity="0.201"/><path d="M 67 209.2 C 144 209.2, 322 260.7, 381 260.7"
-      fill="none" stroke="var(--bien)" stroke-width="0.62" opacity="0.197"/><path d="M 67 56.4 C 144 56.4, 322 260.7, 381 260.7"
-      fill="none" stroke="var(--bien)" stroke-width="0.62" opacity="0.196"/><path d="M 67 75.5 C 144 75.5, 322 260.7, 381 260.7"
-      fill="none" stroke="var(--mal)" stroke-width="0.62" opacity="0.195"/><path d="M 67 247.3 C 144 247.3, 322 260.7, 381 260.7"
-      fill="none" stroke="var(--mal)" stroke-width="0.61" opacity="0.193"/><path d="M 67 105.5 C 144 105.5, 322 260.7, 381 260.7"
-      fill="none" stroke="var(--bien)" stroke-width="0.61" opacity="0.192"/><path d="M 67 192.8 C 144 192.8, 322 260.7, 381 260.7"
-      fill="none" stroke="var(--bien)" stroke-width="0.61" opacity="0.192"/><path d="M 67 225.5 C 144 225.5, 322 260.7, 381 260.7"
-      fill="none" stroke="var(--mal)" stroke-width="0.60" opacity="0.190"/><path d="M 67 190.1 C 144 190.1, 322 260.7, 381 260.7"
-      fill="none" stroke="var(--bien)" stroke-width="0.59" opacity="0.186"/><path d="M 67 64.6 C 144 64.6, 322 260.7, 381 260.7"
-      fill="none" stroke="var(--mal)" stroke-width="0.57" opacity="0.182"/><path d="M 67 91.9 C 144 91.9, 322 260.7, 381 260.7"
-      fill="none" stroke="var(--mal)" stroke-width="0.56" opacity="0.180"/><path d="M 67 61.9 C 144 61.9, 322 260.7, 381 260.7"
-      fill="none" stroke="var(--bien)" stroke-width="0.56" opacity="0.179"/><path d="M 67 83.7 C 144 83.7, 322 260.7, 381 260.7"
-      fill="none" stroke="var(--mal)" stroke-width="0.54" opacity="0.174"/><path d="M 67 72.8 C 144 72.8, 322 260.7, 381 260.7"
-      fill="none" stroke="var(--mal)" stroke-width="0.54" opacity="0.174"/><path d="M 67 211.9 C 144 211.9, 322 260.7, 381 260.7"
-      fill="none" stroke="var(--bien)" stroke-width="0.53" opacity="0.170"/><path d="M 67 81.0 C 144 81.0, 322 260.7, 381 260.7"
-      fill="none" stroke="var(--mal)" stroke-width="0.53" opacity="0.170"/><path d="M 67 132.8 C 144 132.8, 322 260.7, 381 260.7"
-      fill="none" stroke="var(--mal)" stroke-width="0.52" opacity="0.169"/><path d="M 67 165.5 C 144 165.5, 322 260.7, 381 260.7"
-      fill="none" stroke="var(--bien)" stroke-width="0.52" opacity="0.168"/><path d="M 67 89.1 C 144 89.1, 322 260.7, 381 260.7"
-      fill="none" stroke="var(--bien)" stroke-width="0.52" opacity="0.167"/><path d="M 67 244.6 C 144 244.6, 322 260.7, 381 260.7"
-      fill="none" stroke="var(--bien)" stroke-width="0.51" opacity="0.166"/><path d="M 67 67.3 C 144 67.3, 322 260.7, 381 260.7"
-      fill="none" stroke="var(--bien)" stroke-width="0.51" opacity="0.166"/><path d="M 67 154.6 C 144 154.6, 322 260.7, 381 260.7"
-      fill="none" stroke="var(--bien)" stroke-width="0.51" opacity="0.165"/><path d="M 67 143.7 C 144 143.7, 322 260.7, 381 260.7"
-      fill="none" stroke="var(--bien)" stroke-width="0.51" opacity="0.164"/><path d="M 67 157.3 C 144 157.3, 322 260.7, 381 260.7"
-      fill="none" stroke="var(--mal)" stroke-width="0.49" opacity="0.160"/><path d="M 67 94.6 C 144 94.6, 322 260.7, 381 260.7"
-      fill="none" stroke="var(--mal)" stroke-width="0.48" opacity="0.156"/><path d="M 67 252.8 C 144 252.8, 322 260.7, 381 260.7"
-      fill="none" stroke="var(--bien)" stroke-width="0.46" opacity="0.151"/><path d="M 67 236.4 C 144 236.4, 322 260.7, 381 260.7"
-      fill="none" stroke="var(--bien)" stroke-width="0.46" opacity="0.150"/><path d="M 67 179.1 C 144 179.1, 322 260.7, 381 260.7"
-      fill="none" stroke="var(--bien)" stroke-width="0.45" opacity="0.148"/><path d="M 67 149.1 C 144 149.1, 322 260.7, 381 260.7"
-      fill="none" stroke="var(--bien)" stroke-width="0.45" opacity="0.148"/><path d="M 67 184.6 C 144 184.6, 322 260.7, 381 260.7"
-      fill="none" stroke="var(--mal)" stroke-width="0.44" opacity="0.145"/><path d="M 67 217.3 C 144 217.3, 322 260.7, 381 260.7"
-      fill="none" stroke="var(--bien)" stroke-width="0.44" opacity="0.145"/><path d="M 67 111.0 C 144 111.0, 322 260.7, 381 260.7"
-      fill="none" stroke="var(--bien)" stroke-width="0.43" opacity="0.144"/><path d="M 67 263.7 C 144 263.7, 322 260.7, 381 260.7"
-      fill="none" stroke="var(--mal)" stroke-width="0.43" opacity="0.143"/><path d="M 67 127.3 C 144 127.3, 322 260.7, 381 260.7"
-      fill="none" stroke="var(--bien)" stroke-width="0.43" opacity="0.142"/><path d="M 67 258.3 C 144 258.3, 322 260.7, 381 260.7"
-      fill="none" stroke="var(--mal)" stroke-width="0.43" opacity="0.142"/><path d="M 67 198.2 C 144 198.2, 322 260.7, 381 260.7"
-      fill="none" stroke="var(--bien)" stroke-width="0.42" opacity="0.139"/><path d="M 67 195.5 C 144 195.5, 322 260.7, 381 260.7"
-      fill="none" stroke="var(--bien)" stroke-width="0.42" opacity="0.138"/><path d="M 67 201.0 C 144 201.0, 322 260.7, 381 260.7"
-      fill="none" stroke="var(--bien)" stroke-width="0.41" opacity="0.137"/><path d="M 67 239.2 C 144 239.2, 322 260.7, 381 260.7"
-      fill="none" stroke="var(--bien)" stroke-width="0.40" opacity="0.133"/><path d="M 67 206.4 C 144 206.4, 322 260.7, 381 260.7"
-      fill="none" stroke="var(--bien)" stroke-width="0.39" opacity="0.131"/><path d="M 67 181.9 C 144 181.9, 322 260.7, 381 260.7"
-      fill="none" stroke="var(--mal)" stroke-width="0.38" opacity="0.129"/><path d="M 67 48.2 C 144 48.2, 322 260.7, 381 260.7"
-      fill="none" stroke="var(--bien)" stroke-width="0.38" opacity="0.129"/><path d="M 67 214.6 C 144 214.6, 322 260.7, 381 260.7"
-      fill="none" stroke="var(--mal)" stroke-width="0.38" opacity="0.127"/><path d="M 67 59.1 C 144 59.1, 322 260.7, 381 260.7"
-      fill="none" stroke="var(--mal)" stroke-width="0.37" opacity="0.126"/><path d="M 67 176.4 C 144 176.4, 322 260.7, 381 260.7"
-      fill="none" stroke="var(--mal)" stroke-width="0.37" opacity="0.126"/><path d="M 67 173.7 C 144 173.7, 322 260.7, 381 260.7"
-      fill="none" stroke="var(--mal)" stroke-width="0.37" opacity="0.124"/><path d="M 67 113.7 C 144 113.7, 322 260.7, 381 260.7"
-      fill="none" stroke="var(--bien)" stroke-width="0.36" opacity="0.124"/><path d="M 67 42.8 C 144 42.8, 322 48.5, 381 48.5"
-      fill="none" stroke="var(--mal)" stroke-width="0.35" opacity="0.120"/><path d="M 67 42.8 C 144 42.8, 322 62.6, 381 62.6"
-      fill="none" stroke="var(--mal)" stroke-width="0.35" opacity="0.120"/><path d="M 67 42.8 C 144 42.8, 322 76.8, 381 76.8"
-      fill="none" stroke="var(--mal)" stroke-width="0.35" opacity="0.120"/><path d="M 67 42.8 C 144 42.8, 322 90.9, 381 90.9"
-      fill="none" stroke="var(--mal)" stroke-width="0.35" opacity="0.120"/><path d="M 67 42.8 C 144 42.8, 322 105.1, 381 105.1"
-      fill="none" stroke="var(--mal)" stroke-width="0.35" opacity="0.120"/><path d="M 67 42.8 C 144 42.8, 322 119.2, 381 119.2"
-      fill="none" stroke="var(--mal)" stroke-width="0.35" opacity="0.120"/><path d="M 67 42.8 C 144 42.8, 322 133.4, 381 133.4"
-      fill="none" stroke="var(--mal)" stroke-width="0.35" opacity="0.120"/><rect x="41" y="41.40" width="26" height="2.38" fill="var(--dato)" opacity="0.292"><title>9 Mariscal · avance · fuerza 20%</title></rect><rect x="41" y="44.13" width="26" height="2.38" fill="var(--dato)" opacity="0.306"><title>9 Mariscal · lateral · fuerza 21%</title></rect><rect x="41" y="46.86" width="26" height="2.38" fill="var(--dato)" opacity="0.138"><title>9 Mariscal · juntoABandera · fuerza 2%</title></rect><rect x="41" y="49.58" width="26" height="2.38" fill="var(--dato)" opacity="0.396"><title>9 Mariscal · juntoAReclutamiento · fuerza 31%</title></rect><rect x="41" y="52.31" width="26" height="2.38" fill="var(--dato)" opacity="0.407"><title>9 Mariscal · enElBorde · fuerza 33%</title></rect><rect x="41" y="55.04" width="26" height="2.38" fill="var(--dato)" opacity="0.279"><title>9 Mariscal · cubiertoPorLago · fuerza 18%</title></rect><rect x="41" y="57.77" width="26" height="2.38" fill="var(--dato)" opacity="0.132"><title>9 Mariscal · cercaDeTiro · fuerza 1%</title></rect><rect x="41" y="60.49" width="26" height="2.38" fill="var(--dato)" opacity="0.245"><title>9 Mariscal · prontoEnJuego · fuerza 14%</title></rect><rect x="41" y="63.22" width="26" height="2.38" fill="var(--dato)" opacity="0.250"><title>8 General · avance · fuerza 15%</title></rect><rect x="41" y="65.95" width="26" height="2.38" fill="var(--dato)" opacity="0.216"><title>8 General · lateral · fuerza 11%</title></rect><rect x="41" y="68.68" width="26" height="2.38" fill="var(--dato)" opacity="0.290"><title>8 General · juntoABandera · fuerza 19%</title></rect><rect x="41" y="71.40" width="26" height="2.38" fill="var(--dato)" opacity="0.232"><title>8 General · juntoAReclutamiento · fuerza 13%</title></rect><rect x="41" y="74.13" width="26" height="2.38" fill="var(--dato)" opacity="0.278"><title>8 General · enElBorde · fuerza 18%</title></rect><rect x="41" y="76.86" width="26" height="2.38" fill="var(--dato)" opacity="0.445"><title>8 General · cubiertoPorLago · fuerza 37%</title></rect><rect x="41" y="79.59" width="26" height="2.38" fill="var(--dato)" opacity="0.224"><title>8 General · cercaDeTiro · fuerza 12%</title></rect><rect x="41" y="82.32" width="26" height="2.38" fill="var(--dato)" opacity="0.233"><title>8 General · prontoEnJuego · fuerza 13%</title></rect><rect x="41" y="85.04" width="26" height="2.38" fill="var(--dato)" opacity="0.402"><title>7 Comandante · avance · fuerza 32%</title></rect><rect x="41" y="87.77" width="26" height="2.38" fill="var(--dato)" opacity="0.219"><title>7 Comandante · lateral · fuerza 11%</title></rect><rect x="41" y="90.50" width="26" height="2.38" fill="var(--dato)" opacity="0.246"><title>7 Comandante · juntoABandera · fuerza 14%</title></rect><rect x="41" y="93.23" width="26" height="2.38" fill="var(--dato)" opacity="0.196"><title>7 Comandante · juntoAReclutamiento · fuerza 9%</title></rect><rect x="41" y="95.95" width="26" height="2.38" fill="var(--dato)" opacity="0.404"><title>7 Comandante · enElBorde · fuerza 32%</title></rect><rect x="41" y="98.68" width="26" height="2.38" fill="var(--dato)" opacity="0.605"><title>7 Comandante · cubiertoPorLago · fuerza 55%</title></rect><rect x="41" y="101.41" width="26" height="2.38" fill="var(--dato)" opacity="0.303"><title>7 Comandante · cercaDeTiro · fuerza 21%</title></rect><rect x="41" y="104.14" width="26" height="2.38" fill="var(--dato)" opacity="0.272"><title>7 Comandante · prontoEnJuego · fuerza 17%</title></rect><rect x="41" y="106.87" width="26" height="2.38" fill="var(--dato)" opacity="0.346"><title>6 Capitán · avance · fuerza 26%</title></rect><rect x="41" y="109.59" width="26" height="2.38" fill="var(--dato)" opacity="0.170"><title>6 Capitán · lateral · fuerza 6%</title></rect><rect x="41" y="112.32" width="26" height="2.38" fill="var(--dato)" opacity="0.127"><title>6 Capitán · juntoABandera · fuerza 1%</title></rect><rect x="41" y="115.05" width="26" height="2.38" fill="var(--dato)" opacity="0.345"><title>6 Capitán · juntoAReclutamiento · fuerza 26%</title></rect><rect x="41" y="117.78" width="26" height="2.38" fill="var(--dato)" opacity="0.407"><title>6 Capitán · enElBorde · fuerza 33%</title></rect><rect x="41" y="120.50" width="26" height="2.38" fill="var(--dato)" opacity="0.441"><title>6 Capitán · cubiertoPorLago · fuerza 37%</title></rect><rect x="41" y="123.23" width="26" height="2.38" fill="var(--dato)" opacity="0.298"><title>6 Capitán · cercaDeTiro · fuerza 20%</title></rect><rect x="41" y="125.96" width="26" height="2.38" fill="var(--dato)" opacity="0.166"><title>6 Capitán · prontoEnJuego · fuerza 5%</title></rect><rect x="41" y="128.69" width="26" height="2.38" fill="var(--dato)" opacity="0.348"><title>5 Teniente · avance · fuerza 26%</title></rect><rect x="41" y="131.41" width="26" height="2.38" fill="var(--dato)" opacity="0.222"><title>5 Teniente · lateral · fuerza 12%</title></rect><rect x="41" y="134.14" width="26" height="2.38" fill="var(--dato)" opacity="0.402"><title>5 Teniente · juntoABandera · fuerza 32%</title></rect><rect x="41" y="136.87" width="26" height="2.38" fill="var(--dato)" opacity="0.907"><title>5 Teniente · juntoAReclutamiento · fuerza 89%</title></rect><rect x="41" y="139.60" width="26" height="2.38" fill="var(--dato)" opacity="0.389"><title>5 Teniente · enElBorde · fuerza 31%</title></rect><rect x="41" y="142.33" width="26" height="2.38" fill="var(--dato)" opacity="0.213"><title>5 Teniente · cubiertoPorLago · fuerza 11%</title></rect><rect x="41" y="145.05" width="26" height="2.38" fill="var(--dato)" opacity="0.391"><title>5 Teniente · cercaDeTiro · fuerza 31%</title></rect><rect x="41" y="147.78" width="26" height="2.38" fill="var(--dato)" opacity="0.178"><title>5 Teniente · prontoEnJuego · fuerza 7%</title></rect><rect x="41" y="150.51" width="26" height="2.38" fill="var(--dato)" opacity="0.566"><title>4 Sargento · avance · fuerza 51%</title></rect><rect x="41" y="153.24" width="26" height="2.38" fill="var(--dato)" opacity="0.213"><title>4 Sargento · lateral · fuerza 11%</title></rect><rect x="41" y="155.96" width="26" height="2.38" fill="var(--dato)" opacity="0.203"><title>4 Sargento · juntoABandera · fuerza 9%</title></rect><rect x="41" y="158.69" width="26" height="2.38" fill="var(--dato)" opacity="0.359"><title>4 Sargento · juntoAReclutamiento · fuerza 27%</title></rect><rect x="41" y="161.42" width="26" height="2.38" fill="var(--dato)" opacity="0.322"><title>4 Sargento · enElBorde · fuerza 23%</title></rect><rect x="41" y="164.15" width="26" height="2.38" fill="var(--dato)" opacity="0.220"><title>4 Sargento · cubiertoPorLago · fuerza 11%</title></rect><rect x="41" y="166.87" width="26" height="2.38" fill="var(--dato)" opacity="0.511"><title>4 Sargento · cercaDeTiro · fuerza 44%</title></rect><rect x="41" y="169.60" width="26" height="2.38" fill="var(--dato)" opacity="0.351"><title>4 Sargento · prontoEnJuego · fuerza 26%</title></rect><rect x="41" y="172.33" width="26" height="2.38" fill="var(--dato)" opacity="0.129"><title>3 Explorador · avance · fuerza 1%</title></rect><rect x="41" y="175.06" width="26" height="2.38" fill="var(--dato)" opacity="0.132"><title>3 Explorador · lateral · fuerza 1%</title></rect><rect x="41" y="177.79" width="26" height="2.38" fill="var(--dato)" opacity="0.179"><title>3 Explorador · juntoABandera · fuerza 7%</title></rect><rect x="41" y="180.51" width="26" height="2.38" fill="var(--dato)" opacity="0.139"><title>3 Explorador · juntoAReclutamiento · fuerza 2%</title></rect><rect x="41" y="183.24" width="26" height="2.38" fill="var(--dato)" opacity="0.173"><title>3 Explorador · enElBorde · fuerza 6%</title></rect><rect x="41" y="185.97" width="26" height="2.38" fill="var(--dato)" opacity="0.406"><title>3 Explorador · cubiertoPorLago · fuerza 33%</title></rect><rect x="41" y="188.70" width="26" height="2.38" fill="var(--dato)" opacity="0.259"><title>3 Explorador · cercaDeTiro · fuerza 16%</title></rect><rect x="41" y="191.42" width="26" height="2.38" fill="var(--dato)" opacity="0.270"><title>3 Explorador · prontoEnJuego · fuerza 17%</title></rect><rect x="41" y="194.15" width="26" height="2.38" fill="var(--dato)" opacity="0.158"><title>2 Espía · avance · fuerza 4%</title></rect><rect x="41" y="196.88" width="26" height="2.38" fill="var(--dato)" opacity="0.159"><title>2 Espía · lateral · fuerza 4%</title></rect><rect x="41" y="199.61" width="26" height="2.38" fill="var(--dato)" opacity="0.155"><title>2 Espía · juntoABandera · fuerza 4%</title></rect><rect x="41" y="202.33" width="26" height="2.38" fill="var(--dato)" opacity="0.289"><title>2 Espía · juntoAReclutamiento · fuerza 19%</title></rect><rect x="41" y="205.06" width="26" height="2.38" fill="var(--dato)" opacity="0.143"><title>2 Espía · enElBorde · fuerza 3%</title></rect><rect x="41" y="207.79" width="26" height="2.38" fill="var(--dato)" opacity="0.281"><title>2 Espía · cubiertoPorLago · fuerza 18%</title></rect><rect x="41" y="210.52" width="26" height="2.38" fill="var(--dato)" opacity="0.224"><title>2 Espía · cercaDeTiro · fuerza 12%</title></rect><rect x="41" y="213.25" width="26" height="2.38" fill="var(--dato)" opacity="0.135"><title>2 Espía · prontoEnJuego · fuerza 2%</title></rect><rect x="41" y="215.97" width="26" height="2.38" fill="var(--dato)" opacity="0.171"><title>1 Cañón · avance · fuerza 6%</title></rect><rect x="41" y="218.70" width="26" height="2.38" fill="var(--dato)" opacity="1.000"><title>1 Cañón · lateral · fuerza 100%</title></rect><rect x="41" y="221.43" width="26" height="2.38" fill="var(--dato)" opacity="0.298"><title>1 Cañón · juntoABandera · fuerza 20%</title></rect><rect x="41" y="224.16" width="26" height="2.38" fill="var(--dato)" opacity="0.268"><title>1 Cañón · juntoAReclutamiento · fuerza 17%</title></rect><rect x="41" y="226.88" width="26" height="2.38" fill="var(--dato)" opacity="0.383"><title>1 Cañón · enElBorde · fuerza 30%</title></rect><rect x="41" y="229.61" width="26" height="2.38" fill="var(--dato)" opacity="0.899"><title>1 Cañón · cubiertoPorLago · fuerza 89%</title></rect><rect x="41" y="232.34" width="26" height="2.38" fill="var(--dato)" opacity="0.535"><title>1 Cañón · cercaDeTiro · fuerza 47%</title></rect><rect x="41" y="235.07" width="26" height="2.38" fill="var(--dato)" opacity="0.182"><title>1 Cañón · prontoEnJuego · fuerza 7%</title></rect><rect x="41" y="237.80" width="26" height="2.38" fill="var(--dato)" opacity="0.147"><title>conjunto · equilibrioLateral · fuerza 3%</title></rect><rect x="41" y="240.52" width="26" height="2.38" fill="var(--dato)" opacity="0.914"><title>conjunto · rangoDeLaBandera · fuerza 90%</title></rect><rect x="41" y="243.25" width="26" height="2.38" fill="var(--dato)" opacity="0.216"><title>conjunto · fuerzaAdelantada · fuerza 11%</title></rect><rect x="41" y="245.98" width="26" height="2.38" fill="var(--dato)" opacity="0.272"><title>conjunto · espiaJuntoAAlto · fuerza 17%</title></rect><rect x="41" y="248.71" width="26" height="2.38" fill="var(--dato)" opacity="0.444"><title>conjunto · altosCamuflados · fuerza 37%</title></rect><rect x="41" y="251.43" width="26" height="2.38" fill="var(--dato)" opacity="0.185"><title>conjunto · altosJuntoAComandante · fuerza 7%</title></rect><rect x="41" y="254.16" width="26" height="2.38" fill="var(--dato)" opacity="0.443"><title>conjunto · comandantesJuntoATeniente · fuerza 37%</title></rect><rect x="41" y="256.89" width="26" height="2.38" fill="var(--dato)" opacity="0.166"><title>conjunto · mezclaEnPrimeraLinea · fuerza 5%</title></rect><rect x="41" y="259.62" width="26" height="2.38" fill="var(--dato)" opacity="0.582"><title>conjunto · altosEnPrimeraLinea · fuerza 53%</title></rect><rect x="41" y="262.34" width="26" height="2.38" fill="var(--dato)" opacity="0.168"><title>conjunto · parejasDeDosSaltos · fuerza 5%</title></rect><rect x="41" y="265.07" width="26" height="2.38" fill="var(--dato)" opacity="0.367"><title>conjunto · defensaEconomica · fuerza 28%</title></rect><line x1="39" y1="220.1" x2="30" y2="220.1" stroke="var(--laton)" stroke-width="1"/>
-      <text x="27" y="223.1" text-anchor="end" font-size="9" fill="var(--laton)" font-family="'IBM Plex Mono',monospace">lateral</text><line x1="39" y1="241.9" x2="30" y2="241.9" stroke="var(--laton)" stroke-width="1"/>
-      <text x="27" y="244.9" text-anchor="end" font-size="9" fill="var(--laton)" font-family="'IBM Plex Mono',monospace">rangoDeLaBandera</text><line x1="39" y1="138.2" x2="30" y2="138.2" stroke="var(--laton)" stroke-width="1"/>
-      <text x="27" y="141.2" text-anchor="end" font-size="9" fill="var(--laton)" font-family="'IBM Plex Mono',monospace">juntoAReclutamient</text><path d="M 394.6 48.5 L 645 150.0"
-        fill="none" stroke="var(--mal)" stroke-width="0.40" opacity="0.45"/>
-      <circle cx="392.00000000000006" cy="48.5" r="2.60" fill="var(--laton)" opacity="0.200">
-        <title>oculta 0 · le entra 0% · sale 0%</title></circle><path d="M 394.6 62.6 L 645 150.0"
-        fill="none" stroke="var(--mal)" stroke-width="0.40" opacity="0.45"/>
-      <circle cx="392.00000000000006" cy="62.6" r="2.60" fill="var(--laton)" opacity="0.200">
-        <title>oculta 1 · le entra 0% · sale 0%</title></circle><path d="M 394.6 76.8 L 645 150.0"
-        fill="none" stroke="var(--mal)" stroke-width="0.40" opacity="0.45"/>
-      <circle cx="392.00000000000006" cy="76.8" r="2.60" fill="var(--laton)" opacity="0.200">
-        <title>oculta 2 · le entra 0% · sale 0%</title></circle><path d="M 394.6 90.9 L 645 150.0"
-        fill="none" stroke="var(--mal)" stroke-width="0.40" opacity="0.45"/>
-      <circle cx="392.00000000000006" cy="90.9" r="2.60" fill="var(--laton)" opacity="0.200">
-        <title>oculta 3 · le entra 0% · sale 0%</title></circle><path d="M 394.6 105.1 L 645 150.0"
-        fill="none" stroke="var(--mal)" stroke-width="0.40" opacity="0.45"/>
-      <circle cx="392.00000000000006" cy="105.1" r="2.60" fill="var(--laton)" opacity="0.200">
-        <title>oculta 4 · le entra 0% · sale 0%</title></circle><path d="M 394.6 119.2 L 645 150.0"
-        fill="none" stroke="var(--mal)" stroke-width="0.40" opacity="0.45"/>
-      <circle cx="392.00000000000006" cy="119.2" r="2.60" fill="var(--laton)" opacity="0.200">
-        <title>oculta 5 · le entra 0% · sale 0%</title></circle><path d="M 394.6 133.4 L 645 150.0"
-        fill="none" stroke="var(--mal)" stroke-width="0.40" opacity="0.45"/>
-      <circle cx="392.00000000000006" cy="133.4" r="2.60" fill="var(--laton)" opacity="0.200">
-        <title>oculta 6 · le entra 0% · sale 0%</title></circle><path d="M 394.6 147.5 L 645 150.0"
-        fill="none" stroke="var(--mal)" stroke-width="0.40" opacity="0.45"/>
-      <circle cx="392.00000000000006" cy="147.5" r="2.60" fill="var(--laton)" opacity="0.200">
-        <title>oculta 7 · le entra 0% · sale 0%</title></circle><path d="M 394.6 161.7 L 645 150.0"
-        fill="none" stroke="var(--mal)" stroke-width="0.40" opacity="0.45"/>
-      <circle cx="392.00000000000006" cy="161.7" r="2.60" fill="var(--laton)" opacity="0.200">
-        <title>oculta 8 · le entra 0% · sale 0%</title></circle><path d="M 394.6 175.8 L 645 150.0"
-        fill="none" stroke="var(--mal)" stroke-width="0.40" opacity="0.45"/>
-      <circle cx="392.00000000000006" cy="175.8" r="2.60" fill="var(--laton)" opacity="0.200">
-        <title>oculta 9 · le entra 0% · sale 0%</title></circle><path d="M 394.6 190.0 L 645 150.0"
-        fill="none" stroke="var(--mal)" stroke-width="0.40" opacity="0.45"/>
-      <circle cx="392.00000000000006" cy="190.0" r="2.60" fill="var(--laton)" opacity="0.200">
-        <title>oculta 10 · le entra 0% · sale 0%</title></circle><path d="M 394.6 204.1 L 645 150.0"
-        fill="none" stroke="var(--mal)" stroke-width="0.40" opacity="0.45"/>
-      <circle cx="392.00000000000006" cy="204.1" r="2.60" fill="var(--laton)" opacity="0.200">
-        <title>oculta 11 · le entra 0% · sale 0%</title></circle><path d="M 394.6 218.3 L 645 150.0"
-        fill="none" stroke="var(--mal)" stroke-width="0.40" opacity="0.45"/>
-      <circle cx="392.00000000000006" cy="218.3" r="2.60" fill="var(--laton)" opacity="0.200">
-        <title>oculta 12 · le entra 0% · sale 0%</title></circle><path d="M 394.6 232.4 L 645 150.0"
-        fill="none" stroke="var(--mal)" stroke-width="0.40" opacity="0.45"/>
-      <circle cx="392.00000000000006" cy="232.4" r="2.60" fill="var(--laton)" opacity="0.200">
-        <title>oculta 13 · le entra 0% · sale 0%</title></circle><path d="M 394.6 246.6 L 645 150.0"
-        fill="none" stroke="var(--mal)" stroke-width="0.40" opacity="0.45"/>
-      <circle cx="392.00000000000006" cy="246.6" r="2.60" fill="var(--laton)" opacity="0.200">
-        <title>oculta 14 · le entra 0% · sale 0%</title></circle><path d="M 402.1 260.7 L 645 150.0"
+    <path d="M 67 231.0 C 144 231.0, 322 133.4, 381 133.4"
+      fill="none" stroke="var(--mal)" stroke-width="1.85" opacity="0.540"/><path d="M 67 241.9 C 144 241.9, 322 133.4, 381 133.4"
+      fill="none" stroke="var(--mal)" stroke-width="1.80" opacity="0.525"/><path d="M 67 56.4 C 144 56.4, 322 133.4, 381 133.4"
+      fill="none" stroke="var(--bien)" stroke-width="1.68" opacity="0.493"/><path d="M 67 220.1 C 144 220.1, 322 133.4, 381 133.4"
+      fill="none" stroke="var(--bien)" stroke-width="1.66" opacity="0.486"/><path d="M 67 116.4 C 144 116.4, 322 133.4, 381 133.4"
+      fill="none" stroke="var(--bien)" stroke-width="1.32" opacity="0.392"/><path d="M 67 50.9 C 144 50.9, 322 133.4, 381 133.4"
+      fill="none" stroke="var(--mal)" stroke-width="1.29" opacity="0.384"/><path d="M 67 228.2 C 144 228.2, 322 133.4, 381 133.4"
+      fill="none" stroke="var(--bien)" stroke-width="1.28" opacity="0.380"/><path d="M 67 233.7 C 144 233.7, 322 133.4, 381 133.4"
+      fill="none" stroke="var(--mal)" stroke-width="1.24" opacity="0.370"/><path d="M 67 168.2 C 144 168.2, 322 133.4, 381 133.4"
+      fill="none" stroke="var(--bien)" stroke-width="1.13" opacity="0.338"/><path d="M 67 228.2 C 144 228.2, 322 260.7, 381 260.7"
+      fill="none" stroke="var(--bien)" stroke-width="1.08" opacity="0.326"/><path d="M 67 151.9 C 144 151.9, 322 133.4, 381 133.4"
+      fill="none" stroke="var(--bien)" stroke-width="1.08" opacity="0.325"/><path d="M 67 48.2 C 144 48.2, 322 133.4, 381 133.4"
+      fill="none" stroke="var(--bien)" stroke-width="1.05" opacity="0.317"/><path d="M 67 222.8 C 144 222.8, 322 133.4, 381 133.4"
+      fill="none" stroke="var(--bien)" stroke-width="1.05" opacity="0.316"/><path d="M 67 72.8 C 144 72.8, 322 133.4, 381 133.4"
+      fill="none" stroke="var(--mal)" stroke-width="1.02" opacity="0.308"/><path d="M 67 138.2 C 144 138.2, 322 133.4, 381 133.4"
+      fill="none" stroke="var(--bien)" stroke-width="1.01" opacity="0.304"/><path d="M 67 209.2 C 144 209.2, 322 133.4, 381 133.4"
+      fill="none" stroke="var(--bien)" stroke-width="1.01" opacity="0.304"/><path d="M 67 203.7 C 144 203.7, 322 133.4, 381 133.4"
+      fill="none" stroke="var(--mal)" stroke-width="0.95" opacity="0.288"/><path d="M 67 261.0 C 144 261.0, 322 133.4, 381 133.4"
+      fill="none" stroke="var(--mal)" stroke-width="0.94" opacity="0.285"/><path d="M 67 119.1 C 144 119.1, 322 133.4, 381 133.4"
+      fill="none" stroke="var(--bien)" stroke-width="0.94" opacity="0.285"/><path d="M 67 201.0 C 144 201.0, 322 133.4, 381 133.4"
+      fill="none" stroke="var(--mal)" stroke-width="0.94" opacity="0.285"/><path d="M 67 108.2 C 144 108.2, 322 133.4, 381 133.4"
+      fill="none" stroke="var(--mal)" stroke-width="0.93" opacity="0.282"/><path d="M 67 56.4 C 144 56.4, 322 260.7, 381 260.7"
+      fill="none" stroke="var(--bien)" stroke-width="0.93" opacity="0.281"/><path d="M 67 53.7 C 144 53.7, 322 133.4, 381 133.4"
+      fill="none" stroke="var(--bien)" stroke-width="0.92" opacity="0.281"/><path d="M 67 220.1 C 144 220.1, 322 260.7, 381 260.7"
+      fill="none" stroke="var(--bien)" stroke-width="0.92" opacity="0.279"/><path d="M 67 124.6 C 144 124.6, 322 133.4, 381 133.4"
+      fill="none" stroke="var(--mal)" stroke-width="0.91" opacity="0.277"/><path d="M 67 162.8 C 144 162.8, 322 133.4, 381 133.4"
+      fill="none" stroke="var(--mal)" stroke-width="0.83" opacity="0.255"/><path d="M 67 146.4 C 144 146.4, 322 133.4, 381 133.4"
+      fill="none" stroke="var(--bien)" stroke-width="0.83" opacity="0.253"/><path d="M 67 86.4 C 144 86.4, 322 133.4, 381 133.4"
+      fill="none" stroke="var(--bien)" stroke-width="0.80" opacity="0.247"/><path d="M 67 100.0 C 144 100.0, 322 133.4, 381 133.4"
+      fill="none" stroke="var(--bien)" stroke-width="0.76" opacity="0.236"/><path d="M 67 141.0 C 144 141.0, 322 133.4, 381 133.4"
+      fill="none" stroke="var(--mal)" stroke-width="0.76" opacity="0.234"/><path d="M 67 72.8 C 144 72.8, 322 260.7, 381 260.7"
+      fill="none" stroke="var(--mal)" stroke-width="0.76" opacity="0.234"/><path d="M 67 119.1 C 144 119.1, 322 260.7, 381 260.7"
+      fill="none" stroke="var(--bien)" stroke-width="0.75" opacity="0.233"/><path d="M 67 78.2 C 144 78.2, 322 133.4, 381 133.4"
+      fill="none" stroke="var(--bien)" stroke-width="0.75" opacity="0.233"/><path d="M 67 165.5 C 144 165.5, 322 133.4, 381 133.4"
+      fill="none" stroke="var(--bien)" stroke-width="0.74" opacity="0.229"/><path d="M 67 255.5 C 144 255.5, 322 133.4, 381 133.4"
+      fill="none" stroke="var(--bien)" stroke-width="0.74" opacity="0.229"/><path d="M 67 102.8 C 144 102.8, 322 133.4, 381 133.4"
+      fill="none" stroke="var(--bien)" stroke-width="0.72" opacity="0.225"/><path d="M 67 116.4 C 144 116.4, 322 260.7, 381 260.7"
+      fill="none" stroke="var(--bien)" stroke-width="0.72" opacity="0.222"/><path d="M 67 171.0 C 144 171.0, 322 133.4, 381 133.4"
+      fill="none" stroke="var(--bien)" stroke-width="0.71" opacity="0.220"/><path d="M 67 247.3 C 144 247.3, 322 260.7, 381 260.7"
+      fill="none" stroke="var(--bien)" stroke-width="0.71" opacity="0.220"/><path d="M 67 135.5 C 144 135.5, 322 133.4, 381 133.4"
+      fill="none" stroke="var(--mal)" stroke-width="0.70" opacity="0.217"/><path d="M 67 53.7 C 144 53.7, 322 260.7, 381 260.7"
+      fill="none" stroke="var(--bien)" stroke-width="0.70" opacity="0.217"/><path d="M 67 231.0 C 144 231.0, 322 260.7, 381 260.7"
+      fill="none" stroke="var(--mal)" stroke-width="0.69" opacity="0.216"/><path d="M 67 138.2 C 144 138.2, 322 260.7, 381 260.7"
+      fill="none" stroke="var(--bien)" stroke-width="0.68" opacity="0.212"/><path d="M 67 252.8 C 144 252.8, 322 133.4, 381 133.4"
+      fill="none" stroke="var(--bien)" stroke-width="0.68" opacity="0.211"/><path d="M 67 111.0 C 144 111.0, 322 133.4, 381 133.4"
+      fill="none" stroke="var(--bien)" stroke-width="0.68" opacity="0.211"/><path d="M 67 179.1 C 144 179.1, 322 133.4, 381 133.4"
+      fill="none" stroke="var(--mal)" stroke-width="0.67" opacity="0.210"/><path d="M 67 48.2 C 144 48.2, 322 260.7, 381 260.7"
+      fill="none" stroke="var(--bien)" stroke-width="0.67" opacity="0.209"/><path d="M 67 130.1 C 144 130.1, 322 133.4, 381 133.4"
+      fill="none" stroke="var(--bien)" stroke-width="0.67" opacity="0.208"/><path d="M 67 154.6 C 144 154.6, 322 133.4, 381 133.4"
+      fill="none" stroke="var(--mal)" stroke-width="0.66" opacity="0.207"/><path d="M 67 121.9 C 144 121.9, 322 133.4, 381 133.4"
+      fill="none" stroke="var(--mal)" stroke-width="0.66" opacity="0.206"/><path d="M 67 70.0 C 144 70.0, 322 133.4, 381 133.4"
+      fill="none" stroke="var(--bien)" stroke-width="0.66" opacity="0.206"/><path d="M 67 42.8 C 144 42.8, 322 133.4, 381 133.4"
+      fill="none" stroke="var(--mal)" stroke-width="0.65" opacity="0.203"/><path d="M 67 97.3 C 144 97.3, 322 133.4, 381 133.4"
+      fill="none" stroke="var(--bien)" stroke-width="0.64" opacity="0.201"/><path d="M 67 247.3 C 144 247.3, 322 133.4, 381 133.4"
+      fill="none" stroke="var(--bien)" stroke-width="0.62" opacity="0.196"/><path d="M 67 132.8 C 144 132.8, 322 133.4, 381 133.4"
+      fill="none" stroke="var(--mal)" stroke-width="0.62" opacity="0.196"/><path d="M 67 105.5 C 144 105.5, 322 133.4, 381 133.4"
+      fill="none" stroke="var(--bien)" stroke-width="0.61" opacity="0.194"/><path d="M 67 165.5 C 144 165.5, 322 260.7, 381 260.7"
+      fill="none" stroke="var(--bien)" stroke-width="0.61" opacity="0.192"/><path d="M 67 211.9 C 144 211.9, 322 133.4, 381 133.4"
+      fill="none" stroke="var(--bien)" stroke-width="0.60" opacity="0.190"/><path d="M 67 72.8 C 144 72.8, 322 105.1, 381 105.1"
+      fill="none" stroke="var(--bien)" stroke-width="0.60" opacity="0.190"/><path d="M 67 72.8 C 144 72.8, 322 62.6, 381 62.6"
+      fill="none" stroke="var(--bien)" stroke-width="0.60" opacity="0.190"/><path d="M 67 146.4 C 144 146.4, 322 260.7, 381 260.7"
+      fill="none" stroke="var(--bien)" stroke-width="0.60" opacity="0.190"/><path d="M 67 72.8 C 144 72.8, 322 161.7, 381 161.7"
+      fill="none" stroke="var(--bien)" stroke-width="0.59" opacity="0.188"/><path d="M 67 64.6 C 144 64.6, 322 260.7, 381 260.7"
+      fill="none" stroke="var(--bien)" stroke-width="0.59" opacity="0.187"/><path d="M 67 168.2 C 144 168.2, 322 260.7, 381 260.7"
+      fill="none" stroke="var(--bien)" stroke-width="0.58" opacity="0.186"/><path d="M 67 83.7 C 144 83.7, 322 260.7, 381 260.7"
+      fill="none" stroke="var(--bien)" stroke-width="0.58" opacity="0.185"/><path d="M 67 225.5 C 144 225.5, 322 133.4, 381 133.4"
+      fill="none" stroke="var(--mal)" stroke-width="0.58" opacity="0.185"/><path d="M 67 233.7 C 144 233.7, 322 260.7, 381 260.7"
+      fill="none" stroke="var(--mal)" stroke-width="0.58" opacity="0.183"/><path d="M 67 70.0 C 144 70.0, 322 260.7, 381 260.7"
+      fill="none" stroke="var(--bien)" stroke-width="0.57" opacity="0.183"/><path d="M 67 89.1 C 144 89.1, 322 133.4, 381 133.4"
+      fill="none" stroke="var(--bien)" stroke-width="0.57" opacity="0.183"/><path d="M 67 67.3 C 144 67.3, 322 133.4, 381 133.4"
+      fill="none" stroke="var(--bien)" stroke-width="0.57" opacity="0.182"/><path d="M 67 241.9 C 144 241.9, 322 260.7, 381 260.7"
+      fill="none" stroke="var(--mal)" stroke-width="0.57" opacity="0.181"/><path d="M 67 94.6 C 144 94.6, 322 133.4, 381 133.4"
+      fill="none" stroke="var(--mal)" stroke-width="0.56" opacity="0.180"/><path d="M 67 83.7 C 144 83.7, 322 133.4, 381 133.4"
+      fill="none" stroke="var(--bien)" stroke-width="0.55" opacity="0.177"/><path d="M 67 252.8 C 144 252.8, 322 260.7, 381 260.7"
+      fill="none" stroke="var(--bien)" stroke-width="0.55" opacity="0.175"/><path d="M 67 209.2 C 144 209.2, 322 260.7, 381 260.7"
+      fill="none" stroke="var(--bien)" stroke-width="0.54" opacity="0.174"/><path d="M 67 261.0 C 144 261.0, 322 260.7, 381 260.7"
+      fill="none" stroke="var(--bien)" stroke-width="0.53" opacity="0.171"/><path d="M 67 81.0 C 144 81.0, 322 260.7, 381 260.7"
+      fill="none" stroke="var(--bien)" stroke-width="0.53" opacity="0.170"/><path d="M 67 263.7 C 144 263.7, 322 133.4, 381 133.4"
+      fill="none" stroke="var(--bien)" stroke-width="0.53" opacity="0.170"/><path d="M 67 173.7 C 144 173.7, 322 133.4, 381 133.4"
+      fill="none" stroke="var(--mal)" stroke-width="0.53" opacity="0.169"/><path d="M 67 50.9 C 144 50.9, 322 260.7, 381 260.7"
+      fill="none" stroke="var(--mal)" stroke-width="0.53" opacity="0.169"/><path d="M 67 149.1 C 144 149.1, 322 133.4, 381 133.4"
+      fill="none" stroke="var(--bien)" stroke-width="0.52" opacity="0.169"/><path d="M 67 231.0 C 144 231.0, 322 105.1, 381 105.1"
+      fill="none" stroke="var(--bien)" stroke-width="0.52" opacity="0.168"/><path d="M 67 198.2 C 144 198.2, 322 133.4, 381 133.4"
+      fill="none" stroke="var(--mal)" stroke-width="0.52" opacity="0.168"/><path d="M 67 220.1 C 144 220.1, 322 105.1, 381 105.1"
+      fill="none" stroke="var(--mal)" stroke-width="0.52" opacity="0.168"/><path d="M 67 162.8 C 144 162.8, 322 260.7, 381 260.7"
+      fill="none" stroke="var(--mal)" stroke-width="0.52" opacity="0.168"/><path d="M 67 206.4 C 144 206.4, 322 133.4, 381 133.4"
+      fill="none" stroke="var(--bien)" stroke-width="0.52" opacity="0.168"/><path d="M 67 220.1 C 144 220.1, 322 62.6, 381 62.6"
+      fill="none" stroke="var(--mal)" stroke-width="0.52" opacity="0.168"/><path d="M 67 231.0 C 144 231.0, 322 62.6, 381 62.6"
+      fill="none" stroke="var(--bien)" stroke-width="0.52" opacity="0.167"/><path d="M 67 75.5 C 144 75.5, 322 133.4, 381 133.4"
+      fill="none" stroke="var(--mal)" stroke-width="0.52" opacity="0.167"/><path d="M 67 91.9 C 144 91.9, 322 133.4, 381 133.4"
+      fill="none" stroke="var(--bien)" stroke-width="0.51" opacity="0.166"/><rect x="41" y="41.40" width="26" height="2.38" fill="var(--dato)" opacity="0.290"><title>9 Mariscal · avance · fuerza 19%</title></rect><rect x="41" y="44.13" width="26" height="2.38" fill="var(--dato)" opacity="0.221"><title>9 Mariscal · lateral · fuerza 11%</title></rect><rect x="41" y="46.86" width="26" height="2.38" fill="var(--dato)" opacity="0.552"><title>9 Mariscal · juntoABandera · fuerza 49%</title></rect><rect x="41" y="49.58" width="26" height="2.38" fill="var(--dato)" opacity="0.711"><title>9 Mariscal · juntoAReclutamiento · fuerza 67%</title></rect><rect x="41" y="52.31" width="26" height="2.38" fill="var(--dato)" opacity="0.504"><title>9 Mariscal · enElBorde · fuerza 44%</title></rect><rect x="41" y="55.04" width="26" height="2.38" fill="var(--dato)" opacity="0.862"><title>9 Mariscal · cubiertoPorLago · fuerza 84%</title></rect><rect x="41" y="57.77" width="26" height="2.38" fill="var(--dato)" opacity="0.270"><title>9 Mariscal · cercaDeTiro · fuerza 17%</title></rect><rect x="41" y="60.49" width="26" height="2.38" fill="var(--dato)" opacity="0.207"><title>9 Mariscal · prontoEnJuego · fuerza 10%</title></rect><rect x="41" y="63.22" width="26" height="2.38" fill="var(--dato)" opacity="0.382"><title>8 General · avance · fuerza 30%</title></rect><rect x="41" y="65.95" width="26" height="2.38" fill="var(--dato)" opacity="0.277"><title>8 General · lateral · fuerza 18%</title></rect><rect x="41" y="68.68" width="26" height="2.38" fill="var(--dato)" opacity="0.336"><title>8 General · juntoABandera · fuerza 25%</title></rect><rect x="41" y="71.40" width="26" height="2.38" fill="var(--dato)" opacity="0.796"><title>8 General · juntoAReclutamiento · fuerza 77%</title></rect><rect x="41" y="74.13" width="26" height="2.38" fill="var(--dato)" opacity="0.289"><title>8 General · enElBorde · fuerza 19%</title></rect><rect x="41" y="76.86" width="26" height="2.38" fill="var(--dato)" opacity="0.439"><title>8 General · cubiertoPorLago · fuerza 36%</title></rect><rect x="41" y="79.59" width="26" height="2.38" fill="var(--dato)" opacity="0.268"><title>8 General · cercaDeTiro · fuerza 17%</title></rect><rect x="41" y="82.32" width="26" height="2.38" fill="var(--dato)" opacity="0.393"><title>8 General · prontoEnJuego · fuerza 31%</title></rect><rect x="41" y="85.04" width="26" height="2.38" fill="var(--dato)" opacity="0.414"><title>7 Comandante · avance · fuerza 33%</title></rect><rect x="41" y="87.77" width="26" height="2.38" fill="var(--dato)" opacity="0.372"><title>7 Comandante · lateral · fuerza 29%</title></rect><rect x="41" y="90.50" width="26" height="2.38" fill="var(--dato)" opacity="0.200"><title>7 Comandante · juntoABandera · fuerza 9%</title></rect><rect x="41" y="93.23" width="26" height="2.38" fill="var(--dato)" opacity="0.296"><title>7 Comandante · juntoAReclutamiento · fuerza 20%</title></rect><rect x="41" y="95.95" width="26" height="2.38" fill="var(--dato)" opacity="0.384"><title>7 Comandante · enElBorde · fuerza 30%</title></rect><rect x="41" y="98.68" width="26" height="2.38" fill="var(--dato)" opacity="0.284"><title>7 Comandante · cubiertoPorLago · fuerza 19%</title></rect><rect x="41" y="101.41" width="26" height="2.38" fill="var(--dato)" opacity="0.333"><title>7 Comandante · cercaDeTiro · fuerza 24%</title></rect><rect x="41" y="104.14" width="26" height="2.38" fill="var(--dato)" opacity="0.292"><title>7 Comandante · prontoEnJuego · fuerza 20%</title></rect><rect x="41" y="106.87" width="26" height="2.38" fill="var(--dato)" opacity="0.492"><title>6 Capitán · avance · fuerza 42%</title></rect><rect x="41" y="109.59" width="26" height="2.38" fill="var(--dato)" opacity="0.326"><title>6 Capitán · lateral · fuerza 23%</title></rect><rect x="41" y="112.32" width="26" height="2.38" fill="var(--dato)" opacity="0.276"><title>6 Capitán · juntoABandera · fuerza 18%</title></rect><rect x="41" y="115.05" width="26" height="2.38" fill="var(--dato)" opacity="0.719"><title>6 Capitán · juntoAReclutamiento · fuerza 68%</title></rect><rect x="41" y="117.78" width="26" height="2.38" fill="var(--dato)" opacity="0.616"><title>6 Capitán · enElBorde · fuerza 56%</title></rect><rect x="41" y="120.50" width="26" height="2.38" fill="var(--dato)" opacity="0.369"><title>6 Capitán · cubiertoPorLago · fuerza 28%</title></rect><rect x="41" y="123.23" width="26" height="2.38" fill="var(--dato)" opacity="0.504"><title>6 Capitán · cercaDeTiro · fuerza 44%</title></rect><rect x="41" y="125.96" width="26" height="2.38" fill="var(--dato)" opacity="0.252"><title>6 Capitán · prontoEnJuego · fuerza 15%</title></rect><rect x="41" y="128.69" width="26" height="2.38" fill="var(--dato)" opacity="0.339"><title>5 Teniente · avance · fuerza 25%</title></rect><rect x="41" y="131.41" width="26" height="2.38" fill="var(--dato)" opacity="0.345"><title>5 Teniente · lateral · fuerza 26%</title></rect><rect x="41" y="134.14" width="26" height="2.38" fill="var(--dato)" opacity="0.477"><title>5 Teniente · juntoABandera · fuerza 41%</title></rect><rect x="41" y="136.87" width="26" height="2.38" fill="var(--dato)" opacity="0.507"><title>5 Teniente · juntoAReclutamiento · fuerza 44%</title></rect><rect x="41" y="139.60" width="26" height="2.38" fill="var(--dato)" opacity="0.415"><title>5 Teniente · enElBorde · fuerza 34%</title></rect><rect x="41" y="142.33" width="26" height="2.38" fill="var(--dato)" opacity="0.252"><title>5 Teniente · cubiertoPorLago · fuerza 15%</title></rect><rect x="41" y="145.05" width="26" height="2.38" fill="var(--dato)" opacity="0.429"><title>5 Teniente · cercaDeTiro · fuerza 35%</title></rect><rect x="41" y="147.78" width="26" height="2.38" fill="var(--dato)" opacity="0.252"><title>5 Teniente · prontoEnJuego · fuerza 15%</title></rect><rect x="41" y="150.51" width="26" height="2.38" fill="var(--dato)" opacity="0.525"><title>4 Sargento · avance · fuerza 46%</title></rect><rect x="41" y="153.24" width="26" height="2.38" fill="var(--dato)" opacity="0.431"><title>4 Sargento · lateral · fuerza 35%</title></rect><rect x="41" y="155.96" width="26" height="2.38" fill="var(--dato)" opacity="0.177"><title>4 Sargento · juntoABandera · fuerza 7%</title></rect><rect x="41" y="158.69" width="26" height="2.38" fill="var(--dato)" opacity="0.340"><title>4 Sargento · juntoAReclutamiento · fuerza 25%</title></rect><rect x="41" y="161.42" width="26" height="2.38" fill="var(--dato)" opacity="0.533"><title>4 Sargento · enElBorde · fuerza 47%</title></rect><rect x="41" y="164.15" width="26" height="2.38" fill="var(--dato)" opacity="0.450"><title>4 Sargento · cubiertoPorLago · fuerza 38%</title></rect><rect x="41" y="166.87" width="26" height="2.38" fill="var(--dato)" opacity="0.550"><title>4 Sargento · cercaDeTiro · fuerza 49%</title></rect><rect x="41" y="169.60" width="26" height="2.38" fill="var(--dato)" opacity="0.328"><title>4 Sargento · prontoEnJuego · fuerza 24%</title></rect><rect x="41" y="172.33" width="26" height="2.38" fill="var(--dato)" opacity="0.352"><title>3 Explorador · avance · fuerza 26%</title></rect><rect x="41" y="175.06" width="26" height="2.38" fill="var(--dato)" opacity="0.258"><title>3 Explorador · lateral · fuerza 16%</title></rect><rect x="41" y="177.79" width="26" height="2.38" fill="var(--dato)" opacity="0.360"><title>3 Explorador · juntoABandera · fuerza 27%</title></rect><rect x="41" y="180.51" width="26" height="2.38" fill="var(--dato)" opacity="0.330"><title>3 Explorador · juntoAReclutamiento · fuerza 24%</title></rect><rect x="41" y="183.24" width="26" height="2.38" fill="var(--dato)" opacity="0.210"><title>3 Explorador · enElBorde · fuerza 10%</title></rect><rect x="41" y="185.97" width="26" height="2.38" fill="var(--dato)" opacity="0.189"><title>3 Explorador · cubiertoPorLago · fuerza 8%</title></rect><rect x="41" y="188.70" width="26" height="2.38" fill="var(--dato)" opacity="0.288"><title>3 Explorador · cercaDeTiro · fuerza 19%</title></rect><rect x="41" y="191.42" width="26" height="2.38" fill="var(--dato)" opacity="0.239"><title>3 Explorador · prontoEnJuego · fuerza 13%</title></rect><rect x="41" y="194.15" width="26" height="2.38" fill="var(--dato)" opacity="0.267"><title>2 Espía · avance · fuerza 17%</title></rect><rect x="41" y="196.88" width="26" height="2.38" fill="var(--dato)" opacity="0.349"><title>2 Espía · lateral · fuerza 26%</title></rect><rect x="41" y="199.61" width="26" height="2.38" fill="var(--dato)" opacity="0.566"><title>2 Espía · juntoABandera · fuerza 51%</title></rect><rect x="41" y="202.33" width="26" height="2.38" fill="var(--dato)" opacity="0.525"><title>2 Espía · juntoAReclutamiento · fuerza 46%</title></rect><rect x="41" y="205.06" width="26" height="2.38" fill="var(--dato)" opacity="0.269"><title>2 Espía · enElBorde · fuerza 17%</title></rect><rect x="41" y="207.79" width="26" height="2.38" fill="var(--dato)" opacity="0.567"><title>2 Espía · cubiertoPorLago · fuerza 51%</title></rect><rect x="41" y="210.52" width="26" height="2.38" fill="var(--dato)" opacity="0.340"><title>2 Espía · cercaDeTiro · fuerza 25%</title></rect><rect x="41" y="213.25" width="26" height="2.38" fill="var(--dato)" opacity="0.237"><title>2 Espía · prontoEnJuego · fuerza 13%</title></rect><rect x="41" y="215.97" width="26" height="2.38" fill="var(--dato)" opacity="0.305"><title>1 Cañón · avance · fuerza 21%</title></rect><rect x="41" y="218.70" width="26" height="2.38" fill="var(--dato)" opacity="1.000"><title>1 Cañón · lateral · fuerza 100%</title></rect><rect x="41" y="221.43" width="26" height="2.38" fill="var(--dato)" opacity="0.444"><title>1 Cañón · juntoABandera · fuerza 37%</title></rect><rect x="41" y="224.16" width="26" height="2.38" fill="var(--dato)" opacity="0.272"><title>1 Cañón · juntoAReclutamiento · fuerza 17%</title></rect><rect x="41" y="226.88" width="26" height="2.38" fill="var(--dato)" opacity="0.847"><title>1 Cañón · enElBorde · fuerza 83%</title></rect><rect x="41" y="229.61" width="26" height="2.38" fill="var(--dato)" opacity="1.000"><title>1 Cañón · cubiertoPorLago · fuerza 100%</title></rect><rect x="41" y="232.34" width="26" height="2.38" fill="var(--dato)" opacity="0.704"><title>1 Cañón · cercaDeTiro · fuerza 66%</title></rect><rect x="41" y="235.07" width="26" height="2.38" fill="var(--dato)" opacity="0.244"><title>1 Cañón · prontoEnJuego · fuerza 14%</title></rect><rect x="41" y="237.80" width="26" height="2.38" fill="var(--dato)" opacity="0.242"><title>conjunto · equilibrioLateral · fuerza 14%</title></rect><rect x="41" y="240.52" width="26" height="2.38" fill="var(--dato)" opacity="0.871"><title>conjunto · rangoDeLaBandera · fuerza 85%</title></rect><rect x="41" y="243.25" width="26" height="2.38" fill="var(--dato)" opacity="0.245"><title>conjunto · fuerzaAdelantada · fuerza 14%</title></rect><rect x="41" y="245.98" width="26" height="2.38" fill="var(--dato)" opacity="0.506"><title>conjunto · espiaJuntoAAlto · fuerza 44%</title></rect><rect x="41" y="248.71" width="26" height="2.38" fill="var(--dato)" opacity="0.282"><title>conjunto · altosCamuflados · fuerza 18%</title></rect><rect x="41" y="251.43" width="26" height="2.38" fill="var(--dato)" opacity="0.372"><title>conjunto · altosJuntoAComandante · fuerza 29%</title></rect><rect x="41" y="254.16" width="26" height="2.38" fill="var(--dato)" opacity="0.324"><title>conjunto · comandantesJuntoATeniente · fuerza 23%</title></rect><rect x="41" y="256.89" width="26" height="2.38" fill="var(--dato)" opacity="0.241"><title>conjunto · mezclaEnPrimeraLinea · fuerza 14%</title></rect><rect x="41" y="259.62" width="26" height="2.38" fill="var(--dato)" opacity="0.562"><title>conjunto · altosEnPrimeraLinea · fuerza 50%</title></rect><rect x="41" y="262.34" width="26" height="2.38" fill="var(--dato)" opacity="0.246"><title>conjunto · parejasDeDosSaltos · fuerza 14%</title></rect><rect x="41" y="265.07" width="26" height="2.38" fill="var(--dato)" opacity="0.226"><title>conjunto · defensaEconomica · fuerza 12%</title></rect><line x1="39" y1="220.1" x2="30" y2="220.1" stroke="var(--laton)" stroke-width="1"/>
+      <text x="27" y="223.1" text-anchor="end" font-size="9" fill="var(--laton)" font-family="'IBM Plex Mono',monospace">lateral</text><line x1="39" y1="231.0" x2="30" y2="231.0" stroke="var(--laton)" stroke-width="1"/>
+      <text x="27" y="234.0" text-anchor="end" font-size="9" fill="var(--laton)" font-family="'IBM Plex Mono',monospace">cubiertoPorLago</text><line x1="39" y1="241.9" x2="30" y2="241.9" stroke="var(--laton)" stroke-width="1"/>
+      <text x="27" y="244.9" text-anchor="end" font-size="9" fill="var(--laton)" font-family="'IBM Plex Mono',monospace">rangoDeLaBandera</text><path d="M 394.7 48.5 L 645 150.0"
+        fill="none" stroke="var(--mal)" stroke-width="0.44" opacity="0.45"/>
+      <circle cx="392.00000000000006" cy="48.5" r="2.73" fill="var(--laton)" opacity="0.208">
+        <title>oculta 0 · le entra 1% · sale 2%</title></circle><path d="M 395.1 62.6 L 645 150.0"
+        fill="none" stroke="var(--bien)" stroke-width="0.59" opacity="0.45"/>
+      <circle cx="392.00000000000006" cy="62.6" r="3.14" fill="var(--laton)" opacity="0.355">
+        <title>oculta 1 · le entra 19% · sale 7%</title></circle><path d="M 394.8 76.8 L 645 150.0"
+        fill="none" stroke="var(--mal)" stroke-width="0.46" opacity="0.45"/>
+      <circle cx="392.00000000000006" cy="76.8" r="2.77" fill="var(--laton)" opacity="0.207">
+        <title>oculta 2 · le entra 1% · sale 2%</title></circle><path d="M 395.0 90.9 L 645 150.0"
+        fill="none" stroke="var(--bien)" stroke-width="0.52" opacity="0.45"/>
+      <circle cx="392.00000000000006" cy="90.9" r="2.95" fill="var(--laton)" opacity="0.207">
+        <title>oculta 3 · le entra 1% · sale 5%</title></circle><path d="M 395.2 105.1 L 645 150.0"
+        fill="none" stroke="var(--bien)" stroke-width="0.59" opacity="0.45"/>
+      <circle cx="392.00000000000006" cy="105.1" r="3.16" fill="var(--laton)" opacity="0.358">
+        <title>oculta 4 · le entra 20% · sale 7%</title></circle><path d="M 394.7 119.2 L 645 150.0"
+        fill="none" stroke="var(--mal)" stroke-width="0.44" opacity="0.45"/>
+      <circle cx="392.00000000000006" cy="119.2" r="2.73" fill="var(--laton)" opacity="0.207">
+        <title>oculta 5 · le entra 1% · sale 2%</title></circle><path d="M 402.1 133.4 L 645 150.0"
         fill="none" stroke="var(--mal)" stroke-width="3.00" opacity="0.45"/>
-      <circle cx="392.00000000000006" cy="260.7" r="10.10" fill="var(--laton)" opacity="1.000">
-        <title>oculta 15 · le entra 100% · sale 100%</title></circle>
+      <circle cx="392.00000000000006" cy="133.4" r="10.10" fill="var(--laton)" opacity="1.000">
+        <title>oculta 6 · le entra 100% · sale 100%</title></circle><path d="M 394.7 147.5 L 645 150.0"
+        fill="none" stroke="var(--mal)" stroke-width="0.45" opacity="0.45"/>
+      <circle cx="392.00000000000006" cy="147.5" r="2.74" fill="var(--laton)" opacity="0.206">
+        <title>oculta 7 · le entra 1% · sale 2%</title></circle><path d="M 395.1 161.7 L 645 150.0"
+        fill="none" stroke="var(--bien)" stroke-width="0.57" opacity="0.45"/>
+      <circle cx="392.00000000000006" cy="161.7" r="3.08" fill="var(--laton)" opacity="0.345">
+        <title>oculta 8 · le entra 18% · sale 6%</title></circle><path d="M 394.7 175.8 L 645 150.0"
+        fill="none" stroke="var(--mal)" stroke-width="0.44" opacity="0.45"/>
+      <circle cx="392.00000000000006" cy="175.8" r="2.73" fill="var(--laton)" opacity="0.207">
+        <title>oculta 9 · le entra 1% · sale 2%</title></circle><path d="M 394.7 190.0 L 645 150.0"
+        fill="none" stroke="var(--mal)" stroke-width="0.44" opacity="0.45"/>
+      <circle cx="392.00000000000006" cy="190.0" r="2.73" fill="var(--laton)" opacity="0.207">
+        <title>oculta 10 · le entra 1% · sale 2%</title></circle><path d="M 394.7 204.1 L 645 150.0"
+        fill="none" stroke="var(--mal)" stroke-width="0.45" opacity="0.45"/>
+      <circle cx="392.00000000000006" cy="204.1" r="2.74" fill="var(--laton)" opacity="0.206">
+        <title>oculta 11 · le entra 1% · sale 2%</title></circle><path d="M 394.7 218.3 L 645 150.0"
+        fill="none" stroke="var(--mal)" stroke-width="0.44" opacity="0.45"/>
+      <circle cx="392.00000000000006" cy="218.3" r="2.73" fill="var(--laton)" opacity="0.207">
+        <title>oculta 12 · le entra 1% · sale 2%</title></circle><path d="M 394.7 232.4 L 645 150.0"
+        fill="none" stroke="var(--mal)" stroke-width="0.45" opacity="0.45"/>
+      <circle cx="392.00000000000006" cy="232.4" r="2.75" fill="var(--laton)" opacity="0.206">
+        <title>oculta 13 · le entra 1% · sale 2%</title></circle><path d="M 394.7 246.6 L 645 150.0"
+        fill="none" stroke="var(--mal)" stroke-width="0.44" opacity="0.45"/>
+      <circle cx="392.00000000000006" cy="246.6" r="2.73" fill="var(--laton)" opacity="0.207">
+        <title>oculta 14 · le entra 1% · sale 2%</title></circle><path d="M 398.1 260.7 L 645 150.0"
+        fill="none" stroke="var(--mal)" stroke-width="1.62" opacity="0.45"/>
+      <circle cx="392.00000000000006" cy="260.7" r="6.13" fill="var(--laton)" opacity="0.514">
+        <title>oculta 15 · le entra 39% · sale 47%</title></circle>
     <circle cx="654" cy="150" r="8" fill="var(--bien)" opacity="0.9"/>
     <text x="54" y="29.4" text-anchor="middle" font-size="9.5" fill="var(--tenue)" font-family="'IBM Plex Mono',monospace">83 entradas</text>
     <text x="392.00000000000006" y="29.4" text-anchor="middle" font-size="9.5" fill="var(--tenue)" font-family="'IBM Plex Mono',monospace">16 ocultas</text>
@@ -482,19 +515,19 @@ victorias contra la heurística escrita a mano</b>; lo demás es diagnóstico.</
   </svg></div></figure>
     <figure><figcaption>Qué mira: efecto de cada rasgo sobre la predicción.</figcaption><div class="lienzo"><svg viewBox="0 0 700 304" role="img"><text x="264" y="15" fill="var(--apagado)" font-size="11.5" text-anchor="end" font-family="'IBM Plex Mono',monospace">1 Cañón lateral</text>
         <rect x="272" y="6" width="300.0" height="11" rx="1.5" fill="var(--mal)"/><text x="264" y="36" fill="var(--apagado)" font-size="11.5" text-anchor="end" font-family="'IBM Plex Mono',monospace">conjunto rangoDeLaBandera</text>
-        <rect x="272" y="27" width="264.6" height="11" rx="1.5" fill="var(--bien)"/><text x="264" y="57" fill="var(--apagado)" font-size="11.5" text-anchor="end" font-family="'IBM Plex Mono',monospace">1 Cañón cubiertoPorLago</text>
-        <rect x="272" y="48" width="242.2" height="11" rx="1.5" fill="var(--bien)"/><text x="264" y="78" fill="var(--apagado)" font-size="11.5" text-anchor="end" font-family="'IBM Plex Mono',monospace">5 Teniente juntoAReclutamiento</text>
-        <rect x="272" y="69" width="200.0" height="11" rx="1.5" fill="var(--mal)"/><text x="264" y="99" fill="var(--apagado)" font-size="11.5" text-anchor="end" font-family="'IBM Plex Mono',monospace">4 Sargento avance</text>
-        <rect x="272" y="90" width="157.7" height="11" rx="1.5" fill="var(--mal)"/><text x="264" y="120" fill="var(--apagado)" font-size="11.5" text-anchor="end" font-family="'IBM Plex Mono',monospace">1 Cañón cercaDeTiro</text>
-        <rect x="272" y="111" width="145.3" height="11" rx="1.5" fill="var(--bien)"/><text x="264" y="141" fill="var(--apagado)" font-size="11.5" text-anchor="end" font-family="'IBM Plex Mono',monospace">7 Comandante cubiertoPorLago</text>
-        <rect x="272" y="132" width="145.2" height="11" rx="1.5" fill="var(--mal)"/><text x="264" y="162" fill="var(--apagado)" font-size="11.5" text-anchor="end" font-family="'IBM Plex Mono',monospace">4 Sargento cercaDeTiro</text>
-        <rect x="272" y="153" width="138.4" height="11" rx="1.5" fill="var(--mal)"/><text x="264" y="183" fill="var(--apagado)" font-size="11.5" text-anchor="end" font-family="'IBM Plex Mono',monospace">conjunto altosEnPrimeraLinea</text>
-        <rect x="272" y="174" width="126.0" height="11" rx="1.5" fill="var(--bien)"/><text x="264" y="204" fill="var(--apagado)" font-size="11.5" text-anchor="end" font-family="'IBM Plex Mono',monospace">6 Capitán cubiertoPorLago</text>
-        <rect x="272" y="195" width="104.1" height="11" rx="1.5" fill="var(--bien)"/><text x="264" y="225" fill="var(--apagado)" font-size="11.5" text-anchor="end" font-family="'IBM Plex Mono',monospace">7 Comandante avance</text>
-        <rect x="272" y="216" width="99.1" height="11" rx="1.5" fill="var(--mal)"/><text x="264" y="246" fill="var(--apagado)" font-size="11.5" text-anchor="end" font-family="'IBM Plex Mono',monospace">5 Teniente cercaDeTiro</text>
-        <rect x="272" y="237" width="95.6" height="11" rx="1.5" fill="var(--mal)"/><text x="264" y="267" fill="var(--apagado)" font-size="11.5" text-anchor="end" font-family="'IBM Plex Mono',monospace">3 Explorador cubiertoPorLago</text>
-        <rect x="272" y="258" width="93.8" height="11" rx="1.5" fill="var(--mal)"/><text x="264" y="288" fill="var(--apagado)" font-size="11.5" text-anchor="end" font-family="'IBM Plex Mono',monospace">conjunto comandantesJuntoATeniente</text>
-        <rect x="272" y="279" width="88.6" height="11" rx="1.5" fill="var(--bien)"/></svg></div></figure>
+        <rect x="272" y="27" width="284.9" height="11" rx="1.5" fill="var(--bien)"/><text x="264" y="57" fill="var(--apagado)" font-size="11.5" text-anchor="end" font-family="'IBM Plex Mono',monospace">1 Cañón cubiertoPorLago</text>
+        <rect x="272" y="48" width="284.5" height="11" rx="1.5" fill="var(--bien)"/><text x="264" y="78" fill="var(--apagado)" font-size="11.5" text-anchor="end" font-family="'IBM Plex Mono',monospace">9 Mariscal cubiertoPorLago</text>
+        <rect x="272" y="69" width="232.9" height="11" rx="1.5" fill="var(--mal)"/><text x="264" y="99" fill="var(--apagado)" font-size="11.5" text-anchor="end" font-family="'IBM Plex Mono',monospace">1 Cañón cercaDeTiro</text>
+        <rect x="272" y="90" width="196.5" height="11" rx="1.5" fill="var(--bien)"/><text x="264" y="120" fill="var(--apagado)" font-size="11.5" text-anchor="end" font-family="'IBM Plex Mono',monospace">1 Cañón enElBorde</text>
+        <rect x="272" y="111" width="174.2" height="11" rx="1.5" fill="var(--mal)"/><text x="264" y="141" fill="var(--apagado)" font-size="11.5" text-anchor="end" font-family="'IBM Plex Mono',monospace">4 Sargento cercaDeTiro</text>
+        <rect x="272" y="132" width="172.7" height="11" rx="1.5" fill="var(--mal)"/><text x="264" y="162" fill="var(--apagado)" font-size="11.5" text-anchor="end" font-family="'IBM Plex Mono',monospace">6 Capitán juntoAReclutamiento</text>
+        <rect x="272" y="153" width="169.6" height="11" rx="1.5" fill="var(--mal)"/><text x="264" y="183" fill="var(--apagado)" font-size="11.5" text-anchor="end" font-family="'IBM Plex Mono',monospace">4 Sargento avance</text>
+        <rect x="272" y="174" width="146.8" height="11" rx="1.5" fill="var(--mal)"/><text x="264" y="204" fill="var(--apagado)" font-size="11.5" text-anchor="end" font-family="'IBM Plex Mono',monospace">6 Capitán enElBorde</text>
+        <rect x="272" y="195" width="126.7" height="11" rx="1.5" fill="var(--mal)"/><text x="264" y="225" fill="var(--apagado)" font-size="11.5" text-anchor="end" font-family="'IBM Plex Mono',monospace">6 Capitán avance</text>
+        <rect x="272" y="216" width="126.3" height="11" rx="1.5" fill="var(--bien)"/><text x="264" y="246" fill="var(--apagado)" font-size="11.5" text-anchor="end" font-family="'IBM Plex Mono',monospace">6 Capitán cercaDeTiro</text>
+        <rect x="272" y="237" width="122.6" height="11" rx="1.5" fill="var(--bien)"/><text x="264" y="267" fill="var(--apagado)" font-size="11.5" text-anchor="end" font-family="'IBM Plex Mono',monospace">2 Espía cubiertoPorLago</text>
+        <rect x="272" y="258" width="118.4" height="11" rx="1.5" fill="var(--mal)"/><text x="264" y="288" fill="var(--apagado)" font-size="11.5" text-anchor="end" font-family="'IBM Plex Mono',monospace">5 Teniente juntoAReclutamiento</text>
+        <rect x="272" y="279" width="118.2" height="11" rx="1.5" fill="var(--mal)"/></svg></div></figure>
     
     <div class="nota"><p><b>Un aviso sobre la pérdida:</b> apenas se despega de 0,693, que es adivinar a ciegas, y aun así en juego gana el 75%. No es contradictorio: el resultado de una partida depende de los cuatro despliegues y de todo lo jugado después, así que casi toda la varianza es irreducible. La red tiene una señal débil pero bien ordenada, y elegir el mejor de cuarenta candidatos la amplifica.</p></div>
   </section><section>
@@ -694,7 +727,7 @@ victorias contra la heurística escrita a mano</b>; lo demás es diagnóstico.</
         <span class="cifra">100%</span>
       </div></div>
     </section>
-<footer>Generado el 3/9/2026, 11:26:53 · <a href="https://github.com/grutino/reuter4">github.com/grutino/reuter4</a><br>
+<footer>Generado el 3/9/2026, 13:02:14 · <a href="https://github.com/grutino/reuter4">github.com/grutino/reuter4</a><br>
 Motor propio sin dependencias. La red se entrena y se ejecuta en JavaScript.</footer>
 </div>
 </body></html>
