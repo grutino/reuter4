@@ -111,12 +111,33 @@ function opciones(argv) {
     //   x1   83%, 87%      x40  87%, 82%
     //   x3   80%, 89%      x100  2%, 10%   <- se hunde
     //
-    // Con 590 pares de juicio contra unos 30.000 de heurística, x10 los deja en
-    // el 16% del objetivo: influencia real y lejos del borde. La lección es que
-    // 103 posiciones juzgadas no pueden gobernar el entrenamiento por muchas
-    // veces que se repitan — la red las satisface memorizándolas y destroza el
-    // resto.
-    repetirJuicios: 10,
+    // Pero la dosis no era la causa de fondo: con x10 seguía hundiéndose en la
+    // ronda 3, cuando se llena el depósito. Ver `pasadasJuicios`.
+    //
+    // APAGADO POR DEFECTO, y la razón merece leerse antes de encenderlo.
+    //
+    // Con los primeros 740 juicios la red se hundía al 0-6% de fuerza. No era la
+    // dosis -se barrió- ni el escalado del gradiente -se arregló- ni que la
+    // exposición creciera con los datos -también se arregló-. Es lo que enseñan:
+    //
+    //   destilada            12/12 partidas decididas · 108 turnos · 88% avanzan
+    //   con juicios a saco    0/12 decididas          · 400 turnos · 89% avanzan
+    //
+    // Sigue avanzando pero NO TERMINA. Las jugadas marcadas como malas eran las
+    // que delatan -capitán dos casillas, explorador en línea-, que son justo las
+    // rápidas. La red aprende "no te delates", se queda sin velocidad, mueve de
+    // una en una y el rival corona.
+    //
+    // El consejo humano era bueno y condicional -caro AL PRINCIPIO de la
+    // partida- pero 590 pares de 103 posiciones no bastan para que la red saque
+    // esa condición: la generaliza a los 400 turnos. Por eso el valor de esos
+    // juicios no estuvo en supervisar sino en DIAGNOSTICAR: revelaron que a la
+    // red le faltaba vocabulario para el precio de la información, y de ahí
+    // salió `delatarmeAhora`, que sí lleva la fase dentro.
+    //
+    // Para volver a intentarlo hacen falta muchas más posiciones, y sobre todo
+    // que estén repartidas por toda la partida y no solo en la apertura.
+    pasadasJuicios: 0,
     // SIN HEURÍSTICA DELANTE. Con esto la red puntúa TODAS las jugadas legales
     // en vez de reordenar las cuatro que le pasa la heurística. Sale más barato
     // -0,59 ms por turno frente a 0,87- pero exige una red destilada: la
@@ -297,7 +318,7 @@ function jugarTanda(redD, redJ, o, semillaBase, sacarDespliegue, liga) {
 // `previa` es la red vigente. Se sigue desde sus pesos, no desde cero, y el
 // punto de partida entra como candidato en la parada temprana: si ninguna época
 // mejora su validación, la ronda devuelve la red tal cual estaba.
-function entrenar(ejemplos, tamano, oculta, o, azar, previa, pares = null) {
+function entrenar(ejemplos, tamano, oculta, o, azar, previa, pares = null, juicios = null) {
   const barajado = ejemplos.slice();
   for (let i = barajado.length - 1; i > 0; i--) {
     const j = Math.floor(azar() * (i + 1));
@@ -336,9 +357,30 @@ function entrenar(ejemplos, tamano, oculta, o, azar, previa, pares = null) {
       // El ancla, intercalada: un lote de orden por cada lote de valor. Sin
       // esto la red persigue el resultado y olvida el orden destilado; sin los
       // de valor, la salida se dispara y deja de ser una probabilidad.
+      //
+      // Esta SÍ debe escalar con los datos: son decenas de miles de pares
+      // distintos sacados de miles de posiciones, así que más datos es más
+      // variedad, no más repetición.
       if (pares && pares.length) {
         const j = (i * 2) % Math.max(1, pares.length - o.lote);
         entrenarPares(red, pares.slice(j, j + o.lote), { tasa: o.tasa, decaimiento: o.decaimiento });
+      }
+    }
+
+    // LOS JUICIOS VAN APARTE, CON DOSIS FIJA. Intercalados como el ancla, su
+    // exposición crecía con el tamaño del conjunto: al llenarse el depósito en
+    // la ronda 3, los lotes de valor se triplicaban y con ellos los pasos sobre
+    // los MISMOS 590 juicios. Ahí es donde la red se hundía del 80% al 4%, y por
+    // eso el barrido corto de dos rondas no lo veía: nunca llegaba a la ronda
+    // donde ocurre.
+    //
+    // Son pocos y siempre los mismos, así que su dosis tiene que depender de
+    // ellos y no de cuántas partidas se hayan jugado.
+    if (juicios && juicios.length) {
+      for (let pasada = 0; pasada < o.pasadasJuicios; pasada++) {
+        for (let i = 0; i < juicios.length; i += o.lote) {
+          entrenarPares(red, juicios.slice(i, i + o.lote), { tasa: o.tasa, decaimiento: o.decaimiento });
+        }
       }
     }
     if (epoca % 5 === 0 || epoca === o.epocas) {
@@ -458,7 +500,7 @@ async function main() {
   if (juicios.pares.length) {
     const r = resumenDeJuicios();
     console.log(`  juicios humanos: ${r.total} sobre ${juicios.posiciones} posiciones ` +
-      `(${r.buena} buenas, ${r.mala} malas, ${r.indefinida} indefinidas) -> ${juicios.pares.length} pares, repetidos x${o.repetirJuicios}`);
+      `(${r.buena} buenas, ${r.mala} malas, ${r.indefinida} indefinidas) -> ${juicios.pares.length} pares, ${o.pasadasJuicios} pasadas por época`);
   }
   console.log();
 
@@ -492,11 +534,11 @@ async function main() {
     const conEscenarios = todosJ.concat(...Array.from({ length: escenarios.length ? o.pesoEscenarios : 0 }, () => escenarios));
     // Los juicios van con los pares del ancla: los dos son restricciones de
     // orden, solo que unas las dicta la heurística y otras una persona.
-    // Los juicios se repiten para que pesen, en vez de multiplicar su gradiente.
-    const repetidos = [];
-    for (let k = 0; k < o.repetirJuicios; k++) repetidos.push(...juicios.pares);
-    const paresDeLaRonda = o.anclaPares ? todosPares.concat(repetidos) : repetidos;
-    const nuevaJ = entrenar(conEscenarios, TAMANO_JUGADA, o.ocultaJugada, oRonda, azar, redJ, paresDeLaRonda.length ? paresDeLaRonda : null);
+    const nuevaJ = entrenar(
+      conEscenarios, TAMANO_JUGADA, o.ocultaJugada, oRonda, azar, redJ,
+      o.anclaPares && todosPares.length ? todosPares : null,
+      juicios.pares.length ? juicios.pares : null
+    );
     // Partidas nuevas cada ronda, y el titular las juega también.
     const semillaMedida = 31337 + ronda * 15485863;
     const medida = medir(nuevaD.red, nuevaJ.red, semillaMedida);
