@@ -86,6 +86,10 @@ function texturaRango(rango, color) {
   return textura;
 }
 
+// Radio al que se reparten los focos de fuego sobre el anillo: entre el borde
+// interior y el exterior de la corona de piedra.
+const RADIO_ANILLO = 1.02;
+
 function posicion3D(casilla) {
   if (casilla === ANILLO) return [0.95, 0.5, 0];
   if (casilla === TORRE) return [0, 1.35, 0];
@@ -719,52 +723,74 @@ export default function Tablero3D({
       const [x, alturaCasilla, z] = posicion3D(casilla);
       if (x === undefined) continue;
       const suelo = alturaCasilla === undefined ? 0.1 : alturaCasilla;
-      // Apagado el fuego quedan solo los carbones, sin el círculo negro: la
-      // mancha acompaña a la llama mientras arde y se va con ella. Lo que queda
-      // es el rastro, y no se va en toda la partida — una casilla donde reventó
-      // un cañón sigue contando algo mucho después.
-      if (!ardiendo) {
-        for (let i = 0; i < 4; i++) {
-          const angulo = (i / 4) * Math.PI * 2 + 0.7;
-          const radio = 0.1 + (i % 2) * 0.11;
-          const trozo = new THREE.Mesh(
-            g.carbon,
-            new THREE.MeshStandardMaterial({ color: 0x1c1815, roughness: 1, metalness: 0 })
-          );
-          trozo.position.set(x + Math.cos(angulo) * radio, suelo + 0.03, z + Math.sin(angulo) * radio);
-          trozo.rotation.set(i * 0.9, i * 1.4, i * 0.5);
-          trozo.scale.setScalar(0.7 + (i % 3) * 0.25);
-          trozo.castShadow = true;
-          r.grupoAvisos.add(trozo);
+
+      // EL ANILLO ES UNA CASILLA LÓGICA PERO OCHO CELDAS FÍSICAS, así que un
+      // cañonazo ahí tiene que arder entero y no en un punto suelto: sobre el
+      // tablero de verdad son G7 H7 I7 G8 I8 G9 H9 I9. La torre y las casillas
+      // normales son una sola, así que un foco basta.
+      // Los focos se sitúan alrededor del CENTRO del castillo, no del punto que
+      // devuelve `posicion3D` para el anillo: ese está desplazado a propósito
+      // para que una pieza sobre el anillo no quede dentro de la torre.
+      const focos = [];
+      if (casilla === ANILLO) {
+        for (let k = 0; k < 8; k++) {
+          const a = (k / 8) * Math.PI * 2;
+          focos.push([Math.cos(a) * RADIO_ANILLO - x, Math.sin(a) * RADIO_ANILLO - z]);
         }
-        continue;
+      } else {
+        focos.push([0, 0]);
       }
 
-      const quemadura = new THREE.Mesh(
-        g.quemadura,
-        new THREE.MeshBasicMaterial({ color: 0x2a1d14, transparent: true, opacity: 0.72, depthWrite: false })
-      );
-      quemadura.rotation.x = -Math.PI / 2;
-      quemadura.position.set(x, suelo + 0.004, z);
-      r.grupoAvisos.add(quemadura);
+      for (const [dx, dz] of focos) {
+        const fx = x + dx;
+        const fz = z + dz;
 
-      for (let i = 0; i < 3; i++) {
-        const llama = new THREE.Mesh(
-          g.llama,
-          new THREE.MeshStandardMaterial({
-            color: i === 0 ? 0xffb03a : 0xd8471f,
-            emissive: i === 0 ? 0xffa22a : 0xc63c14,
-            emissiveIntensity: 1.6,
-            transparent: true,
-            opacity: 0.85,
-            roughness: 1,
-          })
+        // Apagado el fuego quedan solo los carbones, sin el círculo negro: la
+        // mancha acompaña a la llama mientras arde y se va con ella. Lo que
+        // queda es el rastro, y no se va en toda la partida.
+        if (!ardiendo) {
+          for (let i = 0; i < 4; i++) {
+            const angulo = (i / 4) * Math.PI * 2 + 0.7;
+            const radio = 0.1 + (i % 2) * 0.11;
+            const trozo = new THREE.Mesh(
+              g.carbon,
+              new THREE.MeshStandardMaterial({ color: 0x1c1815, roughness: 1, metalness: 0 })
+            );
+            trozo.position.set(fx + Math.cos(angulo) * radio, suelo + 0.03, fz + Math.sin(angulo) * radio);
+            trozo.rotation.set(i * 0.9, i * 1.4, i * 0.5);
+            trozo.scale.setScalar(0.7 + (i % 3) * 0.25);
+            trozo.castShadow = true;
+            r.grupoAvisos.add(trozo);
+          }
+          continue;
+        }
+
+        const quemadura = new THREE.Mesh(
+          g.quemadura,
+          new THREE.MeshBasicMaterial({ color: 0x2a1d14, transparent: true, opacity: 0.72, depthWrite: false })
         );
-        const angulo = (i / 3) * Math.PI * 2;
-        llama.position.set(x + Math.cos(angulo) * 0.15, suelo + 0.22 + i * 0.03, z + Math.sin(angulo) * 0.15);
-        llama.userData.fase = i * 1.7;
-        r.grupoAvisos.add(llama);
-        r.llamas.push(llama);
+        quemadura.rotation.x = -Math.PI / 2;
+        quemadura.position.set(fx, suelo + 0.004, fz);
+        r.grupoAvisos.add(quemadura);
+
+        for (let i = 0; i < 3; i++) {
+          const llama = new THREE.Mesh(
+            g.llama,
+            new THREE.MeshStandardMaterial({
+              color: i === 0 ? 0xffb03a : 0xd8471f,
+              emissive: i === 0 ? 0xffa22a : 0xc63c14,
+              emissiveIntensity: 1.6,
+              transparent: true,
+              opacity: 0.85,
+              roughness: 1,
+            })
+          );
+          const angulo = (i / 3) * Math.PI * 2;
+          llama.position.set(fx + Math.cos(angulo) * 0.15, suelo + 0.22 + i * 0.03, fz + Math.sin(angulo) * 0.15);
+          llama.userData.fase = i * 1.7 + dx * 3;
+          r.grupoAvisos.add(llama);
+          r.llamas.push(llama);
+        }
       }
     }
   }, [marcador, explosiones]);
