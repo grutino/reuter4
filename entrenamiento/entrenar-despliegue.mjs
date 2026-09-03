@@ -250,6 +250,24 @@ async function main() {
     console.log("\n  (en seco: no se ha guardado nada)");
     return;
   }
+
+  // NO PISAR UN MODELO MEJOR SIN DECIRLO. Ha pasado cuatro veces: un
+  // entrenamiento de prueba se lleva por delante uno bueno y nadie se entera
+  // hasta que alguien compara los números a mano. `publicar-redes` sí compara
+  // antes de publicar; aquí no había nada.
+  if (fs.existsSync(salida)) {
+    try {
+      const viejo = JSON.parse(fs.readFileSync(salida, "utf8"));
+      if (viejo.firmaRasgos === FIRMA && viejo.victoriasEnJuego > medida.tasa + 0.01) {
+        const copia = salida.replace(/\.json$/, "-anterior.json");
+        fs.copyFileSync(salida, copia);
+        console.log(`\n  OJO: el que había sacaba ${(viejo.victoriasEnJuego * 100).toFixed(0)}% y este saca ${(medida.tasa * 100).toFixed(0)}%.`);
+        console.log(`  El anterior queda copiado en ${path.relative(process.cwd(), copia)} por si hace falta volver.`);
+      }
+    } catch {
+      // Un modelo viejo ilegible no puede impedir guardar el nuevo.
+    }
+  }
   fs.writeFileSync(
     salida,
     JSON.stringify(
