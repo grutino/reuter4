@@ -62,7 +62,7 @@
 import { tableroDelEscenario, textoDeAccion } from "/src/escenario-vista.js";
 import { generarFichas } from "/src/informe-partida.js";
 
-const datos = await (await fetch("/casos")).json();
+const datos = await (await fetch("/juicios/api/casos")).json();
 const fichas = generarFichas();
 
 let n = 0;
@@ -146,7 +146,7 @@ async function juzgar(k, veredicto) {
   const caso = datos.casos[n];
   juicios[clave(caso, k)] = veredicto;
   pinta();
-  await fetch("/juicio", { method: "POST", headers: { "content-type": "application/json" },
+  await fetch("/juicios/api/juicio-jugada", { method: "POST", headers: { "content-type": "application/json" },
     body: JSON.stringify({ clave: clave(caso, k), veredicto }) });
 }
 

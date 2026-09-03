@@ -28,6 +28,18 @@
  pre { background:#f7f3ea; border:1px solid var(--linea); border-radius:5px; padding:11px 13px;
        font:12.5px/1.6 ui-monospace,monospace; white-space:pre-wrap; margin:12px 0 0; }
  .nota { font-size:13px; color:var(--tenue); border-left:2px solid var(--linea); padding-left:12px; }
+ .entrenando { border-left:3px solid var(--laton); background:#fdf6e6; padding:10px 13px;
+               border-radius:0 5px 5px 0; margin:0 0 14px; font-size:14px; }
+ .entrenando small { color:var(--tenue); }
+ .parado { color:var(--tenue); font-size:13.5px; margin:0 0 14px; }
+ .red { border-top:1px solid var(--linea); padding:12px 0 4px; }
+ .red-nombre { font-size:14px; font-weight:600; margin-bottom:7px; }
+ .red-cols { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+ .red-cols dt { font:500 10px/1.3 ui-monospace,monospace; letter-spacing:.06em;
+                text-transform:uppercase; color:var(--tenue); }
+ .red-cols dd { margin:4px 0 2px; font:600 18px/1 ui-monospace,monospace; }
+ .red-cols small { font-size:11.5px; color:var(--tenue); }
+ .mal { color:var(--mal); }
  code { font:13px ui-monospace,monospace; background:#f2ece0; padding:1px 5px; border-radius:3px; }
 </style></head><body><div class="hoja">
 <h1>Taller de juicios</h1>
@@ -50,11 +62,23 @@ las partidas terminadas y se valora — no «qué pasó», sino <b>qué era mejo
 
 <section>
   <h2>2 · Valorar</h2>
-  <p>Se comparan de dos en dos y no se puntúan de uno en uno: dar notas absolutas deriva con el
-  cansancio, elegir entre dos no. Y «parecidos» es información, no pereza.</p>
+  <p>Dos cosas distintas que valorar. Una <b>posición de salida</b> es un objeto completo: se juzga
+  en abstracto y su efecto se reparte por toda la partida. Una <b>jugada</b> solo existe dentro de
+  su posición, así que enseña menos por unidad — pero es donde se decide la partida.</p>
   <div class="barra">
     <a class="boton principal" href="/juicios/despliegues">valorar posiciones de salida</a>
-    <button id="reiniciar" style="margin-left:auto;color:var(--mal);border-color:#e0c4bf">reiniciar mis valoraciones</button>
+    <a class="boton" href="/juicios/jugadas">valorar jugadas</a>
+    <button id="reiniciar" style="margin-left:auto;color:var(--mal);border-color:#e0c4bf">reiniciar posiciones</button>
+  </div>
+  <p class="nota" id="avisoBanco" style="margin-top:12px"></p>
+</section>
+
+<section>
+  <h2>Cómo están las redes</h2>
+  <div id="redes"></div>
+  <div class="barra" style="margin-top:12px">
+    <a class="boton" href="/juicios/informe" target="_blank">ver el informe completo</a>
+    <span class="nota" style="border:0;padding:0" id="avisoInforme"></span>
   </div>
 </section>
 
@@ -70,15 +94,66 @@ const F = [
   ["partidas archivadas", (e) => e.archivadas, false],
   ["sin cosechar", (e) => e.sinCosechar, true],
   ["despliegues en el pozo", (e) => e.enElPozo, false],
-  ["valoraciones", (e) => e.juzgados, false],
-  ["de ellas, con orden", (e) => `${e.conOrden}<small> de ${e.juzgados}</small>`, false],
+  ["posiciones valoradas", (e) => e.juzgados, false],
+  ["jugadas valoradas", (e) => e.jugadasJuzgadas, false],
+  ["escenarios en el banco", (e) => e.enElBanco, false],
 ];
+
+const pct = (v) => (v === null || v === undefined ? "—" : `${Math.round(v * 100)}%`);
+const fecha = (s) => (s ? String(s).slice(0, 16).replace("T", " ") : "—");
+
+// Un modelo con otra firma de rasgos no vale: su porcentaje se midió con otras
+// entradas y no significa nada hoy. Se dice, en vez de enseñarlo como si fuera
+// bueno.
+function celda(m, siFalta) {
+  if (!m || !m.capas) return `<dd class="mal">—</dd><small>${siFalta}</small>`;
+  if (!m.alDia) return `<dd class="mal">caducada</dd><small>se entrenó con otros rasgos: hay que rehacerla</small>`;
+  const juicios = m.aciertoEnJuiciosApartados !== null && m.aciertoEnJuiciosApartados !== undefined
+    ? ` · coincide contigo en ${pct(m.aciertoEnJuiciosApartados)}` : "";
+  return `<dd>${pct(m.victorias)} · ${m.capas.join("-")}</dd><small>${fecha(m.creado)}${juicios}</small>`;
+}
+
+function filaDeRed(nombre, pub, taller) {
+  return `<div class="red">
+    <div class="red-nombre">${nombre}</div>
+    <div class="red-cols">
+      <div><dt>publicada — la que juega</dt>${celda(pub, "no hay ninguna: los bots juegan con la heurística")}</div>
+      <div><dt>en el taller — la que se entrena</dt>${celda(taller, "nada entrenado todavía")}</div>
+    </div>
+  </div>`;
+}
+
+async function pintaRedes() {
+  const r = await (await fetch("/juicios/api/redes")).json();
+  const trabajando = r.entrenando.filter((p) => p.que !== "nocturno");
+  let cabecera = "";
+  if (r.entrenando.length) {
+    const n = r.nocturno;
+    const cuanto = n && n.minutosPorSesion
+      ? `cada sesión tarda unos <b>${n.minutosPorSesion} min</b> · van ${n.sesiones} sesiones, ${n.adoptadasTotales} rondas adoptadas`
+      : "aún no ha terminado ninguna sesión, así que todavía no se sabe cuánto tarda cada una";
+    cabecera = `<div class="entrenando">
+      <b>ENTRENANDO AHORA</b> — ${trabajando.map((p) => `${p.que} (${p.desde})`).join(", ") || "arrancando"}<br>
+      ${cuanto}<br>
+      <small>Los números de abajo están cambiando debajo: el del taller es una foto de hace un momento.</small>
+    </div>`;
+  } else {
+    cabecera = `<div class="parado">Ahora mismo no hay ningún entrenamiento en marcha.</div>`;
+  }
+  document.getElementById("redes").innerHTML = cabecera +
+    filaDeRed("jugada — decide cada movimiento", r.publicadas.jugada, r.taller.jugada) +
+    filaDeRed("despliegue — elige la posición de salida", r.publicadas.despliegue, r.taller.despliegue);
+  document.getElementById("avisoInforme").textContent = r.hayInforme
+    ? "" : "aún no hay informe: npm run informe-redes";
+}
 
 async function pinta() {
   const e = await (await fetch("/juicios/api/estado")).json();
   document.getElementById("fichas").innerHTML = F.map(([k, v, urge]) =>
     `<div class="ficha${urge && v(e) ? " urge" : ""}"><dt>${k}</dt><dd>${v(e)}</dd></div>`).join("");
   document.getElementById("cosechar").disabled = !e.sinCosechar;
+  document.getElementById("avisoBanco").textContent = e.enElBanco
+    ? "" : "El banco de escenarios está vacío, así que no hay jugadas que valorar. Se llena con: npm run escenarios";
   document.getElementById("avisoCosecha").textContent = e.sinCosechar
     ? `${e.sinCosechar} partida(s) por cosechar`
     : e.archivadas ? "todo cosechado" : "aún no hay partidas archivadas: se archivan al terminar una con ganador";
@@ -107,4 +182,6 @@ document.getElementById("reiniciar").onclick = async () => {
 };
 
 pinta();
+pintaRedes();
+setInterval(pintaRedes, 30000);
 </script></div></body></html>

@@ -22,9 +22,14 @@ import { promisify } from "node:util";
 import { COLORES } from "../src/motor/tablero.js";
 import { despliegueAleatorio } from "../src/motor/bot.js";
 import { despliegueGuiado } from "../src/motor/bot-red.js";
-import { rasgosDeDespliegue } from "../src/motor/rasgos-despliegue.js";
+import { rasgosDeDespliegue, FIRMA as FIRMA_DESPLIEGUE } from "../src/motor/rasgos-despliegue.js";
 import { evaluar } from "../src/motor/red.js";
 import { generador } from "../entrenamiento/arena.mjs";
+import { puntuarAcciones, DISTANCIA } from "../src/motor/bot.js";
+import { analizarTurno } from "../src/motor/analisis.js";
+import { rasgosDeJugada, contextoDeTurno, FIRMA as FIRMA_JUGADA } from "../src/motor/rasgos-jugada.js";
+import { NOMBRE_RANGO, ESTILO } from "../src/estilo.js";
+import { leerBanco, claveDeJuicio } from "../entrenamiento/escenarios.mjs";
 import { cargarAperturas } from "../entrenamiento/panel.mjs";
 import { aColocacion, variar, guiada } from "../entrenamiento/aperturas.mjs";
 
@@ -36,6 +41,8 @@ const JUICIOS = path.join(CARPETA, "juicios-despliegue.json");
 const POZO = path.join(CARPETA, "despliegues-jugados.json");
 const PARTIDAS = path.join(RAIZ, "partidas");
 const CUANTOS = 120;
+const JUICIOS_JUGADA = path.join(CARPETA, "juicios.json");
+const CANDIDATAS = 4;
 
 // --- Lo juzgado ---------------------------------------------------------------
 
@@ -137,6 +144,136 @@ export function construirParejas(red) {
   return { parejas, hayJugados: COLORES.reduce((n, c) => n + jugados[c].length, 0) };
 }
 
+// --- Juicios de jugada --------------------------------------------------------
+//
+// El mismo mecanismo sobre una jugada dentro de una posición. La diferencia con
+// los despliegues no es de forma sino de alcance: una jugada solo existe dentro
+// de SU posición, así que aquí no se puede cruzar nada entre casos. Cien
+// posiciones no pueden gobernar una política de cuatrocientas decisiones por
+// partida, y por eso estos pesan menos en el conjunto.
+
+export function leerJuiciosJugada() {
+  if (!fs.existsSync(JUICIOS_JUGADA)) return {};
+  try { return JSON.parse(fs.readFileSync(JUICIOS_JUGADA, "utf8")).juicios || {}; } catch { return {}; }
+}
+
+function escribirJuiciosJugada(juicios) {
+  fs.mkdirSync(CARPETA, { recursive: true });
+  fs.writeFileSync(JUICIOS_JUGADA, JSON.stringify({ creado: new Date().toISOString(), juicios }, null, 1));
+}
+
+export function construirCasos(redJugada) {
+  const banco = leerBanco();
+  return banco.map((esc, i) => {
+    const azar = generador(9000 + i);
+    const puntuadas = puntuarAcciones(esc.estado, esc.color, { azar });
+    const mejores = puntuadas.slice(0, Math.max(0, CANDIDATAS - 1)).map((p) => p.accion);
+    // Una del montón: sin alguna mala no hay contraste que juzgar.
+    if (puntuadas.length > CANDIDATAS) mejores.push(puntuadas[puntuadas.length - 1].accion);
+
+    // Lo que piensa la red, calculado aquí pero que la página NO enseña hasta
+    // que hayas juzgado: verlo antes lo convierte en un asentimiento.
+    let suyo = null;
+    if (redJugada && mejores.length) {
+      const contexto = contextoDeTurno(esc.estado, esc.color, analizarTurno(esc.estado, esc.color, DISTANCIA));
+      const notas = mejores.map((a) => evaluar(redJugada, rasgosDeJugada(esc.estado, esc.color, a, contexto)));
+      const orden = notas.map((n, k) => ({ n, k })).sort((a, b) => b.n - a.n).map((x) => x.k);
+      suyo = { notas: notas.map((n) => Number(n.toFixed(4))), puesto: mejores.map((_, k) => orden.indexOf(k)) };
+    }
+    return {
+      i, motivo: esc.motivo, color: esc.color, estado: esc.estado, acciones: mejores,
+      claves: mejores.map((a) => claveDeJuicio(esc.estado, esc.color, a)),
+      suyo,
+    };
+  }).filter((c) => c.acciones.length >= 2);
+}
+
+// --- Estado de las redes ------------------------------------------------------
+//
+// Para no tener que preguntar "¿cómo van las redes?" cada vez. Dice qué hay
+// publicado, si hay algo entrenando AHORA MISMO -que es cuando los números están
+// cambiando debajo y no hay que fiarse de ellos- y cuánto puede quedar.
+
+function leerModelo(carpeta, fichero, firmaEsperada) {
+  const ruta = path.join(RAIZ, carpeta, fichero);
+  if (!fs.existsSync(ruta)) return null;
+  try {
+    const d = JSON.parse(fs.readFileSync(ruta, "utf8"));
+    return {
+      // UN MODELO CON OTRA FIRMA NO ES "PEOR", ES INSERVIBLE: se cargaría sin dar
+      // error y jugaría con basura. Un 93% de victorias medido con otros rasgos
+      // no significa nada hoy, así que la página tiene que decirlo y no
+      // enseñarlo como si estuviera al día.
+      alDia: d.firmaRasgos === firmaEsperada,
+      capas: d.red ? d.red.capas : null,
+      victorias: d.victoriasEnJuego ?? null,
+      perdida: d.perdidaValidacion ?? null,
+      firma: d.firmaRasgos || null,
+      activacion: d.activacion || null,
+      creado: d.creado || null,
+      juiciosUsados: d.juiciosUsados ?? null,
+      aciertoEnJuiciosApartados: d.aciertoEnJuiciosApartados ?? null,
+    };
+  } catch {
+    return null;
+  }
+}
+
+async function entrenando() {
+  try {
+    const { stdout } = await ejecutar("ps", ["-Ao", "pid,etime,command"], { maxBuffer: 8 * 1024 * 1024 });
+    const lineas = stdout.split("\n").filter((l) =>
+      /entrenamiento\/(coevolucion|entrenar-jugada|entrenar-despliegue|destilar|nocturno)\.mjs/.test(l));
+    return lineas.map((l) => {
+      const m = l.trim().match(/^(\d+)\s+(\S+)\s+(.*)$/);
+      if (!m) return null;
+      const cual = (m[3].match(/entrenamiento\/(\w[\w-]*)\.mjs/) || [, "?"])[1];
+      return { pid: Number(m[1]), desde: m[2], que: cual };
+    }).filter(Boolean);
+  } catch {
+    return [];
+  }
+}
+
+// Cuánto puede quedar: se saca de lo que han tardado las sesiones ya hechas, no
+// de una estimación inventada. Si aún no ha terminado ninguna, se dice que no
+// se sabe en vez de dar un número que no significa nada.
+function marchaDelNocturno() {
+  const ruta = path.join(RAIZ, "entrenamiento", "modelos", "nocturno.json");
+  if (!fs.existsSync(ruta)) return null;
+  try {
+    const d = JSON.parse(fs.readFileSync(ruta, "utf8"));
+    const hechas = (d.sesiones || []).filter((s) => s.minutos);
+    if (!hechas.length) return { sesiones: (d.sesiones || []).length, mejor: d.mejor ?? null, minutosPorSesion: null };
+    const media = hechas.reduce((a, s) => a + s.minutos, 0) / hechas.length;
+    return {
+      sesiones: d.sesiones.length,
+      mejor: d.mejor ?? null,
+      minutosPorSesion: Math.round(media),
+      ultima: d.sesiones[d.sesiones.length - 1],
+      adoptadasTotales: d.sesiones.reduce((a, s) => a + (s.adoptadas || 0), 0),
+    };
+  } catch {
+    return null;
+  }
+}
+
+export async function estadoDeLasRedes() {
+  return {
+    publicadas: {
+      jugada: leerModelo(path.join("src", "motor", "modelos"), "red-jugada.json", FIRMA_JUGADA),
+      despliegue: leerModelo(path.join("src", "motor", "modelos"), "red-despliegue.json", FIRMA_DESPLIEGUE),
+    },
+    taller: {
+      jugada: leerModelo(path.join("entrenamiento", "modelos"), "red-jugada.json", FIRMA_JUGADA),
+      despliegue: leerModelo(path.join("entrenamiento", "modelos"), "red-despliegue.json", FIRMA_DESPLIEGUE),
+    },
+    entrenando: await entrenando(),
+    nocturno: marchaDelNocturno(),
+    hayInforme: fs.existsSync(path.join(RAIZ, "docs", "index.html")),
+  };
+}
+
 // --- Estado del taller --------------------------------------------------------
 
 export function estado() {
@@ -150,9 +287,12 @@ export function estado() {
   }
   const juicios = leerJuicios();
   const pozo = leerPozo();
+  const deJugada = leerJuiciosJugada();
   return {
     archivadas,
     cosechadas,
+    jugadasJuzgadas: Object.keys(deJugada).length,
+    enElBanco: leerBanco().length,
     sinCosechar: Math.max(0, archivadas - cosechadas),
     enElPozo: COLORES.reduce((n, c) => n + pozo[c].length, 0),
     juzgados: Object.keys(juicios).length,
@@ -180,10 +320,11 @@ const PAGINAS = {
   "/juicios": "juicios.html",
   "/juicios/": "juicios.html",
   "/juicios/despliegues": "juzgar-despliegues.html",
+  "/juicios/jugadas": "juzgar.html",
 };
 
 // Devuelve true si ha atendido la petición.
-export function atender(peticion, respuesta, url, red) {
+export function atender(peticion, respuesta, url, red, redJugada) {
   if (!url.startsWith("/juicios") && !url.startsWith("/src/")) return false;
 
   const enviarJson = (datos, codigo = 200) => {
@@ -218,6 +359,46 @@ export function atender(peticion, respuesta, url, red) {
   }
 
   if (url === "/juicios/api/estado") { enviarJson(estado()); return true; }
+
+  if (url === "/juicios/api/redes") {
+    estadoDeLasRedes().then((r) => enviarJson(r));
+    return true;
+  }
+
+  // El informe completo, servido desde el taller para no tener que abrirlo a
+  // mano. Es el fichero que genera `npm run informe-redes`.
+  if (url === "/juicios/informe") {
+    const informe = path.join(RAIZ, "docs", "index.html");
+    if (!fs.existsSync(informe)) {
+      respuesta.writeHead(404, { "Content-Type": "text/html; charset=utf-8" });
+      respuesta.end("<p>Todavía no hay informe. Genéralo con <code>npm run informe-redes</code>.</p>");
+      return true;
+    }
+    respuesta.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
+    respuesta.end(fs.readFileSync(informe));
+    return true;
+  }
+
+  if (url === "/juicios/api/casos") {
+    if (!cache.casos) cache.casos = construirCasos(redJugada);
+    enviarJson({ casos: cache.casos, juicios: leerJuiciosJugada(), rangos: NOMBRE_RANGO, estilo: ESTILO });
+    return true;
+  }
+
+  if (url === "/juicios/api/juicio-jugada" && peticion.method === "POST") {
+    let cuerpo = "";
+    peticion.on("data", (t) => { cuerpo += t; if (cuerpo.length > 1e6) peticion.destroy(); });
+    peticion.on("end", () => {
+      try {
+        const { clave, veredicto } = JSON.parse(cuerpo);
+        const juicios = leerJuiciosJugada();
+        juicios[clave] = veredicto;
+        escribirJuiciosJugada(juicios);
+        enviarJson({ ok: true, total: Object.keys(juicios).length });
+      } catch (e) { enviarJson({ error: String(e.message) }, 400); }
+    });
+    return true;
+  }
 
   if (url === "/juicios/api/parejas") {
     if (!cache.parejas) cache.parejas = construirParejas(red);
@@ -261,5 +442,5 @@ export function atender(peticion, respuesta, url, red) {
 // Las parejas se construyen una vez y se guardan: generarlas cuesta correr el
 // despliegue guiado ciento veinte veces, y además tienen que ser LAS MISMAS
 // entre recargas de la página o el juicio cambiaría de objeto a media tanda.
-const cache = { parejas: null };
-export function olvidarParejas() { cache.parejas = null; }
+const cache = { parejas: null, casos: null };
+export function olvidarParejas() { cache.parejas = null; cache.casos = null; }

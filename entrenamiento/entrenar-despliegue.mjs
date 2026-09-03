@@ -229,6 +229,13 @@ async function main() {
     // valor, la exposición a los juicios crecía con el tamaño de los datos: con
     // el depósito lleno la red se dejaba gobernar por unas decenas de opiniones
     // y colapsaba. Aquí son N pasadas por época pase lo que pase.
+    //
+    // LA DOSIS ES `pasadasJuicios`, NO `pesoJuicios`. `entrenarPares` normaliza
+    // por la suma de pesos -tuvo que hacerlo, porque no normalizar disparaba el
+    // paso de Adam-, así que subir el peso de TODOS los pares por igual no
+    // cambia absolutamente nada: se cancela en la normalización. El peso solo
+    // gradúa unos pares frente a otros dentro del lote. Medido: peso 0, 4, 12 y
+    // 40 dan el mismo resultado hasta el punto decimal.
     for (let k = 0; k < o.pasadasJuicios && juicios.pares.length; k++) {
       const r = entrenarPares(red, juicios.pares, { tasa: o.tasa, decaimiento: o.decaimiento });
       if (epoca === o.epocas && k === 0) aciertoFinalJuicios = r.acierto;

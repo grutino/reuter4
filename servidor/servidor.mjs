@@ -253,7 +253,7 @@ const servidor = http.createServer((peticion, respuesta) => {
   // El taller de juicios: la página que cierra el circuito jugar -> valorar ->
   // aprender. Va montada en el servidor del juego y no en una herramienta
   // suelta porque ese circuito se rompe en cuanto un tramo exige un terminal.
-  if (atenderJuicios(peticion, respuesta, url, MODELOS.despliegue)) return;
+  if (atenderJuicios(peticion, respuesta, url, MODELOS.despliegue, MODELOS.jugada)) return;
 
   let fichero = path.join(ESTATICO, url === "/" ? "index.html" : url);
   if (!fichero.startsWith(ESTATICO)) {
