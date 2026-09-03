@@ -25,6 +25,7 @@ import {
   EQUIPOS, nuevaPartida, aplicar, reclutar, recogerLaBandera, renunciarARecoger, validarDespliegue,
 } from "../src/motor/motor.js";
 import { accionDeBot, decisionDeRecogida, despliegueAleatorio } from "../src/motor/bot.js";
+import { PESOS_VARA } from "../src/motor/pesos-vara.js";
 import { generador, repartoDeTablas } from "./arena.mjs";
 import { leerRejilla, aColocacion, variar, guiada } from "./aperturas.mjs";
 
@@ -122,7 +123,12 @@ export function medirContraPanel(aspirante, panel, { parejas = 12, limite = 400,
         }
         const jugadaDe = (estado, color, az) => {
           const esAspirante = EQUIPO_A.includes(color) !== invertido;
-          return esAspirante ? aspirante.jugar(estado, color, az) : accionDeBot(estado, color, { azar: az });
+          // El rival del panel juega con los pesos CONGELADOS, no con los
+          // actuales: si no, tocar la heurística mueve la vara y los números de
+          // antes dejan de ser comparables con los de después. Ha pasado tres
+          // veces, y la última costó leer como regresión de 15 puntos lo que era
+          // una vara más dura.
+          return esAspirante ? aspirante.jugar(estado, color, az) : accionDeBot(estado, color, { azar: az, pesos: PESOS_VARA });
         };
         const estado = jugar(despliegues, jugadaDe, semilla, limite);
         const fin = estado.fin;

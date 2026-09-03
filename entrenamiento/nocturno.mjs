@@ -42,6 +42,10 @@ const MEJORES = path.join(MODELOS, "mejores");
 function opciones(argv) {
   const o = {
     sesiones: 40, rondas: 6, partidas: 400, epocas: 60, parejasPanel: 8, poblacion: 30,
+    // La red decide sobre TODAS las jugadas legales, sin la heurística cribando.
+    // Tiene que coincidir con cómo se entrenó el modelo vigente: mezclar los dos
+    // caminos entrena una cosa y mide otra.
+    soloRed: 1,
     horas: 0,            // 0 = sin límite de tiempo
     // Cuántas sesiones seguidas sin mejorar antes de dar el aprendizaje por
     // congelado, y cuánto tiene que subir la mejor marca para contar como
@@ -117,6 +121,7 @@ async function main() {
         "--rondas", String(o.rondas), "--partidas", String(o.partidas),
         "--epocas", String(o.epocas), "--parejasPanel", String(o.parejasPanel),
         "--poblacion", String(o.poblacion),
+        "--soloRed", String(o.soloRed),
         // Semilla distinta cada sesión: si no, todas juegan lo mismo.
         "--semilla", String(1 + sesion * 7919),
         // Y el veredicto también se mide en partidas distintas cada sesión. Con

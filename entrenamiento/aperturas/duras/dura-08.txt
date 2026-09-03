@@ -1,6 +1,6 @@
-# dura 8 · le saca 70% a las redes en 7 partidas
-# salida de: humana-09×humana-10×humana-02·espejo×hum · ronda 8
+# dura 8 · le saca 81% a las redes en 6 partidas
+# salida de: humana-07×humana-09·mutada · ronda 2
 # NO forma parte del panel a propósito: el panel es la vara y no se mueve.
-4 3 4 9 5 5 3
-5 7 6 . 8 6 7
-3 3 2 1 1 6 4
+5 3 5 7 4 4 3
+4 6 6 . 6 3 5
+7 9 1 1 2 8 3
