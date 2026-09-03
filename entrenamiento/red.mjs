@@ -5,8 +5,8 @@
 // lo que hace falta para APRENDER, que el juego no ejecuta nunca. Se reexporta
 // lo de allí para que quien entrena tenga todo en un sitio.
 
-import { crearRed, adelante, evaluar, aObjeto, desdeObjeto } from "../src/motor/red.js";
-export { crearRed, adelante, evaluar, aObjeto, desdeObjeto };
+import { crearRed, adelante, evaluar, aObjeto, desdeObjeto, FUGA, ACTIVACION } from "../src/motor/red.js";
+export { crearRed, adelante, evaluar, aObjeto, desdeObjeto, ACTIVACION };
 
 function prepararMomento(red) {
   if (red.momento) return;
@@ -46,10 +46,12 @@ function retropropagar(red, act, errorDeSalida, gw, gb) {
     if (c === 0) break;
     const nuevoDelta = new Float64Array(entradas);
     for (let i = 0; i < entradas; i++) {
-      if (anterior[i] <= 0) continue; // derivada de ReLU: cero por debajo
+      // Derivada de la leaky ReLU: 1 por encima de cero y FUGA por debajo. Con
+      // la ReLU normal era cero, y por eso una neurona apagada no volvía nunca.
+      const pendiente = anterior[i] > 0 ? 1 : FUGA;
       let suma = 0;
       for (let j = 0; j < salidas; j++) suma += w[i * salidas + j] * delta[j];
-      nuevoDelta[i] = suma;
+      nuevoDelta[i] = suma * pendiente;
     }
     delta = nuevoDelta;
   }

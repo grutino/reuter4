@@ -23,6 +23,22 @@ export function crearRed(capas, azar = Math.random) {
 
 const sigmoide = (x) => 1 / (1 + Math.exp(-x));
 
+// LEAKY RELU, y no ReLU a secas, por una razón medida: con ReLU las neuronas se
+// morían en masa. En la red de despliegue disparaban 1 de 16 y en la de jugada
+// 4 de 28 — o sea que una red 83->16->1 era en la práctica 83->1->1, un modelo
+// lineal con una sola combinación.
+//
+// Es el problema clásico: si la suma de una neurona queda siempre negativa, saca
+// cero, y su gradiente también es cero, así que no vuelve nunca. Con una
+// pendiente pequeña en el lado negativo conserva gradiente y puede recuperarse.
+//
+// Explica lo que llevaba tiempo sin encajar: acierto clavado en 58-59%,
+// entrenamiento y validación pegados -no había capacidad ni para sobreajustar- y
+// más rondas sin mejorar nada.
+export const FUGA = 0.01;
+export const ACTIVACION = `leaky${FUGA}`;
+const activar = (x) => (x > 0 ? x : x * FUGA);
+
 // Devuelve las activaciones de todas las capas, que la retropropagación
 // necesita: sin ellas habría que volver a pasar hacia delante.
 // Devuelve las activaciones de todas las capas. Además cuelga del array el
@@ -46,7 +62,7 @@ export function adelante(red, entrada) {
       for (let i = 0; i < entradas; i++) suma += actual[i] * w[i * salidas + j];
       // Última capa: sigmoide, porque la salida es una probabilidad de ganar.
       if (c === red.pesos.length - 1) { logitSalida = suma; siguiente[j] = sigmoide(suma); }
-      else siguiente[j] = Math.max(0, suma);
+      else siguiente[j] = activar(suma);
     }
     activaciones.push(siguiente);
     actual = siguiente;

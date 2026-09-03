@@ -8,7 +8,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { desdeObjeto } from "./red.js";
+import { desdeObjeto, ACTIVACION } from "./red.js";
 import { TAMANO as TAMANO_DESPLIEGUE, FIRMA as FIRMA_DESPLIEGUE } from "./rasgos-despliegue.js";
 import { TAMANO as TAMANO_JUGADA, FIRMA as FIRMA_JUGADA } from "./rasgos-jugada.js";
 
@@ -40,6 +40,18 @@ export function cargarModelos(carpeta = CARPETA_MODELOS) {
     }
     // La comprobación que importa: un modelo entrenado con otro juego de rasgos
     // se carga sin protestar y juega con basura.
+    // LA ACTIVACIÓN TAMBIÉN CUENTA. Al pasar de ReLU a leaky ReLU, un modelo
+    // viejo se carga sin protestar y calcula OTRA COSA: mismos pesos, distinta
+    // función. Es la misma trampa que la firma de los rasgos, y por eso lleva su
+    // propia comprobación.
+    const suya = guardado.activacion || "relu";
+    if (suya !== ACTIVACION) {
+      notas.push(
+        `${etiqueta}: el modelo se entrenó con activación ${suya} y ahora se usa ${ACTIVACION}. ` +
+          `Los mismos pesos calculan otra cosa: hay que reentrenar. Se juega con la heurística.`
+      );
+      return null;
+    }
     if (guardado.red.capas[0] !== tamano) {
       notas.push(
         `${etiqueta}: el modelo espera ${guardado.red.capas[0]} entradas y los rasgos de esta versión dan ${tamano}. ` +

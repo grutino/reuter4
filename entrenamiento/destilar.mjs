@@ -25,7 +25,7 @@ import { EQUIPOS, nuevaPartida, aplicar, movimientosLegales, reclutar, recogerLa
 import { accionDeBot, puntuarAcciones, decisionDeRecogida, despliegueAleatorio, DISTANCIA } from "../src/motor/bot.js";
 import { analizarTurno } from "../src/motor/analisis.js";
 import { rasgosDeJugada, contextoDeTurno, TAMANO, FIRMA } from "../src/motor/rasgos-jugada.js";
-import { crearRed, entrenarLote, entrenarPares, evaluar, aObjeto, desdeObjeto } from "./red.mjs";
+import { crearRed, entrenarLote, entrenarPares, evaluar, aObjeto, desdeObjeto, ACTIVACION } from "./red.mjs";
 import { generador, repartoDeTablas } from "./arena.mjs";
 
 const AQUI = path.dirname(fileURLToPath(import.meta.url));
@@ -175,7 +175,7 @@ for (let epoca = 1; epoca <= o.epocas; epoca++) {
 const salida = path.join(AQUI, "modelos", "red-jugada-destilada.json");
 fs.mkdirSync(path.dirname(salida), { recursive: true });
 fs.writeFileSync(salida, JSON.stringify({
-  firmaRasgos: FIRMA, creado: new Date().toISOString(), origen: "destilación", opciones: o,
+  firmaRasgos: FIRMA, activacion: ACTIVACION, creado: new Date().toISOString(), origen: "destilación", opciones: o,
   ordenAcertado: mejorAcierto, red: mejorPesos,
 }, null, 2));
 console.log(`\n  Mejor orden reproducido: ${(mejorAcierto * 100).toFixed(1)}% de los pares`);

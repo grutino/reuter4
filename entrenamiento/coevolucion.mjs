@@ -45,7 +45,7 @@ import { analizarTurno } from "../src/motor/analisis.js";
 import { generador, repartoDeTablas } from "./arena.mjs";
 import { rasgosDeDespliegue, TAMANO as TAMANO_DESPLIEGUE, FIRMA as FIRMA_DESPLIEGUE } from "../src/motor/rasgos-despliegue.js";
 import { rasgosDeJugada, contextoDeTurno, TAMANO as TAMANO_JUGADA, FIRMA as FIRMA_JUGADA } from "../src/motor/rasgos-jugada.js";
-import { crearRed, entrenarLote, entrenarPares, evaluar, aObjeto, desdeObjeto } from "./red.mjs";
+import { crearRed, entrenarLote, entrenarPares, evaluar, aObjeto, desdeObjeto, ACTIVACION } from "./red.mjs";
 import { construirPanel, medirContraPanel, cargarAperturas } from "./panel.mjs";
 import { fuenteDeDespliegues, aColocacion, aTexto } from "./aperturas.mjs";
 import { poblacionInicial, siguienteGeneracion, actualizarArchivo } from "./formaciones.mjs";
@@ -640,6 +640,7 @@ function guardar(nombre, previo, entrenada, o, medida) {
   const destino = path.join(MODELOS, nombre);
   fs.writeFileSync(destino, JSON.stringify({
     ...(previo || {}),
+    activacion: ACTIVACION,
     firmaRasgos: nombre.includes("despliegue") ? FIRMA_DESPLIEGUE : FIRMA_JUGADA,
     creado: new Date().toISOString(),
     origen: "coevolución",

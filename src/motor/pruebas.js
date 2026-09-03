@@ -29,9 +29,10 @@ import path from "node:path";
 import { accionDeBot, accionDeBotClasico, decisionDeRecogida, despliegueAleatorio, DISTANCIA, PESOS_BASE } from "./bot.js";
 import { peligroEn, lineasAbiertasSi } from "./analisis.js";
 import { analizarTurno } from "./analisis.js";
-import { rasgosDeJugada, contextoDeTurno, NOMBRES as NOMBRES_RASGOS, TAMANO as TAMANO_JUGADA } from "./rasgos-jugada.js";
+import { rasgosDeJugada, contextoDeTurno, NOMBRES as NOMBRES_RASGOS, TAMANO as TAMANO_JUGADA, FIRMA as FIRMA_JUGADA } from "./rasgos-jugada.js";
 import { jugadaDeBot, jugadaSoloRed } from "./bot-red.js";
 import { cargarModelos } from "./modelos.js";
+import { ACTIVACION } from "./red.js";
 import { NIVELES, nivelValido, ESCALA, configuracionDeNivel } from "./dificultad.js";
 import { BATEN_ANILLO, BATEN_LA_TORRE, PASOS_A_TIRO, ANILLO as ANILLO_T } from "./tablero.js";
 import { salaParaJugador } from "../../servidor/vista.mjs";
@@ -1021,7 +1022,7 @@ prueba("cargarModelos rechaza un modelo con otro número de entradas", () => {
   const carpeta = fs.mkdtempSync(path.join(os.tmpdir(), "reuter4-modelos-"));
   fs.writeFileSync(
     path.join(carpeta, "red-jugada.json"),
-    JSON.stringify({ red: { capas: [7, 3, 1], pesos: [], sesgos: [] } })
+    JSON.stringify({ activacion: ACTIVACION, red: { capas: [7, 3, 1], pesos: [], sesgos: [] } })
   );
   const cargado = cargarModelos(carpeta);
   assert.strictEqual(cargado.jugada, null, "un modelo de 7 entradas no puede cargarse");
@@ -1068,7 +1069,7 @@ prueba("un modelo con otra firma de rasgos se rechaza aunque el tamaño cuadre",
   const capas = [83, 4, 1];
   fs.writeFileSync(
     path.join(carpeta, "red-despliegue.json"),
-    JSON.stringify({ firmaRasgos: "0badf00d", red: { capas, pesos: [], sesgos: [] } })
+    JSON.stringify({ activacion: ACTIVACION, firmaRasgos: "0badf00d", red: { capas, pesos: [], sesgos: [] } })
   );
   const malo = cargarModelos(carpeta);
   assert.strictEqual(malo.despliegue, null, "otra firma: no se carga");
@@ -1926,6 +1927,39 @@ prueba("gastar el cañón cuesta, así que un explorador no compensa", () => {
   // Y parar una coronación sigue por encima de todo: el coste no puede
   // convertir en dudosa la jugada que evita perder la partida.
   assert.ok(PESOS_BASE.disparoAlCoronador + nota(3) > 300, "parar una coronación manda sobre el coste");
+});
+
+
+prueba("un modelo con otra activación se rechaza aunque todo lo demás cuadre", () => {
+  // Al pasar de ReLU a leaky ReLU, un modelo viejo se carga sin protestar y
+  // calcula OTRA COSA: mismos pesos, distinta función. No da error, no falla
+  // ninguna prueba, y el bot juega con basura — la misma trampa que la firma de
+  // los rasgos.
+  //
+  // El cambio no fue capricho: con ReLU seca las neuronas se morían en masa. En
+  // la red de despliegue disparaba 1 de 16 y en la de jugada 4 de 28, así que
+  // una red 83->16->1 era en la práctica 83->1->1.
+  const carpeta = fs.mkdtempSync(path.join(os.tmpdir(), "reuter4-activacion-"));
+  const modelo = {
+    firmaRasgos: FIRMA_JUGADA,
+    activacion: "relu",
+    red: { capas: [TAMANO_JUGADA, 3, 1], pesos: [], sesgos: [] },
+  };
+  fs.writeFileSync(path.join(carpeta, "red-jugada.json"), JSON.stringify(modelo));
+  const cargado = cargarModelos(carpeta);
+  assert.strictEqual(cargado.jugada, null, "un modelo con otra activación no puede cargarse");
+  assert.ok(
+    cargado.notas.some((n) => n.includes("activación")),
+    "y tiene que decir que es por la activación, no dejarlo a adivinar"
+  );
+
+  // Con la activación buena, el mismo modelo pasa esa comprobación.
+  fs.writeFileSync(path.join(carpeta, "red-jugada.json"), JSON.stringify({ ...modelo, activacion: ACTIVACION }));
+  assert.ok(
+    !cargarModelos(carpeta).notas.some((n) => n.includes("activación")),
+    "con la activación correcta no debería quejarse de eso"
+  );
+  fs.rmSync(carpeta, { recursive: true, force: true });
 });
 
 console.log(`\n${pasadas} pruebas superadas, ${fallidas} fallidas\n`);
