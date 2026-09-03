@@ -21,6 +21,7 @@ import path from "node:path";
 import { DISTANCIA } from "../src/motor/bot.js";
 import { analizarTurno } from "../src/motor/analisis.js";
 import { rasgosDeJugada, contextoDeTurno, FIRMA as FIRMA_JUGADA } from "../src/motor/rasgos-jugada.js";
+import { rasgosDeDespliegue, FIRMA as FIRMA_DESPLIEGUE } from "../src/motor/rasgos-despliegue.js";
 import { movimientosLegales } from "../src/motor/motor.js";
 import { leerBanco, claveDeJuicio, CARPETA } from "./escenarios.mjs";
 
@@ -82,4 +83,76 @@ export function resumenDeJuicios() {
   const cuenta = { buena: 0, mala: 0, indefinida: 0 };
   for (const v of Object.values(juicios)) if (cuenta[v] !== undefined) cuenta[v]++;
   return { total: Object.keys(juicios).length, ...cuenta };
+}
+
+// --- Juicios de despliegue ----------------------------------------------------
+//
+// El mismo mecanismo, sobre la posición de salida en vez de sobre una jugada.
+// Apostamos más por estos que por los de jugada, y por una razón de aritmética:
+// un centenar de posiciones juzgadas no puede gobernar una política que toma
+// cuatrocientas decisiones por partida, pero un despliegue es un objeto
+// completo, se juzga una vez y su efecto se reparte por toda la partida. Cien
+// juicios de despliegue son cien opiniones sobre cien objetos enteros.
+//
+// La clave del juicio lleva dentro la colocación, así que los pares se
+// reconstruyen sin depender del fichero de parejas: se pueden regenerar las
+// parejas cuando se quiera sin perder lo juzgado.
+
+export function leerJuiciosDeDespliegue() {
+  const ruta = path.join(CARPETA, "juicios-despliegue.json");
+  if (!fs.existsSync(ruta)) return {};
+  try {
+    return JSON.parse(fs.readFileSync(ruta, "utf8")).juicios || {};
+  } catch {
+    return {};
+  }
+}
+
+// "rojo:E1-3,E2-1,..." → { color, colocacion }
+export function colocacionDesdeClave(clave) {
+  const corte = clave.indexOf(":");
+  if (corte < 0) return null;
+  const color = clave.slice(0, corte);
+  const colocacion = [];
+  for (const trozo of clave.slice(corte + 1).split(",")) {
+    const guion = trozo.lastIndexOf("-");
+    if (guion < 0) return null;
+    const casilla = trozo.slice(0, guion);
+    const rango = Number(trozo.slice(guion + 1));
+    if (!casilla || !Number.isInteger(rango)) return null;
+    colocacion.push({ casilla, rango });
+  }
+  return { color, colocacion };
+}
+
+export function paresDeDespliegue({ peso = 300 } = {}) {
+  const juicios = leerJuiciosDeDespliegue();
+  const pares = [];
+  let comparados = 0;
+  let iguales = 0;
+
+  for (const [clave, veredicto] of Object.entries(juicios)) {
+    // "iguales" no genera par: no hay orden que enseñar. Se cuenta porque
+    // decir "no los separes" también es información, aunque esta pérdida no
+    // sepa usarla.
+    if (veredicto !== "a" && veredicto !== "b") {
+      iguales++;
+      continue;
+    }
+    const barra = clave.indexOf("|");
+    if (barra < 0) continue;
+    const a = colocacionDesdeClave(clave.slice(0, barra));
+    const b = colocacionDesdeClave(clave.slice(barra + 1));
+    if (!a || !b || a.color !== b.color) continue;
+    const mejor = veredicto === "a" ? a : b;
+    const peor = veredicto === "a" ? b : a;
+    pares.push({
+      mejor: rasgosDeDespliegue(mejor.color, mejor.colocacion),
+      peor: rasgosDeDespliegue(peor.color, peor.colocacion),
+      peso,
+    });
+    comparados++;
+  }
+
+  return { pares, comparados, iguales, total: Object.keys(juicios).length, firma: FIRMA_DESPLIEGUE };
 }

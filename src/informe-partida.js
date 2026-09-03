@@ -142,7 +142,7 @@ export function generarFichas(lado = 44) {
   const salida = {};
   for (const [color, estilo] of Object.entries(ESTILO)) {
     for (let rango = 1; rango <= 9; rango++) {
-      pintarFicha(ctxGrande, rango, estilo.css);
+      pintarFicha(ctxGrande, rango, estilo.css, { tinta: "#F6F1E6" });
       ctxChico.clearRect(0, 0, lado, lado);
       // Se dibuja a 128 y se reduce: la silueta sale suavizada en vez de dentada.
       ctxChico.drawImage(grande, 0, 0, lado, lado);
@@ -209,7 +209,7 @@ export const FONDO = `<use href="#tablero" x="0" y="0" width="${TABLERO}" height
 
 // --- Despliegue inicial de un ejército ---------------------------------------
 
-function diagramaDeDespliegue(color, colocacion, hayFichas) {
+export function diagramaDeDespliegue(color, colocacion, hayFichas) {
   const lado = CELDA * 0.92;
   const fichas = (colocacion || []).map((p) => {
     const c = centro(p.casilla);

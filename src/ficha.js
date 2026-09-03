@@ -24,7 +24,11 @@ export const LADO_FICHA = 128;
 
 const BORDE = "#1E1A14";
 
-export function pintarFicha(ctx, rango, fondoCss) {
+// `tinta` es el color de la silueta. En el visor 3D va en negro, que es como
+// se lee mejor sobre la madera y el color del ejército; en los informes y en
+// las herramientas de juicio va en blanco, porque ahí la ficha se imprime a un
+// tercio de tamaño sobre papel claro y el negro sobre color oscuro se cierra.
+export function pintarFicha(ctx, rango, fondoCss, { tinta = TINTA } = {}) {
   const fondo = fondoCss || "#5B4229";
   const c = LADO_FICHA / 2;
 
@@ -42,8 +46,8 @@ export function pintarFicha(ctx, rango, fondoCss) {
   ctx.beginPath();
   ctx.arc(c, c, c - 6, 0, Math.PI * 2);
   ctx.clip();
-  ctx.fillStyle = TINTA;
-  if (!dibujarSilueta(ctx, rango, { color: TINTA, hueco: fondo, lado: LADO_FICHA })) {
+  ctx.fillStyle = tinta;
+  if (!dibujarSilueta(ctx, rango, { color: tinta, hueco: fondo, lado: LADO_FICHA })) {
     // Sin dibujo para ese rango se cae al número, que siempre se puede pintar.
     ctx.font = "bold 66px Georgia, serif";
     ctx.textAlign = "center";

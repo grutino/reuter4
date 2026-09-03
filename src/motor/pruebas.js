@@ -1962,5 +1962,36 @@ prueba("un modelo con otra activación se rechaza aunque todo lo demás cuadre",
   fs.rmSync(carpeta, { recursive: true, force: true });
 });
 
+prueba("la clave de un juicio de despliegue se vuelve a leer sin ambigüedad", async () => {
+  // La clave lleva dentro la colocación entera para que los juicios sobrevivan
+  // a regenerar las parejas. Pero la casilla acaba en dígito y el rango ES un
+  // dígito: sin separador, "E13" seguido de un 2 se lee igual como (E13, 2) que
+  // como (E1, 32). Eso no daría error: entrenaría con un despliegue que no es
+  // el que se juzgó, y no habría forma de notarlo.
+  const { colocacionDesdeClave } = await import("../../entrenamiento/juicios.mjs");
+
+  const leido = colocacionDesdeClave("rojo:E1-3,E13-2,O15-9");
+  assert.strictEqual(leido.color, "rojo");
+  assert.deepStrictEqual(leido.colocacion, [
+    { casilla: "E1", rango: 3 },
+    { casilla: "E13", rango: 2 },
+    { casilla: "O15", rango: 9 },
+  ]);
+
+  // Y la ida y vuelta completa sobre un despliegue de verdad, con sus veinte
+  // piezas: es la única garantía de que lo que entrena es lo que se juzgó.
+  const colocacion = despliegueAleatorio("rojo", Math.random);
+  const clave = "rojo:" + colocacion.slice().sort((x, y) => (x.casilla < y.casilla ? -1 : 1)).map((p) => `${p.casilla}-${p.rango}`).join(",");
+  const vuelta = colocacionDesdeClave(clave);
+  assert.strictEqual(vuelta.colocacion.length, colocacion.length, "no puede perder piezas por el camino");
+  for (const pieza of colocacion) {
+    assert.ok(
+      vuelta.colocacion.some((q) => q.casilla === pieza.casilla && q.rango === pieza.rango),
+      `${pieza.casilla} de rango ${pieza.rango} tendría que sobrevivir a la ida y vuelta`
+    );
+  }
+});
+
+
 console.log(`\n${pasadas} pruebas superadas, ${fallidas} fallidas\n`);
 process.exit(fallidas ? 1 : 0);

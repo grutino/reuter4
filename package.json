@@ -23,7 +23,8 @@
     "juzgar": "node herramientas/juzgar-escenarios.mjs",
     "destilar": "node entrenamiento/destilar.mjs",
     "analizar": "node entrenamiento/analizar-partida.mjs",
-    "juicios": "node herramientas/ver-juicios.mjs"
+    "juicios": "node herramientas/ver-juicios.mjs",
+    "juzgar-despliegues": "node herramientas/juzgar-despliegues.mjs"
   },
   "dependencies": {
     "react": "^18.3.1",

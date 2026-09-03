@@ -1,0 +1,224 @@
+<!doctype html><html lang="es"><head><meta charset="utf-8"><title>Reuter4 · juicios de despliegue</title>
+<style>
+ :root { --tinta:#2b2620; --tenue:#7a7060; --linea:#ded5c4; --papel:#fffdf8; }
+ * { box-sizing:border-box; }
+ body { margin:0; padding:18px 22px; background:var(--papel); color:var(--tinta);
+        font:15px/1.5 "Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif; }
+ header { display:flex; align-items:baseline; gap:14px; flex-wrap:wrap; }
+ h1 { font-size:21px; margin:0; }
+ .sub { color:var(--tenue); font-size:13px; }
+ .par { display:grid; grid-template-columns:1fr 1fr; gap:24px; margin-top:14px;
+        max-width:1500px; }
+ .lado { border:2px solid var(--linea); border-radius:8px; padding:8px; background:#fff; cursor:pointer; }
+ .lado:hover { border-color:var(--tinta); }
+ .lado.elegido { border-color:#4A7C4A; background:rgba(74,124,74,0.06); }
+ .lado h2 { font-size:14px; margin:0 0 6px; font-weight:600; }
+ .lado .origen { font:11px ui-monospace,monospace; color:var(--tenue); }
+ .barra { display:flex; gap:10px; align-items:center; margin-top:14px; flex-wrap:wrap; }
+ button { font:inherit; font-size:14px; padding:7px 16px; border:1px solid var(--linea);
+          background:#fff; color:var(--tinta); border-radius:6px; cursor:pointer; }
+ button:hover { border-color:var(--tinta); }
+ button.puesto { background:var(--tinta); color:var(--papel); border-color:var(--tinta); }
+ .suyo { font-size:12px; margin-top:7px; padding:4px 8px; border-radius:4px; }
+ .suyo.ok { background:rgba(74,124,74,0.14); } .suyo.no { background:rgba(150,54,44,0.14); }
+ .ayuda { font-size:12px; color:var(--tenue); margin-top:12px; line-height:1.65; max-width:78ch; }
+ kbd { font:12px ui-monospace,monospace; border:1px solid var(--linea); border-bottom-width:2px;
+       border-radius:4px; padding:1px 5px; background:#fff; }
+</style></head><body>
+<header><h1>¿Cuál de los dos despliegues es mejor?</h1><span class="sub" id="donde"></span></header>
+<div class="sub" id="cuenta"></div>
+<div class="par" id="par"></div>
+<div class="barra">
+  <button id="izq">← este (A)</button>
+  <button id="iguales">parecidos / no sé</button>
+  <button id="der">este (B) →</button>
+  <button id="saltar">saltar al siguiente sin juzgar</button>
+  <button id="encuadre">ver el tablero entero</button>
+</div>
+<div class="ayuda" id="ayuda"></div>
+<script type="module">
+import { diagramaDeDespliegue, generarFichas, definicionDelTablero, simbolosDeFichas, centro, CELDA, TABLERO_PX } from "/src/informe-partida.js";
+const datos = await (await fetch("/parejas")).json();
+// El tablero y las nueve siluetas de cada color se definen UNA vez como
+// <symbol>; los diagramas sólo los referencian. Sin estas defs los <use>
+// apuntan a nada y los tableros salen en blanco.
+// Se generan a 96 px y se muestran a 24: el rango se lee por la silueta, no
+// por un número, y a menos resolución la silueta se cierra.
+const fichas = generarFichas(96);
+document.body.insertAdjacentHTML("afterbegin",
+  definicionDelTablero().replace("</defs>", simbolosDeFichas(fichas) + "</defs>"));
+let n = 0;
+const juicios = datos.juicios;
+const clave = (p) => `${p.a.clave}|${p.b.clave}`;
+
+function opinion(p, v) {
+  if (!p.suyo) return "";
+  const suya = p.suyo.a === p.suyo.b ? "iguales" : p.suyo.a > p.suyo.b ? "a" : "b";
+  const coincide = suya === v;
+  return `<div class="suyo ${coincide ? "ok" : "no"}">la red prefiere <b>${suya === "iguales" ? "ninguno" : suya.toUpperCase()}</b>
+    (${p.suyo.a.toFixed(3)} contra ${p.suyo.b.toFixed(3)}) — ${coincide ? "coincide" : "discrepa"}</div>`;
+}
+
+// SIEMPRE DESDE EL LADO DEL QUE COLOCA. Un despliegue del rojo dibujado arriba
+// del tablero se juzga peor que el mismo dibujado abajo: hay que darle la vuelta
+// mentalmente a "adelante" y "atrás" en cada pareja, y eso se paga en juicios
+// peores. Se gira la vista hasta que la franja del ejército queda abajo, como en
+// el ajedrez.
+//
+// Girar la VISTA y no las casillas importa: el fondo pinta las cuatro zonas con
+// su tinte, así que girando el dibujo la franja de abajo sigue siendo la del
+// color correcto. Y el tablero es simétrico a 90 grados —lagos, huella del
+// castillo y casillas jugables— así que el giro no inventa nada.
+const CENTRO_TABLERO = TABLERO_PX / 2;
+
+function giroDe(colocacion) {
+  let sx = 0, sy = 0, n = 0;
+  for (const pieza of colocacion) {
+    const c = centro(pieza.casilla);
+    if (!c) continue;
+    sx += c.x; sy += c.y; n++;
+  }
+  if (!n) return 0;
+  const dx = sx / n - CENTRO_TABLERO;
+  const dy = sy / n - CENTRO_TABLERO;
+  // El ángulo que lleva el centro de masas del despliegue al sur del tablero.
+  for (const grados of [0, 90, 180, 270]) {
+    const r = (grados * Math.PI) / 180;
+    const y = dx * Math.sin(r) + dy * Math.cos(r);
+    const x = dx * Math.cos(r) - dy * Math.sin(r);
+    if (y > Math.abs(x)) return grados;
+  }
+  return 0;
+}
+
+const girarPunto = (c, grados) => {
+  const r = (grados * Math.PI) / 180;
+  const dx = c.x - CENTRO_TABLERO;
+  const dy = c.y - CENTRO_TABLERO;
+  return {
+    x: CENTRO_TABLERO + dx * Math.cos(r) - dy * Math.sin(r),
+    y: CENTRO_TABLERO + dx * Math.sin(r) + dy * Math.cos(r),
+  };
+};
+
+// ENCUADRE. Las veinte fichas ocupan tres filas de quince: con el tablero
+// entero a la vista cada silueta cae a unos 20 px y los nueve rangos se vuelven
+// manchas parecidas. Recortando a la zona salen al triple, que es la diferencia
+// entre juzgar un despliegue y adivinarlo. El tablero entero sigue a un clic,
+// porque para valorar el avance hace falta ver el castillo y los lagos.
+let entero = false;
+
+function encuadre(colocacion, grados) {
+  if (entero) return null;
+  let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+  for (const pieza of colocacion) {
+    const c = centro(pieza.casilla);
+    if (!c) continue;
+    const g = girarPunto(c, grados);
+    x0 = Math.min(x0, g.x); y0 = Math.min(y0, g.y);
+    x1 = Math.max(x1, g.x); y1 = Math.max(y1, g.y);
+  }
+  if (!Number.isFinite(x0)) return null;
+  const m = CELDA * 1.2;
+  return `${x0 - m} ${y0 - m} ${x1 - x0 + 2 * m} ${y1 - y0 + 2 * m}`;
+}
+
+// Gira el dibujo entero y contragira cada silueta sobre su propio centro: sin
+// eso, las fichas del rojo saldrían cabeza abajo.
+function orientar(svg, grados) {
+  if (!grados) return svg;
+  const contragirada = svg.replace(
+    /<use href="#f-([a-z]+)-(\d)" x="([-\d.]+)" y="([-\d.]+)" width="([\d.]+)" height="([\d.]+)"\/>/g,
+    (_, color, rango, x, y, w, h) => {
+      const cx = Number(x) + Number(w) / 2;
+      const cy = Number(y) + Number(h) / 2;
+      return `<use href="#f-${color}-${rango}" x="${x}" y="${y}" width="${w}" height="${h}" transform="rotate(${-grados} ${cx} ${cy})"/>`;
+    }
+  );
+  return contragirada.replace(
+    /(<svg[^>]*>)([\s\S]*)(<\/svg>)/,
+    (_, abre, dentro, cierra) => `${abre}<g transform="rotate(${grados} ${CENTRO_TABLERO} ${CENTRO_TABLERO})">${dentro}</g>${cierra}`
+  );
+}
+
+function pinta() {
+  const p = datos.parejas[n];
+  const v = juicios[clave(p)];
+  document.getElementById("donde").textContent = `pareja ${n + 1} de ${datos.parejas.length} · ejército ${p.color}`;
+
+  let juzgadas = 0, coinciden = 0;
+  for (const q of datos.parejas) {
+    const w = juicios[clave(q)];
+    if (!w || !q.suyo) continue;
+    juzgadas++;
+    const suya = q.suyo.a === q.suyo.b ? "iguales" : q.suyo.a > q.suyo.b ? "a" : "b";
+    if (suya === w) coinciden++;
+  }
+  document.getElementById("cuenta").textContent =
+    `${Object.keys(juicios).length} juicios guardados` +
+    (juzgadas ? ` · la red coincide contigo en ${coinciden} de ${juzgadas} (${Math.round(100 * coinciden / juzgadas)}%)` : "");
+
+  document.getElementById("par").innerHTML = ["a", "b"].map((lado) => {
+    const d = p[lado];
+    return `<div class="lado ${v === lado ? "elegido" : ""}" data-lado="${lado}">
+      <h2>${lado.toUpperCase()} <span class="origen">${v ? d.origen : ""}</span></h2>
+      ${dibujar(p.color, d.colocacion)}
+      ${v ? opinion(p, v) : ""}
+    </div>`;
+  }).join("");
+  for (const el of document.querySelectorAll(".lado")) el.onclick = () => juzgar(el.dataset.lado);
+
+  document.getElementById("izq").className = v === "a" ? "puesto" : "";
+  document.getElementById("der").className = v === "b" ? "puesto" : "";
+  document.getElementById("iguales").className = v === "iguales" ? "puesto" : "";
+  document.getElementById("ayuda").innerHTML = `
+    Los dos son del mismo ejército y en la misma zona, y <b>siempre se ven desde su lado</b>:
+    su franja abajo y el castillo hacia arriba, gire el tablero lo que gire.
+    El aro dorado marca quién lleva la bandera; el círculo del centro es el castillo.<br>
+    El rango se lee por la silueta y por el arco del borde, que es más largo cuanto mayor es el rango.<br>
+    Comparar es más fiable que puntuar — dar notas absolutas deriva con el cansancio, elegir
+    entre dos no. Y <b>«parecidos» es información</b>, no pereza: le dice a la red que no los separe.<br>
+    Lo que opina la red aparece <b>después</b> de que juzgues, nunca antes.<br>
+    <kbd>←</kbd> A · <kbd>→</kbd> B · <kbd>=</kbd> parecidos · <kbd>N</kbd> siguiente · <kbd>T</kbd> tablero entero`;
+}
+
+function dibujar(color, colocacion) {
+  const grados = giroDe(colocacion);
+  const svg = orientar(diagramaDeDespliegue(color, colocacion, fichas), grados);
+  const caja = encuadre(colocacion, grados);
+  return caja ? svg.replace(/viewBox="[^"]*"/, `viewBox="${caja}"`) : svg;
+}
+
+async function juzgar(veredicto) {
+  const p = datos.parejas[n];
+  juicios[clave(p)] = veredicto;
+  pinta();
+  await fetch("/juicio", { method: "POST", headers: { "content-type": "application/json" },
+    body: JSON.stringify({ clave: clave(p), veredicto }) });
+  setTimeout(() => { if (n < datos.parejas.length - 1) { n++; pinta(); } }, 550);
+}
+
+const ir = (d) => { n = (n + d + datos.parejas.length) % datos.parejas.length; pinta(); };
+document.getElementById("izq").onclick = () => juzgar("a");
+document.getElementById("der").onclick = () => juzgar("b");
+document.getElementById("iguales").onclick = () => juzgar("iguales");
+document.getElementById("encuadre").onclick = () => {
+  entero = !entero;
+  document.getElementById("encuadre").textContent = entero ? "acercar a la zona" : "ver el tablero entero";
+  pinta();
+};
+document.getElementById("saltar").onclick = () => {
+  for (let k = 1; k <= datos.parejas.length; k++) {
+    const m = (n + k) % datos.parejas.length;
+    if (!juicios[clave(datos.parejas[m])]) { n = m; pinta(); return; }
+  }
+};
+addEventListener("keydown", (e) => {
+  if (e.key === "ArrowLeft") juzgar("a");
+  else if (e.key === "ArrowRight") juzgar("b");
+  else if (e.key === "=" || e.key === "0") juzgar("iguales");
+  else if (e.key === "n" || e.key === "N") ir(1);
+  else if (e.key === "t" || e.key === "T") document.getElementById("encuadre").click();
+});
+pinta();
+</script></body></html>

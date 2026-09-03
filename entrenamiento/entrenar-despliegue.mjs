@@ -25,7 +25,8 @@ import { despliegueGuiado } from "../src/motor/bot-red.js";
 export { despliegueGuiado };
 import { fuenteDeDespliegues } from "./aperturas.mjs";
 import { cargarAperturas } from "./panel.mjs";
-import { crearRed, entrenarLote, evaluar, aObjeto, ACTIVACION } from "./red.mjs";
+import { crearRed, entrenarLote, entrenarPares, evaluar, aObjeto, ACTIVACION } from "./red.mjs";
+import { paresDeDespliegue } from "./juicios.mjs";
 
 const AQUI = path.dirname(fileURLToPath(import.meta.url));
 const [EQUIPO_A] = EQUIPOS;
@@ -33,7 +34,7 @@ const [EQUIPO_A] = EQUIPOS;
 function opciones(argv) {
   // `seco` no escribe el modelo: para probar sin que un ensayo pise uno bueno.
   // Ya ha pasado tres veces, la última con mi propio experimento de capacidad.
-  const o = { partidas: 1500, epocas: 300, lote: 64, tasa: 0.01, oculta: 10, decaimiento: 0.0015, semilla: 1, limite: 400, candidatos: 40, medir: 60, seco: 0 };
+  const o = { partidas: 1500, epocas: 300, lote: 64, tasa: 0.01, oculta: 10, decaimiento: 0.0015, semilla: 1, limite: 400, candidatos: 40, medir: 60, seco: 0, pesoJuicios: 40, pasadasJuicios: 1 };
   for (let i = 2; i < argv.length; i += 2) {
     const clave = argv[i].replace(/^--/, "");
     if (!(clave in o)) throw new Error(`opción desconocida: ${argv[i]}`);
@@ -182,6 +183,21 @@ async function main() {
     return suma / conjunto.length;
   };
 
+  // Los juicios humanos entran como ORDEN, no como valor: nadie sabe decir
+  // "este despliegue gana el 58%", pero cualquiera sabe decir cuál de dos le
+  // gusta más. Y solo se comparan despliegues del MISMO ejército, que es lo
+  // único comparable.
+  const juicios = paresDeDespliegue({ peso: o.pesoJuicios });
+  let aciertoFinalJuicios = null;
+  if (juicios.firma !== FIRMA) {
+    console.log(`  juicios IGNORADOS: se guardaron con otros rasgos (${juicios.firma} contra ${FIRMA})\n`);
+    juicios.pares = [];
+  } else if (juicios.pares.length) {
+    console.log(`  ${juicios.pares.length} juicios humanos con orden (de ${juicios.total}, ${juicios.iguales} "parecidos") · peso ${o.pesoJuicios}, ${o.pasadasJuicios} pasada(s) por época\n`);
+  } else {
+    console.log(`  sin juicios humanos de despliegue (node herramientas/juzgar-despliegues.mjs para dar alguno)\n`);
+  }
+
   const red = crearRed([TAMANO, o.oculta, 1], azar);
   console.log(`  Red ${TAMANO}-${o.oculta}-1 · ${entrenamiento.length} de entrenamiento, ${validacion.length} de validación`);
   console.log(`  pérdida de partida: ${perdidaDe(red, validacion).toFixed(4)}  (adivinar a ciegas ≈ 0.693)\n`);
@@ -192,6 +208,14 @@ async function main() {
   for (let epoca = 1; epoca <= o.epocas; epoca++) {
     for (let i = 0; i < entrenamiento.length; i += o.lote) {
       entrenarLote(red, entrenamiento.slice(i, i + o.lote), { tasa: o.tasa, decaimiento: o.decaimiento });
+    }
+    // DOSIS FIJA, no intercalada. Intercalando un lote de pares entre lotes de
+    // valor, la exposición a los juicios crecía con el tamaño de los datos: con
+    // el depósito lleno la red se dejaba gobernar por unas decenas de opiniones
+    // y colapsaba. Aquí son N pasadas por época pase lo que pase.
+    for (let k = 0; k < o.pasadasJuicios && juicios.pares.length; k++) {
+      const r = entrenarPares(red, juicios.pares, { tasa: o.tasa, decaimiento: o.decaimiento });
+      if (epoca === o.epocas && k === 0) aciertoFinalJuicios = r.aciertos / juicios.pares.length;
     }
     if (epoca % 10 === 0 || epoca === o.epocas) {
       const pEnt = perdidaDe(red, entrenamiento);
@@ -216,6 +240,9 @@ async function main() {
   const t1 = Date.now();
   const medida = medirEnJuego(mejorRed, o.medir, o.candidatos, o.limite, 424242);
   console.log(`  ${medida.gana}-${medida.pierde} (tablas ${medida.empata}) = ${(medida.tasa * 100).toFixed(0)}% de victorias en ${Math.round((Date.now() - t1) / 1000)}s`);
+  if (aciertoFinalJuicios !== null) {
+    console.log(`  coincide con ${(aciertoFinalJuicios * 100).toFixed(0)}% de tus juicios (es dato de entrenamiento, no de validación)`);
+  }
 
   const salida = path.join(AQUI, "modelos", "red-despliegue.json");
   fs.mkdirSync(path.dirname(salida), { recursive: true });
@@ -226,7 +253,7 @@ async function main() {
   fs.writeFileSync(
     salida,
     JSON.stringify(
-      { firmaRasgos: FIRMA, activacion: ACTIVACION, creado: new Date().toISOString(), opciones: o, perdidaValidacion: mejorValidacion, victoriasEnJuego: medida.tasa, curva, red: mejorPesos },
+      { firmaRasgos: FIRMA, activacion: ACTIVACION, creado: new Date().toISOString(), opciones: o, perdidaValidacion: mejorValidacion, victoriasEnJuego: medida.tasa, juiciosUsados: juicios.pares.length, aciertoEnJuicios: aciertoFinalJuicios, curva, red: mejorPesos },
       null,
       2
     )
