@@ -202,6 +202,31 @@ suelta es ruidoso y sin ese aviso el listado parece decir cosas que no dice.
 
 ## Qué falta por pulir
 
+### 0. El desacuerdo sobre el precio de la información, sin resolver
+
+740 juicios humanos marcaron como malas las jugadas que delatan —capitán dos casillas,
+explorador en línea— porque regalan información en la apertura. La red opina lo contrario:
+con el rasgo `delatarmeAhora` disponible, le da signo **positivo**.
+
+Y no es que no lo sepa. Medido: **las piezas que se delatan mueren el 73% de las veces y las
+que no, el 8%**. La red conoce el coste y aun así prefiere pagarlo, porque esas jugadas son las
+rápidas. Se comprobó por la vía dura: entrenada con los juicios dejó de terminar partidas
+—0 de 12 decididas, 400 turnos— y perdía todas contra el panel.
+
+Tres lecturas posibles y no sé cuál es:
+
+- **El entorno no castiga bastante la fuga de información.** Los rivales de entrenamiento
+  explotan los rangos revelados para atacar, pero puede que no lo suficiente: un humano los
+  usa para deducir por descarte dónde están las piezas clave, y eso el panel no lo hace.
+- **Es correlación y no causa.** Las piezas que se delatan son las que se mueven mucho y van al
+  frente: puede que mueran por exponerse, no por estar identificadas.
+- **La red tiene razón dentro de este juego** y el consejo humano vale para partidas entre
+  personas, donde el rival castiga la información durante cuarenta turnos más.
+
+Para distinguirlas haría falta un rival que explote la información de verdad —por ejemplo uno
+que deduzca por descarte— y volver a medir. Mientras tanto los juicios están **apagados por
+defecto** (`pasadasJuicios: 0`) con toda la explicación en el código.
+
 Ordenado por lo que desbloquea a lo demás. Cada punto dice qué hay hecho, qué falta y con qué
 cuidado, para poder retomarlo sin volver a averiguarlo.
 
