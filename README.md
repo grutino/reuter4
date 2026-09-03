@@ -252,6 +252,12 @@ La diferencia, +1,3 ±1,4, no se distingue de cero: la heurística **ya no aport
 Sigue haciendo falta para el arranque y la medida, pero mientras ancle los pares está fijando el
 techo lineal del punto 0.
 
+Ya se puede soltar desde el nocturno:
+
+```bash
+npm run nocturno -- --anclaPares 0
+```
+
 ### 2. Juzgar despliegues
 
 **Hecho**: `npm run juzgar-despliegues` compara dos colocaciones del mismo ejército y guarda cuál

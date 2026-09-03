@@ -46,6 +46,12 @@ function opciones(argv) {
     // Tiene que coincidir con cómo se entrenó el modelo vigente: mezclar los dos
     // caminos entrena una cosa y mide otra.
     soloRed: 1,
+    // El ancla de la heurística. Con 1, cada ronda mete pares que enseñan el
+    // ORDEN de la heurística; con 0 la red queda suelta. Medido: la heurística
+    // ya no aporta a la decisión -decidir con ella cribando y sin ella empatan
+    // dentro del error-, y mientras ancle está fijando el techo lineal: lo que
+    // se destila es una suma ponderada de rasgos, o sea una recta.
+    anclaPares: 1,
     horas: 0,            // 0 = sin límite de tiempo
     // Cuántas sesiones seguidas sin mejorar antes de dar el aprendizaje por
     // congelado, y cuánto tiene que subir la mejor marca para contar como
@@ -107,6 +113,7 @@ async function main() {
   console.log(`  hasta ${o.sesiones} sesiones de ${o.rondas} rondas x ${o.partidas} partidas`);
   if (o.horas) console.log(`  o hasta ${o.horas} h`);
   console.log(`  se para tras ${o.paciencia} sesiones sin subir al menos ${Math.round(o.minimaMejora * 100)} puntos`);
+  console.log(`  ancla de la heurística: ${o.anclaPares ? "puesta" : "SUELTA"}`);
   if (mejor) console.log(`  viene de una marca previa de ${(mejor * 100).toFixed(1)}%`);
   console.log();
 
@@ -122,6 +129,7 @@ async function main() {
         "--epocas", String(o.epocas), "--parejasPanel", String(o.parejasPanel),
         "--poblacion", String(o.poblacion),
         "--soloRed", String(o.soloRed),
+        "--anclaPares", String(o.anclaPares),
         // Semilla distinta cada sesión: si no, todas juegan lo mismo.
         "--semilla", String(1 + sesion * 7919),
         // Y el veredicto también se mide en partidas distintas cada sesión. Con

@@ -1,10 +1,10 @@
 {
   "firmaRasgos": "bef94320",
-  "creado": "2026-09-03T12:40:20.358Z",
+  "creado": "2026-09-03T13:16:53.376Z",
   "opciones": {
-    "rondas": 8,
-    "partidas": 400,
-    "epocas": 60,
+    "rondas": 1,
+    "partidas": 60,
+    "epocas": 10,
     "lote": 64,
     "decaimiento": 0.001,
     "ocultaDespliegue": 16,
@@ -14,14 +14,14 @@
     "candidatas": 12,
     "candidatos": 30,
     "escalada": 200,
-    "parejasPanel": 8,
+    "parejasPanel": 2,
     "exploracion": 0.25,
     "exploracionFinal": 0.08,
     "tasa": 0.003,
     "tasaFinal": 0.0008,
     "memoria": 3,
     "liga": 0.5,
-    "poblacion": 30,
+    "poblacion": 8,
     "elite": 0.25,
     "sangreNueva": 0.15,
     "mutacion": 0.4,
@@ -29,99 +29,29 @@
     "pesoEscenarios": 40,
     "pasadasJuicios": 0,
     "soloRed": 1,
-    "anclaPares": 1,
+    "anclaPares": 0,
     "paresPorPosicion": 6,
     "paresSueltos": 14,
     "muestreoPares": 8,
     "veredictoBase": 0,
     "margen": 1
   },
-  "perdidaValidacion": 0.6550155376614565,
-  "victoriasEnJuego": 0.9413793103448276,
+  "perdidaValidacion": 0.5923548199570029,
+  "victoriasEnJuego": 0.927536231884058,
   "curva": [
     {
       "epoca": 5,
-      "entrenamiento": 0.6337,
-      "validacion": 0.65571,
-      "aciertoEntrenamiento": 0.6503,
-      "aciertoValidacion": 0.6208
+      "entrenamiento": 0.60348,
+      "validacion": 0.61463,
+      "aciertoEntrenamiento": 0.6556,
+      "aciertoValidacion": 0.6333
     },
     {
       "epoca": 10,
-      "entrenamiento": 0.63235,
-      "validacion": 0.65541,
-      "aciertoEntrenamiento": 0.65,
-      "aciertoValidacion": 0.6242
-    },
-    {
-      "epoca": 15,
-      "entrenamiento": 0.63168,
-      "validacion": 0.65523,
-      "aciertoEntrenamiento": 0.6508,
-      "aciertoValidacion": 0.6217
-    },
-    {
-      "epoca": 20,
-      "entrenamiento": 0.6311,
-      "validacion": 0.65521,
-      "aciertoEntrenamiento": 0.6497,
-      "aciertoValidacion": 0.6208
-    },
-    {
-      "epoca": 25,
-      "entrenamiento": 0.63046,
-      "validacion": 0.65502,
-      "aciertoEntrenamiento": 0.6506,
-      "aciertoValidacion": 0.6217
-    },
-    {
-      "epoca": 30,
-      "entrenamiento": 0.62982,
-      "validacion": 0.65504,
-      "aciertoEntrenamiento": 0.6497,
-      "aciertoValidacion": 0.6242
-    },
-    {
-      "epoca": 35,
-      "entrenamiento": 0.62941,
-      "validacion": 0.65512,
-      "aciertoEntrenamiento": 0.6486,
-      "aciertoValidacion": 0.625
-    },
-    {
-      "epoca": 40,
-      "entrenamiento": 0.62902,
-      "validacion": 0.65521,
-      "aciertoEntrenamiento": 0.6486,
-      "aciertoValidacion": 0.6225
-    },
-    {
-      "epoca": 45,
-      "entrenamiento": 0.6286,
-      "validacion": 0.65524,
-      "aciertoEntrenamiento": 0.6475,
-      "aciertoValidacion": 0.6225
-    },
-    {
-      "epoca": 50,
-      "entrenamiento": 0.62815,
-      "validacion": 0.65533,
-      "aciertoEntrenamiento": 0.6467,
-      "aciertoValidacion": 0.6217
-    },
-    {
-      "epoca": 55,
-      "entrenamiento": 0.62772,
-      "validacion": 0.65544,
-      "aciertoEntrenamiento": 0.6467,
-      "aciertoValidacion": 0.62
-    },
-    {
-      "epoca": 60,
-      "entrenamiento": 0.62746,
-      "validacion": 0.65567,
-      "aciertoEntrenamiento": 0.6444,
-      "aciertoValidacion": 0.6183
+      "entrenamiento": 0.59951,
+      "validacion": 0.63076,
+      "aciertoEntrenamiento": 0.6556,
+      "aciertoValidacion": 0.6333
     }
   ],
   "red": {
@@ -1506,43 +1436,38 @@
   },
   "activacion": "leaky0.01",
   "origen": "coevolución",
-  "acierto": 0.6216666666666667,
-  "errorEnJuego": 0.020761369963434993,
+  "acierto": 0.65,
+  "errorEnJuego": 0.04256282653793743,
   "calibracion": [
     {
-      "n": 20,
-      "predicho": 0.0598400940930775,
-      "real": 0.13467550992817165
+      "n": 3,
+      "predicho": 0.04648140080200016,
+      "real": 0
     },
     {
-      "n": 101,
-      "predicho": 0.14780093174652495,
-      "real": 0.17929427206562557
+      "n": 6,
+      "predicho": 0.13138248713171521,
+      "real": 0
     },
     {
-      "n": 70,
-      "predicho": 0.2502801272347686,
-      "real": 0.32623606865128857
+      "n": 3,
+      "predicho": 0.30003261076471477,
+      "real": 0
     },
     {
-      "n": 90,
-      "predicho": 0.3263679423112291,
-      "real": 0.35332346830296024
+      "n": 1,
+      "predicho": 0.498729659699615,
+      "real": 0
     },
     {
-      "n": 37,
-      "predicho": 0.4609195427637955,
-      "real": 0.4018830999245747
+      "n": 9,
+      "predicho": 0.5663813896815958,
+      "real": 0.6666666666666666
     },
     {
-      "n": 598,
-      "predicho": 0.5695420503953253,
-      "real": 0.5756163931658222
-    },
-    {
-      "n": 284,
-      "predicho": 0.6076627065966534,
-      "real": 0.5817593858568798
+      "n": 38,
+      "predicho": 0.6159694784261278,
+      "real": 0.5263157894736842
     }
   ]
 }
