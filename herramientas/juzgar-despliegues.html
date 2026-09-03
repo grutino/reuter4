@@ -234,5 +234,14 @@ addEventListener("keydown", (e) => {
   else if (e.key === "n" || e.key === "N") ir(1);
   else if (e.key === "t" || e.key === "T") document.getElementById("encuadre").click();
 });
+// Se arranca en la primera sin juzgar, no en la primera de la lista: retomar una
+// tanda a medias obligaba a pasar a mano por todo lo ya hecho.
+const primeraPendiente = datos.parejas.findIndex((p) => !juicios[clave(p)]);
+if (primeraPendiente >= 0) n = primeraPendiente;
 pinta();
+if (primeraPendiente < 0) {
+  document.getElementById("ayuda").insertAdjacentHTML("afterbegin",
+    '<p style="color:#4A7C4A"><b>Ya las has valorado todas.</b> Lo que ves es lo que decidiste; ' +
+    'puedes cambiar cualquiera, o volver al taller.</p>');
+}
 </script></body></html>

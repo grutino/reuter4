@@ -23,7 +23,7 @@ const servidor = http.createServer((peticion, respuesta) => {
 });
 
 servidor.listen(PUERTO, () => {
-  const e = estado();
+  const e = estado(modelos.despliegue, modelos.jugada);
   console.log(`Sala de juicios de jugada en http://localhost:${PUERTO}`);
   console.log(`  ${e.enElBanco} escenarios en el banco · ${Object.keys(leerJuiciosJugada()).length} jugadas ya juzgadas`);
   if (!e.enElBanco) console.log("  El banco está vacío: npm run escenarios");

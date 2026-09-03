@@ -24,6 +24,12 @@
           text-decoration:none; display:inline-block; }
  button:hover, a.boton:hover { border-color:var(--tinta); }
  a.boton.principal { background:var(--tinta); color:var(--papel); border-color:var(--tinta); }
+ /* Sin nada pendiente el botón no lleva a ninguna parte: se apaga en vez de
+    llevarte a una tanda ya juzgada entera. */
+ a.boton.apagado { color:#b3aa98; border-color:#eee6d8; background:#faf7f0;
+                   pointer-events:none; cursor:default; }
+ a.boton.apagado.principal { background:#faf7f0; color:#b3aa98; border-color:#eee6d8; }
+ .cuantas { font-weight:400; opacity:.75; }
  button:disabled { opacity:.45; cursor:default; }
  pre { background:#f7f3ea; border:1px solid var(--linea); border-radius:5px; padding:11px 13px;
        font:12.5px/1.6 ui-monospace,monospace; white-space:pre-wrap; margin:12px 0 0; }
@@ -66,8 +72,8 @@ las partidas terminadas y se valora — no «qué pasó», sino <b>qué era mejo
   en abstracto y su efecto se reparte por toda la partida. Una <b>jugada</b> solo existe dentro de
   su posición, así que enseña menos por unidad — pero es donde se decide la partida.</p>
   <div class="barra">
-    <a class="boton principal" href="/juicios/despliegues">valorar posiciones de salida</a>
-    <a class="boton" href="/juicios/jugadas">valorar jugadas</a>
+    <a class="boton principal" id="irPosiciones" href="/juicios/despliegues">valorar posiciones de salida</a>
+    <a class="boton" id="irJugadas" href="/juicios/jugadas">valorar jugadas</a>
     <button id="reiniciar" style="margin-left:auto;color:var(--mal);border-color:#e0c4bf">reiniciar posiciones</button>
   </div>
   <p class="nota" id="avisoBanco" style="margin-top:12px"></p>
@@ -151,6 +157,20 @@ async function pinta() {
   const e = await (await fetch("/juicios/api/estado")).json();
   document.getElementById("fichas").innerHTML = F.map(([k, v, urge]) =>
     `<div class="ficha${urge && v(e) ? " urge" : ""}"><dt>${k}</dt><dd>${v(e)}</dd></div>`).join("");
+  // Los botones solo se encienden si hay algo que valorar de verdad, y dicen
+  // cuánto: entrar a una tanda ya terminada y tener que buscar el hueco a mano
+  // es la forma más rápida de dejar de valorar.
+  const p = e.pendientes || { posiciones: 0, jugadas: 0 };
+  const pon = (id, cuantas, etiqueta) => {
+    const a = document.getElementById(id);
+    a.classList.toggle("apagado", !cuantas);
+    a.innerHTML = cuantas
+      ? `${etiqueta} <span class="cuantas">· ${cuantas} sin valorar</span>`
+      : `${etiqueta} <span class="cuantas">· todo valorado</span>`;
+  };
+  pon("irPosiciones", p.posiciones, "valorar posiciones de salida");
+  pon("irJugadas", p.jugadas, "valorar jugadas");
+
   document.getElementById("cosechar").disabled = !e.sinCosechar;
   document.getElementById("avisoBanco").textContent = e.enElBanco
     ? "" : "El banco de escenarios está vacío, así que no hay jugadas que valorar. Se llena con: npm run escenarios";

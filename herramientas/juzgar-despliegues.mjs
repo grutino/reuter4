@@ -23,7 +23,7 @@ const servidor = http.createServer((peticion, respuesta) => {
 });
 
 servidor.listen(PUERTO, () => {
-  const e = estado();
+  const e = estado(modelos.despliegue, modelos.jugada);
   console.log(`Taller de juicios en http://localhost:${PUERTO}`);
   console.log(`  ${e.juzgados} valoraciones · ${e.enElPozo} despliegues de partidas jugadas`);
   console.log(`  ${modelos.despliegue ? "con red publicada: se podrá comparar tu juicio con el suyo" : "sin red publicada"}`);

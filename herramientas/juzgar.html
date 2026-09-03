@@ -106,14 +106,20 @@ function pinta() {
     for (let k = 0; k < c.acciones.length; k++) {
       const v = juicios[clave(c, k)];
       if (!v) continue;
-      juzgados++;
+      // Solo cuentan los que la red ha podido opinar. Sin red publicada, `comparar`
+      // devuelve nulo para todos y el marcador salía "0 de 520 (0%)", que se lee
+      // como "la red falla siempre" cuando lo que pasa es que no hay red.
       const cmp = comparar(c, k, v);
-      if (cmp && cmp.coincide) coinciden++;
+      if (!cmp) continue;
+      juzgados++;
+      if (cmp.coincide) coinciden++;
     }
   }
   document.getElementById("cuenta").textContent =
     `${Object.keys(juicios).length} juicios guardados` +
-    (juzgados ? ` · la red coincide contigo en ${coinciden} de ${juzgados} (${Math.round((100 * coinciden) / juzgados)}%)` : "");
+    (juzgados
+      ? ` · la red coincide contigo en ${coinciden} de ${juzgados} (${Math.round((100 * coinciden) / juzgados)}%)`
+      : datos.casos.some((c) => c.suyo) ? "" : " · sin red de jugada al día: no hay con qué comparar");
   document.getElementById("tablero").innerHTML =
     tableroDelEscenario(caso.estado, caso.color, caso.acciones[elegida], fichas);
 
@@ -169,5 +175,15 @@ addEventListener("keydown", (e) => {
   else if (e.key === "ArrowRight") ir(1);
   else if (e.key === "ArrowLeft") ir(-1);
 });
+// Se arranca en el primer caso con algo sin juzgar, no en el primero de la
+// lista: retomar una tanda a medias obligaba a pasar a mano por todo lo ya hecho,
+// y con 440 escenarios eso es abandonar.
+const primeroPendiente = datos.casos.findIndex((c) => c.acciones.some((_, k) => !juicios[clave(c, k)]));
+if (primeroPendiente >= 0) n = primeroPendiente;
 pinta();
+if (primeroPendiente < 0) {
+  document.body.insertAdjacentHTML("afterbegin",
+    '<p style="color:#4A7C4A;margin:0 0 10px"><b>Ya has juzgado todas las candidatas de todos los escenarios.</b> ' +
+    'Lo que ves es lo que decidiste; puedes cambiar cualquiera.</p>');
+}
 </script></body></html>

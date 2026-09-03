@@ -276,7 +276,25 @@ export async function estadoDeLasRedes() {
 
 // --- Estado del taller --------------------------------------------------------
 
-export function estado() {
+// Cuántas quedan por valorar. Hace falta construir las parejas y los casos, que
+// no es gratis, así que van por la misma caché que sirve a las páginas: la
+// primera llamada las construye y las demás las encuentran hechas.
+function pendientes(red, redJugada) {
+  const juicios = leerJuicios();
+  if (!cache.parejas) cache.parejas = construirParejas(red);
+  const posiciones = cache.parejas.parejas.filter((p) => !juicios[`${p.a.clave}|${p.b.clave}`]).length;
+
+  const deJugada = leerJuiciosJugada();
+  if (!cache.casos) cache.casos = construirCasos(redJugada);
+  // Un caso sigue pendiente mientras le quede alguna candidata sin juzgar: el
+  // valor está en el contraste entre ellas, y con la mitad juzgada no hay orden
+  // completo que aprender.
+  const jugadas = cache.casos.filter((c) => c.claves.some((k) => !deJugada[k])).length;
+
+  return { posiciones, jugadas };
+}
+
+export function estado(red, redJugada) {
   const archivadas = fs.existsSync(PARTIDAS)
     ? fs.readdirSync(PARTIDAS).filter((f) => f.endsWith(".json") && f !== "cosechadas.json").length
     : 0;
@@ -297,6 +315,7 @@ export function estado() {
     enElPozo: COLORES.reduce((n, c) => n + pozo[c].length, 0),
     juzgados: Object.keys(juicios).length,
     conOrden: Object.values(juicios).filter((v) => v === "a" || v === "b").length,
+    pendientes: pendientes(red, redJugada),
   };
 }
 
@@ -358,7 +377,7 @@ export function atender(peticion, respuesta, url, red, redJugada) {
     return true;
   }
 
-  if (url === "/juicios/api/estado") { enviarJson(estado()); return true; }
+  if (url === "/juicios/api/estado") { enviarJson(estado(red, redJugada)); return true; }
 
   if (url === "/juicios/api/redes") {
     estadoDeLasRedes().then((r) => enviarJson(r));
@@ -430,7 +449,10 @@ export function atender(peticion, respuesta, url, red, redJugada) {
     cosechar().then((r) => {
       // Lo cosechado entra en las parejas, así que hay que rehacerlas.
       cache.parejas = construirParejas(red);
-      enviarJson({ ...r, estado: estado(), hayJugados: cache.parejas.hayJugados });
+      // Lo cosechado también entra en el banco de escenarios, así que los casos
+      // de jugada se rehacen igual.
+      cache.casos = null;
+      enviarJson({ ...r, estado: estado(red, redJugada), hayJugados: cache.parejas.hayJugados });
     });
     return true;
   }
