@@ -303,6 +303,41 @@ sigue metiendo pares suyos cada ronda (`--anclaPares`) para que la red no olvide
 mientras persigue resultados. Medido: con el modelo actual los dos caminos empatan a 65%, o sea
 que la heurística ya no aporta nada a la decisión — solo al arranque y a la medida.
 
+### El rival que explota la información
+
+Lo que separa a un bot que juega con **evidencias** de uno que juega con **creencias**. Tres
+piezas, y las tres salieron de medir:
+
+**La bolsa descuenta las caídas.** `bolsaOculta` partía del inventario entero y solo restaba las
+reveladas VIVAS, así que un mariscal muerto seguía contando como posible el resto de la partida.
+Toda muerte publica el rango, así que no usarlo era jugar peor de lo permitido.
+
+**Un reclutamiento reparte probabilidad, no devuelve una pieza concreta.** Vuelve una de las
+caídas sin decir cuál, así que el rango vuelve a la bolsa repartido entre todas, **pesado por
+rango**: quien recluta recupera lo mejor que puede —el bot hace literalmente
+`Math.max(...opciones)`— y eso deja conteos fraccionarios, que es exactamente lo que se sabe.
+
+**Y se persigue lo revelado.** Antes el bot solo aprovechaba un rango conocido si lo tenía
+pegado; ahora va a por él. Barrido del peso, contra el mismo bot sin caza:
+
+```
+caza   fuerza   piezas delatadas que mueren
+   0     50%              68%
+   3     50%              72%
+   6     61%   <-         75%
+  14     54%              73%
+  30     38%              76%
+```
+
+A 6 gana más y además **encarece delatarse**, que era el objetivo: si nadie persigue lo
+revelado, la información no cuesta nada y el entrenamiento no puede enseñar que valga.
+
+**Lo que NO se puede inferir, medido.** El comportamiento público apenas predice el rango en
+autojuego: piezas que nunca se mueven, 64% entre los mariscales y 54% entre los cañones; pasos
+medios, 0,6 contra 0,9. Está todo plano, porque los bots se mueven de forma uniforme y no dejan
+firma que leer. Contra una persona sí la habría —protege al mariscal, adelanta exploradores— así
+que esa inferencia rendiría contra un humano y no en entrenamiento.
+
 ### El precio de la información, y por qué un rasgo constante no basta
 
 La red sabía que delatarse es malo, pero le pesaba **57 veces menos** que acercarse al castillo:

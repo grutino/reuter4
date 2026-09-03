@@ -257,6 +257,19 @@ export function analizarTurno(estado, color, distancias, misAcciones = null) {
   }
   const yoAPuntoDeCoronar = yoLlevoBandera && miDistancia <= 2;
 
+  // Piezas enemigas con el rango ya destapado. Es la información que uno paga
+  // por conseguir, y hasta ahora solo se usaba si la presa estaba al lado: el
+  // bot atacaba lo revelado que tenía pegado, pero no iba a por ello. Si nadie
+  // persigue lo revelado, delatarse sale casi gratis — y entonces el
+  // entrenamiento no puede enseñar que la información valga nada.
+  const reveladosEnemigos = [];
+  for (const pieza of Object.values(estado.piezas)) {
+    if (!esEnemigo(color, pieza.color)) continue;
+    const visto = memoria[pieza.id];
+    if (visto === undefined) continue;
+    reveladosEnemigos.push({ id: pieza.id, casilla: pieza.casilla, rango: visto });
+  }
+
   const torreOcupada = Boolean(estado.tablero[TORRE]);
 
   // --- El castillo: quién está a punto de ganar y quién puede impedirlo ------
@@ -339,6 +352,7 @@ export function analizarTurno(estado, color, distancias, misAcciones = null) {
     lineasAlAnillo,
     // Casillas donde plantarse corta al menos una línea de tiro al anillo.
     tapanElAnillo,
+    reveladosEnemigos,
     presencia: {
       mios: miosCerca,
       suyos: suyosCerca,

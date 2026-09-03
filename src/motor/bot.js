@@ -7,7 +7,7 @@
 // No se hace. La única fuente sobre rangos ajenos es `estado.rangosRevelados`,
 // que el motor alimenta con lo que ha quedado a la vista de toda la mesa.
 
-import { ANILLO, TORRE, ADYACENTES, ZONAS, casillasDeZona, BATEN_ANILLO, PASOS_A_TIRO, DIRECCIONES, rayo, ALCANCE_CANON } from "./tablero.js";
+import { ANILLO, TORRE, ADYACENTES, ZONAS, casillasDeZona, coord, BATEN_ANILLO, PASOS_A_TIRO, DIRECCIONES, rayo, ALCANCE_CANON } from "./tablero.js";
 import { analizarTurno, peligroEn, lineasAbiertasSi } from "./analisis.js";
 import {
   RANGOS,
@@ -108,6 +108,38 @@ function esEnemigo(color, otro) {
 export function bolsaOculta(estado, color) {
   const restantes = {};
   for (const [rango, info] of Object.entries(RANGOS)) restantes[rango] = info.cantidad;
+
+  // LAS CAÍDAS TAMBIÉN SALEN DE LA BOLSA, y antes no salían: se partía del
+  // inventario entero y solo se restaban las reveladas VIVAS, así que un
+  // mariscal muerto seguía contando como posible durante el resto de la
+  // partida. Toda muerte publica el rango, en el duelo o en el cañonazo, así
+  // que esto es información pública y no usarla era jugar peor de lo permitido.
+  //
+  const caidos = (estado.caidosPublicos && estado.caidosPublicos[color]) || [];
+  for (const rango of caidos) restantes[rango] = Math.max(0, restantes[rango] - 1);
+
+  // UN RECLUTAMIENTO DEVUELVE UNA DE LAS CAÍDAS SIN DECIR CUÁL, así que no se
+  // puede escoger una: hay que repartir la probabilidad entre todas. La primera
+  // versión devolvía la primera caída de la lista, que es tan arbitrario como
+  // elegir cualquier otra.
+  //
+  // El reparto va PESADO POR RANGO y no uniforme, porque quien recluta recupera
+  // lo mejor que puede: el bot literalmente hace `Math.max(...opciones)`, y una
+  // persona tampoco recupera un explorador teniendo un mariscal caído. Es una
+  // suposición sobre el rival, y por eso queda escrita.
+  //
+  // Los conteos salen fraccionarios, que es lo correcto: media pieza de
+  // posibilidad es exactamente lo que se sabe.
+  const reclutas = (estado.reclutas && estado.reclutas[color]) || 0;
+  if (reclutas > 0 && caidos.length) {
+    const pesoDe = (r) => r * r; // recuperar lo mejor pesa mucho más
+    const total = caidos.reduce((s, r) => s + pesoDe(r), 0);
+    const vueltos = Math.min(reclutas, caidos.length);
+    for (const rango of caidos) {
+      restantes[rango] = (restantes[rango] || 0) + (vueltos * pesoDe(rango)) / total;
+    }
+  }
+
   for (const p of Object.values(estado.piezas)) {
     if (p.color !== color) continue;
     const visto = estado.rangosRevelados ? estado.rangosRevelados[p.id] : undefined;
@@ -193,6 +225,10 @@ export const PESOS_BASE = {
   //
   // En -55 los baratos caen a un tercio y los caros apenas se tocan. Más allá
   // empieza a perder también los buenos sin ganar nada.
+  // Ir a por una pieza cuyo rango ya conocemos y a la que ganamos. Sin esto, el
+  // bot solo aprovechaba lo revelado si lo tenía pegado, y delatarse salía casi
+  // gratis: la información no cuesta nada si nadie la explota.
+  cazarRevelado: 6,
   costeDelCanon: -55,
   disparoConocidoBase: 20,
   disparoConocidoFactor: 7,
@@ -304,6 +340,19 @@ export function amenazasDesde(estado, casilla, miRango, color, memoria) {
 // Devuelve TODAS las acciones legales con su nota. `accionDeBot` se queda con
 // la mejor; el bot con red lo usa para quedarse con las mejores y volver a
 // juzgarlas, que sale mucho más barato que valorar las cien con la red.
+// Distancia a ojo entre dos casillas, para saber si un movimiento acerca o
+// aleja. Las pseudocasillas del castillo no tienen coordenadas, así que se
+// resuelven con la distancia al castillo que ya está tabulada.
+function separacion(a, b) {
+  if (a === b) return 0;
+  const ca = coord(a);
+  const cb = coord(b);
+  if (ca && cb) return Math.max(Math.abs(ca[0] - cb[0]), Math.abs(ca[1] - cb[1]));
+  const da = DISTANCIA[a];
+  const db = DISTANCIA[b];
+  return da === undefined || db === undefined ? null : Math.abs(da - db);
+}
+
 export function puntuarAcciones(estado, color, opciones = {}) {
   return accionDeBot(estado, color, { ...opciones, devolverTodas: true }) || [];
 }
@@ -339,6 +388,23 @@ export function accionDeBot(estado, color, { pesos = PESOS_BASE, azar = Math.ran
       // Al portador de bandera le duele el doble, porque su caída suelta la bandera.
       const amenaza = amenazaConocida(estado, a.hasta, pieza.rango, color);
       if (amenaza && !llevaBanderaAmiga) { nota -= pesos.amenazaBase + amenaza * pesos.amenazaFactor; apuntar("amenazaBase"); apuntar("amenazaFactor"); }
+
+      // Perseguir lo revelado: acercarse a una pieza enemiga cuyo rango ya
+      // conocemos y a la que ganamos.
+      if (a.tipo === "mover" && analisis.reveladosEnemigos.length) {
+        let mejorAcercamiento = 0;
+        for (const presa of analisis.reveladosEnemigos) {
+          if (resolverDuelo(pieza.rango, presa.rango) !== "atacante") continue;
+          const antes = separacion(a.desde, presa.casilla);
+          const despues = separacion(a.hasta, presa.casilla);
+          if (antes === null || despues === null) continue;
+          if (antes - despues > mejorAcercamiento) mejorAcercamiento = antes - despues;
+        }
+        if (mejorAcercamiento > 0) {
+          nota += pesos.cazarRevelado * mejorAcercamiento;
+          apuntar("cazarRevelado");
+        }
+      }
 
       // Defenderse: la línea de tiro de un cañón que aún no se ha visto.
       const riesgo = peligroEn(analisis, a.hasta, pieza.rango);
