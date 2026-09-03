@@ -39,7 +39,11 @@
  .entrenando small { color:var(--tenue); }
  .parado { color:var(--tenue); font-size:13.5px; margin:0 0 14px; }
  .red { border-top:1px solid var(--linea); padding:12px 0 4px; }
- .red-nombre { font-size:14px; font-weight:600; margin-bottom:7px; }
+ .red-nombre { font-size:14px; font-weight:600; margin-bottom:7px;
+                display:flex; align-items:baseline; gap:12px; }
+ .verplot { font-size:12px; font-weight:400; color:var(--laton); text-decoration:none;
+            margin-left:auto; border-bottom:1px solid transparent; }
+ .verplot:hover { border-bottom-color:var(--laton); }
  .red-cols { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
  .red-cols dt { font:500 10px/1.3 ui-monospace,monospace; letter-spacing:.06em;
                 text-transform:uppercase; color:var(--tenue); }
@@ -119,9 +123,10 @@ function celda(m, siFalta) {
   return `<dd>${pct(m.victorias)} · ${m.capas.join("-")}</dd><small>${fecha(m.creado)}${juicios}</small>`;
 }
 
-function filaDeRed(nombre, pub, taller) {
+function filaDeRed(nombre, pub, taller, cual) {
   return `<div class="red">
-    <div class="red-nombre">${nombre}</div>
+    <div class="red-nombre">${nombre}
+      <a class="verplot" href="/juicios/red/${cual}" target="_blank">ver su dibujo →</a></div>
     <div class="red-cols">
       <div><dt>publicada — la que juega</dt>${celda(pub, "no hay ninguna: los bots juegan con la heurística")}</div>
       <div><dt>en el taller — la que se entrena</dt>${celda(taller, "nada entrenado todavía")}</div>
@@ -147,8 +152,8 @@ async function pintaRedes() {
     cabecera = `<div class="parado">Ahora mismo no hay ningún entrenamiento en marcha.</div>`;
   }
   document.getElementById("redes").innerHTML = cabecera +
-    filaDeRed("jugada — decide cada movimiento", r.publicadas.jugada, r.taller.jugada) +
-    filaDeRed("despliegue — elige la posición de salida", r.publicadas.despliegue, r.taller.despliegue);
+    filaDeRed("jugada — decide cada movimiento", r.publicadas.jugada, r.taller.jugada, "jugada") +
+    filaDeRed("despliegue — elige la posición de salida", r.publicadas.despliegue, r.taller.despliegue, "despliegue");
   document.getElementById("avisoInforme").textContent = r.hayInforme
     ? "" : "aún no hay informe: npm run informe-redes";
 }

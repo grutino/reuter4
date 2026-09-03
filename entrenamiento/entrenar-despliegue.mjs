@@ -34,7 +34,12 @@ const [EQUIPO_A] = EQUIPOS;
 function opciones(argv) {
   // `seco` no escribe el modelo: para probar sin que un ensayo pise uno bueno.
   // Ya ha pasado tres veces, la última con mi propio experimento de capacidad.
-  const o = { partidas: 1500, epocas: 300, lote: 64, tasa: 0.01, oculta: 10, decaimiento: 0.0015, semilla: 1, limite: 400, candidatos: 40, medir: 60, seco: 0, pesoJuicios: 40, pasadasJuicios: 1, validarJuicios: 0.3 };
+  // pasadasJuicios 8 sale de un barrido: con 0 la red acierta el 73% de los
+  // juicios apartados, con 1 el 77%, con 8 el 92% sin perder ni una victoria
+  // (78% -> 79%), y con 30 el acierto ya no sube pero la fuerza de juego se
+  // desploma al 58%. Ocho es donde aprende todo lo que hay que aprender y
+  // todavía no estorba.
+  const o = { partidas: 1500, epocas: 300, lote: 64, tasa: 0.01, oculta: 10, decaimiento: 0.0015, semilla: 1, limite: 400, candidatos: 40, medir: 60, seco: 0, pesoJuicios: 40, pasadasJuicios: 8, validarJuicios: 0.3 };
   for (let i = 2; i < argv.length; i += 2) {
     const clave = argv[i].replace(/^--/, "");
     if (!(clave in o)) throw new Error(`opción desconocida: ${argv[i]}`);

@@ -130,7 +130,7 @@ function histograma(puntos, ancho = 340, alto = 260) {
 //
 // Y solo se dibujan las conexiones fuertes: con 72x28 hay 2.016 líneas y el
 // dibujo se vuelve un borrón negro.
-function diagramaDeRed(red, nombres, { ancho = 700, alto = 300, conexiones = 90 } = {}) {
+export function diagramaDeRed(red, nombres, { ancho = 700, alto = 300, conexiones = 90 } = {}) {
   if (!red || !red.pesos || red.pesos.length < 2) return "";
   const [nEntradas, nOcultas] = red.capas;
   const w0 = red.pesos[0];
@@ -226,7 +226,7 @@ function diagramaDeRed(red, nombres, { ancho = 700, alto = 300, conexiones = 90 
   </svg>`;
 }
 
-function barrasDeRasgos(filas, limite = 14) {
+export function barrasDeRasgos(filas, limite = 14) {
   const top = filas.slice().sort((a, b) => Math.abs(b.efecto) - Math.abs(a.efecto)).slice(0, limite);
   if (!top.length) return "";
   const tope = Math.max(...top.map((f) => Math.abs(f.efecto))) || 1;

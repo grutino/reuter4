@@ -274,6 +274,95 @@ export async function estadoDeLasRedes() {
   };
 }
 
+// --- El plot de una red -------------------------------------------------------
+
+const REDES = {
+  jugada: { fichero: "red-jugada.json", titulo: "Red de jugada", pie: "decide cada movimiento" },
+  despliegue: { fichero: "red-despliegue.json", titulo: "Red de despliegue", pie: "elige la posición de salida" },
+};
+
+export async function paginaDeRed(cual) {
+  const cfg = REDES[cual];
+  if (!cfg) return null;
+  const ruta = path.join(RAIZ, "entrenamiento", "modelos", cfg.fichero);
+  if (!fs.existsSync(ruta)) return `<p>Todavía no hay nada entrenado para ${cual}.</p>`;
+
+  const guardado = JSON.parse(fs.readFileSync(ruta, "utf8"));
+  const { diagramaDeRed } = await import("../entrenamiento/informe-redes.mjs");
+  const { desdeObjeto } = await import("../src/motor/red.js");
+  const { ablacion, linealidad } = await import("../entrenamiento/uso-de-red.mjs");
+  const { entradasDeJugada, entradasDeDespliegue } = await import("../entrenamiento/sensibilidad.mjs");
+
+  const red = desdeObjeto(guardado.red);
+  const nombres = cual === "jugada"
+    ? (await import("../src/motor/rasgos-jugada.js")).NOMBRES
+    : await (async () => {
+        const { nombreDeRasgo, TAMANO } = await import("../src/motor/rasgos-despliegue.js");
+        return Array.from({ length: TAMANO }, (_, i) => nombreDeRasgo(i));
+      })();
+
+  // Pocas muestras a propósito: esta página tiene que abrirse al momento. Para
+  // la medida fina está el informe completo.
+  let uso = "";
+  try {
+    const vectores = cual === "jugada" ? entradasDeJugada({ partidas: 3 }) : entradasDeDespliegue({ muestras: 200 });
+    const a = ablacion(red, vectores);
+    const l = linealidad(red, vectores);
+    uso = `<dl class="fichas">
+      <div class="ficha"><dt>neuronas que hacen algo</dt><dd>${a.utiles}<small> de ${a.ocultas}</small></dd></div>
+      <div class="ficha"><dt>inertes</dt><dd>${a.inertes}<small> de ${a.ocultas}</small></dd></div>
+      <div class="ficha"><dt>R² de la mejor recta</dt><dd>${l.r2.toFixed(4)}</dd></div>
+      <div class="ficha"><dt>ordena como una recta</dt><dd>${(l.ordenIgual * 100).toFixed(1)}%</dd></div>
+    </dl>
+    <p class="nota">Si ordena como una recta el 100% de las veces, las capas ocultas no están
+    comprando nada: la red podría ser una suma ponderada de sus entradas y nadie notaría la
+    diferencia. Medido sobre ${vectores.length} entradas, pocas para que esta página abra al
+    momento; la medida fina está en el informe completo.</p>`;
+  } catch {
+    uso = `<p class="nota">No se ha podido medir el uso de la red.</p>`;
+  }
+
+  const pct = (v) => (v === null || v === undefined ? "—" : `${Math.round(v * 100)}%`);
+  return `<!doctype html><html lang="es"><head><meta charset="utf-8">
+<title>Reuter4 · ${cfg.titulo}</title><style>
+ :root { --tinta:#2b2620; --tenue:#7a7060; --linea:#ded5c4; --papel:#fffdf8; --laton:#8A6420;
+         --suelo:#EDE4D2; --apagado:#6E6045; --filo:#ded5c4; --bien:#4A7C4A; --mal:#96362C;
+         --dato:#6FA8C7; --tabla:#fff; }
+ * { box-sizing:border-box; }
+ body { margin:0; padding:26px 24px 60px; background:var(--papel); color:var(--tinta);
+        font:15.5px/1.6 "Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif; }
+ .hoja { max-width:820px; margin:0 auto; }
+ h1 { font-size:26px; margin:0 0 2px; }
+ .sub { color:var(--tenue); font-size:14px; margin:0 0 20px; }
+ .fichas { display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:10px;
+           margin:0 0 18px; padding:0; }
+ .ficha { border:1px solid var(--linea); border-radius:6px; padding:11px 13px; background:#fff; }
+ .ficha dt { font:500 10px/1.3 ui-monospace,monospace; letter-spacing:.08em;
+             text-transform:uppercase; color:var(--tenue); }
+ .ficha dd { margin:5px 0 0; font:600 22px/1 ui-monospace,monospace; }
+ .ficha dd small { font-size:12px; font-weight:400; color:var(--tenue); }
+ .lienzo { background:#fff; border:1px solid var(--linea); border-radius:6px; padding:12px;
+           overflow-x:auto; margin:0 0 14px; }
+ .nota { font-size:13px; color:var(--tenue); border-left:2px solid var(--linea);
+         padding-left:12px; max-width:66ch; }
+ a.boton { font:inherit; font-size:14px; padding:7px 16px; border:1px solid var(--linea);
+           background:#fff; color:var(--tinta); border-radius:6px; text-decoration:none;
+           display:inline-block; margin-top:16px; }
+ a.boton:hover { border-color:var(--tinta); }
+</style></head><body><div class="hoja">
+<h1>${cfg.titulo}</h1>
+<p class="sub">${cfg.pie} · ${guardado.red.capas.join("-")} · ${pct(guardado.victoriasEnJuego)} de victorias · ${(guardado.creado || "").slice(0, 16).replace("T", " ")}</p>
+${uso}
+<div class="lienzo">${diagramaDeRed(red, nombres, { ancho: 780, alto: 340 })}</div>
+<p class="nota">Cada franja de la izquierda es una entrada, tanto más oscura cuanto más reparte.
+Los círculos son las neuronas ocultas: el <b>color</b> es lo que les entra —cuánto miran— y el
+<b>tamaño</b> lo que sacan hacia la salida —cuánto se les hace caso—. Una grande y pálida mira
+poco pero decide mucho. Solo se dibujan las conexiones más fuertes: con
+${guardado.red.capas[0] * (guardado.red.capas[1] || 0)} el dibujo sería un borrón.</p>
+<a class="boton" href="/juicios">volver al taller</a>
+</div></body></html>`;
+}
+
 // --- Estado del taller --------------------------------------------------------
 
 // Cuántas quedan por valorar. Hace falta construir las parejas y los casos, que
@@ -395,6 +484,19 @@ export function atender(peticion, respuesta, url, red, redJugada) {
     }
     respuesta.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
     respuesta.end(fs.readFileSync(informe));
+    return true;
+  }
+
+  // El plot de UNA red, suelto. El informe completo tarda en generarse porque
+  // juega partidas para la sensibilidad; esto solo dibuja los pesos, que ya
+  // están en el fichero, así que sale al momento y sirve para mirar cómo va
+  // cambiando la forma de la red durante un entrenamiento.
+  if (url.startsWith("/juicios/red/")) {
+    const cual = url.slice("/juicios/red/".length);
+    paginaDeRed(cual).then((html) => {
+      respuesta.writeHead(html ? 200 : 404, { "Content-Type": "text/html; charset=utf-8" });
+      respuesta.end(html || "<p>No hay ninguna red con ese nombre.</p>");
+    });
     return true;
   }
 
