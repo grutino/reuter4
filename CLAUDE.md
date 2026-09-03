@@ -303,6 +303,26 @@ sigue metiendo pares suyos cada ronda (`--anclaPares`) para que la red no olvide
 mientras persigue resultados. Medido: con el modelo actual los dos caminos empatan a 65%, o sea
 que la heurística ya no aporta nada a la decisión — solo al arranque y a la medida.
 
+### Cuánto cuesta de verdad delatarse, en bits
+
+Revelar una pieza no cuesta solo esa pieza: estrecha la bolsa, así que todo lo demás queda más
+determinado. Medido sobre 50 revelaciones:
+
+```
+incertidumbre que pierde el ejército:   3,45 bits
+la pieza revelada en sí:                2,95 bits
+arrastre sobre el resto:                0,50 bits   (15% del daño)
+```
+
+Real y cuantificado. **Pero no tiene rasgo propio a propósito**: ese arrastre es casi
+proporcional al coste directo, así que sería colineal con `delatarmeAhora` y la red no podría
+separarlos — sería darle la misma información dos veces con distinto nombre.
+
+Donde sí se separa es al final: con tres piezas ocultas, revelar una determina casi todo. Ese
+efecto **acelera** con la partida, justo al revés que el argumento humano de que la apertura es
+lo caro. Los dos son ciertos y se cancelan en parte, y por eso conviene dejar que lo resuelva
+`delatarmeAhora` —que lleva la fase dentro— en vez de imponerle la forma de la curva.
+
 ### El rival que explota la información
 
 Lo que separa a un bot que juega con **evidencias** de uno que juega con **creencias**. Tres
