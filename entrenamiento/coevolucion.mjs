@@ -621,7 +621,7 @@ async function main() {
   // ganada reciban la misma etiqueta.
   const escenarios = cargarEscenarios();
   if (escenarios.length) {
-    console.log(`  banco de escenarios: ${escenarios.length} ejemplos, repetidos x${o.pesoEscenarios}`);
+    console.log(`  banco de escenarios: ${escenarios.length} ejemplos, con peso x${o.pesoEscenarios}`);
   }
 
   // Los juicios humanos, como pares de orden. Se leen una vez: son pocos y no
@@ -674,9 +674,15 @@ async function main() {
     const nuevaD = entrenar(todosD, TAMANO_DESPLIEGUE, o.ocultaDespliegue,
       { ...oRonda, pasadasDeEstosJuicios: o.pasadasJuiciosDespliegue, juiciosEnUnPaso: true }, azar, redD, null, juiciosDespliegue);
     const todosPares = deposito.flatMap((t) => t.pares || []);
-    // Los del banco se repiten para que pesen: son unos cientos contra cientos
-    // de miles, y sin repetirlos el gradiente ni los nota.
-    const conEscenarios = todosJ.concat(...Array.from({ length: escenarios.length ? o.pesoEscenarios : 0 }, () => escenarios));
+    // Los del banco PESAN, ya no se repiten. Son unos cientos contra cientos de
+    // miles y sin darles peso el gradiente ni los nota, pero metiéndolos
+    // cuarenta veces se pagaban cuarenta pasadas hacia delante y hacia atrás por
+    // cada uno: medido, eran el 51% de todo lo que se entrenaba. Pesar da el
+    // mismo gradiente por una sola pasada, y hay una prueba que lo comprueba
+    // peso a peso.
+    const conEscenarios = escenarios.length
+      ? todosJ.concat(escenarios.map((e) => ({ ...e, peso: o.pesoEscenarios })))
+      : todosJ;
     // Los juicios van con los pares del ancla: los dos son restricciones de
     // orden, solo que unas las dicta la heurística y otras una persona.
     const nuevaJ = entrenar(

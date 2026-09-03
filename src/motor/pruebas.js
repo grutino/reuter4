@@ -2041,5 +2041,47 @@ prueba("los rasgos de defensa no salen muertos ni constantes", async () => {
   }
 });
 
+prueba("pesar un ejemplo equivale a repetirlo, y cuesta una pasada en vez de N", async () => {
+  // De esto depende la optimización que quitó el 51% del coste de entrenar: el
+  // banco de escenarios se metía cuarenta veces en el conjunto para que contase
+  // cuarenta veces. Si pesar NO fuera equivalente a repetir, estaríamos
+  // entrenando otra cosa distinta y más rápido, que no es la idea.
+  const { crearRed, entrenarLote, aObjeto, desdeObjeto } = await import("../../entrenamiento/red.mjs");
+
+  const azar = (() => { let x = 12345; return () => ((x = (x * 1664525 + 1013904223) >>> 0) / 4294967296); })();
+  const semilla = aObjeto(crearRed([4, 3, 1], azar));
+  const ejemplos = Array.from({ length: 5 }, (_, i) => ({
+    entrada: Float64Array.from([i * 0.3, 1 - i * 0.2, 0.5, i % 2]),
+    objetivo: i % 2,
+  }));
+
+  // Con copias: el tercer ejemplo aparece siete veces.
+  const conCopias = [];
+  for (const [i, ej] of ejemplos.entries()) {
+    for (let k = 0; k < (i === 2 ? 7 : 1); k++) conCopias.push(ej);
+  }
+  // Con peso: aparece una vez y pesa siete.
+  const conPeso = ejemplos.map((ej, i) => (i === 2 ? { ...ej, peso: 7 } : ej));
+
+  const redA = desdeObjeto(semilla);
+  const redB = desdeObjeto(semilla);
+  entrenarLote(redA, conCopias, { tasa: 0.05 });
+  entrenarLote(redB, conPeso, { tasa: 0.05 });
+
+  const a = aObjeto(redA);
+  const b = aObjeto(redB);
+  for (let c = 0; c < a.pesos.length; c++) {
+    for (let k = 0; k < a.pesos[c].length; k++) {
+      assert.ok(
+        Math.abs(a.pesos[c][k] - b.pesos[c][k]) < 1e-12,
+        `capa ${c} peso ${k}: repetir dio ${a.pesos[c][k]} y pesar ${b.pesos[c][k]}`
+      );
+    }
+  }
+  assert.strictEqual(conCopias.length, 11, "la versión con copias hace 11 pasadas hacia delante");
+  assert.strictEqual(conPeso.length, 5, "la de pesos hace 5, y sale lo mismo");
+});
+
+
 console.log(`\n${pasadas} pruebas superadas, ${fallidas} fallidas\n`);
 process.exit(fallidas ? 1 : 0);

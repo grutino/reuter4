@@ -64,18 +64,32 @@ export function entrenarLote(red, ejemplos, { tasa = 0.01, b1 = 0.9, b2 = 0.999,
   const gb = red.sesgos.map((b) => new Float64Array(b.length));
   let perdida = 0;
 
+  // UN EJEMPLO PUEDE PESAR MÁS QUE OTRO. Antes, para que el banco de escenarios
+  // contase cuarenta veces, se metían cuarenta COPIAS de cada uno en el
+  // conjunto: eran el 51% de todo lo que se entrenaba, y se pagaba una pasada
+  // hacia delante y otra hacia atrás por cada copia. Con el peso en el ejemplo
+  // se paga una sola vez y el gradiente sale igual, porque lo que importa es la
+  // media ponderada y no cuántas veces aparezca la misma fila.
+  //
+  // Se normaliza por la SUMA DE PESOS y no por el número de ejemplos, igual que
+  // en la pérdida por pares: dividir por el número haría que un lote de peso 40
+  // diera pasos cuarenta veces mayores, que es exactamente el fallo que ya
+  // desestabilizó el entrenamiento con los juicios humanos.
+  let pesoTotal = 0;
   for (const ej of ejemplos) {
+    const peso = ej.peso === undefined ? 1 : ej.peso;
+    pesoTotal += peso;
     const act = adelante(red, ej.entrada);
     const salida = act[capas][0];
     const y = ej.objetivo;
-    perdida += -(y * Math.log(salida + 1e-9) + (1 - y) * Math.log(1 - salida + 1e-9));
+    perdida += -(y * Math.log(salida + 1e-9) + (1 - y) * Math.log(1 - salida + 1e-9)) * peso;
 
     // Con sigmoide y entropía cruzada, el error de la última capa se simplifica
     // a (predicho - real): las derivadas se cancelan.
-    retropropagar(red, act, salida - y, gw, gb);
+    retropropagar(red, act, (salida - y) * peso, gw, gb);
   }
 
-  const n = ejemplos.length || 1;
+  const n = pesoTotal || 1;
   aplicarAdam(red, gw, gb, n, { tasa, b1, b2, eps, decaimiento });
   return perdida / n;
 }

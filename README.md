@@ -238,25 +238,30 @@ eso. La red converge a la mejor recta y ahí se queda.
 
 De ahí que los dos puntos siguientes sean los que valen la pena.
 
-### 1. Soltar el ancla de la heurística
+### 1. El ancla de la heurística NO se suelta
 
-`--anclaPares 0`. Ahora hay motivo de peso, no solo la medida de que empatan. Medido en semillas
-que no había visto nadie (`herramientas/medir.mjs 987654 40`):
+**Resuelto, y al revés de lo que decía este punto.** Aquí ponía que la heurística
+«ya no aporta a la decisión» porque decidir con la red sola (90,3% ±1,0) y con la
+heurística cribando (91,6% ±1,0) empatan dentro del error. Esa medida era buena
+pero la conclusión no: estaba hecha sobre una red **ya entrenada con el ancla
+puesta**. Otra cosa muy distinta es reentrenar sin ella.
+
+Medido con la misma configuración, una ronda de 400 partidas:
 
 ```
-decidir con la red sola          90,3% ±1,0   (2460-263)
-la heurística criba, la red ordena   91,6% ±1,0   (2492-228)
+con --anclaPares 1   aspirante 85%  ·  titular 87%     competitivo
+con --anclaPares 0   aspirante  1%  ·  titular 87%     demolición
+                     aspirante 11%  ·  titular 88%
 ```
 
-La diferencia, +1,3 ±1,4, no se distingue de cero: la heurística **ya no aporta a la decisión**.
-Sigue haciendo falta para el arranque y la medida, pero mientras ancle los pares está fijando el
-techo lineal del punto 0.
+Una noche entera —cinco sesiones, 0 rondas adoptadas— se leyó como
+«no encuentra por dónde mejorar». No era eso: cada ronda producía una red
+arruinada que el sistema descartaba, correctamente. El ancla no era un resto del
+pasado, es lo que sostiene el orden de las jugadas cuando la señal de valor sola
+no basta.
 
-Ya se puede soltar desde el nocturno:
-
-```bash
-npm run nocturno -- --anclaPares 0
-```
+Queda una pregunta abierta y más fina: si el ancla se puede **aflojar** por
+rondas —empezar con ella y bajarla— en vez de quitarla de golpe.
 
 ### 2. Juzgar despliegues
 
