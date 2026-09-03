@@ -1,0 +1,110 @@
+<!doctype html><html lang="es"><head><meta charset="utf-8"><title>Reuter4 · taller de juicios</title>
+<style>
+ :root { --tinta:#2b2620; --tenue:#7a7060; --linea:#ded5c4; --papel:#fffdf8;
+         --bien:#4A7C4A; --mal:#96362C; --laton:#8A6420; }
+ * { box-sizing:border-box; }
+ body { margin:0; padding:26px 24px 60px; background:var(--papel); color:var(--tinta);
+        font:15.5px/1.6 "Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif; }
+ .hoja { max-width:760px; margin:0 auto; }
+ h1 { font-size:27px; margin:0 0 4px; }
+ .sub { color:var(--tenue); font-size:14px; margin:0 0 22px; max-width:62ch; }
+ .fichas { display:grid; grid-template-columns:repeat(auto-fit,minmax(132px,1fr)); gap:10px; margin:0 0 22px; }
+ .ficha { border:1px solid var(--linea); border-radius:6px; padding:11px 13px; background:#fff; }
+ .ficha dt { font:500 10px/1.3 ui-monospace,monospace; letter-spacing:.08em;
+             text-transform:uppercase; color:var(--tenue); }
+ .ficha dd { margin:5px 0 0; font:600 24px/1 ui-monospace,monospace; font-variant-numeric:tabular-nums; }
+ .ficha dd small { font-size:12px; font-weight:400; color:var(--tenue); }
+ .ficha.urge dd { color:var(--laton); }
+ section { border:1px solid var(--linea); border-radius:8px; padding:16px 18px; margin:0 0 16px; background:#fff; }
+ h2 { font-size:18px; margin:0 0 5px; }
+ p { margin:0 0 12px; }
+ .barra { display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+ button, a.boton { font:inherit; font-size:14.5px; padding:8px 17px; border:1px solid var(--linea);
+          background:#fff; color:var(--tinta); border-radius:6px; cursor:pointer;
+          text-decoration:none; display:inline-block; }
+ button:hover, a.boton:hover { border-color:var(--tinta); }
+ a.boton.principal { background:var(--tinta); color:var(--papel); border-color:var(--tinta); }
+ button:disabled { opacity:.45; cursor:default; }
+ pre { background:#f7f3ea; border:1px solid var(--linea); border-radius:5px; padding:11px 13px;
+       font:12.5px/1.6 ui-monospace,monospace; white-space:pre-wrap; margin:12px 0 0; }
+ .nota { font-size:13px; color:var(--tenue); border-left:2px solid var(--linea); padding-left:12px; }
+ code { font:13px ui-monospace,monospace; background:#f2ece0; padding:1px 5px; border-radius:3px; }
+</style></head><body><div class="hoja">
+<h1>Taller de juicios</h1>
+<p class="sub">Las redes aprenden de las partidas que se juegan, pero el resultado por sí solo
+etiqueta mal: un despliegue que ganó pudo ganar a pesar de sí mismo. Aquí se recoge el material de
+las partidas terminadas y se valora — no «qué pasó», sino <b>qué era mejor</b>.</p>
+
+<dl class="fichas" id="fichas"></dl>
+
+<section>
+  <h2>1 · Traer lo nuevo</h2>
+  <p>Cada partida que acaba con ganador se archiva sola. Cosecharla saca sus cuatro despliegues y
+  las posiciones donde la red discrepa más de lo que se jugó.</p>
+  <div class="barra">
+    <button id="cosechar">cosechar las partidas nuevas</button>
+    <span id="avisoCosecha" class="nota" style="border:0;padding:0"></span>
+  </div>
+  <pre id="salida" hidden></pre>
+</section>
+
+<section>
+  <h2>2 · Valorar</h2>
+  <p>Se comparan de dos en dos y no se puntúan de uno en uno: dar notas absolutas deriva con el
+  cansancio, elegir entre dos no. Y «parecidos» es información, no pereza.</p>
+  <div class="barra">
+    <a class="boton principal" href="/juicios/despliegues">valorar posiciones de salida</a>
+    <button id="reiniciar" style="margin-left:auto;color:var(--mal);border-color:#e0c4bf">reiniciar mis valoraciones</button>
+  </div>
+</section>
+
+<section>
+  <h2>3 · Entrenar</h2>
+  <p class="nota">Esto no va aquí a propósito. Un entrenamiento son horas de CPU y no puede colgar
+  del servidor que está repartiendo una partida. Desde el terminal:</p>
+  <pre>npm run nocturno -- --anclaPares 0</pre>
+</section>
+
+<script type="module">
+const F = [
+  ["partidas archivadas", (e) => e.archivadas, false],
+  ["sin cosechar", (e) => e.sinCosechar, true],
+  ["despliegues en el pozo", (e) => e.enElPozo, false],
+  ["valoraciones", (e) => e.juzgados, false],
+  ["de ellas, con orden", (e) => `${e.conOrden}<small> de ${e.juzgados}</small>`, false],
+];
+
+async function pinta() {
+  const e = await (await fetch("/juicios/api/estado")).json();
+  document.getElementById("fichas").innerHTML = F.map(([k, v, urge]) =>
+    `<div class="ficha${urge && v(e) ? " urge" : ""}"><dt>${k}</dt><dd>${v(e)}</dd></div>`).join("");
+  document.getElementById("cosechar").disabled = !e.sinCosechar;
+  document.getElementById("avisoCosecha").textContent = e.sinCosechar
+    ? `${e.sinCosechar} partida(s) por cosechar`
+    : e.archivadas ? "todo cosechado" : "aún no hay partidas archivadas: se archivan al terminar una con ganador";
+  return e;
+}
+
+document.getElementById("cosechar").onclick = async (ev) => {
+  ev.target.disabled = true;
+  ev.target.textContent = "cosechando...";
+  const r = await (await fetch("/juicios/api/cosechar", { method: "POST" })).json();
+  const pre = document.getElementById("salida");
+  pre.hidden = false;
+  pre.textContent = r.salida || "(sin salida)";
+  ev.target.textContent = "cosechar las partidas nuevas";
+  await pinta();
+};
+
+document.getElementById("reiniciar").onclick = async () => {
+  const e = await (await fetch("/juicios/api/estado")).json();
+  if (!e.juzgados) { alert("No hay ninguna valoración que reiniciar."); return; }
+  if (!confirm(`Se borran tus ${e.juzgados} valoraciones y se empieza de cero.\n\n` +
+               `Queda una copia con fecha en entrenamiento/escenarios/, por si acaso.\n\n¿Seguir?`)) return;
+  const r = await (await fetch("/juicios/api/reiniciar", { method: "POST" })).json();
+  await pinta();
+  alert(`Listo: ${r.apartados} valoraciones apartadas. Empiezas de cero.`);
+};
+
+pinta();
+</script></div></body></html>

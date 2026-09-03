@@ -21,8 +21,10 @@
  button.puesto { background:var(--tinta); color:var(--papel); border-color:var(--tinta); }
  .suyo { font-size:12px; margin-top:7px; padding:4px 8px; border-radius:4px; }
  .suyo.ok { background:rgba(74,124,74,0.14); } .suyo.no { background:rgba(150,54,44,0.14); }
- button.peligro { margin-left:auto; color:#96362C; border-color:#e0c4bf; }
- button.peligro:hover { background:#96362C; color:var(--papel); border-color:#96362C; }
+ a.boton { font:inherit; font-size:14px; padding:7px 16px; border:1px solid var(--linea);
+           background:#fff; color:var(--tinta); border-radius:6px; text-decoration:none;
+           margin-left:auto; }
+ a.boton:hover { border-color:var(--tinta); }
  .ayuda { font-size:12px; color:var(--tenue); margin-top:12px; line-height:1.65; max-width:78ch; }
  kbd { font:12px ui-monospace,monospace; border:1px solid var(--linea); border-bottom-width:2px;
        border-radius:4px; padding:1px 5px; background:#fff; }
@@ -36,12 +38,12 @@
   <button id="der">este (B) →</button>
   <button id="saltar">saltar al siguiente sin juzgar</button>
   <button id="encuadre">ver el tablero entero</button>
-  <button id="reiniciar" class="peligro">reiniciar mis valoraciones</button>
+  <a class="boton" href="/juicios">volver al taller</a>
 </div>
 <div class="ayuda" id="ayuda"></div>
 <script type="module">
 import { diagramaDeDespliegue, generarFichas, definicionDelTablero, simbolosDeFichas, centro, CELDA, TABLERO_PX } from "/src/informe-partida.js";
-const datos = await (await fetch("/parejas")).json();
+const datos = await (await fetch("/juicios/api/parejas")).json();
 // El tablero y las nueve siluetas de cada color se definen UNA vez como
 // <symbol>; los diagramas sólo los referencian. Sin estas defs los <use>
 // apuntan a nada y los tableros salen en blanco.
@@ -196,7 +198,7 @@ async function juzgar(veredicto) {
   const p = datos.parejas[n];
   juicios[clave(p)] = veredicto;
   pinta();
-  await fetch("/juicio", { method: "POST", headers: { "content-type": "application/json" },
+  await fetch("/juicios/api/juicio", { method: "POST", headers: { "content-type": "application/json" },
     body: JSON.stringify({ clave: clave(p), veredicto }) });
   setTimeout(() => { if (n < datos.parejas.length - 1) { n++; pinta(); } }, 550);
 }
@@ -210,18 +212,6 @@ document.getElementById("encuadre").onclick = () => {
   document.getElementById("encuadre").textContent = entero ? "acercar a la zona" : "ver el tablero entero";
   pinta();
 };
-document.getElementById("reiniciar").onclick = async () => {
-  const cuantos = Object.keys(juicios).length;
-  if (!cuantos) { alert("No hay ninguna valoración que reiniciar."); return; }
-  if (!confirm(`Se borran tus ${cuantos} valoraciones y se empieza de cero.\n\n` +
-               `Queda una copia con fecha en entrenamiento/escenarios/, por si acaso.\n\n¿Seguir?`)) return;
-  const r = await (await fetch("/reiniciar", { method: "POST" })).json();
-  for (const k of Object.keys(juicios)) delete juicios[k];
-  n = 0;
-  pinta();
-  alert(`Listo: ${r.apartados} valoraciones apartadas. Empiezas de cero.`);
-};
-
 document.getElementById("saltar").onclick = () => {
   for (let k = 1; k <= datos.parejas.length; k++) {
     const m = (n + k) % datos.parejas.length;

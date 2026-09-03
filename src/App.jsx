@@ -1122,6 +1122,14 @@ export default function App() {
                     >
                       {analizando ? "Analizando la partida…" : "Informe de la partida"}
                     </Boton>
+                    {/* El circuito completo: esta partida ya está archivada, y
+                        desde el taller se cosecha y se valora. Sin este botón
+                        había que acordarse de dos comandos de terminal con la
+                        partida ya cerrada y olvidada, que es cuando menos se
+                        acuerda uno. */}
+                    <Boton variante="secundario" onClick={() => window.open("/juicios", "_blank")}>
+                      Valorar para el entrenamiento
+                    </Boton>
                     <span style={{ fontSize: 12, color: "#C9BC9C" }}>
                       Los rangos ya están destapados en el tablero.
                     </span>

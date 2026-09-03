@@ -21,6 +21,7 @@ import { accionDeBot, decisionDeRecogida, despliegueAleatorio } from "../src/mot
 import { jugadaDeBot, despliegueDeBot } from "../src/motor/bot-red.js";
 import { cargarModelos } from "../src/motor/modelos.js";
 import { NIVEL_POR_DEFECTO, nivelValido, ESCALA } from "../src/motor/dificultad.js";
+import { atender as atenderJuicios } from "./juicios.mjs";
 
 const RAIZ = path.dirname(fileURLToPath(import.meta.url));
 
@@ -248,6 +249,11 @@ const servidor = http.createServer((peticion, respuesta) => {
     fs.createReadStream(modelo).pipe(respuesta);
     return;
   }
+
+  // El taller de juicios: la página que cierra el circuito jugar -> valorar ->
+  // aprender. Va montada en el servidor del juego y no en una herramienta
+  // suelta porque ese circuito se rompe en cuanto un tramo exige un terminal.
+  if (atenderJuicios(peticion, respuesta, url, MODELOS.despliegue)) return;
 
   let fichero = path.join(ESTATICO, url === "/" ? "index.html" : url);
   if (!fichero.startsWith(ESTATICO)) {
