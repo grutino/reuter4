@@ -202,175 +202,103 @@ suelta es ruidoso y sin ese aviso el listado parece decir cosas que no dice.
 
 ## Qué falta por pulir
 
-### 0-bis. La defensa no razona con probabilidades, y el ataque sí
+En el orden en que conviene retomarlo. Cada punto dice qué hay hecho, qué falta y por qué está
+en ese sitio.
 
-Asimetría medida en el código:
+### 1. Leer el diagnóstico del nocturno
 
-```
-para ATACAR:    valorEsperadoDelDuelo   probabilidad sobre la bolsa oculta
-para DEFENDER:  hayDesconocido          un booleano
-```
+Lo primero, porque condiciona todo lo demás. `entrenamiento/modelos/diagnostico.md` dice hasta
+dónde llegó, qué rivales siguen ganando y qué rasgos mueven cada red — incluidos los planos, que
+son candidatos a podar.
 
-El bot calcula finamente lo que puede ganar, pero **todos los peligros desconocidos le parecen
-iguales**. Y no lo son: si el mariscal enemigo está localizado en el flanco contrario, un
-desconocido junto a mi general apenas puede hacerle nada salvo que sea un cañón. Eso es
-exactamente lo que un jugador humano aprovecha, y lo que hace que revelar sea caro — no solo
-por la pieza revelada, sino porque **baja el riesgo de todas las decisiones del rival en el
-resto del tablero**.
+Es además **el primer entrenamiento largo cuya medida es comparable**: hasta ahora la vara se
+movió tres veces por tocar `PESOS_BASE`, y desde hoy los rivales del panel juegan con
+`PESOS_VARA`, una copia congelada.
 
-**Falta**: un rasgo `riesgoConDesconocido` = probabilidad de que un desconocido vecino me gane,
-según la bolsa. Medido antes de escribirlo: se activa en el **4,2%** de las jugadas con **49
-valores distintos**, así que hay señal de sobra y está graduado.
+### 2. Los tres rasgos que ya están medidos
 
-Y con ello se abre lo que de verdad decide el final de la partida según el jugador: **control
-del centro, superioridad de calidad e información revelada**. Las dos primeras tienen rasgos
-(`presenciaEnElCentro`, `ventajaDePiezas`); la tercera es esta.
-
-### 0. El desacuerdo sobre el precio de la información, sin resolver
-
-740 juicios humanos marcaron como malas las jugadas que delatan —capitán dos casillas,
-explorador en línea— porque regalan información en la apertura. La red opina lo contrario:
-con el rasgo `delatarmeAhora` disponible, le da signo **positivo**.
-
-Y no es que no lo sepa. Medido: **las piezas que se delatan mueren el 73% de las veces y las
-que no, el 8%**. La red conoce el coste y aun así prefiere pagarlo, porque esas jugadas son las
-rápidas. Se comprobó por la vía dura: entrenada con los juicios dejó de terminar partidas
-—0 de 12 decididas, 400 turnos— y perdía todas contra el panel.
-
-Tres lecturas posibles y no sé cuál es:
-
-- **El entorno no castiga bastante la fuga de información.** Los rivales de entrenamiento
-  explotan los rangos revelados para atacar, pero puede que no lo suficiente: un humano los
-  usa para deducir por descarte dónde están las piezas clave, y eso el panel no lo hace.
-- **Es correlación y no causa.** Las piezas que se delatan son las que se mueven mucho y van al
-  frente: puede que mueran por exponerse, no por estar identificadas.
-- **La red tiene razón dentro de este juego** y el consejo humano vale para partidas entre
-  personas, donde el rival castiga la información durante cuarenta turnos más.
-
-Para distinguirlas haría falta un rival que explote la información de verdad —por ejemplo uno
-que deduzca por descarte— y volver a medir. Mientras tanto los juicios están **apagados por
-defecto** (`pasadasJuicios: 0`) con toda la explicación en el código.
-
-Ordenado por lo que desbloquea a lo demás. Cada punto dice qué hay hecho, qué falta y con qué
-cuidado, para poder retomarlo sin volver a averiguarlo.
-
-### 1. Muestreo por escenarios: que se aprendan las tácticas raras
-
-Es el cuello de botella de todo lo demás. Los ejemplos salen de partidas enteras etiquetadas con
-el resultado final, así que una jugada decisiva y una intrascendente de la misma partida ganada
-reciben la **misma** etiqueta. Medido sobre 3.420 vectores: `tapaLineaAlAnillo` se activa en el
-0,1% de los casos y `disparoAlCoronador` en ninguno. Un rasgo así no aporta gradiente por muchas
-horas que entrene.
-
-**Hecho**: el banco de escenarios (`npm run escenarios`) guarda posiciones donde la cosa está en
-juego y las etiqueta jugando cada candidata hasta el final — una etiqueta por JUGADA, no por
-partida. El replay reproduce una partida terminada exactamente, y `npm run analizar` busca los
-momentos decisivos.
-
-**Falta**: alimentar el banco con partidas reales y mezclar esos ejemplos en el entrenamiento.
-
-**Cuidado**: medir el impacto de una jugada suelta es muy ruidoso. La misma posición medida dos
-veces con 8 tiradas solo correlaciona **0,39** consigo misma. Eso pone un techo a cualquier
-detector barato —ninguna señal puede predecir mejor de lo que la medida se predice a sí misma—
-así que **no se pueden ordenar las jugadas de una partida por importancia** sin gastar decenas
-de tiradas por jugada. Del agregado de muchas posiciones con pocas tiradas sí se aprende.
-
-### 2. Mezclar los juicios humanos en el entrenamiento
-
-`npm run juzgar` levanta la sala donde se marcan candidatas buena/mala/indefinida, respetando la
-regla de información —se ve lo que vería quien mueve—. La pérdida por pares que hace falta ya
-existe y está probada.
-
-**Falta**: leer `escenarios/juicios.json` y mezclarlo, y **calibrar cuánto pesa un juicio** frente
-a un par de la heurística. Eso quiero hacerlo con juicios reales, no inventando el número, así
-que espera a que haya unos cuantos.
-
-### 3. Soltar el ancla de la heurística
-
-`--anclaPares 0`. Medido: con el modelo actual, decidir con la red sola sobre todas las jugadas
-y decidir con la heurística cribando cuatro **empatan a 65%**. O sea que la heurística ya no
-aporta a la decisión, solo al arranque y a la medida. Falta comprobar si las redes aguantan sin
-sus pares de anclaje.
-
-### 4. Correr el nocturno una noche entera
-
-`npm run nocturno -- --horas 8`. Está construido y probado en corto, pero nunca ha corrido de
-verdad. No sabemos dónde está el techo: la última tirada de diez rondas subió de 50% a 90%.
-
-### 5. Un solo informe de partida
-
-Hoy hay un botón para el relato y otro para el análisis. Debería ser **uno con todo**, y las
-jugadas determinantes no en un bloque aparte sino **sobre el hilo que ya existe**: fondo verde
-suave si la jugada fue buena, rojo suave si fue mala, con la evaluación que ya se calcula. El
-hilo es la línea de tiempo natural de la partida; duplicarla en una tabla al lado obliga a leer
-dos veces lo mismo.
-
-### 6. Simplificar el informe de las redes
-
-Hoy mezcla coevolución, panel y redes, y de las redes enseña sobre todo el **último**
-entrenamiento en vez de la evolución. Se quiere ver dos planos: **entre rondas** (pérdida,
-acierto y época útil ronda a ronda) y **dentro de la ronda** (las curvas por época). Lo demás,
-abajo o en otra página.
-
-**Ya se guarda** por ronda y por red, en `modelos/coevolucion.json`: pérdida de validación,
-acierto, `epocasUtiles` —en qué época se dejó de mejorar, la señal directa de sobreajuste—,
-calibración en diez cubos y la curva de pérdida por época.
-
-**Falta registrar**: acierto por época y acierto de entrenamiento. Sin esos dos no se puede
-pintar la pareja de curvas que enseña el sobreajuste, la de entrenamiento subiendo mientras la
-de validación se estanca.
-
-### 7. Tácticas que aún no tienen rasgo
-
-**Medido primero, y el resultado cambia el plan.** De cinco candidatos, solo dos se activan lo
-bastante como para que la red los aprenda:
+Van **juntos y después del nocturno**, porque cambiar la firma invalida modelos y banco.
 
 ```
-defiendoMiBandera     6,91%   sí
-bloqueoLateral       26,04%   sí
-zonaFavorable         0,30%   no
-sondeoBarato          0,15%   no
-victoriaQueAsciende   0,02%   no
+riesgoConDesconocido   4,2% de las jugadas · 49 valores    la defensa, con probabilidad
+defiendoMiBandera      6,9%                                
+bloqueoLateral        26,0%                                
 ```
 
-Los tres descartados son todos **condicionados a un ataque**, y ahí está la razón de fondo: de
-69.830 jugadas legales, el 97,9% son movimientos, el 1,9% ataques y el 0,22% disparos. Cualquier
-rasgo de combate tiene ese techo, por muy bien escrito que esté.
+El primero es el que más promete y sale de una asimetría real: para **atacar** hay
+`valorEsperadoDelDuelo`, que es una probabilidad sobre la bolsa; para **defender** solo hay
+`hayDesconocido`, un booleano. Todos los peligros desconocidos le parecen iguales al bot, y no lo
+son: con el mariscal enemigo localizado en el otro flanco, un desconocido junto a mi general
+apenas puede hacerle nada. Ahí está la mitad del precio de revelar que no estábamos contando.
 
-**Hecho**: el banco de escenarios incluye ahora siempre los ataques y disparos disponibles y
-busca posiciones con combate, lo que sube la proporción del 2,1% al 12,6%.
+### 3. El desacuerdo sobre el precio de la información
 
-**Falta**: añadir los dos que pasaron el corte, y volver a medir los descartados ahora que el
-banco los muestrea. Cambiar los rasgos invalida modelos y banco, así que conviene hacerlo entre
-entrenamientos y no en medio.
+**Sigue sin respuesta**, y es la pregunta más interesante abierta. La red da signo **positivo** a
+`delatarmeAhora`: cree que delatarse pronto compensa. Sabe lo que cuesta —las piezas que se
+delatan mueren el 73% de las veces y las que no, el 8%— y aun así paga, porque esas jugadas son
+las rápidas.
 
-**Ya hechas**: cañones tras los lagos (`cubiertoPorLago`), batir el castillo y al que va a
-coronar, llevar el cañón a posición, tapar la línea de tiro rival y cubrir el anillo entero.
+El reentrenamiento contra el rival que caza lo revelado **adoptó cero rondas**, así que no llegó
+a haber red nueva que medir. Con el nocturno y los rasgos del punto 2 habrá que volver a mirarlo.
+
+Tres lecturas posibles: que el entorno siga sin castigar bastante la fuga, que sea correlación
+—esas piezas mueren por exponerse, no por estar identificadas— o que la red tenga razón dentro de
+este juego y el consejo humano valga para partidas entre personas.
+
+### 4. Soltar el ancla de la heurística
+
+`--anclaPares 0`. Medido: decidir con la red sola y decidir con la heurística cribando cuatro
+**empatan a 65%**, así que la heurística ya no aporta a la decisión — solo al arranque y a la
+medida. Falta comprobar si las redes aguantan sin sus pares de anclaje.
+
+### 5. Muestreo por escenarios desde partidas reales
+
+**Hecho**: el banco (`npm run escenarios`) etiqueta jugada a jugada en vez de por resultado de
+partida, incluye siempre los ataques y disparos disponibles —lo que sube su proporción del 2,1%
+al 12,6%— y el replay reproduce una partida terminada exactamente.
+
+**Falta**: alimentarlo con partidas tuyas de verdad, no solo sintéticas.
+
+**Cuidado**: medir el impacto de una jugada suelta es muy ruidoso —la misma posición medida dos
+veces con 8 tiradas solo correlaciona 0,39 consigo misma— así que no se pueden **ordenar** las
+jugadas de una partida por importancia sin gastar decenas de tiradas. Del agregado sí se aprende.
+
+### 6. Terminar de limpiar el informe de las redes
+
+**Hecho**: se registran pérdida y acierto de entrenamiento y validación en cada punto de la
+curva —la distancia entre las dos líneas de acierto *es* el sobreajuste— y el informe separa
+**entre rondas** de **dentro de la ronda**.
+
+**Falta**: la limpieza visual. Sigue mezclando coevolución, panel y redes en una sola página.
+
+### 7. Los juicios humanos, segunda versión
+
+**Apagados** (`pasadasJuicios: 0`). Los primeros 740 enseñaban a **no terminar la partida**: 0 de
+12 decididas contra 12 de 12. Las jugadas marcadas como malas eran las que delatan, que son las
+rápidas, y la red generalizó "no te delates" a los 400 turnos.
+
+Para volver a intentarlo hacen falta **muchas más y repartidas por toda la partida**, no
+concentradas en la apertura. Su valor hasta ahora ha sido **diagnóstico**: revelaron que faltaba
+vocabulario para el precio de la información, y de ahí salió `delatarmeAhora`.
 
 ### 8. Afinar la renuncia a la bandera del compañero
 
-Ahora un bot nunca carga la bandera de su compañero, porque cargarla la congela: quien la lleva
-no puede coronarla y su dueño ya no la recupera salvo que caiga en combate. Pero renunciar
-tampoco es gratis —quien renuncia se queda encima y la tapa— y **si un enemigo está a punto de
-llevársela, cargarla y negársela puede compensar**. Falta ese matiz.
+Ahora un bot nunca la carga, porque cargarla la congela. Pero renunciar tampoco es gratis —quien
+renuncia se queda encima y la tapa— y **si un enemigo está a punto de llevársela, cargarla y
+negársela puede compensar**. Falta ese matiz.
 
 ### 9. Siluetas: hace falta una foto tuya
 
-`src/siluetas-datos.js` está **generado** por `herramientas/extraer-siluetas.py` a partir de una
-foto de la tarjeta de referencia que **no está en el repositorio** —solo se versiona la silueta
-derivada—. Así que esto no lo puede hacer nadie más: hay que aportar una foto mejor y
-regenerarlas.
+`src/siluetas-datos.js` está generado por `herramientas/extraer-siluetas.py` a partir de una foto
+que **no está en el repositorio**, así que esto no lo puede hacer nadie más.
 
 ```bash
 python3 herramientas/extraer-siluetas.py TU_FOTO.png > src/siluetas-datos.js
 ```
 
-`--cierre` y `--umbral` gobiernan cuánto se macizan las figuras y cuánto dibujo interior se
-graba. Míralas a 46 px antes de dar nada por bueno, que es el tamaño real en el tablero.
-
-**Urgencia baja**: a ese tamaño la silueta sola no basta —está medido, las dos más confundibles
-eran explorador y general— y por eso la ficha lleva el galón, que ya lo resuelve. Con él, la
-distancia visual entre dos fichas correlaciona 0,85 con su distancia de rango.
+**Urgencia baja**: a 46 px la silueta sola no basta —está medido— y por eso la ficha lleva el
+galón, que ya lo resuelve. Con él, la distancia visual entre dos fichas correlaciona 0,85 con su
+distancia de rango.
 
 ## Lo que hay y no se toca
 
