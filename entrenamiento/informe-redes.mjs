@@ -113,28 +113,117 @@ function histograma(puntos, ancho = 340, alto = 260) {
     <text x="${m.izq + w / 2}" y="${alto - 2}" fill="var(--tenue)" font-size="10" text-anchor="middle" font-family="'IBM Plex Mono',monospace">probabilidad que predice</text></svg>`;
 }
 
-function arquitectura(capas, ancho = 340, alto = 200) {
-  if (!capas) return "";
-  const paso = ancho / (capas.length + 1);
-  const nodos = capas
-    .map((n, c) => {
-      const x = paso * (c + 1);
-      const dibujar = Math.min(n, 9);
-      const circulos = Array.from({ length: dibujar }, (_, i) => {
-        const y = alto / 2 + (i - (dibujar - 1) / 2) * 17;
-        return `<circle cx="${x}" cy="${y}" r="5" fill="${c === 0 ? "var(--dato)" : c === capas.length - 1 ? "var(--bien)" : "var(--laton)"}" opacity=".85"/>`;
-      }).join("");
-      const etiqueta = c === 0 ? "entradas" : c === capas.length - 1 ? "salida" : "oculta";
-      return `${circulos}<text x="${x}" y="${alto - 8}" fill="var(--tenue)" font-size="10.5" text-anchor="middle" font-family="'IBM Plex Mono',monospace">${n}</text>
-        <text x="${x}" y="18" fill="var(--tenue)" font-size="9.5" text-anchor="middle" font-family="'IBM Plex Mono',monospace">${etiqueta}</text>
-        ${n > dibujar ? `<text x="${x}" y="${alto / 2 + ((dibujar - 1) / 2) * 17 + 20}" fill="var(--tenue)" font-size="13" text-anchor="middle">⋮</text>` : ""}`;
-    })
-    .join("");
-  const enlaces = capas
-    .slice(0, -1)
-    .map((_, c) => `<line x1="${paso * (c + 1) + 6}" y1="${alto / 2}" x2="${paso * (c + 2) - 6}" y2="${alto / 2}" stroke="var(--filo)" stroke-width="1.5"/>`)
-    .join("");
-  return `<svg viewBox="0 0 ${ancho} ${alto}" role="img">${enlaces}${nodos}</svg>`;
+// La red de verdad, con sus pesos.
+//
+// El diagrama anterior pintaba nueve circulitos iguales por capa: decía cuántas
+// entradas hay y nada más. Este usa los PESOS, así que se ve dónde está la
+// fuerza — qué entradas mandan y qué neuronas ocultas cargan con el trabajo.
+//
+// Las entradas van como una tira y no como círculos porque son 72 u 83: en
+// círculos no se distingue nada. Cada celda se pinta según cuánto peso sale de
+// esa entrada, o sea cuánto puede llegar a mover la red.
+//
+// Las ocultas sí van como círculos, con dos codificaciones distintas a
+// propósito: el COLOR es el peso que les entra —cuánto miran— y el TAMAÑO el
+// peso que sale hacia la salida —cuánto se les hace caso—. Una neurona grande y
+// pálida mira poco pero decide mucho; una pequeña y oscura es al revés.
+//
+// Y solo se dibujan las conexiones fuertes: con 72x28 hay 2.016 líneas y el
+// dibujo se vuelve un borrón negro.
+function diagramaDeRed(red, nombres, { ancho = 700, alto = 300, conexiones = 90 } = {}) {
+  if (!red || !red.pesos || red.pesos.length < 2) return "";
+  const [nEntradas, nOcultas] = red.capas;
+  const w0 = red.pesos[0];
+  const w1 = red.pesos[1];
+
+  // Fuerza de cada entrada: suma de lo que reparte hacia la capa oculta.
+  const fuerzaEntrada = new Float64Array(nEntradas);
+  for (let i = 0; i < nEntradas; i++) {
+    let s = 0;
+    for (let j = 0; j < nOcultas; j++) s += Math.abs(w0[i * nOcultas + j]);
+    fuerzaEntrada[i] = s;
+  }
+  // De cada oculta: lo que le entra y lo que saca.
+  const entraA = new Float64Array(nOcultas);
+  for (let j = 0; j < nOcultas; j++) {
+    let s = 0;
+    for (let i = 0; i < nEntradas; i++) s += Math.abs(w0[i * nOcultas + j]);
+    entraA[j] = s;
+  }
+  const saleDe = Array.from({ length: nOcultas }, (_, j) => Math.abs(w1[j]));
+
+  const tope = (a) => Math.max(1e-9, Math.max(...a));
+  const topeEnt = tope(fuerzaEntrada);
+  const topeIn = tope(entraA);
+  const topeOut = tope(saleDe);
+
+  const margen = 46;
+  const xEnt = margen + 8;
+  const xOcu = ancho * 0.56;
+  const xSal = ancho - margen;
+  const altoTira = alto - margen * 1.6;
+  const yTira = margen * 0.9;
+  const celda = altoTira / nEntradas;
+
+  // La tira de entradas.
+  const tira = Array.from({ length: nEntradas }, (_, i) => {
+    const t = fuerzaEntrada[i] / topeEnt;
+    const y = yTira + i * celda;
+    return `<rect x="${xEnt - 13}" y="${y.toFixed(2)}" width="26" height="${Math.max(0.7, celda - 0.35).toFixed(2)}" fill="var(--dato)" opacity="${(0.12 + t * 0.88).toFixed(3)}"><title>${esc(nombres && nombres[i] ? nombres[i] : "entrada " + i)} · fuerza ${(t * 100).toFixed(0)}%</title></rect>`;
+  }).join("");
+
+  // Las tres entradas que más mandan, etiquetadas.
+  const masFuertes = Array.from(fuerzaEntrada, (v, i) => ({ v, i }))
+    .sort((a, b) => b.v - a.v)
+    .slice(0, 3);
+  const etiquetas = masFuertes.map(({ i }, k) => {
+    const y = yTira + i * celda + celda / 2;
+    const nombre = nombres && nombres[i] ? nombres[i].replace(/^.*· /, "") : `entrada ${i}`;
+    return `<line x1="${xEnt - 15}" y1="${y.toFixed(1)}" x2="${xEnt - 24}" y2="${y.toFixed(1)}" stroke="var(--laton)" stroke-width="1"/>
+      <text x="${xEnt - 27}" y="${(y + 3).toFixed(1)}" text-anchor="end" font-size="9" fill="var(--laton)" font-family="'IBM Plex Mono',monospace">${esc(nombre.slice(0, 18))}</text>`;
+  }).join("");
+
+  const yDe = (j) => yTira + altoTira * ((j + 0.5) / nOcultas);
+
+  // Conexiones: solo las más gruesas.
+  const todas = [];
+  for (let i = 0; i < nEntradas; i++) {
+    for (let j = 0; j < nOcultas; j++) {
+      todas.push({ i, j, w: w0[i * nOcultas + j] });
+    }
+  }
+  todas.sort((a, b) => Math.abs(b.w) - Math.abs(a.w));
+  const topeW = Math.abs(todas[0].w) || 1;
+  const hilos = todas.slice(0, conexiones).map(({ i, j, w }) => {
+    const y1 = yTira + i * celda + celda / 2;
+    const y2 = yDe(j);
+    const t = Math.abs(w) / topeW;
+    return `<path d="M ${xEnt + 13} ${y1.toFixed(1)} C ${(xEnt + 90).toFixed(0)} ${y1.toFixed(1)}, ${(xOcu - 70).toFixed(0)} ${y2.toFixed(1)}, ${(xOcu - 11).toFixed(0)} ${y2.toFixed(1)}"
+      fill="none" stroke="${w > 0 ? "var(--bien)" : "var(--mal)"}" stroke-width="${(0.35 + t * 1.5).toFixed(2)}" opacity="${(0.12 + t * 0.42).toFixed(3)}"/>`;
+  }).join("");
+
+  // Las ocultas y su salida.
+  const ocultas = Array.from({ length: nOcultas }, (_, j) => {
+    const y = yDe(j);
+    const color = entraA[j] / topeIn;
+    const radio = 2.6 + (saleDe[j] / topeOut) * 7.5;
+    const ancho2 = 0.4 + (saleDe[j] / topeOut) * 2.6;
+    return `<path d="M ${(xOcu + radio).toFixed(1)} ${y.toFixed(1)} L ${(xSal - 9).toFixed(0)} ${(alto / 2).toFixed(1)}"
+        fill="none" stroke="${w1[j] > 0 ? "var(--bien)" : "var(--mal)"}" stroke-width="${ancho2.toFixed(2)}" opacity="0.45"/>
+      <circle cx="${xOcu}" cy="${y.toFixed(1)}" r="${radio.toFixed(2)}" fill="var(--laton)" opacity="${(0.2 + color * 0.8).toFixed(3)}">
+        <title>oculta ${j} · le entra ${(color * 100).toFixed(0)}% · sale ${((saleDe[j] / topeOut) * 100).toFixed(0)}%</title></circle>`;
+  }).join("");
+
+  const rotulo = (x, y, t) => `<text x="${x}" y="${y}" text-anchor="middle" font-size="9.5" fill="var(--tenue)" font-family="'IBM Plex Mono',monospace">${esc(t)}</text>`;
+
+  return `<svg viewBox="0 0 ${ancho} ${alto}" role="img">
+    ${hilos}${tira}${etiquetas}${ocultas}
+    <circle cx="${xSal}" cy="${alto / 2}" r="8" fill="var(--bien)" opacity="0.9"/>
+    ${rotulo(xEnt, yTira - 12, `${nEntradas} entradas`)}
+    ${rotulo(xOcu, yTira - 12, `${nOcultas} ocultas`)}
+    ${rotulo(xSal, yTira - 12, "salida")}
+    ${rotulo(ancho / 2, alto - 8, "color = peso que entra · tamaño = peso que sale · verde suma, rojo resta")}
+  </svg>`;
 }
 
 function barrasDeRasgos(filas, limite = 14) {
@@ -159,7 +248,7 @@ function leer(nombre) {
   return fs.existsSync(f) ? JSON.parse(fs.readFileSync(f, "utf8")) : null;
 }
 
-function bloqueRed({ titulo, resumen, curva, curvaAcierto, porRonda, calib, capas, victorias, error, perdida, acierto, rasgos, rasgos2, titulo2, nota }) {
+function bloqueRed({ titulo, resumen, curva, curvaAcierto, porRonda, calib, capas, diagrama, victorias, error, perdida, acierto, rasgos, rasgos2, titulo2, nota }) {
   const fichas = [
     ["victorias en juego", victorias === undefined ? "—" : `${pct(victorias)}${error ? ` <small>±${Math.round(error * 100)}</small>` : ""}`],
     ["pérdida validación", perdida === undefined ? "—" : perdida.toFixed(4)],
@@ -182,14 +271,14 @@ function bloqueRed({ titulo, resumen, curva, curvaAcierto, porRonda, calib, capa
       ${calib ? `<figure><figcaption>Calibración: predicho contra observado. La diagonal es la perfección; el tamaño de cada bola es cuántos casos hay.</figcaption><div class="lienzo">${calib.grafico}</div></figure>` : ""}
       ${calib ? `<figure><figcaption>Distribución de lo que predice. Todo amontonado en el centro sería una red que no se moja.</figcaption><div class="lienzo">${calib.histograma}</div></figure>` : ""}
     </div>
-    ${capas ? `<figure><figcaption>Arquitectura.</figcaption><div class="lienzo">${arquitectura(capas)}</div></figure>` : ""}
+    ${diagrama ? `<figure><figcaption>La red con sus pesos. Cada franja de la izquierda es una entrada, tanto más oscura cuanto más reparte. Los círculos son las neuronas ocultas: el <b>color</b> es lo que les entra —cuánto miran— y el <b>tamaño</b> lo que sacan hacia la salida —cuánto se les hace caso—. Una grande y pálida mira poco pero decide mucho. Solo se dibujan las conexiones más fuertes: con ${capas ? capas[0] * (capas[1] || 0) : "miles de"} hay demasiadas y el dibujo se vuelve un borrón.</figcaption><div class="lienzo">${diagrama}</div></figure>` : ""}
     ${rasgos ? `<figure><figcaption>Qué mira: efecto de cada rasgo sobre la predicción.</figcaption><div class="lienzo">${rasgos}</div></figure>` : ""}
     ${rasgos2 ? `<figure><figcaption>${esc(titulo2 || "")}</figcaption><div class="lienzo">${rasgos2}</div></figure>` : ""}
     ${nota ? `<div class="nota">${nota}</div>` : ""}
   </section>`;
 }
 
-export function construir({ despliegue, jugada, coevolucion, panel, sensibilidadDespliegue, sensibilidadJugada }) {
+export function construir({ despliegue, jugada, coevolucion, panel, sensibilidadDespliegue, sensibilidadJugada, nombresJugada, nombresDespliegue, desdeObjetoLocal }) {
   const bloques = [];
 
   if (coevolucion && coevolucion.historia && coevolucion.historia.length > 1) {
@@ -281,7 +370,12 @@ export function construir({ despliegue, jugada, coevolucion, panel, sensibilidad
           "Cada ronda genera partidas nuevas jugando con la red de la ronda anterior y reentrena desde cero.",
         curva,
         calib: ultima.calibracion ? { grafico: calibracion(ultima.calibracion), histograma: histograma(ultima.calibracion) } : null,
-        capas: [jugada.red ? jugada.red.capas[0] : null, jugada.opciones ? jugada.opciones.oculta : null, 1].filter(Boolean),
+        // De `red.capas`, que es la fuente de verdad. Antes se leía
+        // `opciones.oculta`, que no existe -la clave real es `ocultaJugada`- así
+        // que salía undefined, el filtro la tiraba y el diagrama decía 72->1
+        // cuando la red es 72->28->1. Parecía que esta red no tenía capa oculta.
+        capas: jugada.red ? jugada.red.capas : null,
+        diagrama: jugada.red ? diagramaDeRed(desdeObjetoLocal(jugada.red), nombresJugada) : null,
         victorias: jugada.mejorVictorias !== undefined ? jugada.mejorVictorias : ultima.victoriasEnJuego,
         error: ultima.errorEnJuego,
         perdida: ultima.perdidaValidacion,
@@ -332,6 +426,7 @@ export function construir({ despliegue, jugada, coevolucion, panel, sensibilidad
           : "",
         calib: null,
         capas: despliegue.red ? despliegue.red.capas : null,
+        diagrama: despliegue.red ? diagramaDeRed(desdeObjetoLocal(despliegue.red), nombresDespliegue) : null,
         victorias: despliegue.victoriasEnJuego,
         perdida: despliegue.perdidaValidacion,
         rasgos: sensibilidadDespliegue ? barrasDeRasgos(sensibilidadDespliegue) : null,
@@ -462,7 +557,19 @@ export async function generarInforme() {
   const panel = leer("panel.json");
   const { sensibilidadDespliegue, sensibilidadJugada } = await calcularSensibilidades(despliegue, jugada);
   fs.mkdirSync(path.dirname(DESTINO), { recursive: true });
-  fs.writeFileSync(DESTINO, construir({ despliegue, jugada, coevolucion, panel, sensibilidadDespliegue, sensibilidadJugada }));
+  // Los nombres de los rasgos y el deserializador se pasan desde fuera para que
+  // `construir` siga siendo una función pura de datos a HTML, sin importar el
+  // motor: así se puede probar con datos inventados.
+  const { NOMBRES: nombresJugada } = await import("../src/motor/rasgos-jugada.js");
+  const { nombreDeRasgo } = await import("../src/motor/rasgos-despliegue.js");
+  const { TAMANO: tamanoDespliegue } = await import("../src/motor/rasgos-despliegue.js");
+  const { desdeObjeto: desdeObjetoLocal } = await import("../src/motor/red.js");
+  const nombresDespliegue = Array.from({ length: tamanoDespliegue }, (_, i) => nombreDeRasgo(i));
+
+  fs.writeFileSync(DESTINO, construir({
+    despliegue, jugada, coevolucion, panel, sensibilidadDespliegue, sensibilidadJugada,
+    nombresJugada, nombresDespliegue, desdeObjetoLocal,
+  }));
   return DESTINO;
 }
 
