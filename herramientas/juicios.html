@@ -30,6 +30,11 @@
                    pointer-events:none; cursor:default; }
  a.boton.apagado.principal { background:#faf7f0; color:#b3aa98; border-color:#eee6d8; }
  .cuantas { font-weight:400; opacity:.75; }
+ .grupo { display:inline-flex; align-items:stretch; }
+ .grupo .boton { border-top-right-radius:0; border-bottom-right-radius:0; }
+ .aspa { border-left:0; border-top-left-radius:0; border-bottom-left-radius:0;
+         color:#b9b0a0; padding:8px 11px; font-size:13px; line-height:1; }
+ .aspa:hover { color:var(--papel); background:var(--mal); border-color:var(--mal); }
  button:disabled { opacity:.45; cursor:default; }
  pre { background:#f7f3ea; border:1px solid var(--linea); border-radius:5px; padding:11px 13px;
        font:12.5px/1.6 ui-monospace,monospace; white-space:pre-wrap; margin:12px 0 0; }
@@ -76,10 +81,18 @@ las partidas terminadas y se valora — no «qué pasó», sino <b>qué era mejo
   en abstracto y su efecto se reparte por toda la partida. Una <b>jugada</b> solo existe dentro de
   su posición, así que enseña menos por unidad — pero es donde se decide la partida.</p>
   <div class="barra">
-    <a class="boton principal" id="irPosiciones" href="/juicios/despliegues">valorar posiciones de salida</a>
-    <a class="boton" id="irJugadas" href="/juicios/jugadas">valorar jugadas</a>
-    <button id="reiniciar" style="margin-left:auto;color:var(--mal);border-color:#e0c4bf">reiniciar posiciones</button>
+    <span class="grupo">
+      <a class="boton principal" id="irPosiciones" href="/juicios/despliegues">valorar posiciones de salida</a>
+      <button class="aspa" id="reiniciarPosiciones" title="borrar mis valoraciones de posiciones">✕</button>
+    </span>
+    <span class="grupo">
+      <a class="boton" id="irJugadas" href="/juicios/jugadas">valorar jugadas</a>
+      <button class="aspa" id="reiniciarJugadas" title="borrar mis valoraciones de jugadas">✕</button>
+    </span>
   </div>
+  <p class="nota" style="margin-top:12px">El aspa borra <b>tus valoraciones</b> de ese tipo, no las
+  redes. Antes de borrar deja una copia con la fecha: un modelo se rehace entrenando otra vez, una
+  tarde de valorar no.</p>
   <p class="nota" id="avisoBanco" style="margin-top:12px"></p>
 </section>
 
@@ -196,14 +209,22 @@ document.getElementById("cosechar").onclick = async (ev) => {
   await pinta();
 };
 
-document.getElementById("reiniciar").onclick = async () => {
-  const e = await (await fetch("/juicios/api/estado")).json();
-  if (!e.juzgados) { alert("No hay ninguna valoración que reiniciar."); return; }
-  if (!confirm(`Se borran tus ${e.juzgados} valoraciones y se empieza de cero.\n\n` +
+async function reiniciar(cual, etiqueta, cuantas) {
+  if (!cuantas) { alert(`No hay ninguna valoración de ${etiqueta} que reiniciar.`); return; }
+  if (!confirm(`Se borran tus ${cuantas} valoraciones de ${etiqueta} y se empieza de cero.\n\n` +
                `Queda una copia con fecha en entrenamiento/escenarios/, por si acaso.\n\n¿Seguir?`)) return;
-  const r = await (await fetch("/juicios/api/reiniciar", { method: "POST" })).json();
+  const r = await (await fetch(`/juicios/api/reiniciar/${cual}`, { method: "POST" })).json();
   await pinta();
-  alert(`Listo: ${r.apartados} valoraciones apartadas. Empiezas de cero.`);
+  alert(`Listo: ${r.apartados} valoraciones de ${etiqueta} apartadas.`);
+}
+
+document.getElementById("reiniciarPosiciones").onclick = async () => {
+  const e = await (await fetch("/juicios/api/estado")).json();
+  reiniciar("posiciones", "posiciones", e.juzgados);
+};
+document.getElementById("reiniciarJugadas").onclick = async () => {
+  const e = await (await fetch("/juicios/api/estado")).json();
+  reiniciar("jugadas", "jugadas", e.jugadasJuzgadas);
 };
 
 pinta();

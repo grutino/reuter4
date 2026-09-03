@@ -57,14 +57,18 @@ function escribirJuicios(juicios) {
 }
 
 // Se BORRA lo juzgado, pero antes se guarda copia con la fecha. Un juicio cuesta
-// atención humana y es lo más caro que produce esta herramienta.
-export function reiniciarJuicios() {
-  const antes = Object.keys(leerJuicios()).length;
-  if (fs.existsSync(JUICIOS) && antes) {
+// atención humana y es lo más caro que produce esta herramienta: un modelo se
+// rehace entrenando otra vez, una tarde de valorar no.
+export function reiniciarJuicios(cual = "posiciones") {
+  const ruta = cual === "jugadas" ? JUICIOS_JUGADA : JUICIOS;
+  const leer = cual === "jugadas" ? leerJuiciosJugada : leerJuicios;
+  const antes = Object.keys(leer()).length;
+  if (fs.existsSync(ruta) && antes) {
     const sello = new Date().toISOString().replace(/[:.]/g, "-").slice(0, 19);
-    fs.copyFileSync(JUICIOS, JUICIOS.replace(/\.json$/, `-${sello}.json`));
+    fs.copyFileSync(ruta, ruta.replace(/\.json$/, `-${sello}.json`));
   }
-  escribirJuicios({});
+  fs.mkdirSync(CARPETA, { recursive: true });
+  fs.writeFileSync(ruta, JSON.stringify({ creado: new Date().toISOString(), juicios: {} }, null, 1));
   return { apartados: antes };
 }
 
@@ -542,8 +546,9 @@ export function atender(peticion, respuesta, url, red, redJugada) {
     return true;
   }
 
-  if (url === "/juicios/api/reiniciar" && peticion.method === "POST") {
-    enviarJson({ ok: true, ...reiniciarJuicios() });
+  if (url.startsWith("/juicios/api/reiniciar") && peticion.method === "POST") {
+    const cual = url.endsWith("/jugadas") ? "jugadas" : "posiciones";
+    enviarJson({ ok: true, cual, ...reiniciarJuicios(cual) });
     return true;
   }
 
