@@ -139,6 +139,23 @@ const servidor = http.createServer((req, res) => {
     });
     return;
   }
+  if (url.pathname === "/reiniciar" && req.method === "POST") {
+    // Se BORRA lo juzgado, pero antes se guarda copia con la fecha. Un juicio
+    // cuesta atención humana y es lo más caro que produce esta herramienta:
+    // borrarlo sin red debajo sería tirarlo.
+    try {
+      const antes = Object.keys(leerJuicios()).length;
+      if (fs.existsSync(JUICIOS) && antes) {
+        const sello = new Date().toISOString().replace(/[:.]/g, "-").slice(0, 19);
+        fs.copyFileSync(JUICIOS, JUICIOS.replace(/\.json$/, `-${sello}.json`));
+      }
+      fs.writeFileSync(JUICIOS, JSON.stringify({ creado: new Date().toISOString(), juicios: {} }, null, 1));
+      console.log(`  reiniciado: ${antes} juicios apartados en una copia con fecha`);
+      res.writeHead(200, { "content-type": "application/json" });
+      res.end(JSON.stringify({ ok: true, apartados: antes }));
+    } catch (e) { res.writeHead(500); res.end(String(e.message)); }
+    return;
+  }
   if (url.pathname === "/" || url.pathname === "/index.html") {
     res.writeHead(200, { "content-type": "text/html; charset=utf-8" });
     res.end(fs.readFileSync(path.join(AQUI, "juzgar-despliegues.html"), "utf8"));
