@@ -9,6 +9,15 @@
       "subio": true,
       "minutos": 61,
       "cuando": "2026-09-03 17:06:05"
+    },
+    {
+      "sesion": 2,
+      "veredicto": 0.858,
+      "adoptadas": 0,
+      "mejor": 0.8590000000000001,
+      "subio": false,
+      "minutos": 59,
+      "cuando": "2026-09-03 18:05:22"
     }
   ],
   "mejor": 0.8590000000000001

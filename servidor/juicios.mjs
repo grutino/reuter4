@@ -256,6 +256,9 @@ function marchaDelNocturno() {
       minutosPorSesion: Math.round(media),
       ultima: d.sesiones[d.sesiones.length - 1],
       adoptadasTotales: d.sesiones.reduce((a, s) => a + (s.adoptadas || 0), 0),
+      // Cuándo acabó la última: con eso y lo que tarda una sesión se sabe por
+      // dónde va la que está corriendo ahora.
+      finUltima: d.sesiones[d.sesiones.length - 1].cuando || null,
     };
   } catch {
     return null;
@@ -426,6 +429,21 @@ export async function cosechar() {
   }
 }
 
+// Publicar: llevar lo del taller a donde lo cogen los bots. Sigue siendo un paso
+// EXPLÍCITO -el nocturno entrena solo pero no publica nunca-, solo que ahora se
+// puede pedir desde aquí en vez de desde un terminal. El script decide: rechaza
+// un modelo con otra firma de rasgos y no publica si no mejora.
+export async function publicar() {
+  try {
+    const r = await ejecutar("node", [path.join(RAIZ, "herramientas", "publicar-redes.mjs")], {
+      cwd: RAIZ, maxBuffer: 8 * 1024 * 1024,
+    });
+    return { ok: true, salida: r.stdout.trim() };
+  } catch (e) {
+    return { ok: false, salida: String(e.stdout || e.message).trim() };
+  }
+}
+
 // --- Las rutas ----------------------------------------------------------------
 
 const PAGINAS = {
@@ -436,7 +454,7 @@ const PAGINAS = {
 };
 
 // Devuelve true si ha atendido la petición.
-export function atender(peticion, respuesta, url, red, redJugada) {
+export function atender(peticion, respuesta, url, red, redJugada, alPublicar) {
   if (!url.startsWith("/juicios") && !url.startsWith("/src/")) return false;
 
   const enviarJson = (datos, codigo = 200) => {
@@ -549,6 +567,19 @@ export function atender(peticion, respuesta, url, red, redJugada) {
   if (url.startsWith("/juicios/api/reiniciar") && peticion.method === "POST") {
     const cual = url.endsWith("/jugadas") ? "jugadas" : "posiciones";
     enviarJson({ ok: true, cual, ...reiniciarJuicios(cual) });
+    return true;
+  }
+
+  if (url === "/juicios/api/publicar" && peticion.method === "POST") {
+    publicar().then((r) => {
+      // Que los bots cojan las redes nuevas SIN reiniciar. Sin esto el botón
+      // mentiría: diría "publicado" y las partidas seguirían jugándose con lo
+      // de antes hasta el siguiente arranque.
+      if (r.ok && typeof alPublicar === "function") alPublicar();
+      cache.parejas = null;
+      cache.casos = null;
+      enviarJson(r);
+    });
     return true;
   }
 

@@ -29,8 +29,16 @@ const RAIZ = path.dirname(fileURLToPath(import.meta.url));
 // obsoletos, `cargarModelos` devuelve nulos y los bots juegan con la heurística
 // de siempre: el juego tiene que funcionar igual sin ellos, porque durante la
 // mayor parte de la vida del proyecto funcionó así.
-const MODELOS = cargarModelos();
+// `let` y no `const`: al publicar desde el taller se vuelven a cargar en
+// caliente, y así una partida que empiece a continuación ya usa las nuevas.
+let MODELOS = cargarModelos();
 for (const nota of MODELOS.notas) console.log(`  red de ${nota}`);
+
+function recargarModelos() {
+  MODELOS = cargarModelos();
+  console.log("  modelos recargados tras publicar:");
+  for (const nota of MODELOS.notas) console.log(`    red de ${nota}`);
+}
 
 // El nivel de un puesto. Un humano que se desconecta y pasa a automático juega
 // al máximo: no tendría sentido que su ejército empeorara por ausentarse.
@@ -253,7 +261,7 @@ const servidor = http.createServer((peticion, respuesta) => {
   // El taller de juicios: la página que cierra el circuito jugar -> valorar ->
   // aprender. Va montada en el servidor del juego y no en una herramienta
   // suelta porque ese circuito se rompe en cuanto un tramo exige un terminal.
-  if (atenderJuicios(peticion, respuesta, url, MODELOS.despliegue, MODELOS.jugada)) return;
+  if (atenderJuicios(peticion, respuesta, url, MODELOS.despliegue, MODELOS.jugada, recargarModelos)) return;
 
   let fichero = path.join(ESTATICO, url === "/" ? "index.html" : url);
   if (!fichero.startsWith(ESTATICO)) {

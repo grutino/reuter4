@@ -55,7 +55,7 @@ import { jugadaSoloRed } from "../src/motor/bot-red.js";
 import { movimientosLegales } from "../src/motor/motor.js";
 import { generarInforme } from "./informe-redes.mjs";
 import { CARPETA as CARPETA_ESCENARIOS } from "./escenarios.mjs";
-import { paresDeJuicios, resumenDeJuicios } from "./juicios.mjs";
+import { paresDeJuicios, resumenDeJuicios, paresDeDespliegue } from "./juicios.mjs";
 
 const AQUI = path.dirname(fileURLToPath(import.meta.url));
 const MODELOS = path.join(AQUI, "modelos");
@@ -138,6 +138,13 @@ function opciones(argv) {
     // Para volver a intentarlo hacen falta muchas más posiciones, y sobre todo
     // que estén repartidas por toda la partida y no solo en la apertura.
     pasadasJuicios: 0,
+    // Los juicios de DESPLIEGUE van aparte de los de jugada y encendidos. No es
+    // asimetría gratuita: los de jugada colapsaron la red enseñándole a no
+    // terminar la partida, y los de despliegue están medidos y no cuestan nada
+    // -8 pasadas suben el acierto sobre juicios apartados del 73% al 92% con las
+    // victorias intactas-. Un despliegue es un objeto completo que se juzga en
+    // abstracto; una jugada arrastra toda su posición detrás.
+    pasadasJuiciosDespliegue: 8,
     // SIN HEURÍSTICA DELANTE. Con esto la red puntúa TODAS las jugadas legales
     // en vez de reordenar las cuatro que le pasa la heurística. Sale más barato
     // -0,59 ms por turno frente a 0,87- pero exige una red destilada: la
@@ -377,9 +384,23 @@ function entrenar(ejemplos, tamano, oculta, o, azar, previa, pares = null, juici
     // Son pocos y siempre los mismos, así que su dosis tiene que depender de
     // ellos y no de cuántas partidas se hayan jugado.
     if (juicios && juicios.length) {
-      for (let pasada = 0; pasada < o.pasadasJuicios; pasada++) {
-        for (let i = 0; i < juicios.length; i += o.lote) {
-          entrenarPares(red, juicios.slice(i, i + o.lote), { tasa: o.tasa, decaimiento: o.decaimiento });
+      const pasadas = o.pasadasDeEstosJuicios ?? o.pasadasJuicios;
+      for (let pasada = 0; pasada < pasadas; pasada++) {
+        // UNA PASADA ES UN PASO, NO VEINTICINCO. Trocear en lotes multiplica la
+        // dosis por el número de lotes sin que el número de "pasadas" lo diga:
+        // con 1600 pares y lote 64 son 25 pasos por pasada, veinticinco veces lo
+        // que hace entrenar-despliegue.mjs con el mismo número. Se vio: la red
+        // de despliegue cayó al 14% contra el panel en la primera prueba.
+        //
+        // Con los pares eso se puede hacer -y conviene- porque la pérdida
+        // pareada ya normaliza por la suma de pesos, así que el gradiente de un
+        // conjunto grande no es más grande, solo menos ruidoso.
+        if (o.juiciosEnUnPaso) {
+          entrenarPares(red, juicios, { tasa: o.tasa, decaimiento: o.decaimiento });
+        } else {
+          for (let i = 0; i < juicios.length; i += o.lote) {
+            entrenarPares(red, juicios.slice(i, i + o.lote), { tasa: o.tasa, decaimiento: o.decaimiento });
+          }
         }
       }
     }
@@ -497,6 +518,13 @@ async function main() {
   // Los juicios humanos, como pares de orden. Se leen una vez: son pocos y no
   // cambian mientras entrena.
   const juicios = paresDeJuicios({ peso: 1 });
+  const dj = paresDeDespliegue({ peso: 1 });
+  const juiciosDespliegue = dj.firma === FIRMA_DESPLIEGUE ? dj.pares : [];
+  if (dj.firma !== FIRMA_DESPLIEGUE && dj.pares.length) {
+    console.log(`  ! juicios de despliegue IGNORADOS: otra firma de rasgos (${dj.firma}, ahora ${FIRMA_DESPLIEGUE})`);
+  } else if (juiciosDespliegue.length) {
+    console.log(`  juicios de despliegue: ${dj.comparados} directos + ${dj.cruzados} cruzados = ${juiciosDespliegue.length} pares, ${o.pasadasJuiciosDespliegue} pasadas por época`);
+  }
   if (juicios.pares.length) {
     const r = resumenDeJuicios();
     console.log(`  juicios humanos: ${r.total} sobre ${juicios.posiciones} posiciones ` +
@@ -527,7 +555,12 @@ async function main() {
     const todosD = deposito.flatMap((t) => t.deDespliegue);
     const todosJ = deposito.flatMap((t) => t.deJugada);
 
-    const nuevaD = entrenar(todosD, TAMANO_DESPLIEGUE, o.ocultaDespliegue, oRonda, azar, redD);
+    // LOS JUICIOS DE DESPLIEGUE ENTRAN AQUÍ, y antes no entraban en ninguna
+    // parte: solo los leía entrenar-despliegue.mjs, que no forma parte del
+    // nocturno. O sea que la coevolución reentrenaba la red de despliegue cada
+    // ronda y se llevaba por delante lo aprendido de ellos sin haberlos visto.
+    const nuevaD = entrenar(todosD, TAMANO_DESPLIEGUE, o.ocultaDespliegue,
+      { ...oRonda, pasadasDeEstosJuicios: o.pasadasJuiciosDespliegue, juiciosEnUnPaso: true }, azar, redD, null, juiciosDespliegue);
     const todosPares = deposito.flatMap((t) => t.pares || []);
     // Los del banco se repiten para que pesen: son unos cientos contra cientos
     // de miles, y sin repetirlos el gradiente ni los nota.

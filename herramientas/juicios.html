@@ -42,6 +42,15 @@
  .entrenando { border-left:3px solid var(--laton); background:#fdf6e6; padding:10px 13px;
                border-radius:0 5px 5px 0; margin:0 0 14px; font-size:14px; }
  .entrenando small { color:var(--tenue); }
+ .entrenando .tenue { color:var(--tenue); font-size:13px; }
+ .progreso { height:7px; background:#efe6d2; border-radius:4px; overflow:hidden; margin:9px 0 5px; }
+ .progreso i { display:block; height:100%; background:var(--laton); border-radius:4px;
+               transition:width .6s ease; }
+ .progreso.indeterminada i { width:35%; animation:vaiven 2.4s ease-in-out infinite; }
+ @keyframes vaiven { 0%,100% { margin-left:0 } 50% { margin-left:65% } }
+ @media (prefers-reduced-motion:reduce) { .progreso.indeterminada i { animation:none; width:100%; opacity:.4 } }
+ .reloj { display:flex; justify-content:space-between; font:11px ui-monospace,monospace;
+          color:var(--tenue); margin-bottom:6px; }
  .parado { color:var(--tenue); font-size:13.5px; margin:0 0 14px; }
  .red { border-top:1px solid var(--linea); padding:12px 0 4px; }
  .red-nombre { font-size:14px; font-weight:600; margin-bottom:7px;
@@ -106,10 +115,18 @@ las partidas terminadas y se valora — no «qué pasó», sino <b>qué era mejo
 </section>
 
 <section>
-  <h2>3 · Entrenar</h2>
-  <p class="nota">Esto no va aquí a propósito. Un entrenamiento son horas de CPU y no puede colgar
-  del servidor que está repartiendo una partida. Desde el terminal:</p>
-  <pre>npm run nocturno -- --anclaPares 0</pre>
+  <h2>3 · Publicar</h2>
+  <p>Publicar es llevar lo del taller a donde lo cogen los bots. El nocturno entrena solo pero
+  <b>nunca publica</b>: un proceso que corre de madrugada sin nadie mirando no debería cambiar cómo
+  juegan tus partidas. Esa decisión es tuya y es este botón.</p>
+  <div class="barra">
+    <button id="publicar">publicar las redes del taller</button>
+    <span class="nota" style="border:0;padding:0">solo publica lo que mejora, y rechaza lo que tenga otra firma de rasgos</span>
+  </div>
+  <pre id="salidaPublicar" hidden></pre>
+  <p class="nota" style="margin-top:12px">Entrenar sigue siendo cosa del terminal — son horas de CPU
+  y no pueden colgar del servidor que reparte las partidas:
+  <code>npm run nocturno -- --anclaPares 0</code></p>
 </section>
 
 <script type="module">
@@ -153,12 +170,39 @@ async function pintaRedes() {
   let cabecera = "";
   if (r.entrenando.length) {
     const n = r.nocturno;
-    const cuanto = n && n.minutosPorSesion
-      ? `cada sesión tarda unos <b>${n.minutosPorSesion} min</b> · van ${n.sesiones} sesiones, ${n.adoptadasTotales} rondas adoptadas`
-      : "aún no ha terminado ninguna sesión, así que todavía no se sabe cuánto tarda cada una";
+    // El reloj del proceso viene como [dd-]hh:mm:ss o mm:ss.
+    const enMinutos = (t) => {
+      if (!t) return null;
+      const dias = t.includes("-") ? Number(t.split("-")[0]) : 0;
+      const p = (t.includes("-") ? t.split("-")[1] : t).split(":").map(Number);
+      const [h, m, sg] = p.length === 3 ? p : [0, p[0], p[1]];
+      return dias * 1440 + h * 60 + m + sg / 60;
+    };
+    const va = enMinutos((trabajando[0] || {}).desde);
+    const dura = n && n.minutosPorSesion;
+
+    let barra = "";
+    let resumen;
+    if (dura && va !== null) {
+      // El progreso es DE LA SESIÓN que está corriendo, no de la noche entera:
+      // el nocturno para cuando deja de mejorar, así que cuántas sesiones
+      // quedan no se sabe y fingir una barra hasta 40 sería inventárselo.
+      const frac = Math.min(1, va / dura);
+      const quedan = Math.max(0, Math.round(dura - va));
+      barra = `<div class="progreso"><i style="width:${(frac * 100).toFixed(1)}%"></i></div>
+        <div class="reloj"><span>lleva ${Math.round(va)} min</span>
+        <span>${frac >= 1 ? "acabando de medir…" : `quedan ~${quedan} min`}</span></div>`;
+      resumen = `sesión ${n.sesiones + 1} · las anteriores tardaron ~${dura} min`;
+    } else {
+      resumen = "es la primera sesión, así que todavía no se sabe cuánto tarda";
+      barra = `<div class="progreso indeterminada"><i></i></div>`;
+    }
+    const marca = n && n.mejor ? ` · mejor marca ${Math.round(n.mejor * 100)}%` : "";
+    const adoptadas = n ? ` · ${n.adoptadasTotales} rondas adoptadas de ${n.sesiones} sesiones` : "";
     cabecera = `<div class="entrenando">
-      <b>ENTRENANDO AHORA</b> — ${trabajando.map((p) => `${p.que} (${p.desde})`).join(", ") || "arrancando"}<br>
-      ${cuanto}<br>
+      <b>ENTRENANDO AHORA</b> — ${trabajando.map((p) => p.que).join(", ") || "arrancando"}<br>
+      <span class="tenue">${resumen}${marca}${adoptadas}</span>
+      ${barra}
       <small>Los números de abajo están cambiando debajo: el del taller es una foto de hace un momento.</small>
     </div>`;
   } else {
@@ -217,6 +261,25 @@ async function reiniciar(cual, etiqueta, cuantas) {
   await pinta();
   alert(`Listo: ${r.apartados} valoraciones de ${etiqueta} apartadas.`);
 }
+
+document.getElementById("publicar").onclick = async (ev) => {
+  if (!confirm("Publicar cambia con qué juegan los bots en las partidas de verdad.\n\n" +
+               "Solo se publica lo que mejora, y lo que tenga otra firma de rasgos se rechaza.\n\n¿Seguir?")) return;
+  ev.target.disabled = true;
+  ev.target.textContent = "publicando...";
+  const r = await (await fetch("/juicios/api/publicar", { method: "POST" })).json();
+  const pre = document.getElementById("salidaPublicar");
+  pre.hidden = false;
+  // El script dice "los bots los cogen al reiniciar el servidor" porque también
+  // se usa desde el terminal. Desde aquí no hace falta: el servidor los recarga
+  // en caliente, y decir lo contrario haría reiniciar partidas para nada.
+  pre.textContent = (r.salida || "(sin salida)").replace(
+    "Los bots los cogen al reiniciar el servidor.",
+    "Ya están activas: el servidor las ha recargado sin reiniciar.");
+  ev.target.disabled = false;
+  ev.target.textContent = "publicar las redes del taller";
+  await pintaRedes();
+};
 
 document.getElementById("reiniciarPosiciones").onclick = async () => {
   const e = await (await fetch("/juicios/api/estado")).json();
