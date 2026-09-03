@@ -34,7 +34,7 @@ const [EQUIPO_A] = EQUIPOS;
 function opciones(argv) {
   // `seco` no escribe el modelo: para probar sin que un ensayo pise uno bueno.
   // Ya ha pasado tres veces, la última con mi propio experimento de capacidad.
-  const o = { partidas: 1500, epocas: 300, lote: 64, tasa: 0.01, oculta: 10, decaimiento: 0.0015, semilla: 1, limite: 400, candidatos: 40, medir: 60, seco: 0, pesoJuicios: 40, pasadasJuicios: 1 };
+  const o = { partidas: 1500, epocas: 300, lote: 64, tasa: 0.01, oculta: 10, decaimiento: 0.0015, semilla: 1, limite: 400, candidatos: 40, medir: 60, seco: 0, pesoJuicios: 40, pasadasJuicios: 1, validarJuicios: 0.3 };
   for (let i = 2; i < argv.length; i += 2) {
     const clave = argv[i].replace(/^--/, "");
     if (!(clave in o)) throw new Error(`opción desconocida: ${argv[i]}`);
@@ -188,12 +188,28 @@ async function main() {
   // gusta más. Y solo se comparan despliegues del MISMO ejército, que es lo
   // único comparable.
   const juicios = paresDeDespliegue({ peso: o.pesoJuicios });
+  // SE APARTA UN TERCIO Y NO SE ENTRENA CON ÉL. Con 99 pares vistos 300 veces
+  // cada uno, una red de 16 ocultas los memoriza sin aprender nada que valga
+  // para el par 100; el acierto sobre los que ha visto no distingue una cosa de
+  // la otra. Los apartados son la única medida honesta.
+  let juiciosValidacion = [];
+  if (o.validarJuicios > 0 && juicios.pares.length >= 10) {
+    const mezclado = juicios.pares.slice();
+    for (let i = mezclado.length - 1; i > 0; i--) {
+      const j = Math.floor(azar() * (i + 1));
+      [mezclado[i], mezclado[j]] = [mezclado[j], mezclado[i]];
+    }
+    const corteJ = Math.floor(mezclado.length * (1 - o.validarJuicios));
+    juicios.pares = mezclado.slice(0, corteJ);
+    juiciosValidacion = mezclado.slice(corteJ);
+  }
   let aciertoFinalJuicios = null;
   if (juicios.firma !== FIRMA) {
     console.log(`  juicios IGNORADOS: se guardaron con otros rasgos (${juicios.firma} contra ${FIRMA})\n`);
     juicios.pares = [];
   } else if (juicios.pares.length) {
-    console.log(`  ${juicios.pares.length} juicios humanos con orden (de ${juicios.total}, ${juicios.iguales} "parecidos") · peso ${o.pesoJuicios}, ${o.pasadasJuicios} pasada(s) por época\n`);
+    console.log(`  ${juicios.pares.length} juicios humanos para entrenar y ${juiciosValidacion.length} apartados para medir`);
+    console.log(`  (de ${juicios.total} valorados, ${juicios.iguales} "parecidos" que no dan orden) · peso ${o.pesoJuicios}, ${o.pasadasJuicios} pasada(s) por época\n`);
   } else {
     console.log(`  sin juicios humanos de despliegue (node herramientas/juzgar-despliegues.mjs para dar alguno)\n`);
   }
@@ -215,7 +231,7 @@ async function main() {
     // y colapsaba. Aquí son N pasadas por época pase lo que pase.
     for (let k = 0; k < o.pasadasJuicios && juicios.pares.length; k++) {
       const r = entrenarPares(red, juicios.pares, { tasa: o.tasa, decaimiento: o.decaimiento });
-      if (epoca === o.epocas && k === 0) aciertoFinalJuicios = r.aciertos / juicios.pares.length;
+      if (epoca === o.epocas && k === 0) aciertoFinalJuicios = r.acierto;
     }
     if (epoca % 10 === 0 || epoca === o.epocas) {
       const pEnt = perdidaDe(red, entrenamiento);
@@ -241,7 +257,17 @@ async function main() {
   const medida = medirEnJuego(mejorRed, o.medir, o.candidatos, o.limite, 424242);
   console.log(`  ${medida.gana}-${medida.pierde} (tablas ${medida.empata}) = ${(medida.tasa * 100).toFixed(0)}% de victorias en ${Math.round((Date.now() - t1) / 1000)}s`);
   if (aciertoFinalJuicios !== null) {
-    console.log(`  coincide con ${(aciertoFinalJuicios * 100).toFixed(0)}% de tus juicios (es dato de entrenamiento, no de validación)`);
+    console.log(`\n  Tus juicios:`);
+    console.log(`    con los que ha entrenado: ${(aciertoFinalJuicios * 100).toFixed(0)}%`);
+  }
+
+  // La medida que vale: los pares que NO ha visto.
+  let aciertoApartados = null;
+  if (juiciosValidacion.length) {
+    let ok = 0;
+    for (const par of juiciosValidacion) if (evaluar(mejorRed, par.mejor) > evaluar(mejorRed, par.peor)) ok++;
+    aciertoApartados = ok / juiciosValidacion.length;
+    console.log(`    APARTADOS, que es la que vale: ${(aciertoApartados * 100).toFixed(0)}% de ${juiciosValidacion.length} · 50% sería una moneda`);
   }
 
   const salida = path.join(AQUI, "modelos", "red-despliegue.json");
@@ -271,7 +297,7 @@ async function main() {
   fs.writeFileSync(
     salida,
     JSON.stringify(
-      { firmaRasgos: FIRMA, activacion: ACTIVACION, creado: new Date().toISOString(), opciones: o, perdidaValidacion: mejorValidacion, victoriasEnJuego: medida.tasa, juiciosUsados: juicios.pares.length, aciertoEnJuicios: aciertoFinalJuicios, curva, red: mejorPesos },
+      { firmaRasgos: FIRMA, activacion: ACTIVACION, creado: new Date().toISOString(), opciones: o, perdidaValidacion: mejorValidacion, victoriasEnJuego: medida.tasa, juiciosUsados: juicios.pares.length, aciertoEnJuicios: aciertoFinalJuicios, aciertoEnJuiciosApartados: aciertoApartados, curva, red: mejorPesos },
       null,
       2
     )

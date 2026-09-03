@@ -34,7 +34,8 @@
 <div class="par" id="par"></div>
 <div class="barra">
   <button id="izq">← este (A)</button>
-  <button id="iguales">parecidos / no sé</button>
+  <button id="malos">los dos flojos</button>
+  <button id="buenos">los dos buenos</button>
   <button id="der">este (B) →</button>
   <button id="saltar">saltar al siguiente sin juzgar</button>
   <button id="encuadre">ver el tablero entero</button>
@@ -56,8 +57,13 @@ let n = 0;
 const juicios = datos.juicios;
 const clave = (p) => `${p.a.clave}|${p.b.clave}`;
 
+const EMPATES = { iguales: "parecidos", ambosMalos: "los dos flojos", ambosBuenos: "los dos buenos" };
+
 function opinion(p, v) {
   if (!p.suyo) return "";
+  if (EMPATES[v]) {
+    return `<div class="suyo">la red les da ${p.suyo.a.toFixed(3)} y ${p.suyo.b.toFixed(3)}</div>`;
+  }
   const suya = p.suyo.a === p.suyo.b ? "iguales" : p.suyo.a > p.suyo.b ? "a" : "b";
   const coincide = suya === v;
   return `<div class="suyo ${coincide ? "ok" : "no"}">la red prefiere <b>${suya === "iguales" ? "ninguno" : suya.toUpperCase()}</b>
@@ -154,7 +160,7 @@ function pinta() {
   let juzgadas = 0, coinciden = 0;
   for (const q of datos.parejas) {
     const w = juicios[clave(q)];
-    if (!w || !q.suyo) continue;
+    if (!w || !q.suyo || EMPATES[w]) continue;
     juzgadas++;
     const suya = q.suyo.a === q.suyo.b ? "iguales" : q.suyo.a > q.suyo.b ? "a" : "b";
     if (suya === w) coinciden++;
@@ -175,7 +181,8 @@ function pinta() {
 
   document.getElementById("izq").className = v === "a" ? "puesto" : "";
   document.getElementById("der").className = v === "b" ? "puesto" : "";
-  document.getElementById("iguales").className = v === "iguales" ? "puesto" : "";
+  document.getElementById("malos").className = v === "ambosMalos" ? "puesto" : "";
+  document.getElementById("buenos").className = v === "ambosBuenos" ? "puesto" : "";
   document.getElementById("ayuda").innerHTML = `
     Los dos son del mismo ejército y en la misma zona, y <b>siempre se ven desde su lado</b>:
     su franja abajo y el castillo hacia arriba, gire el tablero lo que gire.
@@ -184,7 +191,7 @@ function pinta() {
     Comparar es más fiable que puntuar — dar notas absolutas deriva con el cansancio, elegir
     entre dos no. Y <b>«parecidos» es información</b>, no pereza: le dice a la red que no los separe.<br>
     Lo que opina la red aparece <b>después</b> de que juzgues, nunca antes.<br>
-    <kbd>←</kbd> A · <kbd>→</kbd> B · <kbd>=</kbd> parecidos · <kbd>N</kbd> siguiente · <kbd>T</kbd> tablero entero`;
+    <kbd>←</kbd> A · <kbd>→</kbd> B · <kbd>=</kbd> los dos flojos · <kbd>+</kbd> los dos buenos · <kbd>N</kbd> siguiente · <kbd>T</kbd> tablero entero`;
 }
 
 function dibujar(color, colocacion) {
@@ -206,7 +213,8 @@ async function juzgar(veredicto) {
 const ir = (d) => { n = (n + d + datos.parejas.length) % datos.parejas.length; pinta(); };
 document.getElementById("izq").onclick = () => juzgar("a");
 document.getElementById("der").onclick = () => juzgar("b");
-document.getElementById("iguales").onclick = () => juzgar("iguales");
+document.getElementById("malos").onclick = () => juzgar("ambosMalos");
+document.getElementById("buenos").onclick = () => juzgar("ambosBuenos");
 document.getElementById("encuadre").onclick = () => {
   entero = !entero;
   document.getElementById("encuadre").textContent = entero ? "acercar a la zona" : "ver el tablero entero";
@@ -221,7 +229,8 @@ document.getElementById("saltar").onclick = () => {
 addEventListener("keydown", (e) => {
   if (e.key === "ArrowLeft") juzgar("a");
   else if (e.key === "ArrowRight") juzgar("b");
-  else if (e.key === "=" || e.key === "0") juzgar("iguales");
+  else if (e.key === "=" || e.key === "0") juzgar("ambosMalos");
+  else if (e.key === "+") juzgar("ambosBuenos");
   else if (e.key === "n" || e.key === "N") ir(1);
   else if (e.key === "t" || e.key === "T") document.getElementById("encuadre").click();
 });

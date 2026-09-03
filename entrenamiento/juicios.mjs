@@ -125,34 +125,78 @@ export function colocacionDesdeClave(clave) {
   return { color, colocacion };
 }
 
-export function paresDeDespliegue({ peso = 300 } = {}) {
+// "LOS DOS IGUAL" NO ES UNA SOLA COSA, y tratarlo como una sola tira información.
+// Empatados arriba dice "los dos por encima de la media"; empatados abajo dice
+// "los dos por debajo". Un empate sin signo no genera par y se pierde entero:
+// eran el 17% de lo valorado y no estaban enseñando nada.
+//
+// Con el signo sí enseñan, y por una vía que las jugadas no permitirían: un
+// despliegue es un objeto COMPLETO, se juzga en abstracto y no depende de la
+// posición en que aparece, así que dos despliegues del mismo ejército juzgados
+// en parejas distintas SÍ son comparables entre sí. Un "los dos flojos" se puede
+// poner por debajo de cualquier ganador, y un "los dos buenos" por encima de
+// cualquier perdedor.
+//
+// Esos pares cruzados pesan MENOS que los directos: comparar dentro de una
+// pareja es lo que la persona vio y decidió; cruzarlos es una deducción nuestra.
+export function paresDeDespliegue({ peso = 300, pesoCruzado = 0.35 } = {}) {
   const juicios = leerJuiciosDeDespliegue();
   const pares = [];
+  const ganadores = [];   // preferidos dentro de su pareja, por color
+  const perdedores = [];
+  const flojos = [];      // los dos de una pareja marcada "los dos flojos"
+  const buenos = [];
   let comparados = 0;
   let iguales = 0;
 
   for (const [clave, veredicto] of Object.entries(juicios)) {
-    // "iguales" no genera par: no hay orden que enseñar. Se cuenta porque
-    // decir "no los separes" también es información, aunque esta pérdida no
-    // sepa usarla.
-    if (veredicto !== "a" && veredicto !== "b") {
-      iguales++;
-      continue;
-    }
     const barra = clave.indexOf("|");
     if (barra < 0) continue;
     const a = colocacionDesdeClave(clave.slice(0, barra));
     const b = colocacionDesdeClave(clave.slice(barra + 1));
     if (!a || !b || a.color !== b.color) continue;
-    const mejor = veredicto === "a" ? a : b;
-    const peor = veredicto === "a" ? b : a;
-    pares.push({
-      mejor: rasgosDeDespliegue(mejor.color, mejor.colocacion),
-      peor: rasgosDeDespliegue(peor.color, peor.colocacion),
-      peso,
-    });
-    comparados++;
+    const rasgosDe = (x) => rasgosDeDespliegue(x.color, x.colocacion);
+
+    if (veredicto === "a" || veredicto === "b") {
+      const mejor = veredicto === "a" ? a : b;
+      const peor = veredicto === "a" ? b : a;
+      pares.push({ mejor: rasgosDe(mejor), peor: rasgosDe(peor), peso });
+      ganadores.push({ color: mejor.color, entrada: rasgosDe(mejor) });
+      perdedores.push({ color: peor.color, entrada: rasgosDe(peor) });
+      comparados++;
+      continue;
+    }
+
+    iguales++;
+    // "iguales" a secas es el formato viejo, de cuando la página no distinguía:
+    // no se puede saber de qué lado del listón estaban, así que no genera nada.
+    if (veredicto === "ambosMalos") {
+      flojos.push({ color: a.color, entrada: rasgosDe(a) }, { color: b.color, entrada: rasgosDe(b) });
+    } else if (veredicto === "ambosBuenos") {
+      buenos.push({ color: a.color, entrada: rasgosDe(a) }, { color: b.color, entrada: rasgosDe(b) });
+    }
   }
 
-  return { pares, comparados, iguales, total: Object.keys(juicios).length, firma: FIRMA_DESPLIEGUE };
+  // Los cruces, solo dentro del mismo ejército: la zona de cada uno es distinta
+  // y sus rasgos no significan lo mismo.
+  let cruzados = 0;
+  const cruzar = (arriba, abajo) => {
+    for (const x of arriba) {
+      for (const y of abajo) {
+        if (x.color !== y.color) continue;
+        pares.push({ mejor: x.entrada, peor: y.entrada, peso: peso * pesoCruzado });
+        cruzados++;
+      }
+    }
+  };
+  cruzar(ganadores, flojos);
+  cruzar(buenos, perdedores);
+  cruzar(buenos, flojos);
+
+  return {
+    pares, comparados, iguales, cruzados,
+    conSigno: flojos.length + buenos.length,
+    total: Object.keys(juicios).length,
+    firma: FIRMA_DESPLIEGUE,
+  };
 }
