@@ -202,6 +202,30 @@ suelta es ruidoso y sin ese aviso el listado parece decir cosas que no dice.
 
 ## Qué falta por pulir
 
+### 0-bis. La defensa no razona con probabilidades, y el ataque sí
+
+Asimetría medida en el código:
+
+```
+para ATACAR:    valorEsperadoDelDuelo   probabilidad sobre la bolsa oculta
+para DEFENDER:  hayDesconocido          un booleano
+```
+
+El bot calcula finamente lo que puede ganar, pero **todos los peligros desconocidos le parecen
+iguales**. Y no lo son: si el mariscal enemigo está localizado en el flanco contrario, un
+desconocido junto a mi general apenas puede hacerle nada salvo que sea un cañón. Eso es
+exactamente lo que un jugador humano aprovecha, y lo que hace que revelar sea caro — no solo
+por la pieza revelada, sino porque **baja el riesgo de todas las decisiones del rival en el
+resto del tablero**.
+
+**Falta**: un rasgo `riesgoConDesconocido` = probabilidad de que un desconocido vecino me gane,
+según la bolsa. Medido antes de escribirlo: se activa en el **4,2%** de las jugadas con **49
+valores distintos**, así que hay señal de sobra y está graduado.
+
+Y con ello se abre lo que de verdad decide el final de la partida según el jugador: **control
+del centro, superioridad de calidad e información revelada**. Las dos primeras tienen rasgos
+(`presenciaEnElCentro`, `ventajaDePiezas`); la tercera es esta.
+
 ### 0. El desacuerdo sobre el precio de la información, sin resolver
 
 740 juicios humanos marcaron como malas las jugadas que delatan —capitán dos casillas,
