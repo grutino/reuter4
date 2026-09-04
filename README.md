@@ -238,7 +238,25 @@ Se calcula sobre el titular remedido cada ronda, que fluctúa entre 88% y 94% co
 ±2 de error; cuando al titular le toca una medida afortunada el listón sube a 96%
 y ninguna mejora razonable lo pasa. El listón depende del ruido de una medida.
 
-### 1. Las redes son casi lineales, y eso explica la meseta
+### 1. `humana-08` NO era un agujero — era el camino de medida
+
+Durante varias noches `humana-08` salió como el peor rival del panel, hasta el
+38%, y el algoritmo de formaciones encontró una variante suya que ganaba el 100%.
+Parecía un agujero concreto: es la única de las once aperturas humanas que
+adelanta el mariscal a primera línea (`4 3 5 9 4 3 4`), y las demás lo esconden
+detrás.
+
+Medido con la criba correcta, la red **le gana el 82%**, y en el panel completo
+`humana-08` está en el 75,6%. Los ocho peores rivales van del 72,9% al 80,9%,
+repartidos y sin ningún desastre. **No hay agujero.**
+
+Aquel 38% estaba medido por el camino `solo`, que no es como juega el servidor.
+Es la tercera conclusión falsa salida del mismo desajuste, así que ahora el
+diagnóstico del nocturno **escribe siempre por qué camino midió** y `medir.mjs`
+lo guarda en su salida junto al número de candidatas. Un porcentaje sin el camino
+al lado no significa nada.
+
+### 2. Las redes son casi lineales, y eso explica la meseta
 
 **El hallazgo que reordena el resto.** Medido por ablación —poner a cero la salida de cada
 neurona oculta y ver cuánto se mueve la predicción, que es la única prueba que no depende de la
@@ -271,7 +289,7 @@ eso. La red converge a la mejor recta y ahí se queda.
 
 De ahí que los dos puntos siguientes sean los que valen la pena.
 
-### 2. El ancla de la heurística NO se suelta
+### 3. El ancla de la heurística NO se suelta
 
 **Resuelto, y al revés de lo que decía este punto.** Aquí ponía que la heurística
 «ya no aporta a la decisión» porque decidir con la red sola (90,3% ±1,0) y con la
@@ -296,7 +314,7 @@ no basta.
 Queda una pregunta abierta y más fina: si el ancla se puede **aflojar** por
 rondas —empezar con ella y bajarla— en vez de quitarla de golpe.
 
-### 3. Juzgar despliegues — HECHO, y ya entran
+### 4. Juzgar despliegues — HECHO, y ya entran
 
 **Hecho de punta a punta.** El taller vive en el propio juego (`/juicios`): se
 cosechan las partidas terminadas, se comparan dos colocaciones del mismo ejército
@@ -323,7 +341,7 @@ el 92% sobre pares que no ha visto.
 **Falta**: nada para que funcionen. Más juicios siempre suman, sobre todo de
 partidas jugadas de verdad, que son los que se sirven primero.
 
-### 4. Los tres rasgos de defensa — HECHO
+### 5. Los tres rasgos de defensa — HECHO
 
 Escritos y medidos. La firma de rasgos pasa a `94ad006f` y el tamaño a **75**, así que **todo
 modelo anterior queda invalidado** y hay que reentrenar de cero: es justo por eso que este punto
@@ -346,7 +364,7 @@ error: `DISTANCIA` mide al **castillo**, no entre dos casillas, y `coord()` devu
 no `{columna, fila}`. Hay ahora una prueba que falla si cualquiera de los tres baja del 1% de
 activación o pasa del 95%.
 
-### 5. El desacuerdo sobre el precio de la información
+### 6. El desacuerdo sobre el precio de la información
 
 **Sigue sin respuesta**, y es la pregunta más interesante abierta. La red da signo **positivo** a
 `delatarmeAhora`: cree que delatarse pronto compensa. Sabe lo que cuesta —las piezas que se
@@ -357,7 +375,7 @@ Tres lecturas posibles: que el entorno siga sin castigar bastante la fuga, que s
 —esas piezas mueren por exponerse, no por estar identificadas— o que la red tenga razón dentro de
 este juego y el consejo humano valga para partidas entre personas.
 
-### 6. Pulir el visor 3D — HECHO
+### 7. Pulir el visor 3D — HECHO
 
 - **La última casilla queda iluminada**: emisión blanca con la propia textura como mapa, para que
   se vea *piedra iluminada* y no un cilindro blanco, y latiendo despacio (2,2 Hz, para no competir
@@ -370,7 +388,7 @@ este juego y el consejo humano valga para partidas entre personas.
   su ejército.
 - Las siluetas van en **blanco** en informes y herramientas y en **negro** en el visor.
 
-### 7. El informe de las redes — HECHO
+### 8. El informe de las redes — HECHO
 
 Pérdida y acierto de entrenamiento y validación en cada punto de la curva —la distancia entre las
 dos líneas de acierto *es* el sobreajuste—, separación entre **entre rondas** y **dentro de la
@@ -379,7 +397,7 @@ la mayor, R² del ajuste lineal y en qué porcentaje de pares ordena como una re
 cada `npm run informe-redes` sobre los mismos vectores que la sensibilidad, sin volver a jugar las
 partidas.
 
-### 8. Los juicios de jugada, segunda versión
+### 9. Los juicios de jugada, segunda versión
 
 **Apagados** (`pasadasJuicios: 0`). Los primeros 740 enseñaban a **no terminar la partida**: 0 de
 12 decididas contra 12 de 12. Las jugadas marcadas como malas eran las que delatan, que son las
@@ -388,7 +406,7 @@ rápidas, y la red generalizó «no te delates» a los 400 turnos.
 Hacen falta **muchas más y repartidas por toda la partida**. `npm run cosechar` ya mete en el
 banco las posiciones donde la red discrepa de lo que se jugó, que es donde un juicio vale más.
 
-### 9. La renuncia a la bandera del compañero — HECHO
+### 10. La renuncia a la bandera del compañero — HECHO
 
 Por defecto no se carga, porque cargarla la congela. El matiz nuevo: renunciar solo la protege
 **mientras el que la tapa aguante**. Si ahí me matan, quien gana el duelo avanza a mi casilla, cae
@@ -398,7 +416,7 @@ Se carga entonces si un enemigo **conocido** que me gana está al lado, o si hay
 más de la mitad de su bolsa oculta me ganaría. Solo cuerpo a cuerpo: un cañonazo me mata pero deja
 la bandera donde está y el que disparó sigue lejos.
 
-### 10. Siluetas: hace falta una foto tuya
+### 11. Siluetas: hace falta una foto tuya
 
 `src/siluetas-datos.js` está generado por `herramientas/extraer-siluetas.py` a partir de una foto
 que **no está en el repositorio**, así que esto no lo puede hacer nadie más.

@@ -26,6 +26,7 @@
 //   marca se mueva más que el ruido.
 
 import fs from "node:fs";
+import { CANDIDATAS_UTILES } from "../src/motor/dificultad.js";
 import path from "node:path";
 import os from "node:os";
 import { execFile } from "node:child_process";
@@ -214,6 +215,20 @@ async function construirDiagnostico(bitacora, mejor, motivo, o, confirmado) {
   l.push(`# Diagnóstico del entrenamiento nocturno`);
   l.push(``, `_${ahora()}_`, ``);
   l.push(`**${motivo}.** Mejor marca de la noche: **${(mejor * 100).toFixed(1)}%** contra el panel.`, ``);
+  // EL CAMINO, SIEMPRE ESCRITO. Un porcentaje sin decir por dónde se midió no
+  // significa nada: el mismo modelo da 89,8% decidiendo sobre todas las jugadas
+  // y 83,4% con la heurística cribando. Leer un número de un camino como si
+  // fuera del otro ya llevó tres veces a conclusiones falsas — entre ellas dar
+  // por "agujero" un rival que ganaba el 38% por solo, y que por criba pierde
+  // el 76%.
+  l.push(
+    o.soloRed
+      ? `> Medido por el camino **solo**: la red puntúa todas las jugadas legales. ` +
+        `NO es como juega el servidor, que criba con la heurística — estos números no son comparables con los de criba.`
+      : `> Medido por el camino **criba**: la heurística preselecciona ${CANDIDATAS_UTILES} candidatas y la red las ordena, ` +
+        `que es exactamente como juega el servidor.`,
+    ``
+  );
   if (confirmado) {
     l.push(
       `Confirmada en **${(confirmado.tasa * 100).toFixed(1)}%** ±${Math.round(confirmado.error * 100)} sobre partidas que no ha visto ninguna sesión. ` +

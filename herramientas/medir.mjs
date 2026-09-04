@@ -56,6 +56,7 @@ const r = medirContraPanel(
 
 console.log(JSON.stringify({
   semillaBase, parejas, camino,
+  candidatas: camino === "criba" ? candidatas : null,
   tasa: r.tasa, error: r.error, gana: r.gana, pierde: r.pierde, tablas: r.tablas,
   peor: { rival: r.peor.rival, tasa: r.peor.tasa },
   porRival: r.porRival.slice().sort((a, b) => a.tasa - b.tasa).slice(0, 8).map((x) => ({ rival: x.rival, clase: x.clase, tasa: x.tasa })),
