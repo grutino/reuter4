@@ -294,7 +294,7 @@ no basta.
 Queda una pregunta abierta y más fina: si el ancla se puede **aflojar** por
 rondas —empezar con ella y bajarla— en vez de quitarla de golpe.
 
-### 2. Juzgar despliegues
+### 3. Juzgar despliegues
 
 **Hecho**: `npm run juzgar-despliegues` compara dos colocaciones del mismo ejército y guarda cuál
 prefieres; `entrenar-despliegue.mjs` las aplica con la pérdida por pares en **dosis fija** por
@@ -308,7 +308,7 @@ de sus rasgos.
 Se comparan de dos en dos y no se puntúan de uno en uno a propósito: dar notas absolutas deriva
 con el cansancio, elegir entre dos no. Y «parecidos» es información, no pereza.
 
-### 3. Los tres rasgos de defensa — HECHO
+### 4. Los tres rasgos de defensa — HECHO
 
 Escritos y medidos. La firma de rasgos pasa a `94ad006f` y el tamaño a **75**, así que **todo
 modelo anterior queda invalidado** y hay que reentrenar de cero: es justo por eso que este punto
@@ -331,7 +331,7 @@ error: `DISTANCIA` mide al **castillo**, no entre dos casillas, y `coord()` devu
 no `{columna, fila}`. Hay ahora una prueba que falla si cualquiera de los tres baja del 1% de
 activación o pasa del 95%.
 
-### 4. El desacuerdo sobre el precio de la información
+### 5. El desacuerdo sobre el precio de la información
 
 **Sigue sin respuesta**, y es la pregunta más interesante abierta. La red da signo **positivo** a
 `delatarmeAhora`: cree que delatarse pronto compensa. Sabe lo que cuesta —las piezas que se
@@ -342,7 +342,7 @@ Tres lecturas posibles: que el entorno siga sin castigar bastante la fuga, que s
 —esas piezas mueren por exponerse, no por estar identificadas— o que la red tenga razón dentro de
 este juego y el consejo humano valga para partidas entre personas.
 
-### 5. Pulir el visor 3D — HECHO
+### 6. Pulir el visor 3D — HECHO
 
 - **La última casilla queda iluminada**: emisión blanca con la propia textura como mapa, para que
   se vea *piedra iluminada* y no un cilindro blanco, y latiendo despacio (2,2 Hz, para no competir
@@ -355,7 +355,7 @@ este juego y el consejo humano valga para partidas entre personas.
   su ejército.
 - Las siluetas van en **blanco** en informes y herramientas y en **negro** en el visor.
 
-### 6. El informe de las redes — HECHO
+### 7. El informe de las redes — HECHO
 
 Pérdida y acierto de entrenamiento y validación en cada punto de la curva —la distancia entre las
 dos líneas de acierto *es* el sobreajuste—, separación entre **entre rondas** y **dentro de la
@@ -364,7 +364,7 @@ la mayor, R² del ajuste lineal y en qué porcentaje de pares ordena como una re
 cada `npm run informe-redes` sobre los mismos vectores que la sensibilidad, sin volver a jugar las
 partidas.
 
-### 7. Los juicios de jugada, segunda versión
+### 8. Los juicios de jugada, segunda versión
 
 **Apagados** (`pasadasJuicios: 0`). Los primeros 740 enseñaban a **no terminar la partida**: 0 de
 12 decididas contra 12 de 12. Las jugadas marcadas como malas eran las que delatan, que son las
@@ -373,7 +373,7 @@ rápidas, y la red generalizó «no te delates» a los 400 turnos.
 Hacen falta **muchas más y repartidas por toda la partida**. `npm run cosechar` ya mete en el
 banco las posiciones donde la red discrepa de lo que se jugó, que es donde un juicio vale más.
 
-### 8. La renuncia a la bandera del compañero — HECHO
+### 9. La renuncia a la bandera del compañero — HECHO
 
 Por defecto no se carga, porque cargarla la congela. El matiz nuevo: renunciar solo la protege
 **mientras el que la tapa aguante**. Si ahí me matan, quien gana el duelo avanza a mi casilla, cae
@@ -383,7 +383,7 @@ Se carga entonces si un enemigo **conocido** que me gana está al lado, o si hay
 más de la mitad de su bolsa oculta me ganaría. Solo cuerpo a cuerpo: un cañonazo me mata pero deja
 la bandera donde está y el que disparó sigue lejos.
 
-### 9. Siluetas: hace falta una foto tuya
+### 10. Siluetas: hace falta una foto tuya
 
 `src/siluetas-datos.js` está generado por `herramientas/extraer-siluetas.py` a partir de una foto
 que **no está en el repositorio**, así que esto no lo puede hacer nadie más.
