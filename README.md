@@ -205,36 +205,38 @@ suelta es ruidoso y sin ese aviso el listado parece decir cosas que no dice.
 En el orden en que conviene retomarlo. Cada punto dice qué hay hecho, qué falta y por qué está
 en ese sitio.
 
-### 0. Se entrena por un camino y se juega por otro
+### 0. Entrenar, medir y jugar el mismo juego — MEDIO HECHO
 
-**Lo más importante que hay abierto.** El servidor juega por CRIBA: `jugadaDeBot`
-deja que la heurística elija las mejores candidatas y la red solo las ordena.
-Pero la coevolución entrena con `--soloRed 1`, donde la red puntúa TODAS las
-jugadas legales. Son dos formas distintas de jugar, y se nota:
+**Hecho y publicado: el servidor cribaba a 4 y ahora criba a 12.** Valían seis
+puntos. El 4 estaba medido, pero con una red que apenas distinguía entre
+jugadas; el número se quedó fijo mientras la red mejoraba. Remedido:
 
 ```
-                        camino solo      camino criba
-                     (como se entrena)  (como juega el servidor)
-tras el nocturno         89,8% ±1,1        83,4% ±1,1
-el modelo publicado      89,0% ±1,1        90,2% ±1,1
+ 4 candidatas   84,2% ±1,3
+ 8              88,6%  ·  90,8%   (dos semillas)
+12              90,3%  ·  90,4%
+20              88,4%  ·  92,1%
+40              88,4%
 ```
 
-El modelo recién entrenado es el mejor de los dos **en el camino con el que se
-entrena** y el peor **en el camino con el que de verdad se juega**, por casi
-siete puntos. Se está optimizando algo que luego no se usa.
+Entre 8 y 20 no hay señal —el orden se invierte al cambiar de semilla— pero el 4
+pierde seis puntos en las dos. Servidor, coevolución y `medir.mjs` leen ahora la
+misma constante. La escalera de dificultad aguanta el cambio.
 
-Por eso el modelo publicado sigue siendo el bueno y no se ha sustituido.
+**La lección, que vale más que el número**: un parámetro medido caduca cuando
+cambia aquello sobre lo que se midió. `medir.mjs` acepta el número por argumento
+para poder volver a barrerlo.
 
-Lo siguiente es alinear las dos cosas, y la dirección natural es entrenar con
-`--soloRed 0`: entrenar como se juega, no al revés. Antes de darlo por hecho hay
-que medirlo, porque el camino solo tiene una ventaja teórica -no queda atado al
-criterio de la heurística para elegir qué mirar-, pero esa ventaja no sirve de
-nada si nadie juega así.
+**Hecho también: la coevolución ya puede entrenar por criba** (`--soloRed 0`), y
+entonces entrena, mide y juega lo mismo. Cuatro rondas partiendo del modelo
+publicado: ninguna lo superó, veredicto 89,3% contra un punto de partida del 90%.
+No es un fracaso del cambio —descarta con razón— pero dice que el modelo vigente
+no se supera en cuatro rondas.
 
-**Cuidado al medir esto**: `herramientas/medir.mjs` toma el camino como quinto
-argumento y los dos NO son comparables entre sí. Confundirlos ya costó anunciar
-un +3 que no existía, y una segunda vez leer como regresión de la reválida lo
-que era una medida mal alineada.
+**Falta**: una noche entera con `--soloRed 0`, y arreglar el listón de adopción.
+Se calcula sobre el titular remedido cada ronda, que fluctúa entre 88% y 94% con
+±2 de error; cuando al titular le toca una medida afortunada el listón sube a 96%
+y ninguna mejora razonable lo pasa. El listón depende del ruido de una medida.
 
 ### 1. Las redes son casi lineales, y eso explica la meseta
 
