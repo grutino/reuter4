@@ -45,6 +45,15 @@
       "subio": false,
       "minutos": 39,
       "cuando": "2026-09-04 22:59:20"
+    },
+    {
+      "sesion": 6,
+      "veredicto": 0.915,
+      "adoptadas": 0,
+      "mejor": 0.905,
+      "subio": false,
+      "minutos": 36,
+      "cuando": "2026-09-04 23:35:30"
     }
   ],
   "mejor": 0.905

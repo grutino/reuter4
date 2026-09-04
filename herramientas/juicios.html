@@ -28,12 +28,14 @@
           background:#fff; color:var(--tinta); border-radius:6px; cursor:pointer;
           text-decoration:none; display:inline-block; }
  button:hover, a.boton:hover { border-color:var(--tinta); }
- a.boton.principal { background:var(--tinta); color:var(--papel); border-color:var(--tinta); }
+ /* Los dos botones de valorar se ven IGUAL. Uno llevaba fondo oscuro de cuando
+    las posiciones eran la prioridad; esa jerarquía ya no existe -son dos tipos
+    de juicio distintos, no uno principal y otro secundario- y pintarla hacía
+    creer que el otro era un añadido. */
  /* Sin nada pendiente el botón no lleva a ninguna parte: se apaga en vez de
     llevarte a una tanda ya juzgada entera. */
  a.boton.apagado { color:#b3aa98; border-color:#eee6d8; background:#faf7f0;
                    pointer-events:none; cursor:default; }
- a.boton.apagado.principal { background:#faf7f0; color:#b3aa98; border-color:#eee6d8; }
  .cuantas { font-weight:400; opacity:.75; }
  .grupo { display:inline-flex; align-items:stretch; }
  .grupo .boton { border-top-right-radius:0; border-bottom-right-radius:0; }
@@ -113,7 +115,7 @@ las partidas terminadas y se valora — no «qué pasó», sino <b>qué era mejo
   su posición, así que enseña menos por unidad — pero es donde se decide la partida.</p>
   <div class="barra">
     <span class="grupo">
-      <a class="boton principal" id="irPosiciones" href="/juicios/despliegues">valorar posiciones de salida</a>
+      <a class="boton" id="irPosiciones" href="/juicios/despliegues">valorar posiciones de salida</a>
       <button class="aspa" id="reiniciarPosiciones" title="borrar mis valoraciones de posiciones">✕</button>
     </span>
     <span class="grupo">
