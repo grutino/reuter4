@@ -18,7 +18,7 @@
  .ficha dt { font:500 10px/1.3 ui-monospace,monospace; letter-spacing:.08em;
              text-transform:uppercase; color:var(--tenue); }
  .ficha dd { margin:5px 0 0; font:600 24px/1 ui-monospace,monospace; font-variant-numeric:tabular-nums; }
- .ficha dd small { font-size:12px; font-weight:400; color:var(--tenue); }
+ .ficha dd small { font-size:11px; font-weight:400; color:var(--tenue); display:block; margin-top:3px; }
  .ficha.urge dd { color:var(--laton); }
  section { border:1px solid var(--linea); border-radius:8px; padding:16px 18px; margin:0 0 16px; background:#fff; }
  h2 { font-size:18px; margin:0 0 5px; }
@@ -161,13 +161,28 @@ las partidas terminadas y se valora — no «qué pasó», sino <b>qué era mejo
 // Leído por columnas: cuántas partidas hay y cuántas faltan por cosechar; cuántos
 // despliegues se han sacado y cuántos se han valorado; cuántos escenarios hay y
 // cuántas jugadas se han juzgado en ellos.
+// CADA COLUMNA TIENE QUE HABLAR DE LO MISMO. Antes no: arriba iban despliegues
+// sueltos del pozo (8) y abajo juicios acumulados de todas las tandas (132), que
+// ni son la misma unidad ni salen unos de otros — las parejas se forman de cinco
+// fuentes y solo unas pocas vienen del pozo. Así el emparejamiento engañaba.
+//
+// Ahora abajo va el AVANCE sobre lo que hay ahora mismo delante, con su
+// denominador, y el total histórico queda como apunte pequeño.
 const F = [
   ["partidas archivadas", (e) => e.archivadas, false],
-  ["despliegues en el pozo", (e) => e.enElPozo, false],
+  ["despliegues en el pozo", (e) => `${e.enElPozo}<small> de partidas reales</small>`, false],
   ["escenarios en el banco", (e) => e.enElBanco, false],
   ["sin cosechar", (e) => e.sinCosechar, true],
-  ["posiciones valoradas", (e) => e.juzgados, false],
-  ["jugadas valoradas", (e) => e.jugadasJuzgadas, false],
+  ["parejas valoradas", (e) => {
+    const p = e.pendientes || {};
+    const hechas = (p.parejas || 0) - (p.posiciones || 0);
+    return `${hechas}<small> de ${p.parejas || 0} · ${e.juzgados} en total</small>`;
+  }, false],
+  ["escenarios completos", (e) => {
+    const p = e.pendientes || {};
+    const hechos = (p.escenarios || 0) - (p.jugadas || 0);
+    return `${hechos}<small> de ${p.escenarios || 0} · ${e.jugadasJuzgadas} jugadas</small>`;
+  }, false],
 ];
 
 const pct = (v) => (v === null || v === undefined ? "—" : `${Math.round(v * 100)}%`);

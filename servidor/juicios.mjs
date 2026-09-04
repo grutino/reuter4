@@ -387,7 +387,14 @@ function pendientes(red, redJugada) {
   // completo que aprender.
   const jugadas = cache.casos.filter((c) => c.claves.some((k) => !deJugada[k])).length;
 
-  return { posiciones, jugadas };
+  return {
+    posiciones, jugadas,
+    // Los totales de los que salen esos pendientes. Sin ellos, "111 sin valorar"
+    // no se puede comparar con nada: no son 111 de los 8 despliegues del pozo ni
+    // de los 132 juicios guardados, son 111 de las 120 PAREJAS que se ofrecen.
+    parejas: cache.parejas.parejas.length,
+    escenarios: cache.casos.length,
+  };
 }
 
 export function estado(red, redJugada) {
