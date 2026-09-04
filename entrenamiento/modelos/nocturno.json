@@ -1,51 +1,24 @@
 {
-  "creado": "2026-09-03 16:04:47",
+  "creado": "2026-09-03 22:48:54",
   "sesiones": [
     {
       "sesion": 1,
-      "veredicto": 0.8590000000000001,
-      "adoptadas": 0,
-      "mejor": 0.8590000000000001,
+      "veredicto": 0.848,
+      "adoptadas": 1,
+      "mejor": 0.848,
       "subio": true,
-      "minutos": 61,
-      "cuando": "2026-09-03 17:06:05"
+      "minutos": 38,
+      "cuando": "2026-09-03 23:26:27"
     },
     {
       "sesion": 2,
       "veredicto": 0.858,
       "adoptadas": 0,
-      "mejor": 0.8590000000000001,
+      "mejor": 0.848,
       "subio": false,
-      "minutos": 59,
-      "cuando": "2026-09-03 18:05:22"
-    },
-    {
-      "sesion": 3,
-      "veredicto": 0.851,
-      "adoptadas": 0,
-      "mejor": 0.8590000000000001,
-      "subio": false,
-      "minutos": 65,
-      "cuando": "2026-09-03 19:10:38"
-    },
-    {
-      "sesion": 4,
-      "veredicto": 0.8540000000000001,
-      "adoptadas": 0,
-      "mejor": 0.8590000000000001,
-      "subio": false,
-      "minutos": 62,
-      "cuando": "2026-09-03 20:12:32"
-    },
-    {
-      "sesion": 5,
-      "veredicto": 0.871,
-      "adoptadas": 0,
-      "mejor": 0.8590000000000001,
-      "subio": false,
-      "minutos": 62,
-      "cuando": "2026-09-03 21:14:50"
+      "minutos": 38,
+      "cuando": "2026-09-04 00:04:39"
     }
   ],
-  "mejor": 0.8590000000000001
+  "mejor": 0.848
 }

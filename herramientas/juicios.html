@@ -43,12 +43,29 @@
                border-radius:0 5px 5px 0; margin:0 0 14px; font-size:14px; }
  .entrenando small { color:var(--tenue); }
  .entrenando .tenue { color:var(--tenue); font-size:13px; }
- .progreso { height:7px; background:#efe6d2; border-radius:4px; overflow:hidden; margin:9px 0 5px; }
- .progreso i { display:block; height:100%; background:var(--laton); border-radius:4px;
-               transition:width .6s ease; }
+ /* La barra respira mientras entrena. No es adorno: una barra quieta a mitad de
+    camino no se distingue de una barra congelada porque el proceso ha muerto, y
+    el nocturno tarda media hora por sesión. Moviéndose se ve de un vistazo que
+    aquello sigue vivo. */
+ .progreso { height:8px; background:#efe6d2; border-radius:4px; overflow:hidden;
+             margin:9px 0 5px; position:relative; }
+ .progreso i { display:block; height:100%; border-radius:4px; position:relative;
+               overflow:hidden; transition:width 1s linear;
+               background:linear-gradient(90deg, #A8813A, var(--laton)); }
+ /* El brillo que recorre lo ya hecho. */
+ .progreso i::after { content:""; position:absolute; inset:0;
+   background:linear-gradient(90deg, transparent 0%, rgba(255,255,255,.55) 50%, transparent 100%);
+   animation:brillo 1.8s ease-in-out infinite; }
+ @keyframes brillo { from { transform:translateX(-100%) } to { transform:translateX(100%) } }
+ /* Y un latido suave en el borde de avance, donde está trabajando ahora. */
+ .progreso::after { content:""; position:absolute; inset:0; border-radius:4px;
+   box-shadow:inset 0 0 0 1px rgba(138,100,32,.22); pointer-events:none; }
  .progreso.indeterminada i { width:35%; animation:vaiven 2.4s ease-in-out infinite; }
  @keyframes vaiven { 0%,100% { margin-left:0 } 50% { margin-left:65% } }
- @media (prefers-reduced-motion:reduce) { .progreso.indeterminada i { animation:none; width:100%; opacity:.4 } }
+ @media (prefers-reduced-motion:reduce) {
+   .progreso.indeterminada i { animation:none; width:100%; opacity:.4 }
+   .progreso i::after { animation:none; opacity:0 }
+ }
  .reloj { display:flex; justify-content:space-between; font:11px ui-monospace,monospace;
           color:var(--tenue); margin-bottom:6px; }
  .parado { color:var(--tenue); font-size:13.5px; margin:0 0 14px; }
