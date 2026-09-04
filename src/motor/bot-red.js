@@ -13,7 +13,7 @@
 // juega con basura.
 
 import { evaluar } from "./red.js";
-import { movimientosLegales, banderaQueCorona } from "./motor.js";
+import { movimientosLegales, banderaQueCorona, aplicar, sonAliados } from "./motor.js";
 import { TORRE } from "./tablero.js";
 import { despliegueAleatorio, puntuarAcciones, PESOS_BASE, DISTANCIA } from "./bot.js";
 import { NIVELES, nivelValido, configuracionDeNivel } from "./dificultad.js";
@@ -82,6 +82,72 @@ export function accionConRed(estado, color, red, { candidatas = 12, azar = Math.
   let mejorValor = -Infinity;
   for (const { accion } of finalistas) {
     const valor = evaluar(red, rasgosDeJugada(estado, color, accion, contexto));
+    if (valor > mejorValor) {
+      mejorValor = valor;
+      mejor = accion;
+    }
+  }
+  return mejor;
+}
+
+// --- Mirando una jugada más allá ---------------------------------------------
+//
+// EL BOT NO MIRABA NADA. `aplicar` no aparecía ni una vez en bot.js, bot-red.js
+// ni rasgos-jugada.js: se puntuaba el par (posición, jugada) desde el estado
+// actual y se cogía el máximo. Medio ply, sin ver el tablero resultante ni la
+// respuesta de nadie.
+//
+// Aquí se juega la jugada y se mira qué puede hacer el siguiente. Como la red
+// evalúa pares (posición, jugada) y no posiciones sueltas, no se puede "evaluar
+// el tablero resultante": lo que se hace es preguntarle a la MISMA red cuánto le
+// gusta al siguiente en turno su mejor jugada desde ahí.
+//
+// En un juego de cuatro el siguiente no siempre es un enemigo. Si es el
+// compañero, que tenga una buena jugada es bueno para mí, así que suma en vez de
+// restar — y suma menos, porque su turno me ayuda menos de lo que me perjudica
+// el de un rival.
+export function accionConRedProfunda(
+  estado, color, red,
+  { candidatas = 12, respuestas = 6, peso = 0.6, pesoAliado = 0.3, azar = Math.random, pesos = PESOS_BASE } = {}
+) {
+  const puntuadas = puntuarAcciones(estado, color, { pesos, azar });
+  if (!puntuadas.length) return null;
+  const finalistas = puntuadas.slice(0, Math.min(candidatas, puntuadas.length));
+  if (finalistas.length === 1) return finalistas[0].accion;
+
+  const contexto = contextoDeTurno(estado, color, analizarTurno(estado, color, DISTANCIA));
+  let mejor = finalistas[0].accion;
+  let mejorValor = -Infinity;
+
+  for (const { accion } of finalistas) {
+    const mio = evaluar(red, rasgosDeJugada(estado, color, accion, contexto));
+
+    let ajuste = 0;
+    try {
+      const despues = aplicar(estado, accion);
+      // Una decisión pendiente congela el turno y no se sabe quién movería: se
+      // deja la jugada con su valor a secas en vez de inventarse una respuesta.
+      if (!despues.fin && !despues.pendiente) {
+        const otro = despues.turno;
+        const suyas = puntuarAcciones(despues, otro, { pesos, azar })
+          .slice(0, respuestas)
+          .map((x) => x.accion);
+        if (suyas.length) {
+          const suContexto = contextoDeTurno(despues, otro, analizarTurno(despues, otro, DISTANCIA));
+          let suMejor = -Infinity;
+          for (const a of suyas) {
+            const v = evaluar(red, rasgosDeJugada(despues, otro, a, suContexto));
+            if (v > suMejor) suMejor = v;
+          }
+          const aliado = sonAliados(estado, otro, color);
+          ajuste = (aliado ? pesoAliado : -peso) * suMejor;
+        }
+      }
+    } catch {
+      // Si la jugada no se puede aplicar por lo que sea, vale su nota a secas.
+    }
+
+    const valor = mio + ajuste;
     if (valor > mejorValor) {
       mejorValor = valor;
       mejor = accion;

@@ -65,7 +65,7 @@ function clonar(estado) {
   return JSON.parse(JSON.stringify(estado));
 }
 
-function sonAliados(estado, a, b) {
+export function sonAliados(estado, a, b) {
   return a === b || SOCIO[a] === b;
 }
 

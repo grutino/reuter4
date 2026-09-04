@@ -43,6 +43,9 @@ function opciones(argv) {
   };
   for (let i = 2; i < argv.length; i += 2) {
     const clave = argv[i].replace(/^--/, "");
+    // `--a` no es un número, es la carpeta donde guardar. Se salta aquí y se lee
+    // más abajo, donde toca escribir.
+    if (clave === "a") continue;
     if (!(clave in o)) throw new Error(`opción desconocida: ${argv[i]}`);
     o[clave] = Number(argv[i + 1]);
   }
@@ -243,7 +246,11 @@ async function main() {
 
   console.log(`  Mejor de todas las rondas: ${(mejorVictorias * 100).toFixed(0)}% de victorias`);
 
-  const salida = path.join(AQUI, "modelos", "red-jugada.json");
+  // `--a <carpeta>` guarda en otro sitio: hace falta para barrer variantes sin
+  // que cada una pise a la anterior ni al modelo bueno.
+  const iA = process.argv.indexOf("--a");
+  const carpeta = iA > 0 ? process.argv[iA + 1] : path.join(AQUI, "modelos");
+  const salida = path.join(carpeta, "red-jugada.json");
   fs.mkdirSync(path.dirname(salida), { recursive: true });
   if (!o.seco) fs.writeFileSync(salida, JSON.stringify({
     activacion: ACTIVACION,

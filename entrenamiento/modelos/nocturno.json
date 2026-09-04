@@ -1,0 +1,33 @@
+{
+  "creado": "2026-09-04 19:47:11",
+  "sesiones": [
+    {
+      "sesion": 1,
+      "veredicto": 0.905,
+      "adoptadas": 0,
+      "mejor": 0.905,
+      "subio": true,
+      "minutos": 38,
+      "cuando": "2026-09-04 20:24:45"
+    },
+    {
+      "sesion": 2,
+      "veredicto": 0.899,
+      "adoptadas": 0,
+      "mejor": 0.905,
+      "subio": false,
+      "minutos": 39,
+      "cuando": "2026-09-04 21:04:11"
+    },
+    {
+      "sesion": 3,
+      "veredicto": 0.9,
+      "adoptadas": 0,
+      "mejor": 0.905,
+      "subio": false,
+      "minutos": 37,
+      "cuando": "2026-09-04 21:41:20"
+    }
+  ],
+  "mejor": 0.905
+}

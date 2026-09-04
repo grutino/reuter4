@@ -1,15 +1,15 @@
 {
   "firmaRasgos": "bef94320",
-  "creado": "2026-09-04T01:03:16.513Z",
+  "creado": "2026-09-03T12:23:14.986Z",
   "opciones": {
-    "rondas": 6,
+    "rondas": 8,
     "partidas": 400,
     "epocas": 60,
     "lote": 64,
     "decaimiento": 0.001,
     "ocultaDespliegue": 16,
     "ocultaJugada": 28,
-    "semilla": 31677,
+    "semilla": 1,
     "limite": 400,
     "candidatas": 12,
     "candidatos": 30,
@@ -28,102 +28,100 @@
     "seco": 0,
     "pesoEscenarios": 40,
     "pasadasJuicios": 0,
-    "pasadasJuiciosDespliegue": 8,
-    "nucleos": 0,
     "soloRed": 1,
     "anclaPares": 1,
     "paresPorPosicion": 6,
     "paresSueltos": 14,
     "muestreoPares": 8,
-    "veredictoBase": 4000012,
+    "veredictoBase": 0,
     "margen": 1
   },
-  "perdidaValidacion": 0.6480675388374934,
-  "victoriasEnJuego": 0.9228070175438596,
+  "perdidaValidacion": 0.6344854729692043,
+  "victoriasEnJuego": 0.9294532627865961,
   "curva": [
     {
       "epoca": 5,
-      "entrenamiento": 0.66303,
-      "validacion": 0.65944,
-      "aciertoEntrenamiento": 0.5794,
-      "aciertoValidacion": 0.59
+      "entrenamiento": 0.63155,
+      "validacion": 0.63561,
+      "aciertoEntrenamiento": 0.6364,
+      "aciertoValidacion": 0.6325
     },
     {
       "epoca": 10,
-      "entrenamiento": 0.6662,
-      "validacion": 0.66452,
-      "aciertoEntrenamiento": 0.5803,
-      "aciertoValidacion": 0.5917
+      "entrenamiento": 0.63005,
+      "validacion": 0.63465,
+      "aciertoEntrenamiento": 0.6369,
+      "aciertoValidacion": 0.6317
     },
     {
       "epoca": 15,
-      "entrenamiento": 0.66614,
-      "validacion": 0.66568,
-      "aciertoEntrenamiento": 0.5789,
-      "aciertoValidacion": 0.5825
+      "entrenamiento": 0.62905,
+      "validacion": 0.63449,
+      "aciertoEntrenamiento": 0.6361,
+      "aciertoValidacion": 0.6317
     },
     {
       "epoca": 20,
-      "entrenamiento": 0.66477,
-      "validacion": 0.6653,
-      "aciertoEntrenamiento": 0.5769,
-      "aciertoValidacion": 0.5842
+      "entrenamiento": 0.62797,
+      "validacion": 0.63471,
+      "aciertoEntrenamiento": 0.6361,
+      "aciertoValidacion": 0.6292
     },
     {
       "epoca": 25,
-      "entrenamiento": 0.66588,
-      "validacion": 0.66567,
-      "aciertoEntrenamiento": 0.5883,
-      "aciertoValidacion": 0.6075
+      "entrenamiento": 0.6272,
+      "validacion": 0.6348,
+      "aciertoEntrenamiento": 0.6367,
+      "aciertoValidacion": 0.625
     },
     {
       "epoca": 30,
-      "entrenamiento": 0.66458,
-      "validacion": 0.66367,
-      "aciertoEntrenamiento": 0.5867,
-      "aciertoValidacion": 0.605
+      "entrenamiento": 0.6263,
+      "validacion": 0.6348,
+      "aciertoEntrenamiento": 0.6375,
+      "aciertoValidacion": 0.6267
     },
     {
       "epoca": 35,
-      "entrenamiento": 0.66347,
-      "validacion": 0.6629,
-      "aciertoEntrenamiento": 0.5886,
-      "aciertoValidacion": 0.6108
+      "entrenamiento": 0.62568,
+      "validacion": 0.63527,
+      "aciertoEntrenamiento": 0.6383,
+      "aciertoValidacion": 0.6283
     },
     {
       "epoca": 40,
-      "entrenamiento": 0.6632,
-      "validacion": 0.66308,
-      "aciertoEntrenamiento": 0.5919,
-      "aciertoValidacion": 0.6083
+      "entrenamiento": 0.625,
+      "validacion": 0.63581,
+      "aciertoEntrenamiento": 0.6386,
+      "aciertoValidacion": 0.6308
     },
     {
       "epoca": 45,
-      "entrenamiento": 0.66106,
-      "validacion": 0.66219,
-      "aciertoEntrenamiento": 0.5939,
-      "aciertoValidacion": 0.6075
+      "entrenamiento": 0.62445,
+      "validacion": 0.63627,
+      "aciertoEntrenamiento": 0.6392,
+      "aciertoValidacion": 0.6292
     },
     {
       "epoca": 50,
-      "entrenamiento": 0.66012,
-      "validacion": 0.66223,
-      "aciertoEntrenamiento": 0.5967,
-      "aciertoValidacion": 0.6092
+      "entrenamiento": 0.62408,
+      "validacion": 0.63692,
+      "aciertoEntrenamiento": 0.6408,
+      "aciertoValidacion": 0.6275
     },
     {
       "epoca": 55,
-      "entrenamiento": 0.65705,
-      "validacion": 0.65928,
-      "aciertoEntrenamiento": 0.6056,
-      "aciertoValidacion": 0.6167
+      "entrenamiento": 0.62362,
+      "validacion": 0.63763,
+      "aciertoEntrenamiento": 0.6403,
+      "aciertoValidacion": 0.6267
     },
     {
       "epoca": 60,
-      "entrenamiento": 0.65644,
-      "validacion": 0.65823,
-      "aciertoEntrenamiento": 0.6056,
-      "aciertoValidacion": 0.615
+      "entrenamiento": 0.6233,
+      "validacion": 0.63796,
+      "aciertoEntrenamiento": 0.6406,
+      "aciertoValidacion": 0.6267
     }
   ],
   "red": {
@@ -1508,43 +1506,43 @@
   },
   "activacion": "leaky0.01",
   "origen": "coevolución",
-  "acierto": 0.615,
-  "errorEnJuego": 0.020942695414584777,
+  "acierto": 0.6316666666666667,
+  "errorEnJuego": 0.0209980262782904,
   "calibracion": [
     {
-      "n": 37,
-      "predicho": 0.07589533625681688,
-      "real": 0.08108108108108109
+      "n": 34,
+      "predicho": 0.05869033557961867,
+      "real": 0.006233223276847251
     },
     {
-      "n": 64,
-      "predicho": 0.16060381472415453,
-      "real": 0.16507027947007064
+      "n": 80,
+      "predicho": 0.15345841116976014,
+      "real": 0.17078176288508218
     },
     {
-      "n": 96,
-      "predicho": 0.24954042458820513,
-      "real": 0.2765740490198665
+      "n": 65,
+      "predicho": 0.2637117000212789,
+      "real": 0.18461538461538463
     },
     {
-      "n": 53,
-      "predicho": 0.34319325807691414,
-      "real": 0.25281529215142157
+      "n": 88,
+      "predicho": 0.35995019730651623,
+      "real": 0.37215294507189045
     },
     {
-      "n": 28,
-      "predicho": 0.4342630568372893,
-      "real": 0.5357142857142857
+      "n": 20,
+      "predicho": 0.4253439888343905,
+      "real": 0.25
     },
     {
-      "n": 129,
-      "predicho": 0.5852653576321137,
-      "real": 0.5185142993239419
+      "n": 426,
+      "predicho": 0.5831453548617735,
+      "real": 0.5846158451169496
     },
     {
-      "n": 793,
-      "predicho": 0.6075978073218907,
-      "real": 0.5783292488513222
+      "n": 487,
+      "predicho": 0.6049673188282408,
+      "real": 0.5861309872657907
     }
   ]
 }

@@ -308,16 +308,25 @@ function bloqueDeUso(usos) {
       <thead><tr><th>red</th><th>útiles</th><th>inertes</th><th>la mayor</th><th>R² lineal</th><th>ordena como una recta</th></tr></thead>
       <tbody>${filas}</tbody>
     </table>
-    <p class="sub">Las dos últimas columnas son la prueba de fuego: se ajusta la mejor función
-    <b>lineal</b> a los propios logits de la red y se mira si ordena igual que ella. Si ordena
-    igual, las capas ocultas no están comprando nada — la red podría ser una suma ponderada de sus
-    entradas y nadie notaría la diferencia. <b>Al 100% no es una red, es una recta con pasos
-    intermedios.</b></p>
-    <div class="nota">Que salga lineal no es un fallo de la red: es lo que se le ha enseñado. La
-    heurística es una suma ponderada de rasgos, o sea lineal por construcción, y destilar su orden
-    enseña exactamente eso. Por eso el barrido de capacidad salió plano —2, 8, 28 y 64 neuronas
-    ocultas daban el mismo acierto—: no faltaba capacidad, faltaba señal no lineal. Soltar el ancla
-    de la heurística y meter juicios humanos son las dos vías que pueden romperlo.</div>
+    <p class="sub">Las dos últimas columnas ajustan la mejor función <b>lineal</b> a los propios
+    logits de la red y miran si ordena igual que ella. Son un indicio, no un veredicto — y hay que
+    leerlas con cuidado.</p>
+    <div class="nota"><b>Un R² alto NO significa que las capas ocultas sobren.</b> Se comprobó
+    construyendo la red lineal equivalente y haciéndola jugar:
+    <table class="tabla" style="margin:10px 0">
+      <thead><tr><th></th><th>R² lineal</th><th>ordena igual</th><th>jugando</th></tr></thead>
+      <tbody>
+        <tr><td>las dos con capa oculta</td><td class="num">—</td><td class="num">—</td><td class="num">90,4% ±1,2</td></tr>
+        <tr><td>despliegue lineal, jugada no</td><td class="num">1,0000</td><td class="num">99,9%</td><td class="num">90,0% ±1,2</td></tr>
+        <tr><td>jugada lineal, despliegue no</td><td class="num">0,9731</td><td class="num">94,9%</td><td class="num">50,1% ±1,4</td></tr>
+      </tbody>
+    </table>
+    La red de <b>despliegue</b> sí es lineal: sus neuronas ocultas no cambian ni una partida. La de
+    <b>jugada</b> ordena igual que una recta el 95% de los pares y aun así juega cuarenta puntos
+    peor al sustituirla. Ese 5% no está repartido: está justo donde se decide, porque elegir jugada
+    es coger el máximo de unas cincuenta opciones y basta con equivocarse en las de arriba.
+    <b>R² y concordancia media engañan cuando lo que importa es el argmax; la única medida que vale
+    es jugar.</b></div>
   </section>`;
 }
 
