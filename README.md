@@ -294,19 +294,32 @@ no basta.
 Queda una pregunta abierta y más fina: si el ancla se puede **aflojar** por
 rondas —empezar con ella y bajarla— en vez de quitarla de golpe.
 
-### 3. Juzgar despliegues
+### 3. Juzgar despliegues — HECHO, y ya entran
 
-**Hecho**: `npm run juzgar-despliegues` compara dos colocaciones del mismo ejército y guarda cuál
-prefieres; `entrenar-despliegue.mjs` las aplica con la pérdida por pares en **dosis fija** por
-época. Cada partida terminada se archiva y `npm run cosechar` mete sus cuatro despliegues en el
-pozo, que se sirve antes que lo generado.
+**Hecho de punta a punta.** El taller vive en el propio juego (`/juicios`): se
+cosechan las partidas terminadas, se comparan dos colocaciones del mismo ejército
+y lo valorado entra en el entrenamiento. Están las 124 parejas valoradas, que dan
+99 órdenes directas y 1.018 pares cruzados desde los empates con signo.
 
-**Falta**: juzgar. Sin juicios no hay nada que aprender, y son la señal con más posibilidades de
-romper la linealidad del punto 0: una opinión humana sobre una formación no es una suma ponderada
-de sus rasgos.
+Y entran de verdad en los dos sitios: `entrenar-despliegue.mjs` y la coevolución
+del nocturno, que antes los ignoraba por completo.
 
-Se comparan de dos en dos y no se puntúan de uno en uno a propósito: dar notas absolutas deriva
-con el cansancio, elegir entre dos no. Y «parecidos» es información, no pereza.
+Medido lo que aportan, con un barrido de dosis:
+
+```
+pasadas   victorias   acierto en juicios apartados
+   0         78%              73%
+   1         78%              77%
+   8         79%              92%      <- el punto
+  30         58%              92%
+```
+
+Ocho pasadas es donde aprende todo lo que hay que aprender y todavía no estorba.
+La red partía de coincidir con Patxi el 52% de las veces —una moneda— y acaba en
+el 92% sobre pares que no ha visto.
+
+**Falta**: nada para que funcionen. Más juicios siempre suman, sobre todo de
+partidas jugadas de verdad, que son los que se sirven primero.
 
 ### 4. Los tres rasgos de defensa — HECHO
 
