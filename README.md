@@ -205,7 +205,38 @@ suelta es ruidoso y sin ese aviso el listado parece decir cosas que no dice.
 En el orden en que conviene retomarlo. Cada punto dice qué hay hecho, qué falta y por qué está
 en ese sitio.
 
-### 0. Las redes son casi lineales, y eso explica la meseta
+### 0. Se entrena por un camino y se juega por otro
+
+**Lo más importante que hay abierto.** El servidor juega por CRIBA: `jugadaDeBot`
+deja que la heurística elija las mejores candidatas y la red solo las ordena.
+Pero la coevolución entrena con `--soloRed 1`, donde la red puntúa TODAS las
+jugadas legales. Son dos formas distintas de jugar, y se nota:
+
+```
+                        camino solo      camino criba
+                     (como se entrena)  (como juega el servidor)
+tras el nocturno         89,8% ±1,1        83,4% ±1,1
+el modelo publicado      89,0% ±1,1        90,2% ±1,1
+```
+
+El modelo recién entrenado es el mejor de los dos **en el camino con el que se
+entrena** y el peor **en el camino con el que de verdad se juega**, por casi
+siete puntos. Se está optimizando algo que luego no se usa.
+
+Por eso el modelo publicado sigue siendo el bueno y no se ha sustituido.
+
+Lo siguiente es alinear las dos cosas, y la dirección natural es entrenar con
+`--soloRed 0`: entrenar como se juega, no al revés. Antes de darlo por hecho hay
+que medirlo, porque el camino solo tiene una ventaja teórica -no queda atado al
+criterio de la heurística para elegir qué mirar-, pero esa ventaja no sirve de
+nada si nadie juega así.
+
+**Cuidado al medir esto**: `herramientas/medir.mjs` toma el camino como quinto
+argumento y los dos NO son comparables entre sí. Confundirlos ya costó anunciar
+un +3 que no existía, y una segunda vez leer como regresión de la reválida lo
+que era una medida mal alineada.
+
+### 1. Las redes son casi lineales, y eso explica la meseta
 
 **El hallazgo que reordena el resto.** Medido por ablación —poner a cero la salida de cada
 neurona oculta y ver cuánto se mueve la predicción, que es la única prueba que no depende de la
@@ -238,7 +269,7 @@ eso. La red converge a la mejor recta y ahí se queda.
 
 De ahí que los dos puntos siguientes sean los que valen la pena.
 
-### 1. El ancla de la heurística NO se suelta
+### 2. El ancla de la heurística NO se suelta
 
 **Resuelto, y al revés de lo que decía este punto.** Aquí ponía que la heurística
 «ya no aporta a la decisión» porque decidir con la red sola (90,3% ±1,0) y con la
