@@ -33,7 +33,7 @@ import { rasgosDeJugada, contextoDeTurno, NOMBRES as NOMBRES_RASGOS, TAMANO as T
 import { jugadaDeBot, jugadaSoloRed } from "./bot-red.js";
 import { cargarModelos } from "./modelos.js";
 import { ACTIVACION } from "./red.js";
-import { NIVELES, nivelValido, ESCALA, configuracionDeNivel } from "./dificultad.js";
+import { COMO_JUEGAN, configuracionDeBot } from "./dificultad.js";
 import { BATEN_ANILLO, BATEN_LA_TORRE, PASOS_A_TIRO, ANILLO as ANILLO_T } from "./tablero.js";
 import { salaParaJugador } from "../../servidor/vista.mjs";
 import { centro as centroEnInforme, reconstruirRangos, CELDA, MARGEN, LADO } from "../informe-partida.js";
@@ -348,7 +348,7 @@ prueba("la bandera queda suelta tras un empate y la recoge un tercero", () => {
   colocar(e, "rojo", 7, "H4", { bandera: true });
   colocar(e, "verde", 7, "G4");
   const tras = aplicar(e, accion(movimientosLegales(e), (a) => a.tipo === "atacar"));
-  assert.strictEqual(tras.banderasSueltas["H4"], "rojo");
+  assert.strictEqual(tras.banderasSueltas["H4"] && tras.banderasSueltas["H4"][0], "rojo");
 
   // tras el empate no quedaba nadie en el tablero, así que la partida se había dado por cerrada
   const e2 = { ...tras, turno: "verde", fin: null };
@@ -463,7 +463,7 @@ prueba("el cañón tampoco dispara al compañero", () => {
 prueba("recoger la bandera del compañero no da promoción", () => {
   const e = estadoVacio();
   colocar(e, "rojo", 4, "H4");
-  e.banderasSueltas["G4"] = "azul";
+  e.banderasSueltas["G4"] = ["azul"];
   e.banderas.azul = { portador: null, casilla: "G4", ultimoDueño: "azul" };
   e.bajas.rojo.push(9);
   const tras = recogerLaBandera(aplicar(e, accion(movimientosLegales(e), (a) => a.hasta === "G4")));
@@ -475,7 +475,7 @@ prueba("recoger la bandera del compañero no da promoción", () => {
 prueba("recoger del suelo la bandera enemiga sí da promoción", () => {
   const e = estadoVacio();
   colocar(e, "rojo", 4, "H4");
-  e.banderasSueltas["G4"] = "verde";
+  e.banderasSueltas["G4"] = ["verde"];
   e.banderas.verde = { portador: null, casilla: "G4", ultimoDueño: "verde" };
   e.bajas.rojo.push(9);
   const tras = recogerLaBandera(aplicar(e, accion(movimientosLegales(e), (a) => a.hasta === "G4")));
@@ -487,7 +487,7 @@ prueba("recoger del suelo la bandera enemiga sí da promoción", () => {
 prueba("recuperar tu propia bandera no da promoción", () => {
   const e = estadoVacio();
   colocar(e, "rojo", 4, "H4");
-  e.banderasSueltas["G4"] = "rojo";
+  e.banderasSueltas["G4"] = ["rojo"];
   e.banderas.rojo = { portador: null, casilla: "G4", ultimoDueño: "rojo" };
   e.bajas.rojo.push(9);
   const tras = recogerLaBandera(aplicar(e, accion(movimientosLegales(e), (a) => a.hasta === "G4")));
@@ -530,7 +530,7 @@ prueba("la promoción por bandera no toca el contador de victorias", () => {
   const e = estadoVacio();
   e.marcador.rojo = 4;
   colocar(e, "rojo", 4, "H4");
-  e.banderasSueltas["G4"] = "verde";
+  e.banderasSueltas["G4"] = ["verde"];
   e.banderas.verde = { portador: null, casilla: "G4", ultimoDueño: "verde" };
   e.bajas.rojo.push(9);
   const tras = aplicar(e, accion(movimientosLegales(e), (a) => a.hasta === "G4"));
@@ -559,7 +559,7 @@ prueba("el cañón puede disparar aunque lleve la bandera", () => {
   const disparo = accion(movimientosLegales(e), (a) => a.tipo === "disparar");
   const tras = aplicar(e, disparo);
   assert.ok(!tras.piezas[canon.id], "el cañón se retira tras disparar");
-  assert.strictEqual(tras.banderasSueltas["H6"], "rojo", "la bandera queda donde estaba el cañón");
+  assert.strictEqual(tras.banderasSueltas["H6"] && tras.banderasSueltas["H6"][0], "rojo", "la bandera queda donde estaba el cañón");
   assert.strictEqual(tras.marcador.rojo, 1, "el cañonazo cuenta como victoria");
 });
 
@@ -568,13 +568,13 @@ console.log("\nRECOGER BANDERA");
 prueba("caer sobre una bandera suelta solo abre la decisión", () => {
   const e = estadoVacio();
   colocar(e, "rojo", 4, "H4");
-  e.banderasSueltas["G4"] = "verde";
+  e.banderasSueltas["G4"] = ["verde"];
   e.banderas.verde = { portador: null, casilla: "G4", ultimoDueño: "verde" };
   const tras = aplicar(e, accion(movimientosLegales(e), (a) => a.hasta === "G4"));
   assert.strictEqual(tras.pendiente.tipo, "recoger");
   assert.strictEqual(tras.pendiente.color, "rojo");
   assert.strictEqual(tras.pendiente.bandera, "verde");
-  assert.strictEqual(tras.banderasSueltas["G4"], "verde", "todavía no la ha cogido");
+  assert.strictEqual(tras.banderasSueltas["G4"] && tras.banderasSueltas["G4"][0], "verde", "todavía no la ha cogido");
   assert.strictEqual(tras.turno, "rojo", "el turno no pasa hasta decidir");
 });
 
@@ -582,11 +582,11 @@ prueba("renunciar deja la bandera en el suelo y pasa turno", () => {
   const e = estadoVacio();
   colocar(e, "rojo", 4, "H4");
   colocar(e, "verde", 4, "M8");
-  e.banderasSueltas["G4"] = "verde";
+  e.banderasSueltas["G4"] = ["verde"];
   e.banderas.verde = { portador: null, casilla: "G4", ultimoDueño: "verde" };
   const tras = renunciarARecoger(aplicar(e, accion(movimientosLegales(e), (a) => a.hasta === "G4")));
   assert.strictEqual(tras.pendiente, null);
-  assert.strictEqual(tras.banderasSueltas["G4"], "verde");
+  assert.strictEqual(tras.banderasSueltas["G4"] && tras.banderasSueltas["G4"][0], "verde");
   assert.ok(Object.values(tras.piezas).every((p) => p.bandera === null), "nadie la lleva");
   assert.notStrictEqual(tras.turno, "rojo", "tras decidir, el turno avanza");
 });
@@ -595,7 +595,7 @@ prueba("renunciar a una bandera enemiga no da promoción", () => {
   const e = estadoVacio();
   colocar(e, "rojo", 4, "H4");
   colocar(e, "verde", 4, "M8");
-  e.banderasSueltas["G4"] = "verde";
+  e.banderasSueltas["G4"] = ["verde"];
   e.banderas.verde = { portador: null, casilla: "G4", ultimoDueño: "verde" };
   e.bajas.rojo.push(9);
   const tras = renunciarARecoger(aplicar(e, accion(movimientosLegales(e), (a) => a.hasta === "G4")));
@@ -606,7 +606,7 @@ prueba("renunciar a una bandera enemiga no da promoción", () => {
 prueba("recoger la bandera propia en la torre gana la partida", () => {
   const e = estadoVacio();
   colocar(e, "rojo", 4, ANILLO);
-  e.banderasSueltas[TORRE] = "rojo";
+  e.banderasSueltas[TORRE] = ["rojo"];
   e.banderas.rojo = { portador: null, casilla: TORRE, ultimoDueño: "rojo" };
   const tras = aplicar(e, accion(movimientosLegales(e), (a) => a.hasta === TORRE));
   assert.strictEqual(tras.pendiente.tipo, "recoger");
@@ -620,11 +620,11 @@ prueba("renunciar en la torre no gana", () => {
   const e = estadoVacio();
   colocar(e, "rojo", 4, ANILLO);
   colocar(e, "verde", 4, "M8");
-  e.banderasSueltas[TORRE] = "rojo";
+  e.banderasSueltas[TORRE] = ["rojo"];
   e.banderas.rojo = { portador: null, casilla: TORRE, ultimoDueño: "rojo" };
   const tras = renunciarARecoger(aplicar(e, accion(movimientosLegales(e), (a) => a.hasta === TORRE)));
   assert.strictEqual(tras.fin, null);
-  assert.strictEqual(tras.banderasSueltas[TORRE], "rojo");
+  assert.deepStrictEqual(tras.banderasSueltas[TORRE], ["rojo"]);
 });
 
 prueba("quien ya lleva bandera no recibe la oferta", () => {
@@ -635,7 +635,7 @@ prueba("quien ya lleva bandera no recibe la oferta", () => {
   colocar(e, "verde", 4, "G4", { bandera: true });
   const tras = aplicar(e, accion(movimientosLegales(e), (a) => a.tipo === "atacar"));
   assert.strictEqual(tras.pendiente, null, "no puede llevar dos banderas");
-  assert.strictEqual(tras.banderasSueltas["G4"], "verde", "la del caído se queda en el suelo");
+  assert.strictEqual(tras.banderasSueltas["G4"] && tras.banderasSueltas["G4"][0], "verde", "la del caído se queda en el suelo");
   assert.ok(tras.eventos.some((ev) => ev.tipo === "bandera-en-el-suelo"));
 });
 
@@ -1088,80 +1088,8 @@ prueba("un modelo con otra firma de rasgos se rechaza aunque el tamaño cuadre",
 });
 
 
-prueba("la escala de dificultad es monótona", () => {
-  // Medido, la escalera da 36-50-63-75-88 por ciento. Esto no vuelve a medirla
-  // -son minutos de partidas- sino que vigila que nadie rompa el orden editando
-  // la tabla: la primera versión graduaba por esfuerzo de búsqueda y salía al
-  // revés (78-75-72), porque más candidatas no compran fuerza.
-  // OJO con cómo se enuncia esto: el nivel 3 tiene MÁS ruido que el 2 (0,5
-  // contra 0,35) y aun así es más fuerte, porque usa la red. El ruido solo
-  // ordena DENTRO de la misma clase de motor; entre clases manda la red. La
-  // primera versión de esta prueba exigía ruido decreciente en toda la escala y
-  // falló contra una tabla que estaba bien.
-  const niveles = [1, 2, 3, 4, 5].map((n) => NIVELES[n]);
-  for (let i = 1; i < niveles.length; i++) {
-    const antes = niveles[i - 1];
-    const ahora = niveles[i];
-    assert.ok(!antes.red || ahora.red, `el nivel ${i + 1} no usa la red y el ${i} sí`);
-    assert.ok(!antes.memoria || ahora.memoria, `el nivel ${i + 1} pierde la memoria que tiene el ${i}`);
-    if (antes.red === ahora.red) {
-      assert.ok(
-        ahora.ruido <= antes.ruido,
-        `el nivel ${i + 1} y el ${i} usan el mismo motor, y el ${i + 1} falla más (${ahora.ruido} contra ${antes.ruido})`
-      );
-    }
-  }
-  assert.strictEqual(niveles[4].ruido, 0, "el nivel máximo no debería fallar a propósito");
 
-  // Y SIN MODELO PUBLICADO. Los niveles altos caen a la heurística y entonces sus
-  // ruidos dejan de tener sentido: el 3 lleva 0,5 para compensar la ventaja de la
-  // red, así que sin red quedaría por debajo del 2, que lleva 0,35. La escalera
-  // se invertía justo en el tramo del medio, y pasa de verdad cada vez que se
-  // cambian los rasgos y los modelos publicados quedan rechazados.
-  const sinRed = [1, 2, 3, 4, 5].map((n) => configuracionDeNivel(n, false));
-  for (let i = 1; i < sinRed.length; i++) {
-    assert.ok(
-      sinRed[i].ruido <= sinRed[i - 1].ruido,
-      `sin modelo, el nivel ${i + 1} falla más (${sinRed[i].ruido}) que el ${i} (${sinRed[i - 1].ruido})`
-    );
-  }
-  assert.ok(sinRed.every((c) => !c.red), "sin modelo ningún nivel debería creerse que usa la red");
-  assert.strictEqual(niveles[0].memoria, false, "el nivel mínimo se distingue por no recordar");
-  assert.strictEqual(ESCALA.length, 5, "el cliente pinta cinco peldaños");
-});
 
-prueba("un nivel inválido cae al de por defecto en vez de romper", () => {
-  // Llega del WebSocket, así que puede venir cualquier cosa.
-  for (const malo of [0, 6, -1, 2.5, NaN, "tres", null, undefined, {}]) {
-    const n = nivelValido(malo);
-    assert.ok(NIVELES[n], `${JSON.stringify(malo)} dio ${n}, que no es un nivel`);
-  }
-  assert.strictEqual(nivelValido(3), 3, "un nivel bueno se respeta");
-});
-
-prueba("el bot de nivel 1 no mira los rangos revelados", () => {
-  // El nivel 1 se define por no tener memoria. Si la vista sin memoria se
-  // rompiera, el nivel más fácil jugaría como los demás y nadie lo notaría.
-  const e = estadoVacio();
-  const mio = colocar(e, "rojo", 5, "H4");
-  const suyo = colocar(e, "verde", 9, "H3");
-  e.rangosRevelados = { [suyo.id]: 9 };
-  const sembrado = (semilla) => { let a = semilla >>> 0; return () => { a = (a + 0x6d2b79f5) >>> 0; let x = a; x = Math.imul(x ^ (x >>> 15), x | 1); x ^= x + Math.imul(x ^ (x >>> 7), x | 61); return ((x ^ (x >>> 14)) >>> 0) / 4294967296; }; };
-  // Con memoria sabe que H3 es el mariscal y no ataca; sin memoria, a veces sí.
-  let ataquesSinMemoria = 0;
-  let ataquesConMemoria = 0;
-  for (let i = 0; i < 200; i++) {
-    const a = jugadaDeBot(e, "rojo", 1, {}, sembrado(i + 1));
-    const b = jugadaDeBot(e, "rojo", 2, {}, sembrado(i + 1));
-    if (a && a.tipo === "atacar" && a.hasta === "H3") ataquesSinMemoria++;
-    if (b && b.tipo === "atacar" && b.hasta === "H3") ataquesConMemoria++;
-  }
-  assert.ok(
-    ataquesSinMemoria > ataquesConMemoria,
-    `sin memoria atacó ${ataquesSinMemoria} veces al mariscal fichado y con memoria ${ataquesConMemoria}: ` +
-      `el nivel 1 debería estrellarse más`
-  );
-});
 
 
 prueba("la geometría de tiro al anillo existe y tiene gradiente", () => {
@@ -1849,7 +1777,7 @@ prueba("un hilo que no se puede reproducir lo dice, no lo intenta", () => {
 });
 
 
-prueba("ningún nivel tira una victoria inmediata por el ruido", () => {
+prueba("un bot que puede coronar corona, pase lo que pase", () => {
   // Visto jugando: un bot que podía coronar movió otra pieza y ganó un turno más
   // tarde. No era la red ni la heurística: era el RUIDO de la dificultad. Medido
   // antes del arreglo, el nivel 3 dejaba de coronar el 42% de las veces y el 4
@@ -1880,14 +1808,12 @@ prueba("ningún nivel tira una victoria inmediata por el ruido", () => {
     return e;
   };
 
-  for (const nivel of [1, 2, 3, 4, 5]) {
-    for (let i = 0; i < 60; i++) {
-      const elegida = jugadaDeBot(escenario(), "rojo", nivel, {}, sembrado(i + 1));
-      assert.strictEqual(
-        elegida && elegida.hasta, TORRE,
-        `nivel ${nivel}, azar ${i}: podía coronar y jugó otra cosa`
-      );
-    }
+  for (let i = 0; i < 200; i++) {
+    const elegida = jugadaDeBot(escenario(), "rojo", {}, sembrado(i + 1));
+    assert.strictEqual(
+      elegida && elegida.hasta, TORRE,
+      `azar ${i}: podía coronar y jugó otra cosa`
+    );
   }
 });
 
@@ -2080,6 +2006,69 @@ prueba("pesar un ejemplo equivale a repetirlo, y cuesta una pasada en vez de N",
   }
   assert.strictEqual(conCopias.length, 11, "la versión con copias hace 11 pasadas hacia delante");
   assert.strictEqual(conPeso.length, 5, "la de pesos hace 5, y sale lo mismo");
+});
+
+
+prueba("dos banderas caídas en la misma casilla no se comen la una a la otra", () => {
+  // Visto jugando: caen dos portadores en el mismo sitio y solo queda una
+  // bandera recogible. La otra no es que esté escondida, es que ha DESAPARECIDO
+  // del estado y no se puede recoger nunca más.
+  //
+  // Pasa fácil en el anillo, que es una sola casilla lógica donde se concentra
+  // todo el combate del final.
+  const e = estadoVacio();
+  // En G4 ya hay una bandera amarilla en el suelo, de un portador que cayó antes.
+  e.banderasSueltas["G4"] = ["amarillo"];
+  e.banderas.amarillo = { portador: null, casilla: "G4", ultimoDueño: "amarillo" };
+  // Y ahí mismo está un portador verde, que va a caer. Verde y amarillo son
+  // equipo, y los dos son enemigos del rojo que ataca.
+  const portador = colocar(e, "verde", 3, "G4");
+  portador.bandera = "verde";
+  e.banderas.verde = { portador: portador.id, casilla: null, ultimoDueño: "verde" };
+  colocar(e, "rojo", 9, "G3");
+
+  let tras = aplicar(e, accion(movimientosLegales(e), (a) => a.hasta === "G4" && a.tipo === "atacar"));
+  while (tras.pendiente) tras = renunciarARecoger(tras);
+
+  const sueltas = tras.banderasSueltas["G4"];
+  const cuantas = Array.isArray(sueltas) ? sueltas.length : sueltas ? 1 : 0;
+  assert.strictEqual(
+    cuantas, 2,
+    `en G4 tendría que haber DOS banderas caídas y hay ${cuantas}: ${JSON.stringify(sueltas)}`
+  );
+});
+
+
+prueba("de un montón de banderas se pueden recoger las dos, una por pieza", () => {
+  // Guardarlas las dos no sirve de nada si luego solo se puede coger una. Una
+  // pieza carga una sola bandera, así que hacen falta dos piezas — y la segunda
+  // tiene que encontrar todavía la que quedó.
+  const e = estadoVacio();
+  e.banderasSueltas["G4"] = ["amarillo", "verde"];
+  e.banderas.amarillo = { portador: null, casilla: "G4", ultimoDueño: "amarillo" };
+  e.banderas.verde = { portador: null, casilla: "G4", ultimoDueño: "verde" };
+  colocar(e, "rojo", 4, "H4");
+  colocar(e, "rojo", 5, "G3");
+
+  const primera = recogerLaBandera(aplicar(e, accion(movimientosLegales(e), (a) => a.hasta === "G4")));
+  const conBandera = Object.values(primera.piezas).filter((p) => p.bandera);
+  assert.strictEqual(conBandera.length, 1, "la primera pieza carga una sola bandera");
+  assert.deepStrictEqual(
+    primera.banderasSueltas["G4"], ["verde"],
+    "y en el suelo tiene que quedar la otra"
+  );
+
+  // La primera se aparta y la segunda va a por la que queda. Se fuerza el turno:
+  // lo que se prueba es que la bandera siga ahí, no el orden de los turnos.
+  const cargada = Object.values(primera.piezas).find((p) => p.bandera);
+  const libre = aplicar({ ...primera, turno: "rojo" }, { tipo: "mover", pieza: cargada.id, desde: "G4", hasta: "F4" });
+  const otra = Object.values(libre.piezas).find((p) => p.casilla === "G3");
+  const segunda = recogerLaBandera(
+    aplicar({ ...libre, turno: "rojo" }, { tipo: "mover", pieza: otra.id, desde: "G3", hasta: "G4" })
+  );
+  const cargadas = Object.values(segunda.piezas).filter((p) => p.bandera).map((p) => p.bandera).sort();
+  assert.deepStrictEqual(cargadas, ["amarillo", "verde"], "las dos banderas acaban cargadas");
+  assert.strictEqual(segunda.banderasSueltas["G4"], undefined, "y el suelo queda limpio");
 });
 
 

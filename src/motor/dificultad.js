@@ -1,65 +1,25 @@
-// Los cinco niveles de dificultad de un bot.
+// Cómo juegan los bots. Ya no hay niveles: todos juegan a tope.
 //
-// La dificultad no es un número que multiplique nada: es una combinación de
-// cuatro mandos que ya existían sueltos por el motor. Ponerlos juntos aquí evita
-// que "nivel 3" signifique una cosa en el servidor y otra en la simulación.
+// HUBO CINCO NIVELES y se han retirado a propósito. Graduaban la fuerza con
+// ruido -tirar por una candidata peor de vez en cuando- y con memoria, y la
+// escalera estaba medida y funcionaba. Pero un bot que falla adrede no es un
+// rival más fácil, es un rival que juega a otra cosa, y lo que se quiere aquí es
+// el mejor juego que las redes sepan dar.
 //
-//   red        si mira la red o se queda en la heurística
-//   candidatas cuántas jugadas evalúa la red antes de elegir
-//   ruido      con qué probabilidad tira por una candidata al azar
-//   memoria    si recuerda los rangos ya revelados en combate
-//   despliegue cuánto esfuerzo mete en montar la posición inicial
+// De todo aquello sobrevive lo único que no era un mando de dificultad sino una
+// decisión de fuerza: cuántas candidatas mira la red y cuánto esfuerzo mete en
+// el despliegue.
 //
-// Por qué la MEMORIA es el mando del nivel más bajo: es lo que separa al bot
-// clásico del actual, y su ausencia se nota jugando de una forma muy humana
-// -vuelve a estrellarse contra el mariscal que ya te enseñó-, en vez de parecer
-// un bot que juega mal a propósito.
-//
-// Y por qué hay RUIDO y no solo menos candidatas: un bot que siempre elige la
-// mejor de tres candidatas es predecible, y contra un humano eso se aprende en
-// diez partidas. El ruido lo hace fallar de vez en cuando sin volverlo tonto.
+// La lección de los niveles, por si alguna vez vuelven: los valores estaban
+// MEDIDOS, no elegidos a ojo, y la primera versión los graduó por esfuerzo de
+// búsqueda -más candidatas, más recocido- con el resultado de que la escalera
+// salió al revés. La fuerza no estaba ahí.
 
-// LOS VALORES ESTÁN MEDIDOS, NO ELEGIDOS A OJO. La primera versión graduaba los
-// niveles altos por esfuerzo de búsqueda -más candidatas, más recocido- y la
-// escalera salió al revés: 78%, 75%, 72% para los niveles 3, 4 y 5. Cruzando los
-// dos mandos por separado, con ruido cero, quedó claro que ninguno compra fuerza:
-//
-//    4 candidatas · despliegue 12/60     75%
-//   12 candidatas · despliegue 12/60     74%
-//    4 candidatas · despliegue 30/200    75%
-//   12 candidatas · despliegue 30/200    70%
-//
-// La ventaja de la red sobre la heurística está en la ordenación gruesa, no en
-// afinar entre muchas candidatas. Así que todos los niveles con red miran las
-// mismas 4 y despliegan con el mismo esfuerzo: fingir lo contrario sería vender
-// un mando que no hace nada, y encima cuesta tiempo de cálculo.
-//
-// Lo que sí gradúa es el RUIDO, medido contra un rival fijo:
-//
-//   con red    0,00 -> 75%   0,20 -> 73%   0,35 -> 64%   0,50 -> 54%   0,70 -> 38%
-//   sin red    0,00 -> 48%   0,30 -> 45%   0,60 -> 28%
-//
-// OJO: esa curva se midió cuando el ruido PODÍA tirar una victoria inmediata.
-// Desde que las jugadas que ganan están protegidas, la misma dosis hace mucho
-// menos daño -los niveles 3 y 4 saltaron de 69% y 83% a 83% y 93%- y hubo que
-// subirla para recuperar el espaciado. Es la consecuencia de arreglar el fallo,
-// no un ajuste caprichoso.
-//
-// Escalera medida con los valores actuales: 38-50-74-82-95. El salto grande del
-// 2 al 3 es estructural, ahí es donde entra la red.
-//
-// La curva es plana hasta 0,2 y luego cae: elegir entre las seis mejores una de
-// cada cinco veces casi no duele, porque las seis son razonables. De ahí salen
-// los cinco peldaños, espaciados de verdad.
-// Se exporta porque quien mide y quien entrena tienen que usar el MISMO número
-// que el servidor: cribar a doce y jugar cribando a cuatro son dos juegos
-// distintos, y la red entrenada en uno no vale para el otro.
-//
-// FUE 4 Y AHORA ES 12. El 4 estaba medido y la medida era correcta -"4
-// candidatas 75%, 12 candidatas 74%"- pero se hizo con una red que apenas
-// distinguía entre jugadas, a la que darle más opciones solo le daba más formas
-// de equivocarse. El número se quedó fijo mientras la red mejoraba. Remedido con
-// la red de ahora:
+// CUÁNTAS CANDIDATAS MIRA LA RED antes de elegir. Fue 4 durante mucho tiempo,
+// con una medida correcta de su época: "4 candidatas 75%, 12 candidatas 74%".
+// Pero esa medida se hizo con una red que apenas distinguía entre jugadas, a la
+// que darle más opciones solo le daba más formas de equivocarse. El número se
+// quedó fijo mientras la red mejoraba. Remedido con la red de ahora:
 //
 //    4 candidatas   84,2% ±1,3
 //    8              88,6%  ·  90,8%   (dos semillas)
@@ -68,73 +28,40 @@
 //   40              88,4%
 //
 // Entre 8 y 20 la diferencia no se distingue del ruido -el orden se invierte al
-// cambiar de semilla-, pero el 4 pierde seis puntos en las dos. Se pone 12 por
-// estar en el centro de esa meseta y por ser el número con el que ya se entrena
-// y se mide.
-// Comprobado que la escalera aguanta el cambio: cada nivel sigue ganando al de
-// abajo -57%, 76%, 69%, 85% en 40 partidas por peldaño-, porque lo que los
-// separa es el ruido y no cuántas candidatas miran.
+// cambiar de semilla-, pero el 4 pierde seis puntos en las dos. De ahí el 12,
+// que además es el número con el que se entrena y se mide.
+//
+// La moraleja vale más que el número: un parámetro medido caduca cuando cambia
+// aquello sobre lo que se midió.
 export const CANDIDATAS_UTILES = 12;
-const DESPLIEGUE_UTIL = { candidatosDespliegue: 12, escalada: 60 };
 
-export const NIVELES = {
-  1: {
-    nombre: "Recluta",
-    descripcion: "No recuerda lo que ha visto en combate y se despista mucho.",
-    red: false, candidatas: 1, ruido: 0.6, memoria: false,
-    candidatosDespliegue: 0, escalada: 0,
-  },
-  2: {
-    nombre: "Veterano",
-    descripcion: "Recuerda los rangos revelados, pero juega de heurística y falla a menudo.",
-    red: false, candidatas: 1, ruido: 0.35, memoria: true,
-    candidatosDespliegue: 0, escalada: 0,
-  },
-  3: {
-    nombre: "Oficial",
-    descripcion: "Usa la red entrenada y despliega con ella, aunque se equivoca la mitad de las veces.",
-    red: true, candidatas: CANDIDATAS_UTILES, ruido: 0.64, memoria: true, ruidoSinRed: 0.2, ...DESPLIEGUE_UTIL,
-  },
-  4: {
-    nombre: "Coronel",
-    descripcion: "La red entrenada con pocos despistes.",
-    red: true, candidatas: CANDIDATAS_UTILES, ruido: 0.5, memoria: true, ruidoSinRed: 0.08, ...DESPLIEGUE_UTIL,
-  },
-  5: {
-    nombre: "Mariscal",
-    descripcion: "Todo lo que sabe, sin un solo fallo deliberado.",
-    red: true, candidatas: CANDIDATAS_UTILES, ruido: 0, memoria: true, ruidoSinRed: 0, ...DESPLIEGUE_UTIL,
-  },
-};
-
-// SIN MODELO PUBLICADO, los niveles altos caen a la heurística, y entonces sus
-// ruidos dejan de tener sentido: el nivel 3 lleva 0,5 porque compensa la ventaja
-// de la red, así que sin red quedaría por DEBAJO del nivel 2, que lleva 0,35. La
-// escalera se invertía justo en el tramo del medio.
+// MIRAR LA RESPUESTA DEL SIGUIENTE antes de mover. Hasta que se añadió, ningún
+// bot miraba nada: `aplicar` no aparecía ni una vez en bot.js ni en bot-red.js,
+// así que se elegía la mejor jugada según el estado ACTUAL, sin ver el tablero
+// resultante ni lo que podía hacer nadie después. Medido en dos semillas
+// independientes: 93,4% y 93,2%, contra 90,3% y 90,4% sin ello.
 //
-// Pasa de verdad y no es una hipótesis: al cambiar los rasgos, los modelos
-// publicados quedan rechazados hasta que se reentrena y se vuelve a publicar, y
-// mientras tanto los cuatro bots juegan de heurística.
-//
-// Así que cada nivel con red trae también el ruido que le toca cuando no la hay,
-// escalonado sobre la curva medida de la heurística sola (0,00 -> 48%,
-// 0,30 -> 45%, 0,60 -> 28% contra el nivel 2).
-export function configuracionDeNivel(nivel, hayRed) {
-  const cfg = NIVELES[nivelValido(nivel)];
-  if (cfg.red && !hayRed && cfg.ruidoSinRed !== undefined) {
-    return { ...cfg, red: false, ruido: cfg.ruidoSinRed };
-  }
-  return cfg;
+// Cuesta x10,8 por turno -de 1,74 ms a 18,82- y el servidor mueve los bots de
+// todas las salas en el mismo temporizador. Con partidas sueltas no se nota;
+// si algún día hay muchas a la vez, este es el mando que hay que mirar.
+export const MIRAR_LA_RESPUESTA = true;
+
+export const COMO_JUEGAN = Object.freeze({
+  red: true,
+  candidatas: CANDIDATAS_UTILES,
+  profundo: MIRAR_LA_RESPUESTA,
+  // Recordar los rangos ya revelados en combate. Sin esto el bot vuelve a
+  // estrellarse contra el mariscal que ya le enseñó, que era el mando del nivel
+  // más bajo de los de antes.
+  memoria: true,
+  candidatosDespliegue: 12,
+  escalada: 60,
+  // Sin ruido: cero jugadas tiradas a propósito.
+  ruido: 0,
+  ruidoSinRed: 0,
+});
+
+// Sin modelo publicado los bots caen a la heurística, que sigue jugando bien.
+export function configuracionDeBot(hayRed) {
+  return hayRed ? COMO_JUEGAN : { ...COMO_JUEGAN, red: false, profundo: false, candidatas: 1 };
 }
-
-export const NIVEL_POR_DEFECTO = 4;
-
-export function nivelValido(n) {
-  const k = Number(n);
-  return Number.isInteger(k) && k >= 1 && k <= 5 ? k : NIVEL_POR_DEFECTO;
-}
-
-// Lo que el cliente necesita para pintar el selector, sin exponer los mandos.
-export const ESCALA = Object.entries(NIVELES).map(([n, v]) => ({
-  nivel: Number(n), nombre: v.nombre, descripcion: v.descripcion,
-}));

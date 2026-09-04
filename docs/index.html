@@ -86,16 +86,25 @@ victorias contra la heurística escrita a mano</b>; lo demás es diagnóstico.</
       <td class="num">99.9%<div class="barrita"><i style="width:100%;background:var(--mal)"></i></div></td>
     </tr></tbody>
     </table>
-    <p class="sub">Las dos últimas columnas son la prueba de fuego: se ajusta la mejor función
-    <b>lineal</b> a los propios logits de la red y se mira si ordena igual que ella. Si ordena
-    igual, las capas ocultas no están comprando nada — la red podría ser una suma ponderada de sus
-    entradas y nadie notaría la diferencia. <b>Al 100% no es una red, es una recta con pasos
-    intermedios.</b></p>
-    <div class="nota">Que salga lineal no es un fallo de la red: es lo que se le ha enseñado. La
-    heurística es una suma ponderada de rasgos, o sea lineal por construcción, y destilar su orden
-    enseña exactamente eso. Por eso el barrido de capacidad salió plano —2, 8, 28 y 64 neuronas
-    ocultas daban el mismo acierto—: no faltaba capacidad, faltaba señal no lineal. Soltar el ancla
-    de la heurística y meter juicios humanos son las dos vías que pueden romperlo.</div>
+    <p class="sub">Las dos últimas columnas ajustan la mejor función <b>lineal</b> a los propios
+    logits de la red y miran si ordena igual que ella. Son un indicio, no un veredicto — y hay que
+    leerlas con cuidado.</p>
+    <div class="nota"><b>Un R² alto NO significa que las capas ocultas sobren.</b> Se comprobó
+    construyendo la red lineal equivalente y haciéndola jugar:
+    <table class="tabla" style="margin:10px 0">
+      <thead><tr><th></th><th>R² lineal</th><th>ordena igual</th><th>jugando</th></tr></thead>
+      <tbody>
+        <tr><td>las dos con capa oculta</td><td class="num">—</td><td class="num">—</td><td class="num">90,4% ±1,2</td></tr>
+        <tr><td>despliegue lineal, jugada no</td><td class="num">1,0000</td><td class="num">99,9%</td><td class="num">90,0% ±1,2</td></tr>
+        <tr><td>jugada lineal, despliegue no</td><td class="num">0,9731</td><td class="num">94,9%</td><td class="num">50,1% ±1,4</td></tr>
+      </tbody>
+    </table>
+    La red de <b>despliegue</b> sí es lineal: sus neuronas ocultas no cambian ni una partida. La de
+    <b>jugada</b> ordena igual que una recta el 95% de los pares y aun así juega cuarenta puntos
+    peor al sustituirla. Ese 5% no está repartido: está justo donde se decide, porque elegir jugada
+    es coger el máximo de unas cincuenta opciones y basta con equivocarse en las de arriba.
+    <b>R² y concordancia media engañan cuando lo que importa es el argmax; la única medida que vale
+    es jugar.</b></div>
   </section><section>
       <h2>Coevolución</h2>
       <p class="sub">Las dos redes juegan entre ellas y se reentrenan con esas partidas, contra una
@@ -106,14 +115,14 @@ victorias contra la heurística escrita a mano</b>; lo demás es diagnóstico.</
       con semillas nuevas. Conservar la nota con la que fue elegido lo hacía competir con una nota
       inflada -fue elegido justamente por tener suerte en esas partidas- y el listón se volvía
       inalcanzable: doce rondas seguidas descartadas.</p>
-      <dl class="fichas"><div class="ficha"><dt>veredicto en semillas frescas</dt><dd>—</dd></div><div class="ficha"><dt>titular en la última ronda</dt><dd>89%</dd></div><div class="ficha"><dt>rondas</dt><dd>5</dd></div><div class="ficha"><dt>adoptadas</dt><dd>0<small> de 5</small></dd></div><div class="ficha"><dt>formaciones archivadas</dt><dd>25</dd></div><div class="ficha"><dt>tiempo</dt><dd>31 min</dd></div></dl>
+      <dl class="fichas"><div class="ficha"><dt>veredicto en semillas frescas</dt><dd>—</dd></div><div class="ficha"><dt>titular en la última ronda</dt><dd>90%</dd></div><div class="ficha"><dt>rondas</dt><dd>3</dd></div><div class="ficha"><dt>adoptadas</dt><dd>0<small> de 3</small></dd></div><div class="ficha"><dt>formaciones archivadas</dt><dd>15</dd></div><div class="ficha"><dt>tiempo</dt><dd>17 min</dd></div></dl>
       
       <figure><figcaption>Verde: el titular, remedido en partidas nuevas cada ronda. Azul: el aspirante de esa ronda.</figcaption><div class="lienzo"><svg viewBox="0 0 700 190" role="img"><g><line x1="50" y1="164" x2="686" y2="164" stroke="var(--filo)" opacity=".45"/>
         <text x="43" y="167.5" fill="var(--tenue)" font-size="10" text-anchor="end" font-family="'IBM Plex Mono',monospace">0%</text><line x1="50" y1="126.5" x2="686" y2="126.5" stroke="var(--filo)" opacity=".45"/>
         <text x="43" y="130" fill="var(--tenue)" font-size="10" text-anchor="end" font-family="'IBM Plex Mono',monospace">25%</text><line x1="50" y1="89" x2="686" y2="89" stroke="var(--filo)" opacity=".45"/>
         <text x="43" y="92.5" fill="var(--tenue)" font-size="10" text-anchor="end" font-family="'IBM Plex Mono',monospace">50%</text><line x1="50" y1="51.5" x2="686" y2="51.5" stroke="var(--filo)" opacity=".45"/>
         <text x="43" y="55" fill="var(--tenue)" font-size="10" text-anchor="end" font-family="'IBM Plex Mono',monospace">75%</text><line x1="50" y1="14" x2="686" y2="14" stroke="var(--filo)" opacity=".45"/>
-        <text x="43" y="17.5" fill="var(--tenue)" font-size="10" text-anchor="end" font-family="'IBM Plex Mono',monospace">100%</text></g><path d="M50.0,28.1 L209.0,32.1 L368.0,28.3 L527.0,23.5 L686.0,30.9" fill="none" stroke="var(--bien)" stroke-width="2"  stroke-linejoin="round"/><path d="M50.0,31.8 L209.0,51.3 L368.0,83.4 L527.0,32.0 L686.0,48.8" fill="none" stroke="var(--dato)" stroke-width="1.5"  stroke-linejoin="round"/><rect x="56" y="14" width="10" height="3" fill="var(--bien)"/>
+        <text x="43" y="17.5" fill="var(--tenue)" font-size="10" text-anchor="end" font-family="'IBM Plex Mono',monospace">100%</text></g><path d="M50.0,28.1 L368.0,32.1 L686.0,28.3" fill="none" stroke="var(--bien)" stroke-width="2"  stroke-linejoin="round"/><path d="M50.0,49.5 L368.0,51.4 L686.0,64.6" fill="none" stroke="var(--dato)" stroke-width="1.5"  stroke-linejoin="round"/><rect x="56" y="14" width="10" height="3" fill="var(--bien)"/>
       <text x="71" y="18" fill="var(--tenue)" font-size="11" font-family="'IBM Plex Mono',monospace">titular, remedido cada ronda</text><rect x="204" y="14" width="10" height="3" fill="var(--dato)"/>
       <text x="219" y="18" fill="var(--tenue)" font-size="11" font-family="'IBM Plex Mono',monospace">aspirante de la ronda</text>
     <text x="686" y="184" fill="var(--tenue)" font-size="10" text-anchor="end" font-family="'IBM Plex Mono',monospace">ronda</text></svg></div></figure>
@@ -122,7 +131,7 @@ victorias contra la heurística escrita a mano</b>; lo demás es diagnóstico.</
         <text x="43" y="130" fill="var(--tenue)" font-size="10" text-anchor="end" font-family="'IBM Plex Mono',monospace">25%</text><line x1="50" y1="89" x2="686" y2="89" stroke="var(--filo)" opacity=".45"/>
         <text x="43" y="92.5" fill="var(--tenue)" font-size="10" text-anchor="end" font-family="'IBM Plex Mono',monospace">50%</text><line x1="50" y1="51.5" x2="686" y2="51.5" stroke="var(--filo)" opacity=".45"/>
         <text x="43" y="55" fill="var(--tenue)" font-size="10" text-anchor="end" font-family="'IBM Plex Mono',monospace">75%</text><line x1="50" y1="14" x2="686" y2="14" stroke="var(--filo)" opacity=".45"/>
-        <text x="43" y="17.5" fill="var(--tenue)" font-size="10" text-anchor="end" font-family="'IBM Plex Mono',monospace">100%</text></g><path d="M50.0,50.2 L209.0,64.0 L368.0,63.2 L527.0,61.7 L686.0,45.2" fill="none" stroke="var(--mal)" stroke-width="2"  stroke-linejoin="round"/><path d="M50.0,115.1 L209.0,110.9 L368.0,105.5 L527.0,113.9 L686.0,121.3" fill="none" stroke="var(--laton)" stroke-width="1.5"  stroke-linejoin="round"/><path d="M50.0,89.0 L209.0,89.0 L368.0,89.0 L527.0,89.0 L686.0,89.0" fill="none" stroke="var(--tenue)" stroke-width="1.5" stroke-dasharray="4 4" stroke-linejoin="round"/><rect x="56" y="14" width="10" height="3" fill="var(--mal)"/>
+        <text x="43" y="17.5" fill="var(--tenue)" font-size="10" text-anchor="end" font-family="'IBM Plex Mono',monospace">100%</text></g><path d="M50.0,19.1 L368.0,44.4 L686.0,44.8" fill="none" stroke="var(--mal)" stroke-width="2"  stroke-linejoin="round"/><path d="M50.0,103.2 L368.0,108.5 L686.0,115.4" fill="none" stroke="var(--laton)" stroke-width="1.5"  stroke-linejoin="round"/><path d="M50.0,89.0 L368.0,89.0 L686.0,89.0" fill="none" stroke="var(--tenue)" stroke-width="1.5" stroke-dasharray="4 4" stroke-linejoin="round"/><rect x="56" y="14" width="10" height="3" fill="var(--mal)"/>
       <text x="71" y="18" fill="var(--tenue)" font-size="11" font-family="'IBM Plex Mono',monospace">la formación más dura</text><rect x="204" y="14" width="10" height="3" fill="var(--laton)"/>
       <text x="219" y="18" fill="var(--tenue)" font-size="11" font-family="'IBM Plex Mono',monospace">media de la población</text><rect x="352" y="14" width="10" height="3" fill="var(--tenue)"/>
       <text x="367" y="18" fill="var(--tenue)" font-size="11" font-family="'IBM Plex Mono',monospace">paridad</text>
@@ -769,7 +778,7 @@ victorias contra la heurística escrita a mano</b>; lo demás es diagnóstico.</
         <span class="cifra">100%</span>
       </div></div>
     </section>
-<footer>Generado el 5/9/2026, 0:12:48 · <a href="https://github.com/grutino/reuter4">github.com/grutino/reuter4</a><br>
+<footer>Generado el 5/9/2026, 0:38:02 · <a href="https://github.com/grutino/reuter4">github.com/grutino/reuter4</a><br>
 Motor propio sin dependencias. La red se entrena y se ejecuta en JavaScript.</footer>
 </div>
 </body></html>

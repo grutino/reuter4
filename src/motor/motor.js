@@ -353,19 +353,35 @@ function registrarTramo(pieza, desde, hasta) {
   pieza.ultimoTramo = { desde, hasta };
 }
 
+// EN UNA CASILLA CABE MÁS DE UNA BANDERA. `banderasSueltas` era un mapa
+// casilla -> color y la segunda que caía sobrescribía a la primera: no quedaba
+// escondida, DESAPARECÍA del estado y no se podía recoger nunca más. Pasa fácil
+// en el anillo, que es una sola casilla lógica donde se concentra el combate del
+// final. Ahora cada casilla guarda una lista.
+export const banderasEn = (estado, casilla) => estado.banderasSueltas[casilla] || [];
+
 function soltarBandera(estado, pieza) {
   if (!llevaBandera(pieza)) return;
   const color = pieza.bandera;
   pieza.bandera = null;
-  estado.banderasSueltas[pieza.casilla] = color;
+  const aqui = estado.banderasSueltas[pieza.casilla];
+  // La copia importa: `aplicar` clona el mapa por encima, así que empujar sobre
+  // la lista del estado anterior le cambiaría las banderas a una partida ya
+  // jugada.
+  estado.banderasSueltas[pieza.casilla] = aqui ? [...aqui, color] : [color];
   estado.banderas[color].portador = null;
   estado.banderas[color].casilla = pieza.casilla;
 }
 
-function recogerBandera(estado, pieza) {
-  const color = estado.banderasSueltas[pieza.casilla];
+function recogerBandera(estado, pieza, cual = null) {
+  const aqui = banderasEn(estado, pieza.casilla);
+  // Sin decir cuál, se coge la primera que cayó: es lo que hacía antes cuando
+  // solo cabía una, y deja el orden de llegada como criterio.
+  const color = cual && aqui.includes(cual) ? cual : aqui[0];
   if (!color || llevaBandera(pieza)) return null;
-  delete estado.banderasSueltas[pieza.casilla];
+  const resto = aqui.filter((c, i) => !(c === color && aqui.indexOf(color) === i));
+  if (resto.length) estado.banderasSueltas[pieza.casilla] = resto;
+  else delete estado.banderasSueltas[pieza.casilla];
   pieza.bandera = color;
   estado.banderas[color].portador = pieza.id;
   estado.banderas[color].casilla = null;
@@ -435,11 +451,17 @@ function abrirReclutamiento(estado, color, motivo) {
 // jugada, porque recoger puede a su vez cambiar lo que se recluta.
 
 function ofrecerRecogida(estado, pieza) {
-  const bandera = estado.banderasSueltas[pieza.casilla];
-  if (!bandera || llevaBandera(pieza)) return false;
+  const aqui = banderasEn(estado, pieza.casilla);
+  if (!aqui.length || llevaBandera(pieza)) return false;
   encolarPendiente(
     estado,
-    { tipo: "recoger", color: pieza.color, pieza: pieza.id, casilla: pieza.casilla, bandera },
+    {
+      tipo: "recoger", color: pieza.color, pieza: pieza.id, casilla: pieza.casilla,
+      // `bandera` es la que se ofrece; `banderas` son todas las que hay ahí, por
+      // si algún día se deja elegir. Se mantienen las dos para no romper a quien
+      // solo lee la primera.
+      bandera: aqui[0], banderas: [...aqui],
+    },
     { alFrente: true }
   );
   return true;
@@ -695,7 +717,11 @@ export function vistaDe(estado, color) {
     equipo: equipoDe(color),
     fin: estado.fin,
     piezas,
-    banderasSueltas: { ...estado.banderasSueltas },
+    // Las listas también se copian: sin esto, soltar una bandera le añadiría una
+    // al estado anterior, que se supone inmutable.
+    banderasSueltas: Object.fromEntries(
+      Object.entries(estado.banderasSueltas).map(([c, cs]) => [c, [...cs]])
+    ),
     // Público para todos: son rangos que ya se han visto sobre la mesa.
     rangosRevelados: { ...(estado.rangosRevelados || {}) },
     historia: estado.fin ? [...(estado.historia || [])] : historiaPublica(estado.historia),

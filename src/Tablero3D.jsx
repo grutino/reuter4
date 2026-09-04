@@ -47,6 +47,25 @@ const CACHE_NUMEROS = {};
 // reclutamiento de cada ejército. Estaba solo en el panel lateral, y es un dato
 // que se mira constantemente mientras se juega: tenerlo en el tablero ahorra
 // apartar la vista.
+// El contador de promociones va en números romanos, como en las planillas de
+// verdad. Son pocos —hay veinte piezas por ejército y ascender no es cosa de
+// todos los turnos— así que la tabla llega de sobra y no hace falta el algoritmo
+// general.
+const ROMANOS = ["", "I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X",
+                 "XI", "XII", "XIII", "XIV", "XV", "XVI", "XVII", "XVIII", "XIX", "XX"];
+export const enRomano = (n) => {
+  if (!Number.isInteger(n) || n <= 0) return "";
+  if (n < ROMANOS.length) return ROMANOS[n];
+  // Por encima de veinte se compone, que es raro pero no imposible.
+  const piezas = [[100, "C"], [90, "XC"], [50, "L"], [40, "XL"], [10, "X"], [9, "IX"], [5, "V"], [4, "IV"], [1, "I"]];
+  let queda = n;
+  let salida = "";
+  for (const [valor, letras] of piezas) {
+    while (queda >= valor) { salida += letras; queda -= valor; }
+  }
+  return salida;
+};
+
 function texturaNumero(n, colorCss) {
   const clave = `${n}-${colorCss}`;
   if (CACHE_NUMEROS[clave]) return CACHE_NUMEROS[clave];
@@ -54,16 +73,20 @@ function texturaNumero(n, colorCss) {
   const lienzo = document.createElement("canvas");
   lienzo.width = lienzo.height = lado;
   const ctx = lienzo.getContext("2d");
-  ctx.font = "bold 92px Georgia, serif";
+  const texto = enRomano(n);
+  // El romano crece a lo ancho: "XVIII" ocupa cinco letras donde "8" ocupaba una,
+  // así que el cuerpo se ajusta para que quepa siempre dentro de la baldosa.
+  const cuerpo = texto.length <= 2 ? 92 : texto.length <= 3 ? 74 : texto.length <= 4 ? 58 : 46;
+  ctx.font = `bold ${cuerpo}px Georgia, serif`;
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
   // Halo claro debajo: el número tiene que leerse sobre la arena y sobre el
   // tinte del ejército, que son fondos distintos.
-  ctx.lineWidth = 12;
+  ctx.lineWidth = Math.max(6, cuerpo / 8);
   ctx.strokeStyle = "rgba(255, 248, 232, 0.92)";
-  ctx.strokeText(String(n), lado / 2, lado / 2 + 4);
+  ctx.strokeText(texto, lado / 2, lado / 2 + 4);
   ctx.fillStyle = colorCss;
-  ctx.fillText(String(n), lado / 2, lado / 2 + 4);
+  ctx.fillText(texto, lado / 2, lado / 2 + 4);
   const textura = new THREE.CanvasTexture(lienzo);
   textura.colorSpace = THREE.SRGBColorSpace;
   CACHE_NUMEROS[clave] = textura;
@@ -693,8 +716,13 @@ export default function Tablero3D({
     // Banderas caídas en el suelo: sin pieza que las lleve. Van inclinadas, como
     // clavadas donde cayó su portador, y con un aro del color de la bandera para
     // poder localizarlas desde arriba sin girar la cámara.
-    for (const [casilla, color] of Object.entries(banderasSueltas || {})) {
-      if (!ESTILO[color]) continue;
+    // EN UNA CASILLA CABE MÁS DE UNA. Antes cada casilla guardaba un solo color
+    // y la segunda bandera que caía se comía a la primera; ahora es una lista y
+    // hay que pintarlas todas, repartidas en corro para que se vean las dos.
+    for (const [casilla, caidas] of Object.entries(banderasSueltas || {})) {
+      const lista = Array.isArray(caidas) ? caidas : [caidas];
+      lista.forEach((color, k) => {
+      if (!ESTILO[color]) return;
       const grupo = new THREE.Group();
 
       const aro = new THREE.Mesh(g.aroSuelta, new THREE.MeshLambertMaterial({ color: ESTILO[color].hex }));
@@ -721,8 +749,19 @@ export default function Tablero3D({
       grupo.add(pano);
 
       const [x, y, z] = posicion3D(casilla);
-      grupo.position.set(x, y, z);
+      // Con una sola bandera va centrada, como siempre. Con varias se reparten
+      // en corro alrededor del centro de la casilla, lo bastante juntas para que
+      // se lean como "aquí hay un montón" y no como banderas de casillas
+      // distintas.
+      if (lista.length > 1) {
+        const a = (k / lista.length) * Math.PI * 2;
+        grupo.position.set(x + Math.cos(a) * 0.2, y, z + Math.sin(a) * 0.2);
+        grupo.scale.setScalar(0.8);
+      } else {
+        grupo.position.set(x, y, z);
+      }
       r.grupoPiezas.add(grupo);
+      });
     }
   }, [piezas, banderasSueltas]);
 

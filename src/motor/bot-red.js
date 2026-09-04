@@ -16,7 +16,7 @@ import { evaluar } from "./red.js";
 import { movimientosLegales, banderaQueCorona, aplicar, sonAliados } from "./motor.js";
 import { TORRE } from "./tablero.js";
 import { despliegueAleatorio, puntuarAcciones, PESOS_BASE, DISTANCIA } from "./bot.js";
-import { NIVELES, nivelValido, configuracionDeNivel } from "./dificultad.js";
+import { configuracionDeBot } from "./dificultad.js";
 import { analizarTurno } from "./analisis.js";
 import { rasgosDeDespliegue } from "./rasgos-despliegue.js";
 import { rasgosDeJugada, contextoDeTurno } from "./rasgos-jugada.js";
@@ -187,24 +187,28 @@ function jugadaQueGana(estado, color, acciones) {
 // día se cambia el nivel 1, no puede arrastrar consigo la referencia.
 // La copia es superficial a propósito: `piezas` y `tablero` van por referencia y
 // nadie los toca, así que no cuesta nada por jugada.
-const vistaSegunNivel = (estado, cfg) => (cfg.memoria ? estado : { ...estado, rangosRevelados: {} });
+const vistaSegunMemoria = (estado, cfg) => (cfg.memoria ? estado : { ...estado, rangosRevelados: {} });
 
-export function jugadaDeBot(estado, color, nivel, modelos = {}, azar = Math.random) {
-  const cfg = configuracionDeNivel(nivel, Boolean(modelos.jugada));
-  const visto = vistaSegunNivel(estado, cfg);
+export function jugadaDeBot(estado, color, modelos = {}, azar = Math.random) {
+  const cfg = configuracionDeBot(Boolean(modelos.jugada));
+  const visto = vistaSegunMemoria(estado, cfg);
   const puntuadas = puntuarAcciones(visto, color, { azar });
   if (!puntuadas.length) return null;
 
+  // Aunque ya no haya ruido que pueda tirarla, se comprueba primero: es la
+  // jugada que acaba la partida y no depende de lo que opine ninguna red.
   const ganadora = jugadaQueGana(visto, color, puntuadas.map((p) => p.accion));
   if (ganadora) return ganadora;
 
-  if (cfg.ruido > 0 && azar() < cfg.ruido) {
-    const pool = puntuadas.slice(0, Math.min(POOL_DE_FALLO, puntuadas.length));
-    return pool[Math.floor(azar() * pool.length)].accion;
-  }
-
   const finalistas = puntuadas.slice(0, Math.max(1, Math.min(cfg.candidatas, puntuadas.length)));
   if (!cfg.red || !modelos.jugada || finalistas.length === 1) return finalistas[0].accion;
+
+  // Mirar la respuesta del siguiente antes de decidir. Se llama aquí y no dentro
+  // del bucle de abajo porque `accionConRedProfunda` repite la criba: es el
+  // precio de que sirva también fuera del juego, para medir.
+  if (cfg.profundo) {
+    return accionConRedProfunda(visto, color, modelos.jugada, { candidatas: cfg.candidatas, azar });
+  }
 
   const contexto = contextoDeTurno(visto, color, analizarTurno(visto, color, DISTANCIA));
   let mejor = finalistas[0].accion;
@@ -216,8 +220,8 @@ export function jugadaDeBot(estado, color, nivel, modelos = {}, azar = Math.rand
   return mejor;
 }
 
-export function despliegueDeBot(color, nivel, modelos = {}, azar = Math.random) {
-  const cfg = configuracionDeNivel(nivel, Boolean(modelos.despliegue));
+export function despliegueDeBot(color, modelos = {}, azar = Math.random) {
+  const cfg = configuracionDeBot(Boolean(modelos.despliegue));
   if (!cfg.red || !modelos.despliegue || !cfg.candidatosDespliegue) return despliegueAleatorio(color, azar);
   return despliegueGuiado(color, azar, modelos.despliegue, cfg.candidatosDespliegue, cfg.escalada);
 }
