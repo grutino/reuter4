@@ -51,7 +51,30 @@
 // La curva es plana hasta 0,2 y luego cae: elegir entre las seis mejores una de
 // cada cinco veces casi no duele, porque las seis son razonables. De ahí salen
 // los cinco peldaños, espaciados de verdad.
-const CANDIDATAS_UTILES = 4;   // más no aporta, medido arriba
+// Se exporta porque quien mide y quien entrena tienen que usar el MISMO número
+// que el servidor: cribar a doce y jugar cribando a cuatro son dos juegos
+// distintos, y la red entrenada en uno no vale para el otro.
+//
+// FUE 4 Y AHORA ES 12. El 4 estaba medido y la medida era correcta -"4
+// candidatas 75%, 12 candidatas 74%"- pero se hizo con una red que apenas
+// distinguía entre jugadas, a la que darle más opciones solo le daba más formas
+// de equivocarse. El número se quedó fijo mientras la red mejoraba. Remedido con
+// la red de ahora:
+//
+//    4 candidatas   84,2% ±1,3
+//    8              88,6%  ·  90,8%   (dos semillas)
+//   12              90,3%  ·  90,4%
+//   20              88,4%  ·  92,1%
+//   40              88,4%
+//
+// Entre 8 y 20 la diferencia no se distingue del ruido -el orden se invierte al
+// cambiar de semilla-, pero el 4 pierde seis puntos en las dos. Se pone 12 por
+// estar en el centro de esa meseta y por ser el número con el que ya se entrena
+// y se mide.
+// Comprobado que la escalera aguanta el cambio: cada nivel sigue ganando al de
+// abajo -57%, 76%, 69%, 85% en 40 partidas por peldaño-, porque lo que los
+// separa es el ruido y no cuántas candidatas miran.
+export const CANDIDATAS_UTILES = 12;
 const DESPLIEGUE_UTIL = { candidatosDespliegue: 12, escalada: 60 };
 
 export const NIVELES = {

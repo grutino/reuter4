@@ -48,6 +48,7 @@ import { rasgosDeJugada, contextoDeTurno, TAMANO as TAMANO_JUGADA, FIRMA as FIRM
 import { crearRed, entrenarLote, entrenarPares, evaluar, aObjeto, desdeObjeto, ACTIVACION } from "./red.mjs";
 import { construirPanel, medirContraPanel, resumirPanel, cargarAperturas } from "./panel.mjs";
 import { crearPiscina, NUCLEOS } from "./paralelo.mjs";
+import { CANDIDATAS_UTILES } from "../src/motor/dificultad.js";
 import { fuenteDeDespliegues, aColocacion, aTexto } from "./aperturas.mjs";
 import { poblacionInicial, siguienteGeneracion, actualizarArchivo } from "./formaciones.mjs";
 import { despliegueGuiado } from "./entrenar-despliegue.mjs";
@@ -66,7 +67,10 @@ function opciones(argv) {
   const o = {
     rondas: 6, partidas: 400, epocas: 60, lote: 64, decaimiento: 0.001,
     ocultaDespliegue: 16, ocultaJugada: 28, semilla: 1, limite: 400,
-    candidatas: 12, candidatos: 30, escalada: 200, parejasPanel: 6,
+    // ENTRENAR COMO SE JUEGA. `candidatas` tiene que ser el mismo número que
+    // criba el servidor: entrenar eligiendo entre doce y jugar eligiendo entre
+    // cuatro son dos problemas distintos, y la red aprende el que se le enseña.
+    candidatas: CANDIDATAS_UTILES, candidatos: 30, escalada: 200, parejasPanel: 6,
     // Recocido a lo largo de las rondas. Al principio la exploración es lo que
     // impide que las dos redes jueguen siempre la misma partida; al final, con
     // las redes ya buenas, ese mismo 22% es ruido metido en los datos: una de

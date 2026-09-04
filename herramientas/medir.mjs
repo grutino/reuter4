@@ -3,12 +3,16 @@
 // semillas convierte cualquier selección en sesgo del máximo, y hace falta poder
 // pedir un juego de partidas que no haya visto nadie.
 //
-//   node herramientas/medir.mjs [semillaBase] [parejas] [carpeta] [camino]
+//   node herramientas/medir.mjs [semillaBase] [parejas] [carpeta] [camino] [candidatas]
 //
-// `camino` es "solo" (la red puntúa todas las jugadas legales, que es como se
-// entrena hoy) o "criba" (la heurística elige cuatro y la red las ordena, que es
-// como juega el servidor). NO son comparables entre sí, y confundirlos ya costó
-// anunciar un +3 que no existía.
+// `camino` es "solo" (la red puntúa todas las jugadas legales) o "criba" (la
+// heurística preselecciona y la red las ordena, que es como juega el servidor).
+// NO son comparables entre sí, y confundirlos ya costó anunciar un +3 que no
+// existía y, más tarde, leer como regresión lo que era una medida mal alineada.
+//
+// La criba usa CANDIDATAS_UTILES, el mismo número que el servidor. Antes ponía
+// doce a mano mientras el servidor cribaba a cuatro, así que "como juega el
+// servidor" no era verdad.
 
 import fs from "node:fs";
 import path from "node:path";
@@ -16,6 +20,7 @@ import { fileURLToPath } from "node:url";
 import { despliegueAleatorio } from "../src/motor/bot.js";
 import { accionConRed, jugadaSoloRed, despliegueGuiado } from "../src/motor/bot-red.js";
 import { desdeObjeto } from "../src/motor/red.js";
+import { CANDIDATAS_UTILES } from "../src/motor/dificultad.js";
 import { generador } from "../entrenamiento/arena.mjs";
 import { construirPanel, medirContraPanel } from "../entrenamiento/panel.mjs";
 
@@ -24,6 +29,10 @@ const semillaBase = Number(process.argv[2] ?? 31337);
 const parejas = Number(process.argv[3] ?? 8);
 const carpeta = process.argv[4] || path.join(AQUI, "..", "entrenamiento", "modelos");
 const camino = process.argv[5] || "criba";
+// Cuántas candidatas criba la heurística antes de que la red ordene. Por defecto
+// las del servidor, pero se puede barrer para ver si ese número sigue siendo el
+// bueno: el valor actual se fijó con una red que apenas discriminaba.
+const candidatas = Number(process.argv[6] || CANDIDATAS_UTILES);
 
 const leer = (f) => {
   const r = path.join(carpeta, f);
@@ -39,7 +48,7 @@ const r = medirContraPanel(
   {
     desplegar: (c, az) => (rd ? despliegueGuiado(c, az, rd, 30, 200) : despliegueAleatorio(c, az)),
     jugar: (e, c, az) =>
-      !rj ? null : camino === "solo" ? jugadaSoloRed(e, c, rj, { azar: az }) : accionConRed(e, c, rj, { candidatas: 12, azar: az }),
+      !rj ? null : camino === "solo" ? jugadaSoloRed(e, c, rj, { azar: az }) : accionConRed(e, c, rj, { candidatas, azar: az }),
   },
   panel,
   { parejas, semillaBase }
