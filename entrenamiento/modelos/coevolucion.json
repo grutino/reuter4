@@ -1,5 +1,5 @@
 {
-  "creado": "2026-09-04T22:37:58.835Z",
+  "creado": "2026-09-04T23:22:03.434Z",
   "opciones": {
     "rondas": 6,
     "partidas": 400,
@@ -8,7 +8,7 @@
     "decaimiento": 0.001,
     "ocultaDespliegue": 16,
     "ocultaJugada": 28,
-    "semilla": 39596,
+    "semilla": 47515,
     "limite": 400,
     "candidatas": 12,
     "candidatos": 30,
@@ -34,306 +34,306 @@
     "paresPorPosicion": 6,
     "paresSueltos": 14,
     "muestreoPares": 8,
-    "veredictoBase": 5000015,
+    "veredictoBase": 6000018,
     "margen": 1,
     "revalidar": 1
   },
   "historia": [
     {
       "ronda": 0,
-      "panel": 0.8992932862190812,
-      "error": 0.021016567585459927,
-      "segundos": 19
+      "panel": 0.9054982817869416,
+      "error": 0.020725666807241958,
+      "segundos": 15
     },
     {
       "ronda": 1,
-      "panel": 0.9058614564831261,
-      "medida": 0.7634011090573013,
-      "titular": 0.9058614564831261,
-      "error": 0.02149667901961739,
+      "panel": 0.9195205479452054,
+      "medida": 0.7790055248618785,
+      "titular": 0.9195205479452054,
+      "error": 0.021457053771143726,
       "adoptadas": false,
       "candidata": false,
       "reválida": null,
       "ejemplosDespliegue": 1600,
-      "ejemplosJugada": 60497,
-      "decididas": 372,
+      "ejemplosJugada": 59239,
+      "decididas": 379,
       "deLiga": 193,
       "exploracion": 0.25,
       "tasa": 0.003,
       "formaciones": {
         "masDura": {
-          "origen": "humana-02·espejo",
-          "aptitud": 0.9660774245222996,
+          "origen": "humana-07",
+          "aptitud": 0.7567627636650384,
           "juega": 7
         },
-        "media": 0.405059848592415,
+        "media": 0.33602321668386725,
         "archivo": 8
       },
       "despliegue": {
-        "perdida": 0.6991836034459166,
-        "perdidaDePartida": 0.713214967637747,
+        "perdida": 0.6747594157502017,
+        "perdidaDePartida": 0.707783651929037,
         "epocasUtiles": 5,
-        "acierto": 0.535,
+        "acierto": 0.5625,
         "calibracion": [
           {
-            "n": 9,
-            "predicho": 0.1619803150606286,
-            "real": 0.3333333333333333
+            "n": 5,
+            "predicho": 0.038613357102032876,
+            "real": 0.2
           },
           {
-            "n": 28,
-            "predicho": 0.34996061989835486,
-            "real": 0.38960570007129125
+            "n": 5,
+            "predicho": 0.11094702402560716,
+            "real": 0
           },
           {
-            "n": 51,
-            "predicho": 0.4620028794986945,
-            "real": 0.3627885858110536
+            "n": 6,
+            "predicho": 0.24666520874983833,
+            "real": 0
           },
           {
-            "n": 261,
-            "predicho": 0.5601069129005927,
-            "real": 0.4962936130578513
+            "n": 18,
+            "predicho": 0.3499014138735759,
+            "real": 0.4578150316789606
           },
           {
-            "n": 24,
-            "predicho": 0.6425365310684467,
-            "real": 0.6072462361689592
+            "n": 70,
+            "predicho": 0.45987292656852513,
+            "real": 0.46098487744814276
           },
           {
-            "n": 27,
-            "predicho": 0.7056745347820912,
-            "real": 0.552622930501229
+            "n": 244,
+            "predicho": 0.5545781973099276,
+            "real": 0.5504156303467679
+          },
+          {
+            "n": 52,
+            "predicho": 0.6484872792399883,
+            "real": 0.5480155290023732
           }
         ],
         "curva": [
           {
             "epoca": 5,
-            "entrenamiento": 0.68261,
-            "validacion": 0.69918,
-            "aciertoEntrenamiento": 0.5475,
-            "aciertoValidacion": 0.535
+            "entrenamiento": 0.66841,
+            "validacion": 0.67476,
+            "aciertoEntrenamiento": 0.5775,
+            "aciertoValidacion": 0.5625
           },
           {
             "epoca": 10,
-            "entrenamiento": 0.6819,
-            "validacion": 0.70714,
-            "aciertoEntrenamiento": 0.5475,
-            "aciertoValidacion": 0.5425
+            "entrenamiento": 0.66984,
+            "validacion": 0.67769,
+            "aciertoEntrenamiento": 0.5617,
+            "aciertoValidacion": 0.555
           },
           {
             "epoca": 15,
-            "entrenamiento": 0.67972,
-            "validacion": 0.70786,
-            "aciertoEntrenamiento": 0.5558,
-            "aciertoValidacion": 0.5475
+            "entrenamiento": 0.66815,
+            "validacion": 0.67894,
+            "aciertoEntrenamiento": 0.5775,
+            "aciertoValidacion": 0.5625
           },
           {
             "epoca": 20,
-            "entrenamiento": 0.68034,
-            "validacion": 0.71108,
-            "aciertoEntrenamiento": 0.5558,
-            "aciertoValidacion": 0.545
+            "entrenamiento": 0.66455,
+            "validacion": 0.67855,
+            "aciertoEntrenamiento": 0.5767,
+            "aciertoValidacion": 0.5725
           },
           {
             "epoca": 25,
-            "entrenamiento": 0.68049,
-            "validacion": 0.71255,
-            "aciertoEntrenamiento": 0.5425,
-            "aciertoValidacion": 0.5275
+            "entrenamiento": 0.66352,
+            "validacion": 0.67969,
+            "aciertoEntrenamiento": 0.5758,
+            "aciertoValidacion": 0.5725
           },
           {
             "epoca": 30,
-            "entrenamiento": 0.6805,
-            "validacion": 0.71343,
-            "aciertoEntrenamiento": 0.5433,
-            "aciertoValidacion": 0.5275
+            "entrenamiento": 0.66108,
+            "validacion": 0.68073,
+            "aciertoEntrenamiento": 0.575,
+            "aciertoValidacion": 0.58
           },
           {
             "epoca": 35,
-            "entrenamiento": 0.68067,
-            "validacion": 0.71349,
-            "aciertoEntrenamiento": 0.5442,
-            "aciertoValidacion": 0.5325
+            "entrenamiento": 0.66147,
+            "validacion": 0.68316,
+            "aciertoEntrenamiento": 0.5758,
+            "aciertoValidacion": 0.56
           },
           {
             "epoca": 40,
-            "entrenamiento": 0.67635,
-            "validacion": 0.7094,
-            "aciertoEntrenamiento": 0.5575,
-            "aciertoValidacion": 0.52
+            "entrenamiento": 0.6596,
+            "validacion": 0.6823,
+            "aciertoEntrenamiento": 0.5717,
+            "aciertoValidacion": 0.565
           },
           {
             "epoca": 45,
-            "entrenamiento": 0.67759,
-            "validacion": 0.71047,
-            "aciertoEntrenamiento": 0.5583,
-            "aciertoValidacion": 0.535
+            "entrenamiento": 0.65852,
+            "validacion": 0.68371,
+            "aciertoEntrenamiento": 0.5758,
+            "aciertoValidacion": 0.565
           },
           {
             "epoca": 50,
-            "entrenamiento": 0.67667,
-            "validacion": 0.71074,
-            "aciertoEntrenamiento": 0.5592,
-            "aciertoValidacion": 0.53
+            "entrenamiento": 0.65468,
+            "validacion": 0.68546,
+            "aciertoEntrenamiento": 0.585,
+            "aciertoValidacion": 0.5775
           },
           {
             "epoca": 55,
-            "entrenamiento": 0.67443,
-            "validacion": 0.70986,
-            "aciertoEntrenamiento": 0.5633,
-            "aciertoValidacion": 0.5125
+            "entrenamiento": 0.65793,
+            "validacion": 0.69005,
+            "aciertoEntrenamiento": 0.5675,
+            "aciertoValidacion": 0.55
           },
           {
             "epoca": 60,
-            "entrenamiento": 0.67272,
-            "validacion": 0.71083,
-            "aciertoEntrenamiento": 0.5817,
-            "aciertoValidacion": 0.54
+            "entrenamiento": 0.65297,
+            "validacion": 0.68951,
+            "aciertoEntrenamiento": 0.5867,
+            "aciertoValidacion": 0.57
           }
         ]
       },
       "jugada": {
-        "perdida": 0.7133309831874097,
-        "perdidaDePartida": 0.7336765282932876,
-        "epocasUtiles": 55,
-        "acierto": 0.5622119815668203,
+        "perdida": 0.7156291412859577,
+        "perdidaDePartida": 0.7156291412859577,
+        "epocasUtiles": 0,
+        "acierto": 0.5694319206492335,
         "calibracion": [
           {
-            "n": 136,
-            "predicho": 0.06692481030735954,
-            "real": 0.3729407848047881
+            "n": 442,
+            "predicho": 0.0509542411662537,
+            "real": 0.4337011803366625
           },
           {
-            "n": 406,
-            "predicho": 0.15959162002118737,
-            "real": 0.31534356158437354
+            "n": 969,
+            "predicho": 0.15734242592556616,
+            "real": 0.3530002541177966
           },
           {
-            "n": 1211,
-            "predicho": 0.2568443493646162,
-            "real": 0.354022741761571
+            "n": 1977,
+            "predicho": 0.2516140286855266,
+            "real": 0.3724298114868421
           },
           {
-            "n": 2544,
-            "predicho": 0.3540148651468688,
-            "real": 0.44012418652827534
+            "n": 2418,
+            "predicho": 0.3514873510067069,
+            "real": 0.4303235803021491
           },
           {
-            "n": 3254,
-            "predicho": 0.4511630700180328,
-            "real": 0.4981343742963709
+            "n": 2968,
+            "predicho": 0.45091638802224715,
+            "real": 0.5029785648133276
           },
           {
-            "n": 3523,
-            "predicho": 0.544140283548869,
-            "real": 0.5242769468465801
+            "n": 3052,
+            "predicho": 0.5500205853455212,
+            "real": 0.534252888958337
           },
           {
-            "n": 2025,
-            "predicho": 0.6496044728072048,
-            "real": 0.5529454308994228
+            "n": 2141,
+            "predicho": 0.6474741000396002,
+            "real": 0.608772773990569
           },
           {
-            "n": 1853,
-            "predicho": 0.7483981486336551,
-            "real": 0.5674908001444292
+            "n": 1298,
+            "predicho": 0.743860432699682,
+            "real": 0.6723711908415602
           },
           {
-            "n": 748,
-            "predicho": 0.8428766782240381,
-            "real": 0.6402307814506075
-          },
-          {
-            "n": 141,
-            "predicho": 0.924747541124168,
-            "real": 0.6743604214889934
+            "n": 261,
+            "predicho": 0.8268348525661852,
+            "real": 0.7247670698051236
           }
         ],
         "curva": [
           {
             "epoca": 5,
-            "entrenamiento": 0.71739,
-            "validacion": 0.71714,
-            "aciertoEntrenamiento": 0.5511,
-            "aciertoValidacion": 0.5524
+            "entrenamiento": 0.73612,
+            "validacion": 0.73718,
+            "aciertoEntrenamiento": 0.5703,
+            "aciertoValidacion": 0.5647
           },
           {
             "epoca": 10,
-            "entrenamiento": 0.71557,
-            "validacion": 0.71501,
-            "aciertoEntrenamiento": 0.5564,
-            "aciertoValidacion": 0.5588
+            "entrenamiento": 0.73447,
+            "validacion": 0.73528,
+            "aciertoEntrenamiento": 0.5719,
+            "aciertoValidacion": 0.5666
           },
           {
             "epoca": 15,
-            "entrenamiento": 0.72063,
-            "validacion": 0.71993,
-            "aciertoEntrenamiento": 0.5584,
-            "aciertoValidacion": 0.5601
+            "entrenamiento": 0.74275,
+            "validacion": 0.74336,
+            "aciertoEntrenamiento": 0.5703,
+            "aciertoValidacion": 0.5649
           },
           {
             "epoca": 20,
-            "entrenamiento": 0.71515,
-            "validacion": 0.71423,
-            "aciertoEntrenamiento": 0.5605,
-            "aciertoValidacion": 0.5613
+            "entrenamiento": 0.74414,
+            "validacion": 0.74492,
+            "aciertoEntrenamiento": 0.5715,
+            "aciertoValidacion": 0.5645
           },
           {
             "epoca": 25,
-            "entrenamiento": 0.71571,
-            "validacion": 0.71513,
-            "aciertoEntrenamiento": 0.5619,
-            "aciertoValidacion": 0.564
-          },
-          {
-            "epoca": 30,
-            "entrenamiento": 0.71687,
-            "validacion": 0.71642,
-            "aciertoEntrenamiento": 0.564,
+            "entrenamiento": 0.74028,
+            "validacion": 0.74119,
+            "aciertoEntrenamiento": 0.5685,
             "aciertoValidacion": 0.5629
           },
           {
+            "epoca": 30,
+            "entrenamiento": 0.74008,
+            "validacion": 0.74097,
+            "aciertoEntrenamiento": 0.5684,
+            "aciertoValidacion": 0.5643
+          },
+          {
             "epoca": 35,
-            "entrenamiento": 0.71973,
-            "validacion": 0.71956,
-            "aciertoEntrenamiento": 0.5622,
-            "aciertoValidacion": 0.5632
+            "entrenamiento": 0.73797,
+            "validacion": 0.73896,
+            "aciertoEntrenamiento": 0.5707,
+            "aciertoValidacion": 0.5661
           },
           {
             "epoca": 40,
-            "entrenamiento": 0.71559,
-            "validacion": 0.71526,
-            "aciertoEntrenamiento": 0.5632,
-            "aciertoValidacion": 0.5623
+            "entrenamiento": 0.73291,
+            "validacion": 0.73393,
+            "aciertoEntrenamiento": 0.5675,
+            "aciertoValidacion": 0.5645
           },
           {
             "epoca": 45,
-            "entrenamiento": 0.71422,
-            "validacion": 0.71427,
-            "aciertoEntrenamiento": 0.5633,
-            "aciertoValidacion": 0.5613
+            "entrenamiento": 0.74014,
+            "validacion": 0.74113,
+            "aciertoEntrenamiento": 0.5691,
+            "aciertoValidacion": 0.5615
           },
           {
             "epoca": 50,
-            "entrenamiento": 0.71729,
-            "validacion": 0.71743,
-            "aciertoEntrenamiento": 0.5632,
-            "aciertoValidacion": 0.5625
+            "entrenamiento": 0.74167,
+            "validacion": 0.743,
+            "aciertoEntrenamiento": 0.5695,
+            "aciertoValidacion": 0.5609
           },
           {
             "epoca": 55,
-            "entrenamiento": 0.71325,
-            "validacion": 0.71333,
-            "aciertoEntrenamiento": 0.5627,
-            "aciertoValidacion": 0.5622
+            "entrenamiento": 0.73798,
+            "validacion": 0.7386,
+            "aciertoEntrenamiento": 0.5678,
+            "aciertoValidacion": 0.5633
           },
           {
             "epoca": 60,
-            "entrenamiento": 0.71629,
-            "validacion": 0.71629,
-            "aciertoEntrenamiento": 0.5628,
-            "aciertoValidacion": 0.5628
+            "entrenamiento": 0.73711,
+            "validacion": 0.73818,
+            "aciertoEntrenamiento": 0.5679,
+            "aciertoValidacion": 0.5629
           }
         ]
       },
@@ -341,20 +341,20 @@
         {
           "rival": "humana-01",
           "clase": "humana",
-          "gana": 14,
+          "gana": 12,
           "pierde": 1,
-          "tablas": 1,
-          "tasa": 0.9333333333333333,
-          "error": 0.12909944487358055
+          "tablas": 3,
+          "tasa": 0.9230769230769231,
+          "error": 0.1386750490563073
         },
         {
           "rival": "humana-01~1",
           "clase": "variante",
           "gana": 13,
-          "pierde": 2,
-          "tablas": 1,
-          "tasa": 0.8666666666666667,
-          "error": 0.12909944487358055
+          "pierde": 0,
+          "tablas": 3,
+          "tasa": 1,
+          "error": 0.1386750490563073
         },
         {
           "rival": "humana-01~2",
@@ -368,114 +368,42 @@
         {
           "rival": "humana-02",
           "clase": "humana",
-          "gana": 7,
+          "gana": 8,
           "pierde": 7,
-          "tablas": 2,
-          "tasa": 0.5,
-          "error": 0.1336306209562122
+          "tablas": 1,
+          "tasa": 0.5333333333333333,
+          "error": 0.12909944487358055
         },
         {
           "rival": "humana-02~1",
           "clase": "variante",
-          "gana": 9,
-          "pierde": 7,
+          "gana": 8,
+          "pierde": 8,
           "tablas": 0,
-          "tasa": 0.5625,
+          "tasa": 0.5,
           "error": 0.125
         },
         {
           "rival": "humana-02~2",
           "clase": "variante",
-          "gana": 7,
-          "pierde": 7,
-          "tablas": 2,
-          "tasa": 0.5,
-          "error": 0.1336306209562122
+          "gana": 9,
+          "pierde": 4,
+          "tablas": 3,
+          "tasa": 0.6923076923076923,
+          "error": 0.1386750490563073
         },
         {
           "rival": "humana-03",
           "clase": "humana",
-          "gana": 14,
+          "gana": 15,
           "pierde": 0,
-          "tablas": 2,
+          "tablas": 1,
           "tasa": 1,
-          "error": 0.1336306209562122
+          "error": 0.12909944487358055
         },
         {
           "rival": "humana-03~1",
           "clase": "variante",
-          "gana": 11,
-          "pierde": 1,
-          "tablas": 4,
-          "tasa": 0.9166666666666666,
-          "error": 0.14433756729740643
-        },
-        {
-          "rival": "humana-03~2",
-          "clase": "variante",
-          "gana": 10,
-          "pierde": 3,
-          "tablas": 3,
-          "tasa": 0.7692307692307693,
-          "error": 0.1386750490563073
-        },
-        {
-          "rival": "humana-04",
-          "clase": "humana",
-          "gana": 14,
-          "pierde": 2,
-          "tablas": 0,
-          "tasa": 0.875,
-          "error": 0.125
-        },
-        {
-          "rival": "humana-04~1",
-          "clase": "variante",
-          "gana": 14,
-          "pierde": 1,
-          "tablas": 1,
-          "tasa": 0.9333333333333333,
-          "error": 0.12909944487358055
-        },
-        {
-          "rival": "humana-04~2",
-          "clase": "variante",
-          "gana": 15,
-          "pierde": 1,
-          "tablas": 0,
-          "tasa": 0.9375,
-          "error": 0.125
-        },
-        {
-          "rival": "humana-05",
-          "clase": "humana",
-          "gana": 10,
-          "pierde": 5,
-          "tablas": 1,
-          "tasa": 0.6666666666666666,
-          "error": 0.12909944487358055
-        },
-        {
-          "rival": "humana-05~1",
-          "clase": "variante",
-          "gana": 7,
-          "pierde": 4,
-          "tablas": 5,
-          "tasa": 0.6363636363636364,
-          "error": 0.15075567228888181
-        },
-        {
-          "rival": "humana-05~2",
-          "clase": "variante",
-          "gana": 10,
-          "pierde": 5,
-          "tablas": 1,
-          "tasa": 0.6666666666666666,
-          "error": 0.12909944487358055
-        },
-        {
-          "rival": "humana-06",
-          "clase": "humana",
           "gana": 12,
           "pierde": 2,
           "tablas": 2,
@@ -483,8 +411,71 @@
           "error": 0.1336306209562122
         },
         {
-          "rival": "humana-06~1",
+          "rival": "humana-03~2",
           "clase": "variante",
+          "gana": 10,
+          "pierde": 5,
+          "tablas": 1,
+          "tasa": 0.6666666666666666,
+          "error": 0.12909944487358055
+        },
+        {
+          "rival": "humana-04",
+          "clase": "humana",
+          "gana": 15,
+          "pierde": 1,
+          "tablas": 0,
+          "tasa": 0.9375,
+          "error": 0.125
+        },
+        {
+          "rival": "humana-04~1",
+          "clase": "variante",
+          "gana": 10,
+          "pierde": 0,
+          "tablas": 6,
+          "tasa": 1,
+          "error": 0.15811388300841897
+        },
+        {
+          "rival": "humana-04~2",
+          "clase": "variante",
+          "gana": 10,
+          "pierde": 1,
+          "tablas": 5,
+          "tasa": 0.9090909090909091,
+          "error": 0.15075567228888181
+        },
+        {
+          "rival": "humana-05",
+          "clase": "humana",
+          "gana": 12,
+          "pierde": 4,
+          "tablas": 0,
+          "tasa": 0.75,
+          "error": 0.125
+        },
+        {
+          "rival": "humana-05~1",
+          "clase": "variante",
+          "gana": 10,
+          "pierde": 5,
+          "tablas": 1,
+          "tasa": 0.6666666666666666,
+          "error": 0.12909944487358055
+        },
+        {
+          "rival": "humana-05~2",
+          "clase": "variante",
+          "gana": 10,
+          "pierde": 6,
+          "tablas": 0,
+          "tasa": 0.625,
+          "error": 0.125
+        },
+        {
+          "rival": "humana-06",
+          "clase": "humana",
           "gana": 13,
           "pierde": 2,
           "tablas": 1,
@@ -492,13 +483,22 @@
           "error": 0.12909944487358055
         },
         {
+          "rival": "humana-06~1",
+          "clase": "variante",
+          "gana": 9,
+          "pierde": 4,
+          "tablas": 3,
+          "tasa": 0.6923076923076923,
+          "error": 0.1386750490563073
+        },
+        {
           "rival": "humana-06~2",
           "clase": "variante",
-          "gana": 15,
-          "pierde": 1,
-          "tablas": 0,
-          "tasa": 0.9375,
-          "error": 0.125
+          "gana": 12,
+          "pierde": 2,
+          "tablas": 2,
+          "tasa": 0.8571428571428571,
+          "error": 0.1336306209562122
         },
         {
           "rival": "humana-07",
@@ -512,20 +512,20 @@
         {
           "rival": "humana-07~1",
           "clase": "variante",
-          "gana": 13,
-          "pierde": 1,
-          "tablas": 2,
-          "tasa": 0.9285714285714286,
-          "error": 0.1336306209562122
+          "gana": 11,
+          "pierde": 4,
+          "tablas": 1,
+          "tasa": 0.7333333333333333,
+          "error": 0.12909944487358055
         },
         {
           "rival": "humana-07~2",
           "clase": "variante",
-          "gana": 11,
+          "gana": 14,
           "pierde": 1,
-          "tablas": 4,
-          "tasa": 0.9166666666666666,
-          "error": 0.14433756729740643
+          "tablas": 1,
+          "tasa": 0.9333333333333333,
+          "error": 0.12909944487358055
         },
         {
           "rival": "humana-08",
@@ -548,23 +548,50 @@
         {
           "rival": "humana-08~2",
           "clase": "variante",
-          "gana": 8,
-          "pierde": 5,
-          "tablas": 3,
-          "tasa": 0.6153846153846154,
-          "error": 0.1386750490563073
+          "gana": 13,
+          "pierde": 1,
+          "tablas": 2,
+          "tasa": 0.9285714285714286,
+          "error": 0.1336306209562122
         },
         {
           "rival": "humana-09",
           "clase": "humana",
-          "gana": 10,
+          "gana": 9,
           "pierde": 5,
-          "tablas": 1,
-          "tasa": 0.6666666666666666,
-          "error": 0.12909944487358055
+          "tablas": 2,
+          "tasa": 0.6428571428571429,
+          "error": 0.1336306209562122
         },
         {
           "rival": "humana-09~1",
+          "clase": "variante",
+          "gana": 12,
+          "pierde": 4,
+          "tablas": 0,
+          "tasa": 0.75,
+          "error": 0.125
+        },
+        {
+          "rival": "humana-09~2",
+          "clase": "variante",
+          "gana": 12,
+          "pierde": 3,
+          "tablas": 1,
+          "tasa": 0.8,
+          "error": 0.12909944487358055
+        },
+        {
+          "rival": "humana-10",
+          "clase": "humana",
+          "gana": 13,
+          "pierde": 1,
+          "tablas": 2,
+          "tasa": 0.9285714285714286,
+          "error": 0.1336306209562122
+        },
+        {
+          "rival": "humana-10~1",
           "clase": "variante",
           "gana": 10,
           "pierde": 6,
@@ -573,67 +600,40 @@
           "error": 0.125
         },
         {
-          "rival": "humana-09~2",
-          "clase": "variante",
-          "gana": 5,
-          "pierde": 11,
-          "tablas": 0,
-          "tasa": 0.3125,
-          "error": 0.125
-        },
-        {
-          "rival": "humana-10",
-          "clase": "humana",
-          "gana": 11,
-          "pierde": 4,
-          "tablas": 1,
-          "tasa": 0.7333333333333333,
-          "error": 0.12909944487358055
-        },
-        {
-          "rival": "humana-10~1",
-          "clase": "variante",
-          "gana": 8,
-          "pierde": 5,
-          "tablas": 3,
-          "tasa": 0.6153846153846154,
-          "error": 0.1386750490563073
-        },
-        {
           "rival": "humana-10~2",
-          "clase": "variante",
-          "gana": 14,
-          "pierde": 1,
-          "tablas": 1,
-          "tasa": 0.9333333333333333,
-          "error": 0.12909944487358055
-        },
-        {
-          "rival": "humana-11",
-          "clase": "humana",
-          "gana": 9,
-          "pierde": 6,
-          "tablas": 1,
-          "tasa": 0.6,
-          "error": 0.12909944487358055
-        },
-        {
-          "rival": "humana-11~1",
-          "clase": "variante",
-          "gana": 9,
-          "pierde": 6,
-          "tablas": 1,
-          "tasa": 0.6,
-          "error": 0.12909944487358055
-        },
-        {
-          "rival": "humana-11~2",
           "clase": "variante",
           "gana": 13,
           "pierde": 0,
           "tablas": 3,
           "tasa": 1,
           "error": 0.1386750490563073
+        },
+        {
+          "rival": "humana-11",
+          "clase": "humana",
+          "gana": 9,
+          "pierde": 7,
+          "tablas": 0,
+          "tasa": 0.5625,
+          "error": 0.125
+        },
+        {
+          "rival": "humana-11~1",
+          "clase": "variante",
+          "gana": 8,
+          "pierde": 7,
+          "tablas": 1,
+          "tasa": 0.5333333333333333,
+          "error": 0.12909944487358055
+        },
+        {
+          "rival": "humana-11~2",
+          "clase": "variante",
+          "gana": 13,
+          "pierde": 3,
+          "tablas": 0,
+          "tasa": 0.8125,
+          "error": 0.125
         },
         {
           "rival": "guiada1",
@@ -648,335 +648,335 @@
           "rival": "guiada2",
           "clase": "guiada",
           "gana": 12,
-          "pierde": 0,
-          "tablas": 4,
-          "tasa": 1,
-          "error": 0.14433756729740643
-        },
-        {
-          "rival": "guiada3",
-          "clase": "guiada",
-          "gana": 13,
-          "pierde": 0,
-          "tablas": 3,
-          "tasa": 1,
-          "error": 0.1386750490563073
-        },
-        {
-          "rival": "guiada4",
-          "clase": "guiada",
-          "gana": 10,
-          "pierde": 4,
-          "tablas": 2,
-          "tasa": 0.7142857142857143,
-          "error": 0.1336306209562122
-        },
-        {
-          "rival": "azar",
-          "clase": "azar",
-          "gana": 12,
           "pierde": 1,
           "tablas": 3,
           "tasa": 0.9230769230769231,
           "error": 0.1386750490563073
+        },
+        {
+          "rival": "guiada3",
+          "clase": "guiada",
+          "gana": 14,
+          "pierde": 0,
+          "tablas": 2,
+          "tasa": 1,
+          "error": 0.1336306209562122
+        },
+        {
+          "rival": "guiada4",
+          "clase": "guiada",
+          "gana": 9,
+          "pierde": 3,
+          "tablas": 4,
+          "tasa": 0.75,
+          "error": 0.14433756729740643
+        },
+        {
+          "rival": "azar",
+          "clase": "azar",
+          "gana": 13,
+          "pierde": 1,
+          "tablas": 2,
+          "tasa": 0.9285714285714286,
+          "error": 0.1336306209562122
         }
       ],
-      "segundos": 271
+      "segundos": 261
     },
     {
       "ronda": 2,
-      "panel": 0.8792792792792793,
-      "medida": 0.7509225092250923,
-      "titular": 0.8792792792792793,
-      "error": 0.02147683897937789,
+      "panel": 0.8950086058519794,
+      "medida": 0.8018348623853211,
+      "titular": 0.8950086058519794,
+      "error": 0.021417646843905968,
       "adoptadas": false,
       "candidata": false,
       "reválida": null,
       "ejemplosDespliegue": 3200,
-      "ejemplosJugada": 122423,
-      "decididas": 363,
-      "deLiga": 195,
+      "ejemplosJugada": 114593,
+      "decididas": 387,
+      "deLiga": 196,
       "exploracion": 0.216,
       "tasa": 0.0025599999999999998,
       "formaciones": {
         "masDura": {
-          "origen": "humana-02·espejo",
-          "aptitud": 0.797619181806181,
-          "juega": 11.2
+          "origen": "humana-08·mutada×humana-03·mutada",
+          "aptitud": 0.6666666666666666,
+          "juega": 6
         },
-        "media": 0.3699780308880956,
+        "media": 0.3114137085341106,
         "archivo": 11
       },
       "despliegue": {
-        "perdida": 0.679954110477321,
-        "perdidaDePartida": 0.7083951880492785,
-        "epocasUtiles": 55,
-        "acierto": 0.5625,
+        "perdida": 0.6752911149088362,
+        "perdidaDePartida": 0.6913613409207582,
+        "epocasUtiles": 60,
+        "acierto": 0.55625,
         "calibracion": [
           {
-            "n": 14,
-            "predicho": 0.0816877596945937,
-            "real": 0.14285714285714285
+            "n": 25,
+            "predicho": 0.04380595472419192,
+            "real": 0.11083552850015298
           },
           {
-            "n": 19,
-            "predicho": 0.1614401454110568,
-            "real": 0.21959438571128062
+            "n": 6,
+            "predicho": 0.13773489100796638,
+            "real": 0.09246320585120248
+          },
+          {
+            "n": 38,
+            "predicho": 0.2573448034839039,
+            "real": 0.28719608613913133
+          },
+          {
+            "n": 51,
+            "predicho": 0.3543900645378062,
+            "real": 0.37258173883134715
+          },
+          {
+            "n": 97,
+            "predicho": 0.4507018009699324,
+            "real": 0.5196421755894539
+          },
+          {
+            "n": 568,
+            "predicho": 0.5716522126362953,
+            "real": 0.5472536691642543
           },
           {
             "n": 15,
-            "predicho": 0.2564659716819545,
-            "real": 0.29708066922343357
-          },
-          {
-            "n": 42,
-            "predicho": 0.3520563328398855,
-            "real": 0.4449766061672667
-          },
-          {
-            "n": 219,
-            "predicho": 0.45361894622023197,
-            "real": 0.4748437316971314
-          },
-          {
-            "n": 419,
-            "predicho": 0.5583989850980224,
-            "real": 0.5702199734863658
-          },
-          {
-            "n": 72,
-            "predicho": 0.6176525328059115,
-            "real": 0.5222880990280775
+            "predicho": 0.6005386402634103,
+            "real": 0.348607452499745
           }
         ],
         "curva": [
           {
             "epoca": 5,
-            "entrenamiento": 0.67488,
-            "validacion": 0.68304,
-            "aciertoEntrenamiento": 0.5792,
-            "aciertoValidacion": 0.555
+            "entrenamiento": 0.67014,
+            "validacion": 0.67789,
+            "aciertoEntrenamiento": 0.5613,
+            "aciertoValidacion": 0.5787
           },
           {
             "epoca": 10,
-            "entrenamiento": 0.67397,
-            "validacion": 0.68328,
-            "aciertoEntrenamiento": 0.5779,
-            "aciertoValidacion": 0.5637
+            "entrenamiento": 0.67034,
+            "validacion": 0.67933,
+            "aciertoEntrenamiento": 0.5729,
+            "aciertoValidacion": 0.57
           },
           {
             "epoca": 15,
-            "entrenamiento": 0.67241,
-            "validacion": 0.68216,
-            "aciertoEntrenamiento": 0.5879,
-            "aciertoValidacion": 0.5687
+            "entrenamiento": 0.66957,
+            "validacion": 0.68065,
+            "aciertoEntrenamiento": 0.5775,
+            "aciertoValidacion": 0.555
           },
           {
             "epoca": 20,
-            "entrenamiento": 0.67131,
-            "validacion": 0.68106,
-            "aciertoEntrenamiento": 0.5825,
-            "aciertoValidacion": 0.5587
+            "entrenamiento": 0.67154,
+            "validacion": 0.68086,
+            "aciertoEntrenamiento": 0.5696,
+            "aciertoValidacion": 0.5537
           },
           {
             "epoca": 25,
-            "entrenamiento": 0.67116,
-            "validacion": 0.68087,
-            "aciertoEntrenamiento": 0.5842,
-            "aciertoValidacion": 0.5563
+            "entrenamiento": 0.67022,
+            "validacion": 0.68089,
+            "aciertoEntrenamiento": 0.575,
+            "aciertoValidacion": 0.5525
           },
           {
             "epoca": 30,
-            "entrenamiento": 0.67069,
-            "validacion": 0.68119,
-            "aciertoEntrenamiento": 0.5854,
+            "entrenamiento": 0.67114,
+            "validacion": 0.68091,
+            "aciertoEntrenamiento": 0.5683,
             "aciertoValidacion": 0.5525
           },
           {
             "epoca": 35,
-            "entrenamiento": 0.66982,
-            "validacion": 0.68156,
-            "aciertoEntrenamiento": 0.5808,
-            "aciertoValidacion": 0.5375
-          },
-          {
-            "epoca": 40,
-            "entrenamiento": 0.66928,
-            "validacion": 0.68242,
-            "aciertoEntrenamiento": 0.5808,
+            "entrenamiento": 0.6712,
+            "validacion": 0.68099,
+            "aciertoEntrenamiento": 0.5604,
             "aciertoValidacion": 0.5413
           },
           {
+            "epoca": 40,
+            "entrenamiento": 0.67163,
+            "validacion": 0.68088,
+            "aciertoEntrenamiento": 0.5704,
+            "aciertoValidacion": 0.5587
+          },
+          {
             "epoca": 45,
-            "entrenamiento": 0.66866,
-            "validacion": 0.68287,
-            "aciertoEntrenamiento": 0.5837,
-            "aciertoValidacion": 0.545
+            "entrenamiento": 0.66626,
+            "validacion": 0.6794,
+            "aciertoEntrenamiento": 0.5825,
+            "aciertoValidacion": 0.5563
           },
           {
             "epoca": 50,
-            "entrenamiento": 0.66665,
-            "validacion": 0.68098,
-            "aciertoEntrenamiento": 0.5879,
-            "aciertoValidacion": 0.5525
-          },
-          {
-            "epoca": 55,
-            "entrenamiento": 0.66523,
-            "validacion": 0.67995,
-            "aciertoEntrenamiento": 0.5925,
+            "entrenamiento": 0.66139,
+            "validacion": 0.67662,
+            "aciertoEntrenamiento": 0.5892,
             "aciertoValidacion": 0.5625
           },
           {
+            "epoca": 55,
+            "entrenamiento": 0.65821,
+            "validacion": 0.67701,
+            "aciertoEntrenamiento": 0.5967,
+            "aciertoValidacion": 0.5537
+          },
+          {
             "epoca": 60,
-            "entrenamiento": 0.66414,
-            "validacion": 0.68024,
-            "aciertoEntrenamiento": 0.5942,
-            "aciertoValidacion": 0.5675
+            "entrenamiento": 0.65424,
+            "validacion": 0.67529,
+            "aciertoEntrenamiento": 0.5938,
+            "aciertoValidacion": 0.5563
           }
         ]
       },
       "jugada": {
-        "perdida": 0.6949478713260259,
-        "perdidaDePartida": 0.7199815133298636,
-        "epocasUtiles": 40,
-        "acierto": 0.5796564714896878,
+        "perdida": 0.6948799084183592,
+        "perdidaDePartida": 0.7055661659510677,
+        "epocasUtiles": 20,
+        "acierto": 0.5802485952664737,
         "calibracion": [
           {
-            "n": 353,
-            "predicho": 0.0648183182777821,
-            "real": 0.35750825174368556
+            "n": 338,
+            "predicho": 0.06367987499207588,
+            "real": 0.3445814681845259
           },
           {
-            "n": 965,
-            "predicho": 0.16021720420213723,
-            "real": 0.3181494521327682
+            "n": 1217,
+            "predicho": 0.16016529800281845,
+            "real": 0.3052374394092273
           },
           {
-            "n": 2443,
-            "predicho": 0.25689500949314575,
-            "real": 0.3488867406185667
+            "n": 2627,
+            "predicho": 0.2529911982370562,
+            "real": 0.35449075416005904
           },
           {
-            "n": 4241,
-            "predicho": 0.3531513684744078,
-            "real": 0.4201346676687127
+            "n": 3568,
+            "predicho": 0.35173413348200205,
+            "real": 0.40792175292302185
           },
           {
-            "n": 5811,
-            "predicho": 0.452287877053408,
-            "real": 0.4748419966273654
+            "n": 4552,
+            "predicho": 0.4521512565646788,
+            "real": 0.45429158439238976
           },
           {
-            "n": 9215,
-            "predicho": 0.5539257420977424,
-            "real": 0.5138909522864727
+            "n": 7201,
+            "predicho": 0.5494641671788911,
+            "real": 0.5243639677165627
           },
           {
-            "n": 4430,
-            "predicho": 0.6484046890089233,
-            "real": 0.5900306959976175
+            "n": 4774,
+            "predicho": 0.6471592941183492,
+            "real": 0.5742219788405455
           },
           {
-            "n": 2942,
-            "predicho": 0.7382341257649147,
-            "real": 0.6271881255610028
+            "n": 3578,
+            "predicho": 0.7451499295419431,
+            "real": 0.611914957425282
           },
           {
-            "n": 849,
-            "predicho": 0.8374180389472934,
-            "real": 0.6854021436407395
+            "n": 1347,
+            "predicho": 0.8405589358177643,
+            "real": 0.6897290970624524
           },
           {
-            "n": 73,
-            "predicho": 0.9209309692599845,
-            "real": 0.6854558552232953
+            "n": 163,
+            "predicho": 0.9231269204702156,
+            "real": 0.7559443706265436
           }
         ],
         "curva": [
           {
             "epoca": 5,
-            "entrenamiento": 0.69689,
-            "validacion": 0.69738,
-            "aciertoEntrenamiento": 0.578,
-            "aciertoValidacion": 0.5748
+            "entrenamiento": 0.70525,
+            "validacion": 0.70974,
+            "aciertoEntrenamiento": 0.5744,
+            "aciertoValidacion": 0.5712
           },
           {
             "epoca": 10,
-            "entrenamiento": 0.70141,
-            "validacion": 0.70181,
-            "aciertoEntrenamiento": 0.5762,
-            "aciertoValidacion": 0.576
+            "entrenamiento": 0.69128,
+            "validacion": 0.69582,
+            "aciertoEntrenamiento": 0.5818,
+            "aciertoValidacion": 0.5799
           },
           {
             "epoca": 15,
-            "entrenamiento": 0.69925,
-            "validacion": 0.69954,
-            "aciertoEntrenamiento": 0.5781,
-            "aciertoValidacion": 0.5771
-          },
-          {
-            "epoca": 20,
-            "entrenamiento": 0.70453,
-            "validacion": 0.70484,
-            "aciertoEntrenamiento": 0.574,
-            "aciertoValidacion": 0.5741
-          },
-          {
-            "epoca": 25,
-            "entrenamiento": 0.69643,
-            "validacion": 0.69721,
-            "aciertoEntrenamiento": 0.5798,
-            "aciertoValidacion": 0.5795
-          },
-          {
-            "epoca": 30,
-            "entrenamiento": 0.69917,
-            "validacion": 0.69937,
-            "aciertoEntrenamiento": 0.5778,
-            "aciertoValidacion": 0.5787
-          },
-          {
-            "epoca": 35,
-            "entrenamiento": 0.70079,
-            "validacion": 0.70113,
-            "aciertoEntrenamiento": 0.5768,
-            "aciertoValidacion": 0.5775
-          },
-          {
-            "epoca": 40,
-            "entrenamiento": 0.6941,
-            "validacion": 0.69495,
-            "aciertoEntrenamiento": 0.581,
-            "aciertoValidacion": 0.5797
-          },
-          {
-            "epoca": 45,
-            "entrenamiento": 0.69921,
-            "validacion": 0.70013,
-            "aciertoEntrenamiento": 0.5804,
-            "aciertoValidacion": 0.58
-          },
-          {
-            "epoca": 50,
-            "entrenamiento": 0.69559,
-            "validacion": 0.69643,
-            "aciertoEntrenamiento": 0.5802,
-            "aciertoValidacion": 0.5794
-          },
-          {
-            "epoca": 55,
-            "entrenamiento": 0.69904,
-            "validacion": 0.70001,
-            "aciertoEntrenamiento": 0.5802,
+            "entrenamiento": 0.69404,
+            "validacion": 0.69882,
+            "aciertoEntrenamiento": 0.582,
             "aciertoValidacion": 0.5783
           },
           {
-            "epoca": 60,
-            "entrenamiento": 0.69493,
-            "validacion": 0.69592,
+            "epoca": 20,
+            "entrenamiento": 0.68992,
+            "validacion": 0.69488,
+            "aciertoEntrenamiento": 0.5833,
+            "aciertoValidacion": 0.5802
+          },
+          {
+            "epoca": 25,
+            "entrenamiento": 0.69044,
+            "validacion": 0.69553,
+            "aciertoEntrenamiento": 0.5833,
+            "aciertoValidacion": 0.5806
+          },
+          {
+            "epoca": 30,
+            "entrenamiento": 0.69415,
+            "validacion": 0.69906,
+            "aciertoEntrenamiento": 0.581,
+            "aciertoValidacion": 0.5795
+          },
+          {
+            "epoca": 35,
+            "entrenamiento": 0.69217,
+            "validacion": 0.69702,
             "aciertoEntrenamiento": 0.5823,
-            "aciertoValidacion": 0.5804
+            "aciertoValidacion": 0.5796
+          },
+          {
+            "epoca": 40,
+            "entrenamiento": 0.70007,
+            "validacion": 0.70473,
+            "aciertoEntrenamiento": 0.578,
+            "aciertoValidacion": 0.5775
+          },
+          {
+            "epoca": 45,
+            "entrenamiento": 0.69639,
+            "validacion": 0.70136,
+            "aciertoEntrenamiento": 0.5803,
+            "aciertoValidacion": 0.5787
+          },
+          {
+            "epoca": 50,
+            "entrenamiento": 0.69557,
+            "validacion": 0.70028,
+            "aciertoEntrenamiento": 0.5797,
+            "aciertoValidacion": 0.5783
+          },
+          {
+            "epoca": 55,
+            "entrenamiento": 0.69666,
+            "validacion": 0.70164,
+            "aciertoEntrenamiento": 0.581,
+            "aciertoValidacion": 0.5799
+          },
+          {
+            "epoca": 60,
+            "entrenamiento": 0.69674,
+            "validacion": 0.70146,
+            "aciertoEntrenamiento": 0.5802,
+            "aciertoValidacion": 0.5795
           }
         ]
       },
@@ -984,29 +984,29 @@
         {
           "rival": "humana-01",
           "clase": "humana",
-          "gana": 11,
-          "pierde": 4,
+          "gana": 14,
+          "pierde": 1,
           "tablas": 1,
-          "tasa": 0.7333333333333333,
+          "tasa": 0.9333333333333333,
           "error": 0.12909944487358055
         },
         {
           "rival": "humana-01~1",
           "clase": "variante",
-          "gana": 11,
-          "pierde": 1,
-          "tablas": 4,
-          "tasa": 0.9166666666666666,
-          "error": 0.14433756729740643
+          "gana": 13,
+          "pierde": 0,
+          "tablas": 3,
+          "tasa": 1,
+          "error": 0.1386750490563073
         },
         {
           "rival": "humana-01~2",
           "clase": "variante",
-          "gana": 11,
-          "pierde": 4,
-          "tablas": 1,
-          "tasa": 0.7333333333333333,
-          "error": 0.12909944487358055
+          "gana": 10,
+          "pierde": 3,
+          "tablas": 3,
+          "tasa": 0.7692307692307693,
+          "error": 0.1386750490563073
         },
         {
           "rival": "humana-02",
@@ -1020,41 +1020,86 @@
         {
           "rival": "humana-02~1",
           "clase": "variante",
-          "gana": 7,
-          "pierde": 7,
-          "tablas": 2,
-          "tasa": 0.5,
-          "error": 0.1336306209562122
+          "gana": 9,
+          "pierde": 4,
+          "tablas": 3,
+          "tasa": 0.6923076923076923,
+          "error": 0.1386750490563073
         },
         {
           "rival": "humana-02~2",
           "clase": "variante",
-          "gana": 12,
-          "pierde": 4,
+          "gana": 9,
+          "pierde": 7,
           "tablas": 0,
-          "tasa": 0.75,
+          "tasa": 0.5625,
           "error": 0.125
         },
         {
           "rival": "humana-03",
           "clase": "humana",
-          "gana": 11,
-          "pierde": 2,
-          "tablas": 3,
-          "tasa": 0.8461538461538461,
-          "error": 0.1386750490563073
+          "gana": 13,
+          "pierde": 1,
+          "tablas": 2,
+          "tasa": 0.9285714285714286,
+          "error": 0.1336306209562122
         },
         {
           "rival": "humana-03~1",
           "clase": "variante",
           "gana": 11,
-          "pierde": 4,
-          "tablas": 1,
-          "tasa": 0.7333333333333333,
-          "error": 0.12909944487358055
+          "pierde": 3,
+          "tablas": 2,
+          "tasa": 0.7857142857142857,
+          "error": 0.1336306209562122
         },
         {
           "rival": "humana-03~2",
+          "clase": "variante",
+          "gana": 13,
+          "pierde": 2,
+          "tablas": 1,
+          "tasa": 0.8666666666666667,
+          "error": 0.12909944487358055
+        },
+        {
+          "rival": "humana-04",
+          "clase": "humana",
+          "gana": 14,
+          "pierde": 0,
+          "tablas": 2,
+          "tasa": 1,
+          "error": 0.1336306209562122
+        },
+        {
+          "rival": "humana-04~1",
+          "clase": "variante",
+          "gana": 15,
+          "pierde": 0,
+          "tablas": 1,
+          "tasa": 1,
+          "error": 0.12909944487358055
+        },
+        {
+          "rival": "humana-04~2",
+          "clase": "variante",
+          "gana": 16,
+          "pierde": 0,
+          "tablas": 0,
+          "tasa": 1,
+          "error": 0.125
+        },
+        {
+          "rival": "humana-05",
+          "clase": "humana",
+          "gana": 13,
+          "pierde": 0,
+          "tablas": 3,
+          "tasa": 1,
+          "error": 0.1386750490563073
+        },
+        {
+          "rival": "humana-05~1",
           "clase": "variante",
           "gana": 9,
           "pierde": 3,
@@ -1063,8 +1108,26 @@
           "error": 0.14433756729740643
         },
         {
-          "rival": "humana-04",
+          "rival": "humana-05~2",
+          "clase": "variante",
+          "gana": 9,
+          "pierde": 4,
+          "tablas": 3,
+          "tasa": 0.6923076923076923,
+          "error": 0.1386750490563073
+        },
+        {
+          "rival": "humana-06",
           "clase": "humana",
+          "gana": 14,
+          "pierde": 2,
+          "tablas": 0,
+          "tasa": 0.875,
+          "error": 0.125
+        },
+        {
+          "rival": "humana-06~1",
+          "clase": "variante",
           "gana": 12,
           "pierde": 2,
           "tablas": 2,
@@ -1072,13 +1135,593 @@
           "error": 0.1336306209562122
         },
         {
-          "rival": "humana-04~1",
+          "rival": "humana-06~2",
+          "clase": "variante",
+          "gana": 14,
+          "pierde": 1,
+          "tablas": 1,
+          "tasa": 0.9333333333333333,
+          "error": 0.12909944487358055
+        },
+        {
+          "rival": "humana-07",
+          "clase": "humana",
+          "gana": 9,
+          "pierde": 7,
+          "tablas": 0,
+          "tasa": 0.5625,
+          "error": 0.125
+        },
+        {
+          "rival": "humana-07~1",
+          "clase": "variante",
+          "gana": 9,
+          "pierde": 5,
+          "tablas": 2,
+          "tasa": 0.6428571428571429,
+          "error": 0.1336306209562122
+        },
+        {
+          "rival": "humana-07~2",
+          "clase": "variante",
+          "gana": 13,
+          "pierde": 0,
+          "tablas": 3,
+          "tasa": 1,
+          "error": 0.1386750490563073
+        },
+        {
+          "rival": "humana-08",
+          "clase": "humana",
+          "gana": 8,
+          "pierde": 7,
+          "tablas": 1,
+          "tasa": 0.5333333333333333,
+          "error": 0.12909944487358055
+        },
+        {
+          "rival": "humana-08~1",
+          "clase": "variante",
+          "gana": 8,
+          "pierde": 7,
+          "tablas": 1,
+          "tasa": 0.5333333333333333,
+          "error": 0.12909944487358055
+        },
+        {
+          "rival": "humana-08~2",
+          "clase": "variante",
+          "gana": 12,
+          "pierde": 3,
+          "tablas": 1,
+          "tasa": 0.8,
+          "error": 0.12909944487358055
+        },
+        {
+          "rival": "humana-09",
+          "clase": "humana",
+          "gana": 8,
+          "pierde": 6,
+          "tablas": 2,
+          "tasa": 0.5714285714285714,
+          "error": 0.1336306209562122
+        },
+        {
+          "rival": "humana-09~1",
+          "clase": "variante",
+          "gana": 12,
+          "pierde": 4,
+          "tablas": 0,
+          "tasa": 0.75,
+          "error": 0.125
+        },
+        {
+          "rival": "humana-09~2",
           "clase": "variante",
           "gana": 10,
+          "pierde": 5,
+          "tablas": 1,
+          "tasa": 0.6666666666666666,
+          "error": 0.12909944487358055
+        },
+        {
+          "rival": "humana-10",
+          "clase": "humana",
+          "gana": 13,
           "pierde": 1,
-          "tablas": 5,
-          "tasa": 0.9090909090909091,
-          "error": 0.15075567228888181
+          "tablas": 2,
+          "tasa": 0.9285714285714286,
+          "error": 0.1336306209562122
+        },
+        {
+          "rival": "humana-10~1",
+          "clase": "variante",
+          "gana": 10,
+          "pierde": 4,
+          "tablas": 2,
+          "tasa": 0.7142857142857143,
+          "error": 0.1336306209562122
+        },
+        {
+          "rival": "humana-10~2",
+          "clase": "variante",
+          "gana": 12,
+          "pierde": 1,
+          "tablas": 3,
+          "tasa": 0.9230769230769231,
+          "error": 0.1386750490563073
+        },
+        {
+          "rival": "humana-11",
+          "clase": "humana",
+          "gana": 8,
+          "pierde": 6,
+          "tablas": 2,
+          "tasa": 0.5714285714285714,
+          "error": 0.1336306209562122
+        },
+        {
+          "rival": "humana-11~1",
+          "clase": "variante",
+          "gana": 7,
+          "pierde": 5,
+          "tablas": 4,
+          "tasa": 0.5833333333333334,
+          "error": 0.14433756729740643
+        },
+        {
+          "rival": "humana-11~2",
+          "clase": "variante",
+          "gana": 14,
+          "pierde": 1,
+          "tablas": 1,
+          "tasa": 0.9333333333333333,
+          "error": 0.12909944487358055
+        },
+        {
+          "rival": "guiada1",
+          "clase": "guiada",
+          "gana": 11,
+          "pierde": 3,
+          "tablas": 2,
+          "tasa": 0.7857142857142857,
+          "error": 0.1336306209562122
+        },
+        {
+          "rival": "guiada2",
+          "clase": "guiada",
+          "gana": 13,
+          "pierde": 1,
+          "tablas": 2,
+          "tasa": 0.9285714285714286,
+          "error": 0.1336306209562122
+        },
+        {
+          "rival": "guiada3",
+          "clase": "guiada",
+          "gana": 13,
+          "pierde": 1,
+          "tablas": 2,
+          "tasa": 0.9285714285714286,
+          "error": 0.1336306209562122
+        },
+        {
+          "rival": "guiada4",
+          "clase": "guiada",
+          "gana": 15,
+          "pierde": 1,
+          "tablas": 0,
+          "tasa": 0.9375,
+          "error": 0.125
+        },
+        {
+          "rival": "azar",
+          "clase": "azar",
+          "gana": 15,
+          "pierde": 0,
+          "tablas": 1,
+          "tasa": 1,
+          "error": 0.12909944487358055
+        }
+      ],
+      "segundos": 578
+    },
+    {
+      "ronda": 3,
+      "panel": 0.915807560137457,
+      "medida": 0.748653500897666,
+      "titular": 0.915807560137457,
+      "error": 0.02118567993035179,
+      "adoptadas": false,
+      "candidata": false,
+      "reválida": null,
+      "ejemplosDespliegue": 4800,
+      "ejemplosJugada": 167602,
+      "decididas": 385,
+      "deLiga": 200,
+      "exploracion": 0.182,
+      "tasa": 0.00212,
+      "formaciones": {
+        "masDura": {
+          "origen": "humana-02×humana-11×humana-05×humana-08·",
+          "aptitud": 0.7142857142857143,
+          "juega": 7
+        },
+        "media": 0.30919312132361976,
+        "archivo": 15
+      },
+      "despliegue": {
+        "perdida": 0.6853759599872993,
+        "perdidaDePartida": 0.6977366378904477,
+        "epocasUtiles": 5,
+        "acierto": 0.5533333333333333,
+        "calibracion": [
+          {
+            "n": 12,
+            "predicho": 0.06656880691362674,
+            "real": 0.26573375202075905
+          },
+          {
+            "n": 36,
+            "predicho": 0.14544355759505065,
+            "real": 0.2611711243634711
+          },
+          {
+            "n": 34,
+            "predicho": 0.2687273859718764,
+            "real": 0.22263371246880084
+          },
+          {
+            "n": 57,
+            "predicho": 0.3506320054257231,
+            "real": 0.28687210731089163
+          },
+          {
+            "n": 41,
+            "predicho": 0.4677813637680043,
+            "real": 0.48848753544046597
+          },
+          {
+            "n": 970,
+            "predicho": 0.5762961523538211,
+            "real": 0.5393067317389033
+          },
+          {
+            "n": 50,
+            "predicho": 0.6070004514715046,
+            "real": 0.4426052584927726
+          }
+        ],
+        "curva": [
+          {
+            "epoca": 5,
+            "entrenamiento": 0.66048,
+            "validacion": 0.68538,
+            "aciertoEntrenamiento": 0.5881,
+            "aciertoValidacion": 0.5533
+          },
+          {
+            "epoca": 10,
+            "entrenamiento": 0.65945,
+            "validacion": 0.68732,
+            "aciertoEntrenamiento": 0.5922,
+            "aciertoValidacion": 0.545
+          },
+          {
+            "epoca": 15,
+            "entrenamiento": 0.66097,
+            "validacion": 0.68862,
+            "aciertoEntrenamiento": 0.5917,
+            "aciertoValidacion": 0.5483
+          },
+          {
+            "epoca": 20,
+            "entrenamiento": 0.66108,
+            "validacion": 0.69086,
+            "aciertoEntrenamiento": 0.5875,
+            "aciertoValidacion": 0.5433
+          },
+          {
+            "epoca": 25,
+            "entrenamiento": 0.65895,
+            "validacion": 0.69023,
+            "aciertoEntrenamiento": 0.6006,
+            "aciertoValidacion": 0.5475
+          },
+          {
+            "epoca": 30,
+            "entrenamiento": 0.65709,
+            "validacion": 0.68943,
+            "aciertoEntrenamiento": 0.6011,
+            "aciertoValidacion": 0.555
+          },
+          {
+            "epoca": 35,
+            "entrenamiento": 0.65919,
+            "validacion": 0.69269,
+            "aciertoEntrenamiento": 0.5881,
+            "aciertoValidacion": 0.5517
+          },
+          {
+            "epoca": 40,
+            "entrenamiento": 0.65616,
+            "validacion": 0.69113,
+            "aciertoEntrenamiento": 0.5914,
+            "aciertoValidacion": 0.56
+          },
+          {
+            "epoca": 45,
+            "entrenamiento": 0.6543,
+            "validacion": 0.69061,
+            "aciertoEntrenamiento": 0.5944,
+            "aciertoValidacion": 0.56
+          },
+          {
+            "epoca": 50,
+            "entrenamiento": 0.65273,
+            "validacion": 0.68975,
+            "aciertoEntrenamiento": 0.5969,
+            "aciertoValidacion": 0.5617
+          },
+          {
+            "epoca": 55,
+            "entrenamiento": 0.65192,
+            "validacion": 0.69006,
+            "aciertoEntrenamiento": 0.5964,
+            "aciertoValidacion": 0.565
+          },
+          {
+            "epoca": 60,
+            "entrenamiento": 0.6515,
+            "validacion": 0.69045,
+            "aciertoEntrenamiento": 0.5958,
+            "aciertoValidacion": 0.5608
+          }
+        ]
+      },
+      "jugada": {
+        "perdida": 0.6893754002501841,
+        "perdidaDePartida": 0.6949721678182045,
+        "epocasUtiles": 25,
+        "acierto": 0.5931670460145012,
+        "calibracion": [
+          {
+            "n": 547,
+            "predicho": 0.05934612713772457,
+            "real": 0.33602503570682724
+          },
+          {
+            "n": 2238,
+            "predicho": 0.16053726062776424,
+            "real": 0.2877448277775976
+          },
+          {
+            "n": 4320,
+            "predicho": 0.25379930328289285,
+            "real": 0.32811274528157286
+          },
+          {
+            "n": 6255,
+            "predicho": 0.35198564004265204,
+            "real": 0.41425109633590823
+          },
+          {
+            "n": 7794,
+            "predicho": 0.45146606700689257,
+            "real": 0.4933618350446086
+          },
+          {
+            "n": 8242,
+            "predicho": 0.5513064961068577,
+            "real": 0.5379182475128185
+          },
+          {
+            "n": 5317,
+            "predicho": 0.6473216370054867,
+            "real": 0.5867792096502041
+          },
+          {
+            "n": 5026,
+            "predicho": 0.7501797379024844,
+            "real": 0.6206532496891034
+          },
+          {
+            "n": 2417,
+            "predicho": 0.8417971108500585,
+            "real": 0.708260971647373
+          },
+          {
+            "n": 461,
+            "predicho": 0.9236389460724892,
+            "real": 0.7289052868157259
+          }
+        ],
+        "curva": [
+          {
+            "epoca": 5,
+            "entrenamiento": 0.69271,
+            "validacion": 0.68961,
+            "aciertoEntrenamiento": 0.5878,
+            "aciertoValidacion": 0.59
+          },
+          {
+            "epoca": 10,
+            "entrenamiento": 0.69482,
+            "validacion": 0.69146,
+            "aciertoEntrenamiento": 0.5881,
+            "aciertoValidacion": 0.5911
+          },
+          {
+            "epoca": 15,
+            "entrenamiento": 0.69346,
+            "validacion": 0.68997,
+            "aciertoEntrenamiento": 0.5902,
+            "aciertoValidacion": 0.5931
+          },
+          {
+            "epoca": 20,
+            "entrenamiento": 0.69288,
+            "validacion": 0.68957,
+            "aciertoEntrenamiento": 0.5895,
+            "aciertoValidacion": 0.5939
+          },
+          {
+            "epoca": 25,
+            "entrenamiento": 0.69284,
+            "validacion": 0.68938,
+            "aciertoEntrenamiento": 0.5894,
+            "aciertoValidacion": 0.5932
+          },
+          {
+            "epoca": 30,
+            "entrenamiento": 0.69498,
+            "validacion": 0.69155,
+            "aciertoEntrenamiento": 0.5896,
+            "aciertoValidacion": 0.593
+          },
+          {
+            "epoca": 35,
+            "entrenamiento": 0.69624,
+            "validacion": 0.69269,
+            "aciertoEntrenamiento": 0.5893,
+            "aciertoValidacion": 0.5934
+          },
+          {
+            "epoca": 40,
+            "entrenamiento": 0.69547,
+            "validacion": 0.69203,
+            "aciertoEntrenamiento": 0.5887,
+            "aciertoValidacion": 0.5923
+          },
+          {
+            "epoca": 45,
+            "entrenamiento": 0.69652,
+            "validacion": 0.69305,
+            "aciertoEntrenamiento": 0.5892,
+            "aciertoValidacion": 0.5921
+          },
+          {
+            "epoca": 50,
+            "entrenamiento": 0.69361,
+            "validacion": 0.69,
+            "aciertoEntrenamiento": 0.5905,
+            "aciertoValidacion": 0.5949
+          },
+          {
+            "epoca": 55,
+            "entrenamiento": 0.69538,
+            "validacion": 0.69185,
+            "aciertoEntrenamiento": 0.59,
+            "aciertoValidacion": 0.5939
+          },
+          {
+            "epoca": 60,
+            "entrenamiento": 0.69641,
+            "validacion": 0.69293,
+            "aciertoEntrenamiento": 0.5905,
+            "aciertoValidacion": 0.5939
+          }
+        ]
+      },
+      "porRival": [
+        {
+          "rival": "humana-01",
+          "clase": "humana",
+          "gana": 13,
+          "pierde": 2,
+          "tablas": 1,
+          "tasa": 0.8666666666666667,
+          "error": 0.12909944487358055
+        },
+        {
+          "rival": "humana-01~1",
+          "clase": "variante",
+          "gana": 13,
+          "pierde": 0,
+          "tablas": 3,
+          "tasa": 1,
+          "error": 0.1386750490563073
+        },
+        {
+          "rival": "humana-01~2",
+          "clase": "variante",
+          "gana": 15,
+          "pierde": 0,
+          "tablas": 1,
+          "tasa": 1,
+          "error": 0.12909944487358055
+        },
+        {
+          "rival": "humana-02",
+          "clase": "humana",
+          "gana": 5,
+          "pierde": 10,
+          "tablas": 1,
+          "tasa": 0.3333333333333333,
+          "error": 0.12909944487358055
+        },
+        {
+          "rival": "humana-02~1",
+          "clase": "variante",
+          "gana": 5,
+          "pierde": 11,
+          "tablas": 0,
+          "tasa": 0.3125,
+          "error": 0.125
+        },
+        {
+          "rival": "humana-02~2",
+          "clase": "variante",
+          "gana": 11,
+          "pierde": 5,
+          "tablas": 0,
+          "tasa": 0.6875,
+          "error": 0.125
+        },
+        {
+          "rival": "humana-03",
+          "clase": "humana",
+          "gana": 12,
+          "pierde": 3,
+          "tablas": 1,
+          "tasa": 0.8,
+          "error": 0.12909944487358055
+        },
+        {
+          "rival": "humana-03~1",
+          "clase": "variante",
+          "gana": 9,
+          "pierde": 4,
+          "tablas": 3,
+          "tasa": 0.6923076923076923,
+          "error": 0.1386750490563073
+        },
+        {
+          "rival": "humana-03~2",
+          "clase": "variante",
+          "gana": 14,
+          "pierde": 1,
+          "tablas": 1,
+          "tasa": 0.9333333333333333,
+          "error": 0.12909944487358055
+        },
+        {
+          "rival": "humana-04",
+          "clase": "humana",
+          "gana": 15,
+          "pierde": 0,
+          "tablas": 1,
+          "tasa": 1,
+          "error": 0.12909944487358055
+        },
+        {
+          "rival": "humana-04~1",
+          "clase": "variante",
+          "gana": 14,
+          "pierde": 2,
+          "tablas": 0,
+          "tasa": 0.875,
+          "error": 0.125
         },
         {
           "rival": "humana-04~2",
@@ -1092,6 +1735,24 @@
         {
           "rival": "humana-05",
           "clase": "humana",
+          "gana": 6,
+          "pierde": 7,
+          "tablas": 3,
+          "tasa": 0.46153846153846156,
+          "error": 0.1386750490563073
+        },
+        {
+          "rival": "humana-05~1",
+          "clase": "variante",
+          "gana": 12,
+          "pierde": 2,
+          "tablas": 2,
+          "tasa": 0.8571428571428571,
+          "error": 0.1336306209562122
+        },
+        {
+          "rival": "humana-05~2",
+          "clase": "variante",
           "gana": 11,
           "pierde": 4,
           "tablas": 1,
@@ -1099,16 +1760,52 @@
           "error": 0.12909944487358055
         },
         {
-          "rival": "humana-05~1",
+          "rival": "humana-06",
+          "clase": "humana",
+          "gana": 14,
+          "pierde": 1,
+          "tablas": 1,
+          "tasa": 0.9333333333333333,
+          "error": 0.12909944487358055
+        },
+        {
+          "rival": "humana-06~1",
           "clase": "variante",
           "gana": 12,
-          "pierde": 4,
+          "pierde": 2,
+          "tablas": 2,
+          "tasa": 0.8571428571428571,
+          "error": 0.1336306209562122
+        },
+        {
+          "rival": "humana-06~2",
+          "clase": "variante",
+          "gana": 14,
+          "pierde": 2,
           "tablas": 0,
-          "tasa": 0.75,
+          "tasa": 0.875,
           "error": 0.125
         },
         {
-          "rival": "humana-05~2",
+          "rival": "humana-07",
+          "clase": "humana",
+          "gana": 7,
+          "pierde": 9,
+          "tablas": 0,
+          "tasa": 0.4375,
+          "error": 0.125
+        },
+        {
+          "rival": "humana-07~1",
+          "clase": "variante",
+          "gana": 9,
+          "pierde": 6,
+          "tablas": 1,
+          "tasa": 0.6,
+          "error": 0.12909944487358055
+        },
+        {
+          "rival": "humana-07~2",
           "clase": "variante",
           "gana": 13,
           "pierde": 2,
@@ -1117,93 +1814,39 @@
           "error": 0.12909944487358055
         },
         {
-          "rival": "humana-06",
-          "clase": "humana",
-          "gana": 11,
-          "pierde": 3,
-          "tablas": 2,
-          "tasa": 0.7857142857142857,
-          "error": 0.1336306209562122
-        },
-        {
-          "rival": "humana-06~1",
-          "clase": "variante",
-          "gana": 11,
-          "pierde": 2,
-          "tablas": 3,
-          "tasa": 0.8461538461538461,
-          "error": 0.1386750490563073
-        },
-        {
-          "rival": "humana-06~2",
-          "clase": "variante",
-          "gana": 15,
-          "pierde": 0,
-          "tablas": 1,
-          "tasa": 1,
-          "error": 0.12909944487358055
-        },
-        {
-          "rival": "humana-07",
-          "clase": "humana",
-          "gana": 10,
-          "pierde": 5,
-          "tablas": 1,
-          "tasa": 0.6666666666666666,
-          "error": 0.12909944487358055
-        },
-        {
-          "rival": "humana-07~1",
-          "clase": "variante",
-          "gana": 9,
-          "pierde": 5,
-          "tablas": 2,
-          "tasa": 0.6428571428571429,
-          "error": 0.1336306209562122
-        },
-        {
-          "rival": "humana-07~2",
-          "clase": "variante",
-          "gana": 11,
-          "pierde": 0,
-          "tablas": 5,
-          "tasa": 1,
-          "error": 0.15075567228888181
-        },
-        {
           "rival": "humana-08",
           "clase": "humana",
-          "gana": 9,
-          "pierde": 7,
-          "tablas": 0,
-          "tasa": 0.5625,
-          "error": 0.125
+          "gana": 10,
+          "pierde": 4,
+          "tablas": 2,
+          "tasa": 0.7142857142857143,
+          "error": 0.1336306209562122
         },
         {
           "rival": "humana-08~1",
           "clase": "variante",
-          "gana": 9,
-          "pierde": 7,
-          "tablas": 0,
-          "tasa": 0.5625,
-          "error": 0.125
+          "gana": 10,
+          "pierde": 4,
+          "tablas": 2,
+          "tasa": 0.7142857142857143,
+          "error": 0.1336306209562122
         },
         {
           "rival": "humana-08~2",
           "clase": "variante",
-          "gana": 9,
-          "pierde": 7,
+          "gana": 13,
+          "pierde": 3,
           "tablas": 0,
-          "tasa": 0.5625,
+          "tasa": 0.8125,
           "error": 0.125
         },
         {
           "rival": "humana-09",
           "clase": "humana",
-          "gana": 9,
-          "pierde": 5,
+          "gana": 10,
+          "pierde": 4,
           "tablas": 2,
-          "tasa": 0.6428571428571429,
+          "tasa": 0.7142857142857143,
           "error": 0.1336306209562122
         },
         {
@@ -1218,15 +1861,60 @@
         {
           "rival": "humana-09~2",
           "clase": "variante",
-          "gana": 8,
+          "gana": 9,
           "pierde": 7,
-          "tablas": 1,
-          "tasa": 0.5333333333333333,
-          "error": 0.12909944487358055
+          "tablas": 0,
+          "tasa": 0.5625,
+          "error": 0.125
         },
         {
           "rival": "humana-10",
           "clase": "humana",
+          "gana": 10,
+          "pierde": 6,
+          "tablas": 0,
+          "tasa": 0.625,
+          "error": 0.125
+        },
+        {
+          "rival": "humana-10~1",
+          "clase": "variante",
+          "gana": 7,
+          "pierde": 8,
+          "tablas": 1,
+          "tasa": 0.4666666666666667,
+          "error": 0.12909944487358055
+        },
+        {
+          "rival": "humana-10~2",
+          "clase": "variante",
+          "gana": 15,
+          "pierde": 0,
+          "tablas": 1,
+          "tasa": 1,
+          "error": 0.12909944487358055
+        },
+        {
+          "rival": "humana-11",
+          "clase": "humana",
+          "gana": 5,
+          "pierde": 5,
+          "tablas": 6,
+          "tasa": 0.5,
+          "error": 0.15811388300841897
+        },
+        {
+          "rival": "humana-11~1",
+          "clase": "variante",
+          "gana": 5,
+          "pierde": 9,
+          "tablas": 2,
+          "tasa": 0.35714285714285715,
+          "error": 0.1336306209562122
+        },
+        {
+          "rival": "humana-11~2",
+          "clase": "variante",
           "gana": 13,
           "pierde": 2,
           "tablas": 1,
@@ -1234,80 +1922,17 @@
           "error": 0.12909944487358055
         },
         {
-          "rival": "humana-10~1",
-          "clase": "variante",
-          "gana": 12,
-          "pierde": 3,
-          "tablas": 1,
-          "tasa": 0.8,
-          "error": 0.12909944487358055
-        },
-        {
-          "rival": "humana-10~2",
-          "clase": "variante",
-          "gana": 11,
-          "pierde": 1,
-          "tablas": 4,
-          "tasa": 0.9166666666666666,
-          "error": 0.14433756729740643
-        },
-        {
-          "rival": "humana-11",
-          "clase": "humana",
-          "gana": 7,
-          "pierde": 6,
-          "tablas": 3,
-          "tasa": 0.5384615384615384,
-          "error": 0.1386750490563073
-        },
-        {
-          "rival": "humana-11~1",
-          "clase": "variante",
-          "gana": 10,
-          "pierde": 6,
-          "tablas": 0,
-          "tasa": 0.625,
-          "error": 0.125
-        },
-        {
-          "rival": "humana-11~2",
-          "clase": "variante",
-          "gana": 14,
-          "pierde": 0,
-          "tablas": 2,
-          "tasa": 1,
-          "error": 0.1336306209562122
-        },
-        {
           "rival": "guiada1",
           "clase": "guiada",
-          "gana": 10,
-          "pierde": 3,
+          "gana": 12,
+          "pierde": 1,
           "tablas": 3,
-          "tasa": 0.7692307692307693,
+          "tasa": 0.9230769230769231,
           "error": 0.1386750490563073
         },
         {
           "rival": "guiada2",
           "clase": "guiada",
-          "gana": 11,
-          "pierde": 2,
-          "tablas": 3,
-          "tasa": 0.8461538461538461,
-          "error": 0.1386750490563073
-        },
-        {
-          "rival": "guiada3",
-          "clase": "guiada",
-          "gana": 14,
-          "pierde": 2,
-          "tablas": 0,
-          "tasa": 0.875,
-          "error": 0.125
-        },
-        {
-          "rival": "guiada4",
-          "clase": "guiada",
           "gana": 14,
           "pierde": 0,
           "tablas": 2,
@@ -1315,306 +1940,319 @@
           "error": 0.1336306209562122
         },
         {
+          "rival": "guiada3",
+          "clase": "guiada",
+          "gana": 13,
+          "pierde": 0,
+          "tablas": 3,
+          "tasa": 1,
+          "error": 0.1386750490563073
+        },
+        {
+          "rival": "guiada4",
+          "clase": "guiada",
+          "gana": 10,
+          "pierde": 4,
+          "tablas": 2,
+          "tasa": 0.7142857142857143,
+          "error": 0.1336306209562122
+        },
+        {
           "rival": "azar",
           "clase": "azar",
-          "gana": 7,
-          "pierde": 4,
-          "tablas": 5,
-          "tasa": 0.6363636363636364,
-          "error": 0.15075567228888181
+          "gana": 14,
+          "pierde": 1,
+          "tablas": 1,
+          "tasa": 0.9333333333333333,
+          "error": 0.12909944487358055
         }
       ],
-      "segundos": 619
+      "segundos": 977
     },
     {
-      "ronda": 3,
-      "panel": 0.9045936395759717,
-      "medida": 0.6624775583482945,
-      "titular": 0.9045936395759717,
-      "error": 0.02118567993035179,
+      "ronda": 4,
+      "panel": 0.9429065743944637,
+      "medida": 0.8456260720411664,
+      "titular": 0.9429065743944637,
+      "error": 0.020707884164064556,
       "adoptadas": false,
       "candidata": false,
       "reválida": null,
       "ejemplosDespliegue": 4800,
-      "ejemplosJugada": 178081,
-      "decididas": 373,
-      "deLiga": 199,
-      "exploracion": 0.182,
-      "tasa": 0.00212,
+      "ejemplosJugada": 161030,
+      "decididas": 384,
+      "deLiga": 190,
+      "exploracion": 0.14800000000000002,
+      "tasa": 0.00168,
       "formaciones": {
         "masDura": {
-          "origen": "humana-02·espejo×humana-02",
-          "aptitud": 0.794357395037146,
+          "origen": "humana-02×humana-11×humana-05×humana-08·",
+          "aptitud": 1,
           "juega": 6
         },
-        "media": 0.3239570141746045,
-        "archivo": 15
+        "media": 0.37964587618813994,
+        "archivo": 20
       },
       "despliegue": {
-        "perdida": 0.6735557719314466,
-        "perdidaDePartida": 0.7059980776908039,
+        "perdida": 0.6635643628077426,
+        "perdidaDePartida": 0.666995614997748,
         "epocasUtiles": 5,
-        "acierto": 0.5591666666666667,
+        "acierto": 0.5858333333333333,
         "calibracion": [
           {
-            "n": 14,
-            "predicho": 0.07507618127918514,
-            "real": 0.14285714285714285
-          },
-          {
-            "n": 29,
-            "predicho": 0.14858017042943744,
-            "real": 0.18775552014045552
-          },
-          {
-            "n": 63,
-            "predicho": 0.2540493545483983,
-            "real": 0.19568235033418716
+            "n": 79,
+            "predicho": 0.1556803993370992,
+            "real": 0.19693759627688548
           },
           {
             "n": 57,
-            "predicho": 0.35883369247956215,
-            "real": 0.3642266211421597
+            "predicho": 0.26218629651815545,
+            "real": 0.2252339485604424
           },
           {
-            "n": 300,
-            "predicho": 0.4622350188278441,
-            "real": 0.47485282551436986
+            "n": 56,
+            "predicho": 0.34867866625912874,
+            "real": 0.26785714285714285
           },
           {
-            "n": 737,
-            "predicho": 0.5442808223464973,
-            "real": 0.539352792679301
+            "n": 259,
+            "predicho": 0.47334433365618306,
+            "real": 0.4923209016500671
+          },
+          {
+            "n": 749,
+            "predicho": 0.5394534824913567,
+            "real": 0.5594820894407492
           }
         ],
         "curva": [
           {
             "epoca": 5,
-            "entrenamiento": 0.66859,
-            "validacion": 0.67356,
-            "aciertoEntrenamiento": 0.5703,
-            "aciertoValidacion": 0.5592
+            "entrenamiento": 0.67024,
+            "validacion": 0.66356,
+            "aciertoEntrenamiento": 0.5642,
+            "aciertoValidacion": 0.5858
           },
           {
             "epoca": 10,
-            "entrenamiento": 0.67582,
-            "validacion": 0.6791,
-            "aciertoEntrenamiento": 0.5575,
-            "aciertoValidacion": 0.5442
+            "entrenamiento": 0.67834,
+            "validacion": 0.67332,
+            "aciertoEntrenamiento": 0.5497,
+            "aciertoValidacion": 0.5625
           },
           {
             "epoca": 15,
-            "entrenamiento": 0.67845,
-            "validacion": 0.68059,
-            "aciertoEntrenamiento": 0.5544,
-            "aciertoValidacion": 0.545
+            "entrenamiento": 0.6753,
+            "validacion": 0.66986,
+            "aciertoEntrenamiento": 0.5533,
+            "aciertoValidacion": 0.5733
           },
           {
             "epoca": 20,
-            "entrenamiento": 0.68015,
-            "validacion": 0.6812,
-            "aciertoEntrenamiento": 0.5531,
-            "aciertoValidacion": 0.55
+            "entrenamiento": 0.67545,
+            "validacion": 0.67063,
+            "aciertoEntrenamiento": 0.5539,
+            "aciertoValidacion": 0.5717
           },
           {
             "epoca": 25,
-            "entrenamiento": 0.67933,
-            "validacion": 0.6809,
-            "aciertoEntrenamiento": 0.5558,
-            "aciertoValidacion": 0.5492
+            "entrenamiento": 0.67552,
+            "validacion": 0.67147,
+            "aciertoEntrenamiento": 0.5522,
+            "aciertoValidacion": 0.5617
           },
           {
             "epoca": 30,
-            "entrenamiento": 0.68367,
-            "validacion": 0.68419,
-            "aciertoEntrenamiento": 0.5456,
-            "aciertoValidacion": 0.5417
+            "entrenamiento": 0.6755,
+            "validacion": 0.67208,
+            "aciertoEntrenamiento": 0.5553,
+            "aciertoValidacion": 0.5608
           },
           {
             "epoca": 35,
-            "entrenamiento": 0.68711,
-            "validacion": 0.68655,
-            "aciertoEntrenamiento": 0.5547,
-            "aciertoValidacion": 0.54
+            "entrenamiento": 0.67544,
+            "validacion": 0.67198,
+            "aciertoEntrenamiento": 0.5561,
+            "aciertoValidacion": 0.565
           },
           {
             "epoca": 40,
-            "entrenamiento": 0.68367,
-            "validacion": 0.68398,
-            "aciertoEntrenamiento": 0.5525,
-            "aciertoValidacion": 0.5508
+            "entrenamiento": 0.67527,
+            "validacion": 0.67236,
+            "aciertoEntrenamiento": 0.5519,
+            "aciertoValidacion": 0.5567
           },
           {
             "epoca": 45,
-            "entrenamiento": 0.68666,
-            "validacion": 0.6866,
-            "aciertoEntrenamiento": 0.5522,
-            "aciertoValidacion": 0.5408
+            "entrenamiento": 0.67508,
+            "validacion": 0.67236,
+            "aciertoEntrenamiento": 0.5514,
+            "aciertoValidacion": 0.5533
           },
           {
             "epoca": 50,
-            "entrenamiento": 0.68432,
-            "validacion": 0.68461,
-            "aciertoEntrenamiento": 0.5542,
-            "aciertoValidacion": 0.5467
+            "entrenamiento": 0.67471,
+            "validacion": 0.67233,
+            "aciertoEntrenamiento": 0.5544,
+            "aciertoValidacion": 0.5633
           },
           {
             "epoca": 55,
-            "entrenamiento": 0.68375,
-            "validacion": 0.68391,
-            "aciertoEntrenamiento": 0.5564,
-            "aciertoValidacion": 0.5467
+            "entrenamiento": 0.67444,
+            "validacion": 0.67226,
+            "aciertoEntrenamiento": 0.5586,
+            "aciertoValidacion": 0.5642
           },
           {
             "epoca": 60,
-            "entrenamiento": 0.6849,
-            "validacion": 0.685,
-            "aciertoEntrenamiento": 0.5558,
-            "aciertoValidacion": 0.5467
+            "entrenamiento": 0.67394,
+            "validacion": 0.67172,
+            "aciertoEntrenamiento": 0.5611,
+            "aciertoValidacion": 0.5683
           }
         ]
       },
       "jugada": {
-        "perdida": 0.7020898766039092,
-        "perdidaDePartida": 0.7092473979097408,
-        "epocasUtiles": 5,
-        "acierto": 0.5852510113402746,
+        "perdida": 0.6806865098914217,
+        "perdidaDePartida": 0.6940190568356696,
+        "epocasUtiles": 25,
+        "acierto": 0.6046273246448968,
         "calibracion": [
           {
-            "n": 305,
-            "predicho": 0.06562879751253038,
-            "real": 0.3212057991902112
+            "n": 236,
+            "predicho": 0.07170709970018677,
+            "real": 0.30492347832002414
           },
           {
-            "n": 876,
-            "predicho": 0.15854234452808638,
-            "real": 0.30265282085693584
+            "n": 1187,
+            "predicho": 0.1616817280608462,
+            "real": 0.24037399254152783
           },
           {
-            "n": 2504,
-            "predicho": 0.257773788177181,
-            "real": 0.3144104066309934
+            "n": 3053,
+            "predicho": 0.2565746985765638,
+            "real": 0.30677217322142747
           },
           {
-            "n": 5503,
-            "predicho": 0.3545628920293936,
-            "real": 0.3824406447357174
+            "n": 5267,
+            "predicho": 0.35420968176370016,
+            "real": 0.36620710887434255
           },
           {
-            "n": 8074,
-            "predicho": 0.4520453686141682,
-            "real": 0.45901741129645135
+            "n": 6970,
+            "predicho": 0.450746552634109,
+            "real": 0.4476948506262596
           },
           {
-            "n": 9611,
-            "predicho": 0.5530780401719958,
-            "real": 0.5208475286861395
+            "n": 7534,
+            "predicho": 0.5476673655470057,
+            "real": 0.5045907484919072
           },
           {
-            "n": 7697,
-            "predicho": 0.6465321355036067,
-            "real": 0.5476229369449119
+            "n": 5986,
+            "predicho": 0.6496054576466411,
+            "real": 0.5754528183134865
           },
           {
-            "n": 7121,
-            "predicho": 0.7508802614966553,
-            "real": 0.5839969021039176
+            "n": 6286,
+            "predicho": 0.7529314458052211,
+            "real": 0.6072974942499735
           },
           {
-            "n": 3180,
-            "predicho": 0.8405901594683659,
-            "real": 0.6638399575291298
+            "n": 3796,
+            "predicho": 0.8412841585976261,
+            "real": 0.7105850873907477
           },
           {
-            "n": 366,
-            "predicho": 0.9183302821040779,
-            "real": 0.7354063261263133
+            "n": 659,
+            "predicho": 0.9214077971095769,
+            "real": 0.7701061738557368
           }
         ],
         "curva": [
           {
             "epoca": 5,
-            "entrenamiento": 0.70157,
-            "validacion": 0.70209,
-            "aciertoEntrenamiento": 0.5873,
-            "aciertoValidacion": 0.5853
+            "entrenamiento": 0.6915,
+            "validacion": 0.6924,
+            "aciertoEntrenamiento": 0.5922,
+            "aciertoValidacion": 0.5949
           },
           {
             "epoca": 10,
-            "entrenamiento": 0.70474,
-            "validacion": 0.70557,
-            "aciertoEntrenamiento": 0.5886,
-            "aciertoValidacion": 0.5835
+            "entrenamiento": 0.68494,
+            "validacion": 0.6859,
+            "aciertoEntrenamiento": 0.5987,
+            "aciertoValidacion": 0.5999
           },
           {
             "epoca": 15,
-            "entrenamiento": 0.70596,
-            "validacion": 0.70699,
-            "aciertoEntrenamiento": 0.5895,
-            "aciertoValidacion": 0.586
+            "entrenamiento": 0.68276,
+            "validacion": 0.68382,
+            "aciertoEntrenamiento": 0.6011,
+            "aciertoValidacion": 0.6029
           },
           {
             "epoca": 20,
-            "entrenamiento": 0.70521,
-            "validacion": 0.70624,
-            "aciertoEntrenamiento": 0.5895,
-            "aciertoValidacion": 0.5851
+            "entrenamiento": 0.68252,
+            "validacion": 0.6835,
+            "aciertoEntrenamiento": 0.6015,
+            "aciertoValidacion": 0.6033
           },
           {
             "epoca": 25,
-            "entrenamiento": 0.70491,
-            "validacion": 0.70595,
-            "aciertoEntrenamiento": 0.5899,
-            "aciertoValidacion": 0.5858
+            "entrenamiento": 0.67972,
+            "validacion": 0.68069,
+            "aciertoEntrenamiento": 0.6033,
+            "aciertoValidacion": 0.6046
           },
           {
             "epoca": 30,
-            "entrenamiento": 0.70735,
-            "validacion": 0.70844,
-            "aciertoEntrenamiento": 0.5891,
-            "aciertoValidacion": 0.5844
+            "entrenamiento": 0.68254,
+            "validacion": 0.68359,
+            "aciertoEntrenamiento": 0.6012,
+            "aciertoValidacion": 0.6028
           },
           {
             "epoca": 35,
-            "entrenamiento": 0.70509,
-            "validacion": 0.70612,
-            "aciertoEntrenamiento": 0.5903,
-            "aciertoValidacion": 0.5863
+            "entrenamiento": 0.68604,
+            "validacion": 0.6868,
+            "aciertoEntrenamiento": 0.5998,
+            "aciertoValidacion": 0.6016
           },
           {
             "epoca": 40,
-            "entrenamiento": 0.70612,
-            "validacion": 0.70723,
-            "aciertoEntrenamiento": 0.5901,
-            "aciertoValidacion": 0.5862
+            "entrenamiento": 0.69248,
+            "validacion": 0.69279,
+            "aciertoEntrenamiento": 0.5932,
+            "aciertoValidacion": 0.5959
           },
           {
             "epoca": 45,
-            "entrenamiento": 0.70501,
-            "validacion": 0.70609,
-            "aciertoEntrenamiento": 0.5904,
-            "aciertoValidacion": 0.5873
+            "entrenamiento": 0.692,
+            "validacion": 0.69231,
+            "aciertoEntrenamiento": 0.5926,
+            "aciertoValidacion": 0.596
           },
           {
             "epoca": 50,
-            "entrenamiento": 0.7012,
-            "validacion": 0.70217,
-            "aciertoEntrenamiento": 0.5912,
-            "aciertoValidacion": 0.5881
+            "entrenamiento": 0.69087,
+            "validacion": 0.69125,
+            "aciertoEntrenamiento": 0.5938,
+            "aciertoValidacion": 0.5962
           },
           {
             "epoca": 55,
-            "entrenamiento": 0.70459,
-            "validacion": 0.70565,
-            "aciertoEntrenamiento": 0.5906,
-            "aciertoValidacion": 0.5867
+            "entrenamiento": 0.69124,
+            "validacion": 0.69163,
+            "aciertoEntrenamiento": 0.5935,
+            "aciertoValidacion": 0.5965
           },
           {
             "epoca": 60,
-            "entrenamiento": 0.70369,
-            "validacion": 0.7047,
-            "aciertoEntrenamiento": 0.5911,
-            "aciertoValidacion": 0.587
+            "entrenamiento": 0.69408,
+            "validacion": 0.6945,
+            "aciertoEntrenamiento": 0.5912,
+            "aciertoValidacion": 0.5946
           }
         ]
       },
@@ -1622,56 +2260,56 @@
         {
           "rival": "humana-01",
           "clase": "humana",
-          "gana": 9,
-          "pierde": 5,
-          "tablas": 2,
-          "tasa": 0.6428571428571429,
-          "error": 0.1336306209562122
+          "gana": 12,
+          "pierde": 3,
+          "tablas": 1,
+          "tasa": 0.8,
+          "error": 0.12909944487358055
         },
         {
           "rival": "humana-01~1",
           "clase": "variante",
-          "gana": 13,
-          "pierde": 1,
-          "tablas": 2,
-          "tasa": 0.9285714285714286,
-          "error": 0.1336306209562122
+          "gana": 14,
+          "pierde": 2,
+          "tablas": 0,
+          "tasa": 0.875,
+          "error": 0.125
         },
         {
           "rival": "humana-01~2",
           "clase": "variante",
-          "gana": 8,
-          "pierde": 7,
-          "tablas": 1,
-          "tasa": 0.5333333333333333,
-          "error": 0.12909944487358055
+          "gana": 14,
+          "pierde": 2,
+          "tablas": 0,
+          "tasa": 0.875,
+          "error": 0.125
         },
         {
           "rival": "humana-02",
           "clase": "humana",
-          "gana": 10,
-          "pierde": 6,
+          "gana": 11,
+          "pierde": 5,
           "tablas": 0,
-          "tasa": 0.625,
+          "tasa": 0.6875,
           "error": 0.125
         },
         {
           "rival": "humana-02~1",
           "clase": "variante",
-          "gana": 5,
-          "pierde": 10,
-          "tablas": 1,
-          "tasa": 0.3333333333333333,
-          "error": 0.12909944487358055
+          "gana": 12,
+          "pierde": 4,
+          "tablas": 0,
+          "tasa": 0.75,
+          "error": 0.125
         },
         {
           "rival": "humana-02~2",
           "clase": "variante",
-          "gana": 8,
-          "pierde": 7,
-          "tablas": 1,
-          "tasa": 0.5333333333333333,
-          "error": 0.12909944487358055
+          "gana": 12,
+          "pierde": 4,
+          "tablas": 0,
+          "tasa": 0.75,
+          "error": 0.125
         },
         {
           "rival": "humana-03",
@@ -1685,29 +2323,29 @@
         {
           "rival": "humana-03~1",
           "clase": "variante",
-          "gana": 11,
-          "pierde": 3,
-          "tablas": 2,
-          "tasa": 0.7857142857142857,
-          "error": 0.1336306209562122
+          "gana": 13,
+          "pierde": 2,
+          "tablas": 1,
+          "tasa": 0.8666666666666667,
+          "error": 0.12909944487358055
         },
         {
           "rival": "humana-03~2",
           "clase": "variante",
-          "gana": 8,
-          "pierde": 5,
-          "tablas": 3,
-          "tasa": 0.6153846153846154,
-          "error": 0.1386750490563073
+          "gana": 12,
+          "pierde": 2,
+          "tablas": 2,
+          "tasa": 0.8571428571428571,
+          "error": 0.1336306209562122
         },
         {
           "rival": "humana-04",
           "clase": "humana",
-          "gana": 8,
-          "pierde": 3,
-          "tablas": 5,
-          "tasa": 0.7272727272727273,
-          "error": 0.15075567228888181
+          "gana": 14,
+          "pierde": 1,
+          "tablas": 1,
+          "tasa": 0.9333333333333333,
+          "error": 0.12909944487358055
         },
         {
           "rival": "humana-04~1",
@@ -1721,33 +2359,6 @@
         {
           "rival": "humana-04~2",
           "clase": "variante",
-          "gana": 11,
-          "pierde": 5,
-          "tablas": 0,
-          "tasa": 0.6875,
-          "error": 0.125
-        },
-        {
-          "rival": "humana-05",
-          "clase": "humana",
-          "gana": 10,
-          "pierde": 5,
-          "tablas": 1,
-          "tasa": 0.6666666666666666,
-          "error": 0.12909944487358055
-        },
-        {
-          "rival": "humana-05~1",
-          "clase": "variante",
-          "gana": 7,
-          "pierde": 8,
-          "tablas": 1,
-          "tasa": 0.4666666666666667,
-          "error": 0.12909944487358055
-        },
-        {
-          "rival": "humana-05~2",
-          "clase": "variante",
           "gana": 10,
           "pierde": 4,
           "tablas": 2,
@@ -1755,16 +2366,187 @@
           "error": 0.1336306209562122
         },
         {
+          "rival": "humana-05",
+          "clase": "humana",
+          "gana": 14,
+          "pierde": 1,
+          "tablas": 1,
+          "tasa": 0.9333333333333333,
+          "error": 0.12909944487358055
+        },
+        {
+          "rival": "humana-05~1",
+          "clase": "variante",
+          "gana": 15,
+          "pierde": 1,
+          "tablas": 0,
+          "tasa": 0.9375,
+          "error": 0.125
+        },
+        {
+          "rival": "humana-05~2",
+          "clase": "variante",
+          "gana": 14,
+          "pierde": 1,
+          "tablas": 1,
+          "tasa": 0.9333333333333333,
+          "error": 0.12909944487358055
+        },
+        {
           "rival": "humana-06",
           "clase": "humana",
-          "gana": 8,
-          "pierde": 6,
+          "gana": 12,
+          "pierde": 2,
           "tablas": 2,
-          "tasa": 0.5714285714285714,
+          "tasa": 0.8571428571428571,
           "error": 0.1336306209562122
         },
         {
           "rival": "humana-06~1",
+          "clase": "variante",
+          "gana": 15,
+          "pierde": 1,
+          "tablas": 0,
+          "tasa": 0.9375,
+          "error": 0.125
+        },
+        {
+          "rival": "humana-06~2",
+          "clase": "variante",
+          "gana": 14,
+          "pierde": 1,
+          "tablas": 1,
+          "tasa": 0.9333333333333333,
+          "error": 0.12909944487358055
+        },
+        {
+          "rival": "humana-07",
+          "clase": "humana",
+          "gana": 9,
+          "pierde": 6,
+          "tablas": 1,
+          "tasa": 0.6,
+          "error": 0.12909944487358055
+        },
+        {
+          "rival": "humana-07~1",
+          "clase": "variante",
+          "gana": 11,
+          "pierde": 5,
+          "tablas": 0,
+          "tasa": 0.6875,
+          "error": 0.125
+        },
+        {
+          "rival": "humana-07~2",
+          "clase": "variante",
+          "gana": 15,
+          "pierde": 0,
+          "tablas": 1,
+          "tasa": 1,
+          "error": 0.12909944487358055
+        },
+        {
+          "rival": "humana-08",
+          "clase": "humana",
+          "gana": 11,
+          "pierde": 4,
+          "tablas": 1,
+          "tasa": 0.7333333333333333,
+          "error": 0.12909944487358055
+        },
+        {
+          "rival": "humana-08~1",
+          "clase": "variante",
+          "gana": 11,
+          "pierde": 4,
+          "tablas": 1,
+          "tasa": 0.7333333333333333,
+          "error": 0.12909944487358055
+        },
+        {
+          "rival": "humana-08~2",
+          "clase": "variante",
+          "gana": 13,
+          "pierde": 3,
+          "tablas": 0,
+          "tasa": 0.8125,
+          "error": 0.125
+        },
+        {
+          "rival": "humana-09",
+          "clase": "humana",
+          "gana": 10,
+          "pierde": 6,
+          "tablas": 0,
+          "tasa": 0.625,
+          "error": 0.125
+        },
+        {
+          "rival": "humana-09~1",
+          "clase": "variante",
+          "gana": 14,
+          "pierde": 1,
+          "tablas": 1,
+          "tasa": 0.9333333333333333,
+          "error": 0.12909944487358055
+        },
+        {
+          "rival": "humana-09~2",
+          "clase": "variante",
+          "gana": 12,
+          "pierde": 4,
+          "tablas": 0,
+          "tasa": 0.75,
+          "error": 0.125
+        },
+        {
+          "rival": "humana-10",
+          "clase": "humana",
+          "gana": 12,
+          "pierde": 3,
+          "tablas": 1,
+          "tasa": 0.8,
+          "error": 0.12909944487358055
+        },
+        {
+          "rival": "humana-10~1",
+          "clase": "variante",
+          "gana": 14,
+          "pierde": 2,
+          "tablas": 0,
+          "tasa": 0.875,
+          "error": 0.125
+        },
+        {
+          "rival": "humana-10~2",
+          "clase": "variante",
+          "gana": 15,
+          "pierde": 1,
+          "tablas": 0,
+          "tasa": 0.9375,
+          "error": 0.125
+        },
+        {
+          "rival": "humana-11",
+          "clase": "humana",
+          "gana": 13,
+          "pierde": 3,
+          "tablas": 0,
+          "tasa": 0.8125,
+          "error": 0.125
+        },
+        {
+          "rival": "humana-11~1",
+          "clase": "variante",
+          "gana": 13,
+          "pierde": 2,
+          "tablas": 1,
+          "tasa": 0.8666666666666667,
+          "error": 0.12909944487358055
+        },
+        {
+          "rival": "humana-11~2",
           "clase": "variante",
           "gana": 12,
           "pierde": 3,
@@ -1773,196 +2555,52 @@
           "error": 0.12909944487358055
         },
         {
-          "rival": "humana-06~2",
-          "clase": "variante",
-          "gana": 12,
-          "pierde": 2,
-          "tablas": 2,
-          "tasa": 0.8571428571428571,
-          "error": 0.1336306209562122
-        },
-        {
-          "rival": "humana-07",
-          "clase": "humana",
-          "gana": 6,
-          "pierde": 9,
-          "tablas": 1,
-          "tasa": 0.4,
-          "error": 0.12909944487358055
-        },
-        {
-          "rival": "humana-07~1",
-          "clase": "variante",
-          "gana": 9,
-          "pierde": 5,
-          "tablas": 2,
-          "tasa": 0.6428571428571429,
-          "error": 0.1336306209562122
-        },
-        {
-          "rival": "humana-07~2",
-          "clase": "variante",
-          "gana": 12,
-          "pierde": 4,
-          "tablas": 0,
-          "tasa": 0.75,
-          "error": 0.125
-        },
-        {
-          "rival": "humana-08",
-          "clase": "humana",
-          "gana": 9,
-          "pierde": 6,
-          "tablas": 1,
-          "tasa": 0.6,
-          "error": 0.12909944487358055
-        },
-        {
-          "rival": "humana-08~1",
-          "clase": "variante",
-          "gana": 9,
-          "pierde": 6,
-          "tablas": 1,
-          "tasa": 0.6,
-          "error": 0.12909944487358055
-        },
-        {
-          "rival": "humana-08~2",
-          "clase": "variante",
-          "gana": 12,
-          "pierde": 4,
-          "tablas": 0,
-          "tasa": 0.75,
-          "error": 0.125
-        },
-        {
-          "rival": "humana-09",
-          "clase": "humana",
-          "gana": 8,
-          "pierde": 8,
-          "tablas": 0,
-          "tasa": 0.5,
-          "error": 0.125
-        },
-        {
-          "rival": "humana-09~1",
-          "clase": "variante",
-          "gana": 10,
-          "pierde": 5,
-          "tablas": 1,
-          "tasa": 0.6666666666666666,
-          "error": 0.12909944487358055
-        },
-        {
-          "rival": "humana-09~2",
-          "clase": "variante",
-          "gana": 8,
-          "pierde": 8,
-          "tablas": 0,
-          "tasa": 0.5,
-          "error": 0.125
-        },
-        {
-          "rival": "humana-10",
-          "clase": "humana",
-          "gana": 5,
-          "pierde": 9,
-          "tablas": 2,
-          "tasa": 0.35714285714285715,
-          "error": 0.1336306209562122
-        },
-        {
-          "rival": "humana-10~1",
-          "clase": "variante",
-          "gana": 8,
-          "pierde": 8,
-          "tablas": 0,
-          "tasa": 0.5,
-          "error": 0.125
-        },
-        {
-          "rival": "humana-10~2",
-          "clase": "variante",
-          "gana": 10,
-          "pierde": 4,
-          "tablas": 2,
-          "tasa": 0.7142857142857143,
-          "error": 0.1336306209562122
-        },
-        {
-          "rival": "humana-11",
-          "clase": "humana",
-          "gana": 8,
-          "pierde": 7,
-          "tablas": 1,
-          "tasa": 0.5333333333333333,
-          "error": 0.12909944487358055
-        },
-        {
-          "rival": "humana-11~1",
-          "clase": "variante",
-          "gana": 6,
-          "pierde": 9,
-          "tablas": 1,
-          "tasa": 0.4,
-          "error": 0.12909944487358055
-        },
-        {
-          "rival": "humana-11~2",
-          "clase": "variante",
-          "gana": 10,
-          "pierde": 4,
-          "tablas": 2,
-          "tasa": 0.7142857142857143,
-          "error": 0.1336306209562122
-        },
-        {
           "rival": "guiada1",
           "clase": "guiada",
-          "gana": 10,
-          "pierde": 5,
+          "gana": 15,
+          "pierde": 0,
           "tablas": 1,
-          "tasa": 0.6666666666666666,
+          "tasa": 1,
           "error": 0.12909944487358055
         },
         {
           "rival": "guiada2",
           "clase": "guiada",
-          "gana": 13,
+          "gana": 14,
           "pierde": 0,
-          "tablas": 3,
+          "tablas": 2,
           "tasa": 1,
-          "error": 0.1386750490563073
+          "error": 0.1336306209562122
         },
         {
           "rival": "guiada3",
           "clase": "guiada",
-          "gana": 15,
-          "pierde": 1,
-          "tablas": 0,
-          "tasa": 0.9375,
-          "error": 0.125
+          "gana": 13,
+          "pierde": 2,
+          "tablas": 1,
+          "tasa": 0.8666666666666667,
+          "error": 0.12909944487358055
         },
         {
           "rival": "guiada4",
           "clase": "guiada",
-          "gana": 11,
+          "gana": 14,
           "pierde": 2,
-          "tablas": 3,
-          "tasa": 0.8461538461538461,
-          "error": 0.1386750490563073
+          "tablas": 0,
+          "tasa": 0.875,
+          "error": 0.125
         },
         {
           "rival": "azar",
           "clase": "azar",
-          "gana": 12,
-          "pierde": 1,
-          "tablas": 3,
-          "tasa": 0.9230769230769231,
-          "error": 0.1386750490563073
+          "gana": 16,
+          "pierde": 0,
+          "tablas": 0,
+          "tasa": 1,
+          "error": 0.125
         }
       ],
-      "segundos": 1040
+      "segundos": 1363
     }
   ]
 }

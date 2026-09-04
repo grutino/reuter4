@@ -293,14 +293,47 @@ despliegue explica poco del resultado de una partida de cuatrocientos turnos. M�
 neuronas no van a arreglar eso; mejores etiquetas sí, y por ahí van los juicios,
 que la llevaron de coincidir con Patxi el 52% al 92%.
 
-Y hay una consecuencia práctica: si es lineal, evaluar un candidato es un
-producto escalar. Se podrían mirar **diez veces más candidatos** por el mismo
-coste al desplegar, que hoy son 30.
+Se probó también a mirar **más candidatos** al desplegar, por si con una
+evaluación tan barata compensaba buscar más a fondo. No compensa:
 
-**Jugada** — aquí la capacidad sí cuenta, así que el barrido que salió plano
-(2, 8, 28 y 64 neuronas dando el mismo 59,6%) hay que repetirlo midiendo en
-juego y no por acierto de clasificación. Con lo que ahora sabemos, ese 59,6%
-medía algo que no distingue lo que importa.
+```
+ 30 candidatos   90,2% ±1,5
+120              89,9% ±1,5
+500              91,3% ±1,5
+```
+
+Diecisiete veces más despliegues mirados y ninguna diferencia. Buscar más a fondo
+con un evaluador que apenas predice es afinar la puntería con una brújula
+imprecisa. (De paso cayó otra idea mía: creía que la ganancia vendría de que la
+red es lineal y evaluar sale gratis. Medido, puntuar 2000 candidatos con la red
+cuesta 6 ms y calcular sus rasgos 83 ms — la red nunca fue el cuello de botella.)
+
+**Jugada** — aquí la capacidad sí cuenta, pero mucha menos de la que tiene.
+
+El barrido de entrenar redes de 2, 8, 28 y 64 neuronas salió plano también
+midiendo en juego (84,8%, 86,1%, 84,2%, 84,2% ±1,9), pero no valía de mucho:
+entrenadas con 800 partidas, las cuatro eran flojas y sus diferencias se perdían
+en el ruido. La pregunta buena es otra — **cuántas neuronas usa el modelo que de
+verdad juega al 90%**— y se responde apagándoselas de la menos útil a la más
+útil, sin entrenar nada:
+
+```
+ 1 de 28 vivas   43,0% ±2,1     se rompe
+ 2               86,0% ±1,9
+ 3               83,8% ±1,9
+ 4               88,2% ±1,9
+ 6               90,4% ±1,8     igual que entero
+28 (entero)      90,4% ±1,2
+```
+
+**Con 6 neuronas juega exactamente igual que con 28.** Las otras 22 se pueden
+apagar sin perder una décima. Y el salto está entre 1 y 2: una sola neurona es
+casi un modelo lineal y se hunde igual que la aproximación lineal (43% contra
+50%), mientras que con dos ya se tiene casi todo.
+
+O sea: la no linealidad es imprescindible y **con muy poca basta**. Buscar
+mejoras agrandando la red está descartado con datos; hay que buscarlas en la
+señal y en la búsqueda.
 
 ### 3. El ancla de la heurística NO se suelta
 

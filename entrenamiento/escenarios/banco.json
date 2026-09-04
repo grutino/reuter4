@@ -1,5 +1,5 @@
 {
- "creado": "2026-09-03T13:19:05.142Z",
+ "creado": "2026-09-04T23:07:11.363Z",
  "escenarios": [
   {
    "motivo": "canon-cerca",
@@ -437977,6 +437977,3114 @@
      "amarillo": 0
     }
    }
+  },
+  {
+   "firma": "A10:amarillo|A11:amarillo|A5:amarillo|A6:amarillo|A7:amarillo|A9:amarillo|ANILLO:amarillo|B10:amarillo|B11:amarillo|B5:amarillo|B6:amarillo|B7:amarillo|B9:amarillo|C11:amarillo|C5:amarillo|C9:amarillo|D6:amarillo*|D7:amarillo|D8:amarillo|E13:azul|E14:azul|E15:azul|E1:rojo|E4:rojo|F10:azul|F11:azul|F12:azul|F13:azul*|F1:rojo|F2:rojo|F3:rojo|F6:amarillo|F7:azul|G12:azul|G15:azul|G1:rojo|G2:rojo|G3:rojo|G4:rojo*|H13:azul|H6:verde|I12:azul|I14:azul|I15:azul|I1:rojo|I2:rojo|I3:rojo|I4:rojo|I6:verde|J10:verde|J13:azul|J14:azul|J15:azul|J1:rojo|J2:rojo|J4:rojo|K10:verde|K13:azul|K14:azul|K15:azul|K1:rojo|K2:rojo|K3:rojo|L7:verde|L8:verde*|L9:verde|M11:verde|M5:verde|M9:verde|N10:verde|N11:verde|N5:verde|N7:verde|O10:verde|O11:verde|O5:verde|O6:verde|O7:verde|O9:verde",
+   "estado": {
+    "modo": "equipos",
+    "orden": [
+     "rojo",
+     "verde",
+     "azul",
+     "amarillo"
+    ],
+    "turno": "rojo",
+    "piezas": {
+     "rojo-1": {
+      "id": "rojo-1",
+      "color": "rojo",
+      "rango": 9,
+      "casilla": "G4",
+      "bandera": "rojo",
+      "alternancias": 1,
+      "ultimoTramo": {
+       "desde": "H4",
+       "hasta": "G4"
+      }
+     },
+     "rojo-3": {
+      "id": "rojo-3",
+      "color": "rojo",
+      "rango": 7,
+      "casilla": "J4",
+      "bandera": null,
+      "alternancias": 1,
+      "ultimoTramo": {
+       "desde": "J3",
+       "hasta": "J4"
+      }
+     },
+     "rojo-4": {
+      "id": "rojo-4",
+      "color": "rojo",
+      "rango": 7,
+      "casilla": "K3",
+      "bandera": null,
+      "alternancias": 0,
+      "ultimoTramo": null
+     },
+     "rojo-5": {
+      "id": "rojo-5",
+      "color": "rojo",
+      "rango": 6,
+      "casilla": "G3",
+      "bandera": null,
+      "alternancias": 0,
+      "ultimoTramo": null
+     },
+     "rojo-6": {
+      "id": "rojo-6",
+      "color": "rojo",
+      "rango": 6,
+      "casilla": "G2",
+      "bandera": null,
+      "alternancias": 0,
+      "ultimoTramo": null
+     },
+     "rojo-7": {
+      "id": "rojo-7",
+      "color": "rojo",
+      "rango": 3,
+      "casilla": "F2",
+      "bandera": null,
+      "alternancias": 0,
+      "ultimoTramo": null
+     },
+     "rojo-8": {
+      "id": "rojo-8",
+      "color": "rojo",
+      "rango": 3,
+      "casilla": "F1",
+      "bandera": null,
+      "alternancias": 0,
+      "ultimoTramo": null
+     },
+     "rojo-9": {
+      "id": "rojo-9",
+      "color": "rojo",
+      "rango": 3,
+      "casilla": "J2",
+      "bandera": null,
+      "alternancias": 0,
+      "ultimoTramo": null
+     },
+     "rojo-10": {
+      "id": "rojo-10",
+      "color": "rojo",
+      "rango": 3,
+      "casilla": "J1",
+      "bandera": null,
+      "alternancias": 0,
+      "ultimoTramo": null
+     },
+     "rojo-11": {
+      "id": "rojo-11",
+      "color": "rojo",
+      "rango": 2,
+      "casilla": "E4",
+      "bandera": null,
+      "alternancias": 1,
+      "ultimoTramo": {
+       "desde": "E3",
+       "hasta": "E4"
+      }
+     },
+     "rojo-12": {
+      "id": "rojo-12",
+      "color": "rojo",
+      "rango": 1,
+      "casilla": "I3",
+      "bandera": null,
+      "alternancias": 0,
+      "ultimoTramo": null
+     },
+     "rojo-13": {
+      "id": "rojo-13",
+      "color": "rojo",
+      "rango": 1,
+      "casilla": "I4",
+      "bandera": null,
+      "alternancias": 1,
+      "ultimoTramo": {
+       "desde": "H4",
+       "hasta": "I4"
+      }
+     },
+     "rojo-14": {
+      "id": "rojo-14",
+      "color": "rojo",
+      "rango": 4,
+      "casilla": "G1",
+      "bandera": null,
+      "alternancias": 0,
+      "ultimoTramo": null
+     },
+     "rojo-15": {
+      "id": "rojo-15",
+      "color": "rojo",
+      "rango": 4,
+      "casilla": "I1",
+      "bandera": null,
+      "alternancias": 0,
+      "ultimoTramo": null
+     },
+     "rojo-16": {
+      "id": "rojo-16",
+      "color": "rojo",
+      "rango": 4,
+      "casilla": "I2",
+      "bandera": null,
+      "alternancias": 0,
+      "ultimoTramo": null
+     },
+     "rojo-17": {
+      "id": "rojo-17",
+      "color": "rojo",
+      "rango": 5,
+      "casilla": "E1",
+      "bandera": null,
+      "alternancias": 0,
+      "ultimoTramo": null
+     },
+     "rojo-18": {
+      "id": "rojo-18",
+      "color": "rojo",
+      "rango": 5,
+      "casilla": "K1",
+      "bandera": null,
+      "alternancias": 0,
+      "ultimoTramo": null
+     },
+     "rojo-19": {
+      "id": "rojo-19",
+      "color": "rojo",
+      "rango": 5,
+      "casilla": "K2",
+      "bandera": null,
+      "alternancias": 0,
+      "ultimoTramo": null
+     },
+     "rojo-20": {
+      "id": "rojo-20",
+      "color": "rojo",
+      "rango": 6,
+      "casilla": "F3",
+      "bandera": null,
+      "alternancias": 0,
+      "ultimoTramo": null
+     },
+     "verde-21": {
+      "id": "verde-21",
+      "color": "verde",
+      "rango": 9,
+      "casilla": "L8",
+      "bandera": "verde",
+      "alternancias": 1,
+      "ultimoTramo": {
+       "desde": "M8",
+       "hasta": "L8"
+      }
+     },
+     "verde-22": {
+      "id": "verde-22",
+      "color": "verde",
+      "rango": 5,
+      "casilla": "M11",
+      "bandera": null,
+      "alternancias": 0,
+      "ultimoTramo": null
+     },
+     "verde-23": {
+      "id": "verde-23",
+      "color": "verde",
+      "rango": 6,
+      "casilla": "K10",
+      "bandera": null,
+      "alternancias": 1,
+      "ultimoTramo": {
+       "desde": "M10",
+       "hasta": "K10"
+      }
+     },
+     "verde-24": {
+      "id": "verde-24",
+      "color": "verde",
+      "rango": 1,
+      "casilla": "L9",
+      "bandera": null,
+      "alternancias": 1,
+      "ultimoTramo": {
+       "desde": "L8",
+       "hasta": "L9"
+      }
+     },
+     "verde-25": {
+      "id": "verde-25",
+      "color": "verde",
+      "rango": 5,
+      "casilla": "N5",
+      "bandera": null,
+      "alternancias": 0,
+      "ultimoTramo": null
+     },
+     "verde-26": {
+      "id": "verde-26",
+      "color": "verde",
+      "rango": 3,
+      "casilla": "O5",
+      "bandera": null,
+      "alternancias": 0,
+      "ultimoTramo": null
+     },
+     "verde-27": {
+      "id": "verde-27",
+      "color": "verde",
+      "rango": 6,
+      "casilla": "O9",
+      "bandera": null,
+      "alternancias": 0,
+      "ultimoTramo": null
+     },
+     "verde-28": {
+      "id": "verde-28",
+      "color": "verde",
+      "rango": 4,
+      "casilla": "N11",
+      "bandera": null,
+      "alternancias": 0,
+      "ultimoTramo": null
+     },
+     "verde-29": {
+      "id": "verde-29",
+      "color": "verde",
+      "rango": 4,
+      "casilla": "O11",
+      "bandera": null,
+      "alternancias": 0,
+      "ultimoTramo": null
+     },
+     "verde-30": {
+      "id": "verde-30",
+      "color": "verde",
+      "rango": 5,
+      "casilla": "M5",
+      "bandera": null,
+      "alternancias": 0,
+      "ultimoTramo": null
+     },
+     "verde-31": {
+      "id": "verde-31",
+      "color": "verde",
+      "rango": 3,
+      "casilla": "I6",
+      "bandera": null,
+      "alternancias": 1,
+      "ultimoTramo": {
+       "desde": "N6",
+       "hasta": "I6"
+      }
+     },
+     "verde-32": {
+      "id": "verde-32",
+      "color": "verde",
+      "rango": 3,
+      "casilla": "H6",
+      "bandera": null,
+      "alternancias": 1,
+      "ultimoTramo": {
+       "desde": "M6",
+       "hasta": "H6"
+      }
+     },
+     "verde-33": {
+      "id": "verde-33",
+      "color": "verde",
+      "rango": 6,
+      "casilla": "J10",
+      "bandera": null,
+      "alternancias": 1,
+      "ultimoTramo": {
+       "desde": "L10",
+       "hasta": "J10"
+      }
+     },
+     "verde-34": {
+      "id": "verde-34",
+      "color": "verde",
+      "rango": 1,
+      "casilla": "L7",
+      "bandera": null,
+      "alternancias": 1,
+      "ultimoTramo": {
+       "desde": "M7",
+       "hasta": "L7"
+      }
+     },
+     "verde-35": {
+      "id": "verde-35",
+      "color": "verde",
+      "rango": 2,
+      "casilla": "N7",
+      "bandera": null,
+      "alternancias": 0,
+      "ultimoTramo": null
+     },
+     "verde-36": {
+      "id": "verde-36",
+      "color": "verde",
+      "rango": 3,
+      "casilla": "N10",
+      "bandera": null,
+      "alternancias": 0,
+      "ultimoTramo": null
+     },
+     "verde-37": {
+      "id": "verde-37",
+      "color": "verde",
+      "rango": 8,
+      "casilla": "M9",
+      "bandera": null,
+      "alternancias": 1,
+      "ultimoTramo": {
+       "desde": "N9",
+       "hasta": "M9"
+      }
+     },
+     "verde-38": {
+      "id": "verde-38",
+      "color": "verde",
+      "rango": 4,
+      "casilla": "O6",
+      "bandera": null,
+      "alternancias": 0,
+      "ultimoTramo": null
+     },
+     "verde-39": {
+      "id": "verde-39",
+      "color": "verde",
+      "rango": 7,
+      "casilla": "O10",
+      "bandera": null,
+      "alternancias": 0,
+      "ultimoTramo": null
+     },
+     "verde-40": {
+      "id": "verde-40",
+      "color": "verde",
+      "rango": 7,
+      "casilla": "O7",
+      "bandera": null,
+      "alternancias": 0,
+      "ultimoTramo": null
+     },
+     "azul-41": {
+      "id": "azul-41",
+      "color": "azul",
+      "rango": 9,
+      "casilla": "F13",
+      "bandera": "azul",
+      "alternancias": 1,
+      "ultimoTramo": {
+       "desde": "F14",
+       "hasta": "F13"
+      }
+     },
+     "azul-42": {
+      "id": "azul-42",
+      "color": "azul",
+      "rango": 4,
+      "casilla": "J14",
+      "bandera": null,
+      "alternancias": 0,
+      "ultimoTramo": null
+     },
+     "azul-43": {
+      "id": "azul-43",
+      "color": "azul",
+      "rango": 6,
+      "casilla": "I15",
+      "bandera": null,
+      "alternancias": 0,
+      "ultimoTramo": null
+     },
+     "azul-44": {
+      "id": "azul-44",
+      "color": "azul",
+      "rango": 5,
+      "casilla": "E13",
+      "bandera": null,
+      "alternancias": 0,
+      "ultimoTramo": null
+     },
+     "azul-45": {
+      "id": "azul-45",
+      "color": "azul",
+      "rango": 1,
+      "casilla": "I12",
+      "bandera": null,
+      "alternancias": 1,
+      "ultimoTramo": {
+       "desde": "I13",
+       "hasta": "I12"
+      }
+     },
+     "azul-46": {
+      "id": "azul-46",
+      "color": "azul",
+      "rango": 3,
+      "casilla": "F7",
+      "bandera": null,
+      "alternancias": 1,
+      "ultimoTramo": {
+       "desde": "F13",
+       "hasta": "F7"
+      }
+     },
+     "azul-47": {
+      "id": "azul-47",
+      "color": "azul",
+      "rango": 3,
+      "casilla": "F12",
+      "bandera": null,
+      "alternancias": 1,
+      "ultimoTramo": {
+       "desde": "F15",
+       "hasta": "F12"
+      }
+     },
+     "azul-48": {
+      "id": "azul-48",
+      "color": "azul",
+      "rango": 4,
+      "casilla": "K15",
+      "bandera": null,
+      "alternancias": 0,
+      "ultimoTramo": null
+     },
+     "azul-49": {
+      "id": "azul-49",
+      "color": "azul",
+      "rango": 3,
+      "casilla": "K14",
+      "bandera": null,
+      "alternancias": 0,
+      "ultimoTramo": null
+     },
+     "azul-50": {
+      "id": "azul-50",
+      "color": "azul",
+      "rango": 8,
+      "casilla": "J13",
+      "bandera": null,
+      "alternancias": 0,
+      "ultimoTramo": null
+     },
+     "azul-51": {
+      "id": "azul-51",
+      "color": "azul",
+      "rango": 4,
+      "casilla": "E14",
+      "bandera": null,
+      "alternancias": 0,
+      "ultimoTramo": null
+     },
+     "azul-52": {
+      "id": "azul-52",
+      "color": "azul",
+      "rango": 2,
+      "casilla": "H13",
+      "bandera": null,
+      "alternancias": 0,
+      "ultimoTramo": null
+     },
+     "azul-53": {
+      "id": "azul-53",
+      "color": "azul",
+      "rango": 1,
+      "casilla": "K13",
+      "bandera": null,
+      "alternancias": 0,
+      "ultimoTramo": null
+     },
+     "azul-54": {
+      "id": "azul-54",
+      "color": "azul",
+      "rango": 5,
+      "casilla": "G15",
+      "bandera": null,
+      "alternancias": 0,
+      "ultimoTramo": null
+     },
+     "azul-55": {
+      "id": "azul-55",
+      "color": "azul",
+      "rango": 6,
+      "casilla": "F10",
+      "bandera": null,
+      "alternancias": 1,
+      "ultimoTramo": {
+       "desde": "F12",
+       "hasta": "F10"
+      }
+     },
+     "azul-56": {
+      "id": "azul-56",
+      "color": "azul",
+      "rango": 7,
+      "casilla": "J15",
+      "bandera": null,
+      "alternancias": 0,
+      "ultimoTramo": null
+     },
+     "azul-57": {
+      "id": "azul-57",
+      "color": "azul",
+      "rango": 6,
+      "casilla": "I14",
+      "bandera": null,
+      "alternancias": 0,
+      "ultimoTramo": null
+     },
+     "azul-58": {
+      "id": "azul-58",
+      "color": "azul",
+      "rango": 7,
+      "casilla": "G12",
+      "bandera": null,
+      "alternancias": 1,
+      "ultimoTramo": {
+       "desde": "G13",
+       "hasta": "G12"
+      }
+     },
+     "azul-59": {
+      "id": "azul-59",
+      "color": "azul",
+      "rango": 5,
+      "casilla": "E15",
+      "bandera": null,
+      "alternancias": 0,
+      "ultimoTramo": null
+     },
+     "azul-60": {
+      "id": "azul-60",
+      "color": "azul",
+      "rango": 3,
+      "casilla": "F11",
+      "bandera": null,
+      "alternancias": 1,
+      "ultimoTramo": {
+       "desde": "F14",
+       "hasta": "F11"
+      }
+     },
+     "amarillo-61": {
+      "id": "amarillo-61",
+      "color": "amarillo",
+      "rango": 7,
+      "casilla": "D6",
+      "bandera": "amarillo",
+      "alternancias": 1,
+      "ultimoTramo": {
+       "desde": "C6",
+       "hasta": "D6"
+      }
+     },
+     "amarillo-62": {
+      "id": "amarillo-62",
+      "color": "amarillo",
+      "rango": 5,
+      "casilla": "C5",
+      "bandera": null,
+      "alternancias": 0,
+      "ultimoTramo": null
+     },
+     "amarillo-63": {
+      "id": "amarillo-63",
+      "color": "amarillo",
+      "rango": 4,
+      "casilla": "B11",
+      "bandera": null,
+      "alternancias": 0,
+      "ultimoTramo": null
+     },
+     "amarillo-64": {
+      "id": "amarillo-64",
+      "color": "amarillo",
+      "rango": 1,
+      "casilla": "B9",
+      "bandera": null,
+      "alternancias": 0,
+      "ultimoTramo": null
+     },
+     "amarillo-65": {
+      "id": "amarillo-65",
+      "color": "amarillo",
+      "rango": 6,
+      "casilla": "A6",
+      "bandera": null,
+      "alternancias": 0,
+      "ultimoTramo": null
+     },
+     "amarillo-66": {
+      "id": "amarillo-66",
+      "color": "amarillo",
+      "rango": 7,
+      "casilla": "B7",
+      "bandera": null,
+      "alternancias": 0,
+      "ultimoTramo": null
+     },
+     "amarillo-67": {
+      "id": "amarillo-67",
+      "color": "amarillo",
+      "rango": 3,
+      "casilla": "B5",
+      "bandera": null,
+      "alternancias": 0,
+      "ultimoTramo": null
+     },
+     "amarillo-68": {
+      "id": "amarillo-68",
+      "color": "amarillo",
+      "rango": 4,
+      "casilla": "A7",
+      "bandera": null,
+      "alternancias": 0,
+      "ultimoTramo": null
+     },
+     "amarillo-69": {
+      "id": "amarillo-69",
+      "color": "amarillo",
+      "rango": 5,
+      "casilla": "A5",
+      "bandera": null,
+      "alternancias": 0,
+      "ultimoTramo": null
+     },
+     "amarillo-70": {
+      "id": "amarillo-70",
+      "color": "amarillo",
+      "rango": 3,
+      "casilla": "B10",
+      "bandera": null,
+      "alternancias": 0,
+      "ultimoTramo": null
+     },
+     "amarillo-71": {
+      "id": "amarillo-71",
+      "color": "amarillo",
+      "rango": 8,
+      "casilla": "D8",
+      "bandera": null,
+      "alternancias": 1,
+      "ultimoTramo": {
+       "desde": "C8",
+       "hasta": "D8"
+      }
+     },
+     "amarillo-72": {
+      "id": "amarillo-72",
+      "color": "amarillo",
+      "rango": 9,
+      "casilla": "F6",
+      "bandera": null,
+      "alternancias": 1,
+      "ultimoTramo": {
+       "desde": "E6",
+       "hasta": "F6"
+      }
+     },
+     "amarillo-73": {
+      "id": "amarillo-73",
+      "color": "amarillo",
+      "rango": 2,
+      "casilla": "A9",
+      "bandera": null,
+      "alternancias": 0,
+      "ultimoTramo": null
+     },
+     "amarillo-74": {
+      "id": "amarillo-74",
+      "color": "amarillo",
+      "rango": 1,
+      "casilla": "D7",
+      "bandera": null,
+      "alternancias": 1,
+      "ultimoTramo": {
+       "desde": "C7",
+       "hasta": "D7"
+      }
+     },
+     "amarillo-75": {
+      "id": "amarillo-75",
+      "color": "amarillo",
+      "rango": 6,
+      "casilla": "ANILLO",
+      "bandera": null,
+      "alternancias": 1,
+      "ultimoTramo": {
+       "desde": "G10",
+       "hasta": "ANILLO"
+      }
+     },
+     "amarillo-76": {
+      "id": "amarillo-76",
+      "color": "amarillo",
+      "rango": 3,
+      "casilla": "A10",
+      "bandera": null,
+      "alternancias": 0,
+      "ultimoTramo": null
+     },
+     "amarillo-77": {
+      "id": "amarillo-77",
+      "color": "amarillo",
+      "rango": 3,
+      "casilla": "C9",
+      "bandera": null,
+      "alternancias": 0,
+      "ultimoTramo": null
+     },
+     "amarillo-78": {
+      "id": "amarillo-78",
+      "color": "amarillo",
+      "rango": 4,
+      "casilla": "A11",
+      "bandera": null,
+      "alternancias": 0,
+      "ultimoTramo": null
+     },
+     "amarillo-79": {
+      "id": "amarillo-79",
+      "color": "amarillo",
+      "rango": 6,
+      "casilla": "B6",
+      "bandera": null,
+      "alternancias": 0,
+      "ultimoTramo": null
+     },
+     "amarillo-80": {
+      "id": "amarillo-80",
+      "color": "amarillo",
+      "rango": 5,
+      "casilla": "C11",
+      "bandera": null,
+      "alternancias": 0,
+      "ultimoTramo": null
+     }
+    },
+    "tablero": {
+     "K3": "rojo-4",
+     "G3": "rojo-5",
+     "G2": "rojo-6",
+     "F2": "rojo-7",
+     "F1": "rojo-8",
+     "J2": "rojo-9",
+     "J1": "rojo-10",
+     "I3": "rojo-12",
+     "G1": "rojo-14",
+     "I1": "rojo-15",
+     "I2": "rojo-16",
+     "E1": "rojo-17",
+     "K1": "rojo-18",
+     "K2": "rojo-19",
+     "F3": "rojo-20",
+     "M11": "verde-22",
+     "N5": "verde-25",
+     "O5": "verde-26",
+     "O9": "verde-27",
+     "N11": "verde-28",
+     "O11": "verde-29",
+     "M5": "verde-30",
+     "N7": "verde-35",
+     "N10": "verde-36",
+     "O6": "verde-38",
+     "O10": "verde-39",
+     "O7": "verde-40",
+     "J14": "azul-42",
+     "I15": "azul-43",
+     "E13": "azul-44",
+     "K15": "azul-48",
+     "K14": "azul-49",
+     "J13": "azul-50",
+     "E14": "azul-51",
+     "H13": "azul-52",
+     "K13": "azul-53",
+     "G15": "azul-54",
+     "J15": "azul-56",
+     "I14": "azul-57",
+     "E15": "azul-59",
+     "C5": "amarillo-62",
+     "B11": "amarillo-63",
+     "B9": "amarillo-64",
+     "A6": "amarillo-65",
+     "B7": "amarillo-66",
+     "B5": "amarillo-67",
+     "A7": "amarillo-68",
+     "A5": "amarillo-69",
+     "B10": "amarillo-70",
+     "A9": "amarillo-73",
+     "A10": "amarillo-76",
+     "C9": "amarillo-77",
+     "A11": "amarillo-78",
+     "B6": "amarillo-79",
+     "C11": "amarillo-80",
+     "H6": "verde-32",
+     "F7": "azul-46",
+     "D7": "amarillo-74",
+     "I6": "verde-31",
+     "I12": "azul-45",
+     "ANILLO": "amarillo-75",
+     "F10": "azul-55",
+     "D8": "amarillo-71",
+     "L7": "verde-34",
+     "F11": "azul-60",
+     "E4": "rojo-11",
+     "L9": "verde-24",
+     "F12": "azul-47",
+     "I4": "rojo-13",
+     "M9": "verde-37",
+     "L8": "verde-21",
+     "G4": "rojo-1",
+     "J10": "verde-33",
+     "F13": "azul-41",
+     "D6": "amarillo-61",
+     "J4": "rojo-3",
+     "K10": "verde-23",
+     "G12": "azul-58",
+     "F6": "amarillo-72"
+    },
+    "banderas": {
+     "rojo": {
+      "portador": "rojo-1",
+      "casilla": null,
+      "ultimoDueño": "rojo"
+     },
+     "verde": {
+      "portador": "verde-21",
+      "casilla": null,
+      "ultimoDueño": "verde"
+     },
+     "azul": {
+      "portador": "azul-41",
+      "casilla": null,
+      "ultimoDueño": "azul"
+     },
+     "amarillo": {
+      "portador": "amarillo-61",
+      "casilla": null,
+      "ultimoDueño": "amarillo"
+     }
+    },
+    "banderasSueltas": {},
+    "marcador": {
+     "rojo": 0,
+     "verde": 0,
+     "azul": 0,
+     "amarillo": 1
+    },
+    "bajas": {
+     "rojo": [
+      8
+     ],
+     "verde": [],
+     "azul": [],
+     "amarillo": []
+    },
+    "pendiente": null,
+    "colaPendientes": [],
+    "fin": null,
+    "eventos": [],
+    "rangosRevelados": {
+     "verde-32": 3,
+     "azul-46": 3,
+     "amarillo-75": 6,
+     "verde-31": 3,
+     "azul-55": 6,
+     "verde-33": 6,
+     "azul-60": 3,
+     "azul-47": 3,
+     "amarillo-72": 9,
+     "verde-23": 6
+    },
+    "historia": [
+     {
+      "n": 1,
+      "color": "amarillo",
+      "tipo": "mover",
+      "desde": "A8",
+      "hasta": "B8",
+      "via": null,
+      "eventos": []
+     },
+     {
+      "n": 2,
+      "color": "rojo",
+      "tipo": "mover",
+      "desde": "H3",
+      "hasta": "H4",
+      "via": null,
+      "eventos": []
+     },
+     {
+      "n": 3,
+      "color": "verde",
+      "tipo": "mover",
+      "desde": "M6",
+      "hasta": "H6",
+      "via": null,
+      "eventos": []
+     },
+     {
+      "n": 4,
+      "color": "azul",
+      "tipo": "mover",
+      "desde": "F13",
+      "hasta": "F7",
+      "via": null,
+      "eventos": []
+     },
+     {
+      "n": 5,
+      "color": "amarillo",
+      "tipo": "mover",
+      "desde": "C10",
+      "hasta": "E10",
+      "via": "D10",
+      "eventos": []
+     },
+     {
+      "n": 6,
+      "color": "rojo",
+      "tipo": "mover",
+      "desde": "H1",
+      "hasta": "H2",
+      "via": null,
+      "eventos": []
+     },
+     {
+      "n": 7,
+      "color": "verde",
+      "tipo": "mover",
+      "desde": "O8",
+      "hasta": "N8",
+      "via": null,
+      "eventos": []
+     },
+     {
+      "n": 8,
+      "color": "azul",
+      "tipo": "mover",
+      "desde": "H15",
+      "hasta": "H14",
+      "via": null,
+      "eventos": []
+     },
+     {
+      "n": 9,
+      "color": "amarillo",
+      "tipo": "mover",
+      "desde": "C7",
+      "hasta": "D7",
+      "via": null,
+      "eventos": []
+     },
+     {
+      "n": 10,
+      "color": "rojo",
+      "tipo": "mover",
+      "desde": "H2",
+      "hasta": "H3",
+      "via": null,
+      "eventos": []
+     },
+     {
+      "n": 11,
+      "color": "verde",
+      "tipo": "mover",
+      "desde": "N6",
+      "hasta": "I6",
+      "via": null,
+      "eventos": []
+     },
+     {
+      "n": 12,
+      "color": "azul",
+      "tipo": "mover",
+      "desde": "G13",
+      "hasta": "F12",
+      "via": "G12",
+      "eventos": []
+     },
+     {
+      "n": 13,
+      "color": "amarillo",
+      "tipo": "mover",
+      "desde": "E10",
+      "hasta": "G10",
+      "via": "F10",
+      "eventos": []
+     },
+     {
+      "n": 14,
+      "color": "rojo",
+      "tipo": "mover",
+      "desde": "E3",
+      "hasta": "E4",
+      "via": null,
+      "eventos": []
+     },
+     {
+      "n": 15,
+      "color": "verde",
+      "tipo": "mover",
+      "desde": "M8",
+      "hasta": "L8",
+      "via": null,
+      "eventos": []
+     },
+     {
+      "n": 16,
+      "color": "azul",
+      "tipo": "mover",
+      "desde": "I13",
+      "hasta": "I12",
+      "via": null,
+      "eventos": []
+     },
+     {
+      "n": 17,
+      "color": "amarillo",
+      "tipo": "mover",
+      "desde": "G10",
+      "hasta": "ANILLO",
+      "via": "H10",
+      "eventos": []
+     },
+     {
+      "n": 18,
+      "color": "rojo",
+      "tipo": "mover",
+      "desde": "E4",
+      "hasta": "E5",
+      "via": null,
+      "eventos": []
+     },
+     {
+      "n": 19,
+      "color": "verde",
+      "tipo": "mover",
+      "desde": "M9",
+      "hasta": "L10",
+      "via": "L9",
+      "eventos": []
+     },
+     {
+      "n": 20,
+      "color": "azul",
+      "tipo": "mover",
+      "desde": "F12",
+      "hasta": "F10",
+      "via": "F11",
+      "eventos": []
+     },
+     {
+      "n": 21,
+      "color": "amarillo",
+      "tipo": "mover",
+      "desde": "C8",
+      "hasta": "D8",
+      "via": null,
+      "eventos": []
+     },
+     {
+      "n": 22,
+      "color": "rojo",
+      "tipo": "mover",
+      "desde": "E2",
+      "hasta": "E3",
+      "via": null,
+      "eventos": []
+     },
+     {
+      "n": 23,
+      "color": "verde",
+      "tipo": "mover",
+      "desde": "M7",
+      "hasta": "L7",
+      "via": null,
+      "eventos": []
+     },
+     {
+      "n": 24,
+      "color": "azul",
+      "tipo": "mover",
+      "desde": "F14",
+      "hasta": "F11",
+      "via": null,
+      "eventos": []
+     },
+     {
+      "n": 25,
+      "color": "amarillo",
+      "tipo": "mover",
+      "desde": "B8",
+      "hasta": "C8",
+      "via": null,
+      "eventos": []
+     },
+     {
+      "n": 26,
+      "color": "rojo",
+      "tipo": "mover",
+      "desde": "E3",
+      "hasta": "E4",
+      "via": null,
+      "eventos": []
+     },
+     {
+      "n": 27,
+      "color": "verde",
+      "tipo": "mover",
+      "desde": "L8",
+      "hasta": "L9",
+      "via": null,
+      "eventos": []
+     },
+     {
+      "n": 28,
+      "color": "azul",
+      "tipo": "mover",
+      "desde": "F15",
+      "hasta": "F12",
+      "via": null,
+      "eventos": []
+     },
+     {
+      "n": 29,
+      "color": "amarillo",
+      "tipo": "mover",
+      "desde": "C8",
+      "hasta": "C7",
+      "via": null,
+      "eventos": []
+     },
+     {
+      "n": 30,
+      "color": "rojo",
+      "tipo": "mover",
+      "desde": "H4",
+      "hasta": "I4",
+      "via": null,
+      "eventos": []
+     },
+     {
+      "n": 31,
+      "color": "verde",
+      "tipo": "mover",
+      "desde": "N8",
+      "hasta": "M8",
+      "via": null,
+      "eventos": []
+     },
+     {
+      "n": 32,
+      "color": "azul",
+      "tipo": "mover",
+      "desde": "G14",
+      "hasta": "G13",
+      "via": null,
+      "eventos": []
+     },
+     {
+      "n": 33,
+      "color": "amarillo",
+      "tipo": "mover",
+      "desde": "C6",
+      "hasta": "D6",
+      "via": null,
+      "eventos": []
+     },
+     {
+      "n": 34,
+      "color": "rojo",
+      "tipo": "mover",
+      "desde": "E5",
+      "hasta": "E6",
+      "via": null,
+      "eventos": []
+     },
+     {
+      "n": 35,
+      "color": "verde",
+      "tipo": "mover",
+      "desde": "N9",
+      "hasta": "M9",
+      "via": null,
+      "eventos": []
+     },
+     {
+      "n": 36,
+      "color": "azul",
+      "tipo": "mover",
+      "desde": "H14",
+      "hasta": "G14",
+      "via": null,
+      "eventos": []
+     },
+     {
+      "n": 37,
+      "color": "amarillo",
+      "tipo": "mover",
+      "desde": "C7",
+      "hasta": "C6",
+      "via": null,
+      "eventos": []
+     },
+     {
+      "n": 38,
+      "color": "rojo",
+      "tipo": "mover",
+      "desde": "H3",
+      "hasta": "H4",
+      "via": null,
+      "eventos": []
+     },
+     {
+      "n": 39,
+      "color": "verde",
+      "tipo": "mover",
+      "desde": "M8",
+      "hasta": "L8",
+      "via": null,
+      "eventos": []
+     },
+     {
+      "n": 40,
+      "color": "azul",
+      "tipo": "mover",
+      "desde": "G14",
+      "hasta": "F14",
+      "via": null,
+      "eventos": []
+     },
+     {
+      "n": 41,
+      "color": "amarillo",
+      "tipo": "atacar",
+      "desde": "D6",
+      "hasta": "E6",
+      "via": null,
+      "eventos": [
+       {
+        "tipo": "duelo",
+        "casilla": "E6",
+        "atacante": {
+         "id": "amarillo-72",
+         "color": "amarillo",
+         "rango": 9,
+         "casilla": "D6"
+        },
+        "defensor": {
+         "id": "rojo-2",
+         "color": "rojo",
+         "rango": 8,
+         "casilla": "E6"
+        },
+        "resultado": "atacante"
+       }
+      ]
+     },
+     {
+      "n": 42,
+      "color": "rojo",
+      "tipo": "mover",
+      "desde": "H4",
+      "hasta": "G4",
+      "via": null,
+      "eventos": []
+     },
+     {
+      "n": 43,
+      "color": "verde",
+      "tipo": "mover",
+      "desde": "L10",
+      "hasta": "J10",
+      "via": "K10",
+      "eventos": []
+     },
+     {
+      "n": 44,
+      "color": "azul",
+      "tipo": "mover",
+      "desde": "F14",
+      "hasta": "F13",
+      "via": null,
+      "eventos": []
+     },
+     {
+      "n": 45,
+      "color": "amarillo",
+      "tipo": "mover",
+      "desde": "C6",
+      "hasta": "D6",
+      "via": null,
+      "eventos": []
+     },
+     {
+      "n": 46,
+      "color": "rojo",
+      "tipo": "mover",
+      "desde": "J3",
+      "hasta": "J4",
+      "via": null,
+      "eventos": []
+     },
+     {
+      "n": 47,
+      "color": "verde",
+      "tipo": "mover",
+      "desde": "M10",
+      "hasta": "K10",
+      "via": "L10",
+      "eventos": []
+     },
+     {
+      "n": 48,
+      "color": "azul",
+      "tipo": "mover",
+      "desde": "G13",
+      "hasta": "G12",
+      "via": null,
+      "eventos": []
+     },
+     {
+      "n": 49,
+      "color": "amarillo",
+      "tipo": "mover",
+      "desde": "E6",
+      "hasta": "F6",
+      "via": null,
+      "eventos": []
+     }
+    ],
+    "contador": 80,
+    "caidosPublicos": {
+     "rojo": [
+      8
+     ],
+     "verde": [],
+     "azul": [],
+     "amarillo": []
+    },
+    "reclutas": {
+     "rojo": 0,
+     "verde": 0,
+     "azul": 0,
+     "amarillo": 0
+    }
+   },
+   "color": "rojo",
+   "motivo": "rival-en-el-anillo",
+   "origen": "2026-09-04T23-05-24-s_myhfm4q.json"
+  },
+  {
+   "firma": "A11:amarillo|A5:amarillo|A7:amarillo|A9:amarillo|ANILLO:amarillo|B11:amarillo|B5:amarillo|B7:amarillo|B9:amarillo|C11:amarillo|C5:amarillo|C6:amarillo|C9:amarillo|D10:amarillo|D6:amarillo|D7:amarillo|D8:amarillo|E10:amarillo|E12:azul|E13:azul|E15:azul|E1:rojo|E5:rojo|E6:amarillo*|F10:azul|F11:azul|F12:azul|F13:azul*|F1:rojo|F2:rojo|F3:rojo|F4:rojo*|G10:verde|G12:azul|G15:azul|G1:rojo|G2:rojo|G3:rojo|G4:rojo|H13:azul|H6:verde|I12:azul|I15:azul|I1:rojo|I2:rojo|I3:rojo|I6:rojo|J13:azul|J14:azul|J15:azul|J1:rojo|J2:rojo|K13:azul|K14:azul|K15:azul|K1:rojo|K2:rojo|K3:rojo|L10:verde|L7:verde|L8:verde*|L9:verde|M10:verde|M11:verde|M5:verde|N10:verde|N11:verde|N5:verde|N7:verde|O10:verde|O11:verde|O5:verde|O6:verde|O7:verde",
+   "estado": {
+    "modo": "equipos",
+    "orden": [
+     "rojo",
+     "verde",
+     "azul",
+     "amarillo"
+    ],
+    "turno": "rojo",
+    "piezas": {
+     "rojo-1": {
+      "id": "rojo-1",
+      "color": "rojo",
+      "rango": 9,
+      "casilla": "F4",
+      "bandera": "rojo",
+      "alternancias": 1,
+      "ultimoTramo": {
+       "desde": "G4",
+       "hasta": "F4"
+      }
+     },
+     "rojo-3": {
+      "id": "rojo-3",
+      "color": "rojo",
+      "rango": 7,
+      "casilla": "I6",
+      "bandera": null,
+      "alternancias": 1,
+      "ultimoTramo": {
+       "desde": "J6",
+       "hasta": "I6"
+      }
+     },
+     "rojo-4": {
+      "id": "rojo-4",
+      "color": "rojo",
+      "rango": 7,
+      "casilla": "K3",
+      "bandera": null,
+      "alternancias": 0,
+      "ultimoTramo": null
+     },
+     "rojo-5": {
+      "id": "rojo-5",
+      "color": "rojo",
+      "rango": 6,
+      "casilla": "G3",
+      "bandera": null,
+      "alternancias": 0,
+      "ultimoTramo": null
+     },
+     "rojo-6": {
+      "id": "rojo-6",
+      "color": "rojo",
+      "rango": 6,
+      "casilla": "G2",
+      "bandera": null,
+      "alternancias": 0,
+      "ultimoTramo": null
+     },
+     "rojo-7": {
+      "id": "rojo-7",
+      "color": "rojo",
+      "rango": 3,
+      "casilla": "F2",
+      "bandera": null,
+      "alternancias": 0,
+      "ultimoTramo": null
+     },
+     "rojo-8": {
+      "id": "rojo-8",
+      "color": "rojo",
+      "rango": 3,
+      "casilla": "F1",
+      "bandera": null,
+      "alternancias": 0,
+      "ultimoTramo": null
+     },
+     "rojo-9": {
+      "id": "rojo-9",
+      "color": "rojo",
+      "rango": 3,
+      "casilla": "J2",
+      "bandera": null,
+      "alternancias": 0,
+      "ultimoTramo": null
+     },
+     "rojo-10": {
+      "id": "rojo-10",
+      "color": "rojo",
+      "rango": 3,
+      "casilla": "J1",
+      "bandera": null,
+      "alternancias": 0,
+      "ultimoTramo": null
+     },
+     "rojo-11": {
+      "id": "rojo-11",
+      "color": "rojo",
+      "rango": 2,
+      "casilla": "E5",
+      "bandera": null,
+      "alternancias": 1,
+      "ultimoTramo": {
+       "desde": "E4",
+       "hasta": "E5"
+      }
+     },
+     "rojo-12": {
+      "id": "rojo-12",
+      "color": "rojo",
+      "rango": 1,
+      "casilla": "I3",
+      "bandera": null,
+      "alternancias": 0,
+      "ultimoTramo": null
+     },
+     "rojo-13": {
+      "id": "rojo-13",
+      "color": "rojo",
+      "rango": 1,
+      "casilla": "G4",
+      "bandera": null,
+      "alternancias": 1,
+      "ultimoTramo": {
+       "desde": "H4",
+       "hasta": "G4"
+      }
+     },
+     "rojo-14": {
+      "id": "rojo-14",
+      "color": "rojo",
+      "rango": 4,
+      "casilla": "G1",
+      "bandera": null,
+      "alternancias": 0,
+      "ultimoTramo": null
+     },
+     "rojo-15": {
+      "id": "rojo-15",
+      "color": "rojo",
+      "rango": 4,
+      "casilla": "I1",
+      "bandera": null,
+      "alternancias": 0,
+      "ultimoTramo": null
+     },
+     "rojo-16": {
+      "id": "rojo-16",
+      "color": "rojo",
+      "rango": 4,
+      "casilla": "I2",
+      "bandera": null,
+      "alternancias": 0,
+      "ultimoTramo": null
+     },
+     "rojo-17": {
+      "id": "rojo-17",
+      "color": "rojo",
+      "rango": 5,
+      "casilla": "E1",
+      "bandera": null,
+      "alternancias": 0,
+      "ultimoTramo": null
+     },
+     "rojo-18": {
+      "id": "rojo-18",
+      "color": "rojo",
+      "rango": 5,
+      "casilla": "K1",
+      "bandera": null,
+      "alternancias": 0,
+      "ultimoTramo": null
+     },
+     "rojo-19": {
+      "id": "rojo-19",
+      "color": "rojo",
+      "rango": 5,
+      "casilla": "K2",
+      "bandera": null,
+      "alternancias": 0,
+      "ultimoTramo": null
+     },
+     "rojo-20": {
+      "id": "rojo-20",
+      "color": "rojo",
+      "rango": 6,
+      "casilla": "F3",
+      "bandera": null,
+      "alternancias": 0,
+      "ultimoTramo": null
+     },
+     "verde-21": {
+      "id": "verde-21",
+      "color": "verde",
+      "rango": 9,
+      "casilla": "L8",
+      "bandera": "verde",
+      "alternancias": 1,
+      "ultimoTramo": {
+       "desde": "M8",
+       "hasta": "L8"
+      }
+     },
+     "verde-22": {
+      "id": "verde-22",
+      "color": "verde",
+      "rango": 5,
+      "casilla": "M11",
+      "bandera": null,
+      "alternancias": 0,
+      "ultimoTramo": null
+     },
+     "verde-23": {
+      "id": "verde-23",
+      "color": "verde",
+      "rango": 6,
+      "casilla": "G10",
+      "bandera": null,
+      "alternancias": 1,
+      "ultimoTramo": {
+       "desde": "J9",
+       "hasta": "G10"
+      }
+     },
+     "verde-24": {
+      "id": "verde-24",
+      "color": "verde",
+      "rango": 1,
+      "casilla": "L9",
+      "bandera": null,
+      "alternancias": 1,
+      "ultimoTramo": {
+       "desde": "L8",
+       "hasta": "L9"
+      }
+     },
+     "verde-25": {
+      "id": "verde-25",
+      "color": "verde",
+      "rango": 5,
+      "casilla": "N5",
+      "bandera": null,
+      "alternancias": 0,
+      "ultimoTramo": null
+     },
+     "verde-26": {
+      "id": "verde-26",
+      "color": "verde",
+      "rango": 3,
+      "casilla": "O5",
+      "bandera": null,
+      "alternancias": 0,
+      "ultimoTramo": null
+     },
+     "verde-27": {
+      "id": "verde-27",
+      "color": "verde",
+      "rango": 6,
+      "casilla": "N10",
+      "bandera": null,
+      "alternancias": 1,
+      "ultimoTramo": {
+       "desde": "O9",
+       "hasta": "N10"
+      }
+     },
+     "verde-28": {
+      "id": "verde-28",
+      "color": "verde",
+      "rango": 4,
+      "casilla": "N11",
+      "bandera": null,
+      "alternancias": 0,
+      "ultimoTramo": null
+     },
+     "verde-29": {
+      "id": "verde-29",
+      "color": "verde",
+      "rango": 4,
+      "casilla": "O11",
+      "bandera": null,
+      "alternancias": 0,
+      "ultimoTramo": null
+     },
+     "verde-30": {
+      "id": "verde-30",
+      "color": "verde",
+      "rango": 5,
+      "casilla": "M5",
+      "bandera": null,
+      "alternancias": 0,
+      "ultimoTramo": null
+     },
+     "verde-32": {
+      "id": "verde-32",
+      "color": "verde",
+      "rango": 3,
+      "casilla": "H6",
+      "bandera": null,
+      "alternancias": 1,
+      "ultimoTramo": {
+       "desde": "M6",
+       "hasta": "H6"
+      }
+     },
+     "verde-34": {
+      "id": "verde-34",
+      "color": "verde",
+      "rango": 1,
+      "casilla": "L7",
+      "bandera": null,
+      "alternancias": 1,
+      "ultimoTramo": {
+       "desde": "M7",
+       "hasta": "L7"
+      }
+     },
+     "verde-35": {
+      "id": "verde-35",
+      "color": "verde",
+      "rango": 2,
+      "casilla": "N7",
+      "bandera": null,
+      "alternancias": 0,
+      "ultimoTramo": null
+     },
+     "verde-36": {
+      "id": "verde-36",
+      "color": "verde",
+      "rango": 3,
+      "casilla": "L10",
+      "bandera": null,
+      "alternancias": 1,
+      "ultimoTramo": {
+       "desde": "N10",
+       "hasta": "L10"
+      }
+     },
+     "verde-37": {
+      "id": "verde-37",
+      "color": "verde",
+      "rango": 8,
+      "casilla": "M10",
+      "bandera": null,
+      "alternancias": 1,
+      "ultimoTramo": {
+       "desde": "M9",
+       "hasta": "M10"
+      }
+     },
+     "verde-38": {
+      "id": "verde-38",
+      "color": "verde",
+      "rango": 4,
+      "casilla": "O6",
+      "bandera": null,
+      "alternancias": 0,
+      "ultimoTramo": null
+     },
+     "verde-39": {
+      "id": "verde-39",
+      "color": "verde",
+      "rango": 7,
+      "casilla": "O10",
+      "bandera": null,
+      "alternancias": 0,
+      "ultimoTramo": null
+     },
+     "verde-40": {
+      "id": "verde-40",
+      "color": "verde",
+      "rango": 7,
+      "casilla": "O7",
+      "bandera": null,
+      "alternancias": 0,
+      "ultimoTramo": null
+     },
+     "azul-41": {
+      "id": "azul-41",
+      "color": "azul",
+      "rango": 9,
+      "casilla": "F13",
+      "bandera": "azul",
+      "alternancias": 1,
+      "ultimoTramo": {
+       "desde": "F14",
+       "hasta": "F13"
+      }
+     },
+     "azul-42": {
+      "id": "azul-42",
+      "color": "azul",
+      "rango": 4,
+      "casilla": "J14",
+      "bandera": null,
+      "alternancias": 0,
+      "ultimoTramo": null
+     },
+     "azul-43": {
+      "id": "azul-43",
+      "color": "azul",
+      "rango": 6,
+      "casilla": "I15",
+      "bandera": null,
+      "alternancias": 0,
+      "ultimoTramo": null
+     },
+     "azul-44": {
+      "id": "azul-44",
+      "color": "azul",
+      "rango": 5,
+      "casilla": "E12",
+      "bandera": null,
+      "alternancias": 1,
+      "ultimoTramo": {
+       "desde": "E13",
+       "hasta": "E12"
+      }
+     },
+     "azul-46": {
+      "id": "azul-46",
+      "color": "azul",
+      "rango": 3,
+      "casilla": "F10",
+      "bandera": null,
+      "alternancias": 1,
+      "ultimoTramo": {
+       "desde": "F7",
+       "hasta": "F10"
+      }
+     },
+     "azul-47": {
+      "id": "azul-47",
+      "color": "azul",
+      "rango": 3,
+      "casilla": "F12",
+      "bandera": null,
+      "alternancias": 1,
+      "ultimoTramo": {
+       "desde": "F15",
+       "hasta": "F12"
+      }
+     },
+     "azul-48": {
+      "id": "azul-48",
+      "color": "azul",
+      "rango": 4,
+      "casilla": "K15",
+      "bandera": null,
+      "alternancias": 0,
+      "ultimoTramo": null
+     },
+     "azul-49": {
+      "id": "azul-49",
+      "color": "azul",
+      "rango": 3,
+      "casilla": "K14",
+      "bandera": null,
+      "alternancias": 0,
+      "ultimoTramo": null
+     },
+     "azul-50": {
+      "id": "azul-50",
+      "color": "azul",
+      "rango": 8,
+      "casilla": "J13",
+      "bandera": null,
+      "alternancias": 0,
+      "ultimoTramo": null
+     },
+     "azul-51": {
+      "id": "azul-51",
+      "color": "azul",
+      "rango": 4,
+      "casilla": "E13",
+      "bandera": null,
+      "alternancias": 1,
+      "ultimoTramo": {
+       "desde": "E14",
+       "hasta": "E13"
+      }
+     },
+     "azul-52": {
+      "id": "azul-52",
+      "color": "azul",
+      "rango": 2,
+      "casilla": "H13",
+      "bandera": null,
+      "alternancias": 0,
+      "ultimoTramo": null
+     },
+     "azul-53": {
+      "id": "azul-53",
+      "color": "azul",
+      "rango": 1,
+      "casilla": "K13",
+      "bandera": null,
+      "alternancias": 0,
+      "ultimoTramo": null
+     },
+     "azul-54": {
+      "id": "azul-54",
+      "color": "azul",
+      "rango": 5,
+      "casilla": "G15",
+      "bandera": null,
+      "alternancias": 0,
+      "ultimoTramo": null
+     },
+     "azul-56": {
+      "id": "azul-56",
+      "color": "azul",
+      "rango": 7,
+      "casilla": "J15",
+      "bandera": null,
+      "alternancias": 0,
+      "ultimoTramo": null
+     },
+     "azul-57": {
+      "id": "azul-57",
+      "color": "azul",
+      "rango": 6,
+      "casilla": "I12",
+      "bandera": null,
+      "alternancias": 1,
+      "ultimoTramo": {
+       "desde": "I14",
+       "hasta": "I12"
+      }
+     },
+     "azul-58": {
+      "id": "azul-58",
+      "color": "azul",
+      "rango": 7,
+      "casilla": "G12",
+      "bandera": null,
+      "alternancias": 1,
+      "ultimoTramo": {
+       "desde": "G13",
+       "hasta": "G12"
+      }
+     },
+     "azul-59": {
+      "id": "azul-59",
+      "color": "azul",
+      "rango": 5,
+      "casilla": "E15",
+      "bandera": null,
+      "alternancias": 0,
+      "ultimoTramo": null
+     },
+     "azul-60": {
+      "id": "azul-60",
+      "color": "azul",
+      "rango": 3,
+      "casilla": "F11",
+      "bandera": null,
+      "alternancias": 1,
+      "ultimoTramo": {
+       "desde": "F14",
+       "hasta": "F11"
+      }
+     },
+     "amarillo-61": {
+      "id": "amarillo-61",
+      "color": "amarillo",
+      "rango": 7,
+      "casilla": "E6",
+      "bandera": "amarillo",
+      "alternancias": 1,
+      "ultimoTramo": {
+       "desde": "D6",
+       "hasta": "E6"
+      }
+     },
+     "amarillo-62": {
+      "id": "amarillo-62",
+      "color": "amarillo",
+      "rango": 5,
+      "casilla": "C5",
+      "bandera": null,
+      "alternancias": 0,
+      "ultimoTramo": null
+     },
+     "amarillo-63": {
+      "id": "amarillo-63",
+      "color": "amarillo",
+      "rango": 4,
+      "casilla": "B11",
+      "bandera": null,
+      "alternancias": 0,
+      "ultimoTramo": null
+     },
+     "amarillo-64": {
+      "id": "amarillo-64",
+      "color": "amarillo",
+      "rango": 1,
+      "casilla": "B9",
+      "bandera": null,
+      "alternancias": 0,
+      "ultimoTramo": null
+     },
+     "amarillo-65": {
+      "id": "amarillo-65",
+      "color": "amarillo",
+      "rango": 6,
+      "casilla": "C6",
+      "bandera": null,
+      "alternancias": 1,
+      "ultimoTramo": {
+       "desde": "A6",
+       "hasta": "C6"
+      }
+     },
+     "amarillo-66": {
+      "id": "amarillo-66",
+      "color": "amarillo",
+      "rango": 7,
+      "casilla": "B7",
+      "bandera": null,
+      "alternancias": 0,
+      "ultimoTramo": null
+     },
+     "amarillo-67": {
+      "id": "amarillo-67",
+      "color": "amarillo",
+      "rango": 3,
+      "casilla": "B5",
+      "bandera": null,
+      "alternancias": 0,
+      "ultimoTramo": null
+     },
+     "amarillo-68": {
+      "id": "amarillo-68",
+      "color": "amarillo",
+      "rango": 4,
+      "casilla": "A7",
+      "bandera": null,
+      "alternancias": 0,
+      "ultimoTramo": null
+     },
+     "amarillo-69": {
+      "id": "amarillo-69",
+      "color": "amarillo",
+      "rango": 5,
+      "casilla": "A5",
+      "bandera": null,
+      "alternancias": 0,
+      "ultimoTramo": null
+     },
+     "amarillo-70": {
+      "id": "amarillo-70",
+      "color": "amarillo",
+      "rango": 3,
+      "casilla": "E10",
+      "bandera": null,
+      "alternancias": 1,
+      "ultimoTramo": {
+       "desde": "B10",
+       "hasta": "E10"
+      }
+     },
+     "amarillo-71": {
+      "id": "amarillo-71",
+      "color": "amarillo",
+      "rango": 8,
+      "casilla": "D8",
+      "bandera": null,
+      "alternancias": 1,
+      "ultimoTramo": {
+       "desde": "C8",
+       "hasta": "D8"
+      }
+     },
+     "amarillo-72": {
+      "id": "amarillo-72",
+      "color": "amarillo",
+      "rango": 9,
+      "casilla": "ANILLO",
+      "bandera": null,
+      "alternancias": 1,
+      "ultimoTramo": {
+       "desde": "G6",
+       "hasta": "ANILLO"
+      }
+     },
+     "amarillo-73": {
+      "id": "amarillo-73",
+      "color": "amarillo",
+      "rango": 2,
+      "casilla": "A9",
+      "bandera": null,
+      "alternancias": 0,
+      "ultimoTramo": null
+     },
+     "amarillo-74": {
+      "id": "amarillo-74",
+      "color": "amarillo",
+      "rango": 1,
+      "casilla": "D7",
+      "bandera": null,
+      "alternancias": 1,
+      "ultimoTramo": {
+       "desde": "C7",
+       "hasta": "D7"
+      }
+     },
+     "amarillo-76": {
+      "id": "amarillo-76",
+      "color": "amarillo",
+      "rango": 3,
+      "casilla": "D10",
+      "bandera": null,
+      "alternancias": 1,
+      "ultimoTramo": {
+       "desde": "A10",
+       "hasta": "D10"
+      }
+     },
+     "amarillo-77": {
+      "id": "amarillo-77",
+      "color": "amarillo",
+      "rango": 3,
+      "casilla": "C9",
+      "bandera": null,
+      "alternancias": 0,
+      "ultimoTramo": null
+     },
+     "amarillo-78": {
+      "id": "amarillo-78",
+      "color": "amarillo",
+      "rango": 4,
+      "casilla": "A11",
+      "bandera": null,
+      "alternancias": 0,
+      "ultimoTramo": null
+     },
+     "amarillo-79": {
+      "id": "amarillo-79",
+      "color": "amarillo",
+      "rango": 6,
+      "casilla": "D6",
+      "bandera": null,
+      "alternancias": 1,
+      "ultimoTramo": {
+       "desde": "B6",
+       "hasta": "D6"
+      }
+     },
+     "amarillo-80": {
+      "id": "amarillo-80",
+      "color": "amarillo",
+      "rango": 5,
+      "casilla": "C11",
+      "bandera": null,
+      "alternancias": 0,
+      "ultimoTramo": null
+     }
+    },
+    "tablero": {
+     "K3": "rojo-4",
+     "G3": "rojo-5",
+     "G2": "rojo-6",
+     "F2": "rojo-7",
+     "F1": "rojo-8",
+     "J2": "rojo-9",
+     "J1": "rojo-10",
+     "I3": "rojo-12",
+     "G1": "rojo-14",
+     "I1": "rojo-15",
+     "I2": "rojo-16",
+     "E1": "rojo-17",
+     "K1": "rojo-18",
+     "K2": "rojo-19",
+     "F3": "rojo-20",
+     "M11": "verde-22",
+     "N5": "verde-25",
+     "O5": "verde-26",
+     "N11": "verde-28",
+     "O11": "verde-29",
+     "M5": "verde-30",
+     "N7": "verde-35",
+     "O6": "verde-38",
+     "O10": "verde-39",
+     "O7": "verde-40",
+     "J14": "azul-42",
+     "I15": "azul-43",
+     "K15": "azul-48",
+     "K14": "azul-49",
+     "J13": "azul-50",
+     "H13": "azul-52",
+     "K13": "azul-53",
+     "G15": "azul-54",
+     "J15": "azul-56",
+     "E15": "azul-59",
+     "C5": "amarillo-62",
+     "B11": "amarillo-63",
+     "B9": "amarillo-64",
+     "B7": "amarillo-66",
+     "B5": "amarillo-67",
+     "A7": "amarillo-68",
+     "A5": "amarillo-69",
+     "A9": "amarillo-73",
+     "C9": "amarillo-77",
+     "A11": "amarillo-78",
+     "C11": "amarillo-80",
+     "H6": "verde-32",
+     "D7": "amarillo-74",
+     "D8": "amarillo-71",
+     "L7": "verde-34",
+     "F11": "azul-60",
+     "L9": "verde-24",
+     "F12": "azul-47",
+     "L8": "verde-21",
+     "F13": "azul-41",
+     "G12": "azul-58",
+     "E5": "rojo-11",
+     "L10": "verde-36",
+     "E6": "amarillo-61",
+     "F4": "rojo-1",
+     "N10": "verde-27",
+     "E12": "azul-44",
+     "D6": "amarillo-79",
+     "M10": "verde-37",
+     "E13": "azul-51",
+     "C6": "amarillo-65",
+     "E10": "amarillo-70",
+     "I6": "rojo-3",
+     "D10": "amarillo-76",
+     "F10": "azul-46",
+     "G4": "rojo-13",
+     "G10": "verde-23",
+     "I12": "azul-57",
+     "ANILLO": "amarillo-72"
+    },
+    "banderas": {
+     "rojo": {
+      "portador": "rojo-1",
+      "casilla": null,
+      "ultimoDueño": "rojo"
+     },
+     "verde": {
+      "portador": "verde-21",
+      "casilla": null,
+      "ultimoDueño": "verde"
+     },
+     "azul": {
+      "portador": "azul-41",
+      "casilla": null,
+      "ultimoDueño": "azul"
+     },
+     "amarillo": {
+      "portador": "amarillo-61",
+      "casilla": null,
+      "ultimoDueño": "amarillo"
+     }
+    },
+    "banderasSueltas": {},
+    "marcador": {
+     "rojo": 1,
+     "verde": 0,
+     "azul": 1,
+     "amarillo": 1
+    },
+    "bajas": {
+     "rojo": [
+      8
+     ],
+     "verde": [
+      3,
+      6
+     ],
+     "azul": [
+      1,
+      6
+     ],
+     "amarillo": [
+      6
+     ]
+    },
+    "pendiente": null,
+    "colaPendientes": [],
+    "fin": null,
+    "eventos": [],
+    "rangosRevelados": {
+     "verde-32": 3,
+     "azul-46": 3,
+     "azul-60": 3,
+     "azul-47": 3,
+     "amarillo-72": 9,
+     "verde-23": 6,
+     "verde-36": 3,
+     "verde-27": 6,
+     "amarillo-79": 6,
+     "amarillo-65": 6,
+     "rojo-3": 7,
+     "amarillo-70": 3,
+     "amarillo-76": 3,
+     "azul-57": 6
+    },
+    "historia": [
+     {
+      "n": 1,
+      "color": "amarillo",
+      "tipo": "mover",
+      "desde": "A8",
+      "hasta": "B8",
+      "via": null,
+      "eventos": []
+     },
+     {
+      "n": 2,
+      "color": "rojo",
+      "tipo": "mover",
+      "desde": "H3",
+      "hasta": "H4",
+      "via": null,
+      "eventos": []
+     },
+     {
+      "n": 3,
+      "color": "verde",
+      "tipo": "mover",
+      "desde": "M6",
+      "hasta": "H6",
+      "via": null,
+      "eventos": []
+     },
+     {
+      "n": 4,
+      "color": "azul",
+      "tipo": "mover",
+      "desde": "F13",
+      "hasta": "F7",
+      "via": null,
+      "eventos": []
+     },
+     {
+      "n": 5,
+      "color": "amarillo",
+      "tipo": "mover",
+      "desde": "C10",
+      "hasta": "E10",
+      "via": "D10",
+      "eventos": []
+     },
+     {
+      "n": 6,
+      "color": "rojo",
+      "tipo": "mover",
+      "desde": "H1",
+      "hasta": "H2",
+      "via": null,
+      "eventos": []
+     },
+     {
+      "n": 7,
+      "color": "verde",
+      "tipo": "mover",
+      "desde": "O8",
+      "hasta": "N8",
+      "via": null,
+      "eventos": []
+     },
+     {
+      "n": 8,
+      "color": "azul",
+      "tipo": "mover",
+      "desde": "H15",
+      "hasta": "H14",
+      "via": null,
+      "eventos": []
+     },
+     {
+      "n": 9,
+      "color": "amarillo",
+      "tipo": "mover",
+      "desde": "C7",
+      "hasta": "D7",
+      "via": null,
+      "eventos": []
+     },
+     {
+      "n": 10,
+      "color": "rojo",
+      "tipo": "mover",
+      "desde": "H2",
+      "hasta": "H3",
+      "via": null,
+      "eventos": []
+     },
+     {
+      "n": 11,
+      "color": "verde",
+      "tipo": "mover",
+      "desde": "N6",
+      "hasta": "I6",
+      "via": null,
+      "eventos": []
+     },
+     {
+      "n": 12,
+      "color": "azul",
+      "tipo": "mover",
+      "desde": "G13",
+      "hasta": "F12",
+      "via": "G12",
+      "eventos": []
+     },
+     {
+      "n": 13,
+      "color": "amarillo",
+      "tipo": "mover",
+      "desde": "E10",
+      "hasta": "G10",
+      "via": "F10",
+      "eventos": []
+     },
+     {
+      "n": 14,
+      "color": "rojo",
+      "tipo": "mover",
+      "desde": "E3",
+      "hasta": "E4",
+      "via": null,
+      "eventos": []
+     },
+     {
+      "n": 15,
+      "color": "verde",
+      "tipo": "mover",
+      "desde": "M8",
+      "hasta": "L8",
+      "via": null,
+      "eventos": []
+     },
+     {
+      "n": 16,
+      "color": "azul",
+      "tipo": "mover",
+      "desde": "I13",
+      "hasta": "I12",
+      "via": null,
+      "eventos": []
+     },
+     {
+      "n": 17,
+      "color": "amarillo",
+      "tipo": "mover",
+      "desde": "G10",
+      "hasta": "ANILLO",
+      "via": "H10",
+      "eventos": []
+     },
+     {
+      "n": 18,
+      "color": "rojo",
+      "tipo": "mover",
+      "desde": "E4",
+      "hasta": "E5",
+      "via": null,
+      "eventos": []
+     },
+     {
+      "n": 19,
+      "color": "verde",
+      "tipo": "mover",
+      "desde": "M9",
+      "hasta": "L10",
+      "via": "L9",
+      "eventos": []
+     },
+     {
+      "n": 20,
+      "color": "azul",
+      "tipo": "mover",
+      "desde": "F12",
+      "hasta": "F10",
+      "via": "F11",
+      "eventos": []
+     },
+     {
+      "n": 21,
+      "color": "amarillo",
+      "tipo": "mover",
+      "desde": "C8",
+      "hasta": "D8",
+      "via": null,
+      "eventos": []
+     },
+     {
+      "n": 22,
+      "color": "rojo",
+      "tipo": "mover",
+      "desde": "E2",
+      "hasta": "E3",
+      "via": null,
+      "eventos": []
+     },
+     {
+      "n": 23,
+      "color": "verde",
+      "tipo": "mover",
+      "desde": "M7",
+      "hasta": "L7",
+      "via": null,
+      "eventos": []
+     },
+     {
+      "n": 24,
+      "color": "azul",
+      "tipo": "mover",
+      "desde": "F14",
+      "hasta": "F11",
+      "via": null,
+      "eventos": []
+     },
+     {
+      "n": 25,
+      "color": "amarillo",
+      "tipo": "mover",
+      "desde": "B8",
+      "hasta": "C8",
+      "via": null,
+      "eventos": []
+     },
+     {
+      "n": 26,
+      "color": "rojo",
+      "tipo": "mover",
+      "desde": "E3",
+      "hasta": "E4",
+      "via": null,
+      "eventos": []
+     },
+     {
+      "n": 27,
+      "color": "verde",
+      "tipo": "mover",
+      "desde": "L8",
+      "hasta": "L9",
+      "via": null,
+      "eventos": []
+     },
+     {
+      "n": 28,
+      "color": "azul",
+      "tipo": "mover",
+      "desde": "F15",
+      "hasta": "F12",
+      "via": null,
+      "eventos": []
+     },
+     {
+      "n": 29,
+      "color": "amarillo",
+      "tipo": "mover",
+      "desde": "C8",
+      "hasta": "C7",
+      "via": null,
+      "eventos": []
+     },
+     {
+      "n": 30,
+      "color": "rojo",
+      "tipo": "mover",
+      "desde": "H4",
+      "hasta": "I4",
+      "via": null,
+      "eventos": []
+     },
+     {
+      "n": 31,
+      "color": "verde",
+      "tipo": "mover",
+      "desde": "N8",
+      "hasta": "M8",
+      "via": null,
+      "eventos": []
+     },
+     {
+      "n": 32,
+      "color": "azul",
+      "tipo": "mover",
+      "desde": "G14",
+      "hasta": "G13",
+      "via": null,
+      "eventos": []
+     },
+     {
+      "n": 33,
+      "color": "amarillo",
+      "tipo": "mover",
+      "desde": "C6",
+      "hasta": "D6",
+      "via": null,
+      "eventos": []
+     },
+     {
+      "n": 34,
+      "color": "rojo",
+      "tipo": "mover",
+      "desde": "E5",
+      "hasta": "E6",
+      "via": null,
+      "eventos": []
+     },
+     {
+      "n": 35,
+      "color": "verde",
+      "tipo": "mover",
+      "desde": "N9",
+      "hasta": "M9",
+      "via": null,
+      "eventos": []
+     },
+     {
+      "n": 36,
+      "color": "azul",
+      "tipo": "mover",
+      "desde": "H14",
+      "hasta": "G14",
+      "via": null,
+      "eventos": []
+     },
+     {
+      "n": 37,
+      "color": "amarillo",
+      "tipo": "mover",
+      "desde": "C7",
+      "hasta": "C6",
+      "via": null,
+      "eventos": []
+     },
+     {
+      "n": 38,
+      "color": "rojo",
+      "tipo": "mover",
+      "desde": "H3",
+      "hasta": "H4",
+      "via": null,
+      "eventos": []
+     },
+     {
+      "n": 39,
+      "color": "verde",
+      "tipo": "mover",
+      "desde": "M8",
+      "hasta": "L8",
+      "via": null,
+      "eventos": []
+     },
+     {
+      "n": 40,
+      "color": "azul",
+      "tipo": "mover",
+      "desde": "G14",
+      "hasta": "F14",
+      "via": null,
+      "eventos": []
+     },
+     {
+      "n": 41,
+      "color": "amarillo",
+      "tipo": "atacar",
+      "desde": "D6",
+      "hasta": "E6",
+      "via": null,
+      "eventos": [
+       {
+        "tipo": "duelo",
+        "casilla": "E6",
+        "atacante": {
+         "id": "amarillo-72",
+         "color": "amarillo",
+         "rango": 9,
+         "casilla": "D6"
+        },
+        "defensor": {
+         "id": "rojo-2",
+         "color": "rojo",
+         "rango": 8,
+         "casilla": "E6"
+        },
+        "resultado": "atacante"
+       }
+      ]
+     },
+     {
+      "n": 42,
+      "color": "rojo",
+      "tipo": "mover",
+      "desde": "H4",
+      "hasta": "G4",
+      "via": null,
+      "eventos": []
+     },
+     {
+      "n": 43,
+      "color": "verde",
+      "tipo": "mover",
+      "desde": "L10",
+      "hasta": "J10",
+      "via": "K10",
+      "eventos": []
+     },
+     {
+      "n": 44,
+      "color": "azul",
+      "tipo": "mover",
+      "desde": "F14",
+      "hasta": "F13",
+      "via": null,
+      "eventos": []
+     },
+     {
+      "n": 45,
+      "color": "amarillo",
+      "tipo": "mover",
+      "desde": "C6",
+      "hasta": "D6",
+      "via": null,
+      "eventos": []
+     },
+     {
+      "n": 46,
+      "color": "rojo",
+      "tipo": "mover",
+      "desde": "J3",
+      "hasta": "J4",
+      "via": null,
+      "eventos": []
+     },
+     {
+      "n": 47,
+      "color": "verde",
+      "tipo": "mover",
+      "desde": "M10",
+      "hasta": "K10",
+      "via": "L10",
+      "eventos": []
+     },
+     {
+      "n": 48,
+      "color": "azul",
+      "tipo": "mover",
+      "desde": "G13",
+      "hasta": "G12",
+      "via": null,
+      "eventos": []
+     },
+     {
+      "n": 49,
+      "color": "amarillo",
+      "tipo": "mover",
+      "desde": "E6",
+      "hasta": "F6",
+      "via": null,
+      "eventos": []
+     },
+     {
+      "n": 50,
+      "color": "rojo",
+      "tipo": "mover",
+      "desde": "E4",
+      "hasta": "E5",
+      "via": null,
+      "eventos": []
+     },
+     {
+      "n": 51,
+      "color": "verde",
+      "tipo": "mover",
+      "desde": "N10",
+      "hasta": "L10",
+      "via": null,
+      "eventos": []
+     },
+     {
+      "n": 52,
+      "color": "azul",
+      "tipo": "mover",
+      "desde": "F10",
+      "hasta": "H10",
+      "via": "G10",
+      "eventos": []
+     },
+     {
+      "n": 53,
+      "color": "amarillo",
+      "tipo": "mover",
+      "desde": "D6",
+      "hasta": "E6",
+      "via": null,
+      "eventos": []
+     },
+     {
+      "n": 54,
+      "color": "rojo",
+      "tipo": "mover",
+      "desde": "G4",
+      "hasta": "F4",
+      "via": null,
+      "eventos": []
+     },
+     {
+      "n": 55,
+      "color": "verde",
+      "tipo": "mover",
+      "desde": "O9",
+      "hasta": "N10",
+      "via": "N9",
+      "eventos": []
+     },
+     {
+      "n": 56,
+      "color": "azul",
+      "tipo": "mover",
+      "desde": "E13",
+      "hasta": "E12",
+      "via": null,
+      "eventos": []
+     },
+     {
+      "n": 57,
+      "color": "amarillo",
+      "tipo": "mover",
+      "desde": "B6",
+      "hasta": "D6",
+      "via": "C6",
+      "eventos": []
+     },
+     {
+      "n": 58,
+      "color": "rojo",
+      "tipo": "mover",
+      "desde": "J4",
+      "hasta": "J5",
+      "via": null,
+      "eventos": []
+     },
+     {
+      "n": 59,
+      "color": "verde",
+      "tipo": "mover",
+      "desde": "M9",
+      "hasta": "M10",
+      "via": null,
+      "eventos": []
+     },
+     {
+      "n": 60,
+      "color": "azul",
+      "tipo": "mover",
+      "desde": "E14",
+      "hasta": "E13",
+      "via": null,
+      "eventos": []
+     },
+     {
+      "n": 61,
+      "color": "amarillo",
+      "tipo": "mover",
+      "desde": "A6",
+      "hasta": "C6",
+      "via": "B6",
+      "eventos": []
+     },
+     {
+      "n": 62,
+      "color": "rojo",
+      "tipo": "mover",
+      "desde": "J5",
+      "hasta": "J6",
+      "via": null,
+      "eventos": []
+     },
+     {
+      "n": 63,
+      "color": "verde",
+      "tipo": "atacar",
+      "desde": "I6",
+      "hasta": "J6",
+      "via": null,
+      "eventos": [
+       {
+        "tipo": "duelo",
+        "casilla": "J6",
+        "atacante": {
+         "id": "verde-31",
+         "color": "verde",
+         "rango": 3,
+         "casilla": "I6"
+        },
+        "defensor": {
+         "id": "rojo-3",
+         "color": "rojo",
+         "rango": 7,
+         "casilla": "J6"
+        },
+        "resultado": "defensor"
+       }
+      ]
+     },
+     {
+      "n": 64,
+      "color": "azul",
+      "tipo": "disparar",
+      "desde": "I12",
+      "hasta": "ANILLO",
+      "via": null,
+      "eventos": [
+       {
+        "tipo": "cañonazo",
+        "color": "azul",
+        "desde": "I12",
+        "objetivo": {
+         "id": "amarillo-75",
+         "color": "amarillo",
+         "rango": 6,
+         "casilla": "ANILLO"
+        }
+       }
+      ]
+     },
+     {
+      "n": 65,
+      "color": "amarillo",
+      "tipo": "mover",
+      "desde": "B10",
+      "hasta": "E10",
+      "via": null,
+      "eventos": []
+     },
+     {
+      "n": 66,
+      "color": "rojo",
+      "tipo": "mover",
+      "desde": "J6",
+      "hasta": "I6",
+      "via": null,
+      "eventos": []
+     },
+     {
+      "n": 67,
+      "color": "verde",
+      "tipo": "mover",
+      "desde": "J10",
+      "hasta": "ANILLO",
+      "via": "I10",
+      "eventos": []
+     },
+     {
+      "n": 68,
+      "color": "azul",
+      "tipo": "atacar",
+      "desde": "H10",
+      "hasta": "ANILLO",
+      "via": "I10",
+      "eventos": [
+       {
+        "tipo": "duelo",
+        "casilla": "ANILLO",
+        "atacante": {
+         "id": "azul-55",
+         "color": "azul",
+         "rango": 6,
+         "casilla": "H10"
+        },
+        "defensor": {
+         "id": "verde-33",
+         "color": "verde",
+         "rango": 6,
+         "casilla": "ANILLO"
+        },
+        "resultado": "empate"
+       },
+       {
+        "tipo": "empate",
+        "casilla": "ANILLO"
+       }
+      ]
+     },
+     {
+      "n": 69,
+      "color": "amarillo",
+      "tipo": "mover",
+      "desde": "A10",
+      "hasta": "D10",
+      "via": null,
+      "eventos": []
+     },
+     {
+      "n": 70,
+      "color": "rojo",
+      "tipo": "mover",
+      "desde": "I4",
+      "hasta": "H4",
+      "via": null,
+      "eventos": []
+     },
+     {
+      "n": 71,
+      "color": "verde",
+      "tipo": "mover",
+      "desde": "K10",
+      "hasta": "J9",
+      "via": "J10",
+      "eventos": []
+     },
+     {
+      "n": 72,
+      "color": "azul",
+      "tipo": "mover",
+      "desde": "F7",
+      "hasta": "F10",
+      "via": null,
+      "eventos": []
+     },
+     {
+      "n": 73,
+      "color": "amarillo",
+      "tipo": "mover",
+      "desde": "F6",
+      "hasta": "G6",
+      "via": null,
+      "eventos": []
+     },
+     {
+      "n": 74,
+      "color": "rojo",
+      "tipo": "mover",
+      "desde": "H4",
+      "hasta": "G4",
+      "via": null,
+      "eventos": []
+     },
+     {
+      "n": 75,
+      "color": "verde",
+      "tipo": "mover",
+      "desde": "J9",
+      "hasta": "G10",
+      "via": "ANILLO",
+      "eventos": []
+     },
+     {
+      "n": 76,
+      "color": "azul",
+      "tipo": "mover",
+      "desde": "I14",
+      "hasta": "I12",
+      "via": "I13",
+      "eventos": []
+     },
+     {
+      "n": 77,
+      "color": "amarillo",
+      "tipo": "mover",
+      "desde": "G6",
+      "hasta": "ANILLO",
+      "via": null,
+      "eventos": []
+     }
+    ],
+    "contador": 80,
+    "caidosPublicos": {
+     "rojo": [
+      8
+     ],
+     "verde": [
+      3,
+      6
+     ],
+     "azul": [
+      1,
+      6
+     ],
+     "amarillo": [
+      6
+     ]
+    },
+    "reclutas": {
+     "rojo": 0,
+     "verde": 0,
+     "azul": 0,
+     "amarillo": 0
+    }
+   },
+   "color": "rojo",
+   "motivo": "rival-en-el-anillo",
+   "origen": "2026-09-04T23-05-24-s_myhfm4q.json"
   }
  ]
 }

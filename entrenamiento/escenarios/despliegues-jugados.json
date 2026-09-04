@@ -432,7 +432,439 @@
    ],
    "gano": true,
    "partida": "2026-09-03T17-24-47-s_bjnmo02.json"
+  },
+  {
+   "clave": "rojo:E1-5,E2-2,E3-8,F1-3,F2-3,F3-6,G1-4,G2-6,G3-6,H1-9,H3-1,I1-4,I2-4,I3-1,J1-3,J2-3,J3-7,K1-5,K2-5,K3-7",
+   "color": "rojo",
+   "colocacion": [
+    {
+     "casilla": "H1",
+     "rango": 9,
+     "bandera": true
+    },
+    {
+     "casilla": "E3",
+     "rango": 8,
+     "bandera": false
+    },
+    {
+     "casilla": "J3",
+     "rango": 7,
+     "bandera": false
+    },
+    {
+     "casilla": "K3",
+     "rango": 7,
+     "bandera": false
+    },
+    {
+     "casilla": "G3",
+     "rango": 6,
+     "bandera": false
+    },
+    {
+     "casilla": "G2",
+     "rango": 6,
+     "bandera": false
+    },
+    {
+     "casilla": "F2",
+     "rango": 3,
+     "bandera": false
+    },
+    {
+     "casilla": "F1",
+     "rango": 3,
+     "bandera": false
+    },
+    {
+     "casilla": "J2",
+     "rango": 3,
+     "bandera": false
+    },
+    {
+     "casilla": "J1",
+     "rango": 3,
+     "bandera": false
+    },
+    {
+     "casilla": "E2",
+     "rango": 2,
+     "bandera": false
+    },
+    {
+     "casilla": "I3",
+     "rango": 1,
+     "bandera": false
+    },
+    {
+     "casilla": "H3",
+     "rango": 1,
+     "bandera": false
+    },
+    {
+     "casilla": "G1",
+     "rango": 4,
+     "bandera": false
+    },
+    {
+     "casilla": "I1",
+     "rango": 4,
+     "bandera": false
+    },
+    {
+     "casilla": "I2",
+     "rango": 4,
+     "bandera": false
+    },
+    {
+     "casilla": "E1",
+     "rango": 5,
+     "bandera": false
+    },
+    {
+     "casilla": "K1",
+     "rango": 5,
+     "bandera": false
+    },
+    {
+     "casilla": "K2",
+     "rango": 5,
+     "bandera": false
+    },
+    {
+     "casilla": "F3",
+     "rango": 6,
+     "bandera": false
+    }
+   ],
+   "gano": false,
+   "partida": "2026-09-04T23-05-24-s_myhfm4q.json"
+  },
+  {
+   "clave": "verde:M10-6,M11-5,M5-5,M6-3,M7-1,M8-1,M9-6,N10-3,N11-4,N5-5,N6-3,N7-2,N9-8,O10-7,O11-4,O5-3,O6-4,O7-7,O8-9,O9-6",
+   "color": "verde",
+   "colocacion": [
+    {
+     "casilla": "O8",
+     "rango": 9,
+     "bandera": true
+    },
+    {
+     "casilla": "M11",
+     "rango": 5,
+     "bandera": false
+    },
+    {
+     "casilla": "M10",
+     "rango": 6,
+     "bandera": false
+    },
+    {
+     "casilla": "M8",
+     "rango": 1,
+     "bandera": false
+    },
+    {
+     "casilla": "N5",
+     "rango": 5,
+     "bandera": false
+    },
+    {
+     "casilla": "O5",
+     "rango": 3,
+     "bandera": false
+    },
+    {
+     "casilla": "O9",
+     "rango": 6,
+     "bandera": false
+    },
+    {
+     "casilla": "N11",
+     "rango": 4,
+     "bandera": false
+    },
+    {
+     "casilla": "O11",
+     "rango": 4,
+     "bandera": false
+    },
+    {
+     "casilla": "M5",
+     "rango": 5,
+     "bandera": false
+    },
+    {
+     "casilla": "N6",
+     "rango": 3,
+     "bandera": false
+    },
+    {
+     "casilla": "M6",
+     "rango": 3,
+     "bandera": false
+    },
+    {
+     "casilla": "M9",
+     "rango": 6,
+     "bandera": false
+    },
+    {
+     "casilla": "M7",
+     "rango": 1,
+     "bandera": false
+    },
+    {
+     "casilla": "N7",
+     "rango": 2,
+     "bandera": false
+    },
+    {
+     "casilla": "N10",
+     "rango": 3,
+     "bandera": false
+    },
+    {
+     "casilla": "N9",
+     "rango": 8,
+     "bandera": false
+    },
+    {
+     "casilla": "O6",
+     "rango": 4,
+     "bandera": false
+    },
+    {
+     "casilla": "O10",
+     "rango": 7,
+     "bandera": false
+    },
+    {
+     "casilla": "O7",
+     "rango": 7,
+     "bandera": false
+    }
+   ],
+   "gano": true,
+   "partida": "2026-09-04T23-05-24-s_myhfm4q.json"
+  },
+  {
+   "clave": "azul:E13-5,E14-4,E15-5,F13-3,F14-3,F15-3,G13-6,G14-7,G15-5,H13-2,H15-9,I13-1,I14-6,I15-6,J13-8,J14-4,J15-7,K13-1,K14-3,K15-4",
+   "color": "azul",
+   "colocacion": [
+    {
+     "casilla": "H15",
+     "rango": 9,
+     "bandera": true
+    },
+    {
+     "casilla": "J14",
+     "rango": 4,
+     "bandera": false
+    },
+    {
+     "casilla": "I15",
+     "rango": 6,
+     "bandera": false
+    },
+    {
+     "casilla": "E13",
+     "rango": 5,
+     "bandera": false
+    },
+    {
+     "casilla": "I13",
+     "rango": 1,
+     "bandera": false
+    },
+    {
+     "casilla": "F13",
+     "rango": 3,
+     "bandera": false
+    },
+    {
+     "casilla": "F15",
+     "rango": 3,
+     "bandera": false
+    },
+    {
+     "casilla": "K15",
+     "rango": 4,
+     "bandera": false
+    },
+    {
+     "casilla": "K14",
+     "rango": 3,
+     "bandera": false
+    },
+    {
+     "casilla": "J13",
+     "rango": 8,
+     "bandera": false
+    },
+    {
+     "casilla": "E14",
+     "rango": 4,
+     "bandera": false
+    },
+    {
+     "casilla": "H13",
+     "rango": 2,
+     "bandera": false
+    },
+    {
+     "casilla": "K13",
+     "rango": 1,
+     "bandera": false
+    },
+    {
+     "casilla": "G15",
+     "rango": 5,
+     "bandera": false
+    },
+    {
+     "casilla": "G13",
+     "rango": 6,
+     "bandera": false
+    },
+    {
+     "casilla": "J15",
+     "rango": 7,
+     "bandera": false
+    },
+    {
+     "casilla": "I14",
+     "rango": 6,
+     "bandera": false
+    },
+    {
+     "casilla": "G14",
+     "rango": 7,
+     "bandera": false
+    },
+    {
+     "casilla": "E15",
+     "rango": 5,
+     "bandera": false
+    },
+    {
+     "casilla": "F14",
+     "rango": 3,
+     "bandera": false
+    }
+   ],
+   "gano": false,
+   "partida": "2026-09-04T23-05-24-s_myhfm4q.json"
+  },
+  {
+   "clave": "amarillo:A10-3,A11-4,A5-5,A6-6,A7-4,A8-7,A9-2,B10-3,B11-4,B5-3,B6-6,B7-7,B9-1,C10-6,C11-5,C5-5,C6-9,C7-1,C8-8,C9-3",
+   "color": "amarillo",
+   "colocacion": [
+    {
+     "casilla": "A8",
+     "rango": 7,
+     "bandera": true
+    },
+    {
+     "casilla": "C5",
+     "rango": 5,
+     "bandera": false
+    },
+    {
+     "casilla": "B11",
+     "rango": 4,
+     "bandera": false
+    },
+    {
+     "casilla": "B9",
+     "rango": 1,
+     "bandera": false
+    },
+    {
+     "casilla": "A6",
+     "rango": 6,
+     "bandera": false
+    },
+    {
+     "casilla": "B7",
+     "rango": 7,
+     "bandera": false
+    },
+    {
+     "casilla": "B5",
+     "rango": 3,
+     "bandera": false
+    },
+    {
+     "casilla": "A7",
+     "rango": 4,
+     "bandera": false
+    },
+    {
+     "casilla": "A5",
+     "rango": 5,
+     "bandera": false
+    },
+    {
+     "casilla": "B10",
+     "rango": 3,
+     "bandera": false
+    },
+    {
+     "casilla": "C8",
+     "rango": 8,
+     "bandera": false
+    },
+    {
+     "casilla": "C6",
+     "rango": 9,
+     "bandera": false
+    },
+    {
+     "casilla": "A9",
+     "rango": 2,
+     "bandera": false
+    },
+    {
+     "casilla": "C7",
+     "rango": 1,
+     "bandera": false
+    },
+    {
+     "casilla": "C10",
+     "rango": 6,
+     "bandera": false
+    },
+    {
+     "casilla": "A10",
+     "rango": 3,
+     "bandera": false
+    },
+    {
+     "casilla": "C9",
+     "rango": 3,
+     "bandera": false
+    },
+    {
+     "casilla": "A11",
+     "rango": 4,
+     "bandera": false
+    },
+    {
+     "casilla": "B6",
+     "rango": 6,
+     "bandera": false
+    },
+    {
+     "casilla": "C11",
+     "rango": 5,
+     "bandera": false
+    }
+   ],
+   "gano": true,
+   "partida": "2026-09-04T23-05-24-s_myhfm4q.json"
   }
  ],
- "actualizado": "2026-09-03T17:26:47.407Z"
+ "actualizado": "2026-09-04T23:07:11.361Z"
 }
