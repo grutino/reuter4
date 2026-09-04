@@ -171,6 +171,10 @@ function opciones(argv) {
     // emparejamiento subió del 53% al 61% con +-6 de error en cada medida, y
     // eso no es una mejora, es la misma red medida dos veces.
     margen: 1,
+    // Confirmar cada adopción en partidas distintas de las que la eligieron.
+    // Cuesta dos medidas del panel por candidata -unos 50s con el panel
+    // repartido- y evita la deriva por maldición del ganador.
+    revalidar: 1,
   };
   for (let i = 2; i < argv.length; i += 2) {
     const clave = argv[i].replace(/^--/, "");
@@ -713,14 +717,45 @@ async function main() {
     // cosa. Sin la segunda se adopta ruido, que es igual de malo porque cada
     // adopción mueve el punto de partida de la siguiente ronda.
     const listón = titular.tasa + o.margen * medida.error;
-    const mejora = medida.tasa > listón;
+    const candidata = medida.tasa > listón;
+
+    // SEGUNDA OPINIÓN, EN PARTIDAS QUE NO DECIDIERON NADA.
+    //
+    // Ganar la primera medida basta para ser candidata, no para entrar. Una
+    // noche entera lo demostró: nueve sesiones, ocho rondas adoptadas, y el
+    // modelo acabó 3,2 puntos POR DEBAJO del punto de partida. Cada adopción se
+    // decidía con un error de +-3 y hubo cincuenta y cuatro oportunidades; con
+    // ese ruido acaba colándose un aspirante que solo tuvo suerte, y desde ahí
+    // se entrena todo lo demás. Es la maldición del ganador en cadena.
+    //
+    // El remedio es el mismo que ya se aplicó al veredicto de sesión: la partida
+    // que te elige no puede ser la que te confirma. Solo se pagan estas dos
+    // medidas de más cuando hay candidata, que es lo raro.
+    let mejora = candidata;
+    let reválida = null;
+    if (candidata && o.revalidar) {
+      const otraSemilla = semillaMedida ^ 0x5bd1e995;
+      const [otraMedida, otroTitular] = await Promise.all([
+        medir(nuevaD.red, nuevaJ.red, otraSemilla),
+        medir(redD, redJ, otraSemilla),
+      ]);
+      // En la reválida basta con no ser peor: exigir el margen dos veces
+      // seguidas descartaría mejoras de verdad por mala suerte en la segunda.
+      mejora = otraMedida.tasa >= otroTitular.tasa;
+      reválida = { medida: otraMedida.tasa, titular: otroTitular.tasa, pasa: mejora };
+    }
     if (mejora) { redD = nuevaD.red; redJ = nuevaJ.red; }
 
     console.log(
       `  ronda ${ronda}  ${todosJ.length} jugadas (${tanda.deLiga}/${o.partidas} de liga, expl ${oRonda.exploracion.toFixed(2)}) · decididas ${tanda.decididas} · ` +
         `panel ${(medida.tasa * 100).toFixed(0)}% vs titular ${(titular.tasa * 100).toFixed(0)}% ±${Math.round(medida.error * 100)} · ` +
         `peor ${medida.peor.rival} (${(medida.peor.tasa * 100).toFixed(0)}%)` +
-        (mejora ? "  <- adoptadas" : `  (descartadas, hacía falta ${(listón * 100).toFixed(0)}%)`) +
+        (reválida
+          ? ` · reválida ${(reválida.medida * 100).toFixed(0)}% vs ${(reválida.titular * 100).toFixed(0)}%`
+          : "") +
+        (mejora ? "  <- adoptadas" : candidata
+          ? "  (candidata, pero la reválida no la confirma)"
+          : `  (descartadas, hacía falta ${(listón * 100).toFixed(0)}%)`) +
         `  ${Math.round((Date.now() - t0) / 1000)}s` +
         ` [tanda ${Math.round(msTanda / 1000)}s · entrenar ${Math.round(msEntrenar / 1000)}s · panel ${Math.round(msMedir / 1000)}s]`
     );
@@ -732,6 +767,7 @@ async function main() {
     historia.push({
       ronda, panel: mejora ? medida.tasa : titular.tasa,
       medida: medida.tasa, titular: titular.tasa, error: medida.error, adoptadas: mejora,
+      candidata, reválida,
       ejemplosDespliegue: todosD.length, ejemplosJugada: todosJ.length,
       decididas: tanda.decididas, deLiga: tanda.deLiga,
       exploracion: oRonda.exploracion, tasa: oRonda.tasa,

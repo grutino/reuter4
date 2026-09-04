@@ -1,0 +1,5 @@
+2026-09-04 04:20:23
+
+Reuter4: entrenamiento terminado
+
+el aprendizaje se ha congelado. Mejor marca 90.3%, confirmada en 85.9% sobre partidas vírgenes, en 9 sesiones y 5.5 h.

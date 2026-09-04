@@ -1,15 +1,15 @@
 {
   "firmaRasgos": "bef94320",
-  "creado": "2026-09-03T23:18:35.343Z",
+  "creado": "2026-09-04T13:52:32.578Z",
   "opciones": {
-    "rondas": 6,
+    "rondas": 4,
     "partidas": 400,
     "epocas": 60,
     "lote": 64,
     "decaimiento": 0.001,
     "ocultaDespliegue": 16,
     "ocultaJugada": 28,
-    "semilla": 7920,
+    "semilla": 1,
     "limite": 400,
     "candidatas": 12,
     "candidatos": 30,
@@ -35,95 +35,96 @@
     "paresPorPosicion": 6,
     "paresSueltos": 14,
     "muestreoPares": 8,
-    "veredictoBase": 1000003,
-    "margen": 1
+    "veredictoBase": 0,
+    "margen": 1,
+    "revalidar": 1
   },
-  "perdidaValidacion": 0.6540895711917171,
-  "victoriasEnJuego": 0.8734835355285961,
+  "perdidaValidacion": 0.638186691297287,
+  "victoriasEnJuego": 0.9197952218430034,
   "curva": [
     {
       "epoca": 5,
-      "entrenamiento": 0.64122,
-      "validacion": 0.65454,
-      "aciertoEntrenamiento": 0.6278,
-      "aciertoValidacion": 0.6092
+      "entrenamiento": 0.64522,
+      "validacion": 0.63983,
+      "aciertoEntrenamiento": 0.6214,
+      "aciertoValidacion": 0.6325
     },
     {
       "epoca": 10,
-      "entrenamiento": 0.64397,
-      "validacion": 0.65902,
-      "aciertoEntrenamiento": 0.5997,
-      "aciertoValidacion": 0.5983
+      "entrenamiento": 0.6483,
+      "validacion": 0.64293,
+      "aciertoEntrenamiento": 0.6158,
+      "aciertoValidacion": 0.625
     },
     {
       "epoca": 15,
-      "entrenamiento": 0.6434,
-      "validacion": 0.66064,
-      "aciertoEntrenamiento": 0.6028,
-      "aciertoValidacion": 0.6017
+      "entrenamiento": 0.64907,
+      "validacion": 0.64432,
+      "aciertoEntrenamiento": 0.6128,
+      "aciertoValidacion": 0.6133
     },
     {
       "epoca": 20,
-      "entrenamiento": 0.64198,
-      "validacion": 0.66199,
-      "aciertoEntrenamiento": 0.6033,
-      "aciertoValidacion": 0.5958
+      "entrenamiento": 0.64889,
+      "validacion": 0.645,
+      "aciertoEntrenamiento": 0.6075,
+      "aciertoValidacion": 0.6108
     },
     {
       "epoca": 25,
-      "entrenamiento": 0.64026,
-      "validacion": 0.66178,
-      "aciertoEntrenamiento": 0.6147,
-      "aciertoValidacion": 0.6
+      "entrenamiento": 0.64804,
+      "validacion": 0.64519,
+      "aciertoEntrenamiento": 0.6158,
+      "aciertoValidacion": 0.6133
     },
     {
       "epoca": 30,
-      "entrenamiento": 0.64055,
-      "validacion": 0.66216,
-      "aciertoEntrenamiento": 0.6172,
-      "aciertoValidacion": 0.5933
+      "entrenamiento": 0.64686,
+      "validacion": 0.64521,
+      "aciertoEntrenamiento": 0.6158,
+      "aciertoValidacion": 0.6125
     },
     {
       "epoca": 35,
-      "entrenamiento": 0.63931,
-      "validacion": 0.66198,
-      "aciertoEntrenamiento": 0.6192,
-      "aciertoValidacion": 0.5992
+      "entrenamiento": 0.64529,
+      "validacion": 0.64458,
+      "aciertoEntrenamiento": 0.6214,
+      "aciertoValidacion": 0.6192
     },
     {
       "epoca": 40,
-      "entrenamiento": 0.63978,
-      "validacion": 0.66325,
-      "aciertoEntrenamiento": 0.6169,
-      "aciertoValidacion": 0.6008
+      "entrenamiento": 0.6447,
+      "validacion": 0.64486,
+      "aciertoEntrenamiento": 0.6236,
+      "aciertoValidacion": 0.6158
     },
     {
       "epoca": 45,
-      "entrenamiento": 0.63914,
-      "validacion": 0.66356,
-      "aciertoEntrenamiento": 0.6164,
-      "aciertoValidacion": 0.5992
+      "entrenamiento": 0.64315,
+      "validacion": 0.64439,
+      "aciertoEntrenamiento": 0.6222,
+      "aciertoValidacion": 0.6233
     },
     {
       "epoca": 50,
-      "entrenamiento": 0.63684,
-      "validacion": 0.66217,
-      "aciertoEntrenamiento": 0.6231,
-      "aciertoValidacion": 0.6075
+      "entrenamiento": 0.64252,
+      "validacion": 0.64535,
+      "aciertoEntrenamiento": 0.6197,
+      "aciertoValidacion": 0.6183
     },
     {
       "epoca": 55,
-      "entrenamiento": 0.63707,
-      "validacion": 0.66238,
-      "aciertoEntrenamiento": 0.6203,
-      "aciertoValidacion": 0.6058
+      "entrenamiento": 0.64095,
+      "validacion": 0.64534,
+      "aciertoEntrenamiento": 0.6228,
+      "aciertoValidacion": 0.6225
     },
     {
       "epoca": 60,
-      "entrenamiento": 0.63596,
-      "validacion": 0.66163,
-      "aciertoEntrenamiento": 0.6244,
-      "aciertoValidacion": 0.6067
+      "entrenamiento": 0.63994,
+      "validacion": 0.64568,
+      "aciertoEntrenamiento": 0.6214,
+      "aciertoValidacion": 0.6225
     }
   ],
   "red": {
@@ -1508,43 +1509,43 @@
   },
   "activacion": "leaky0.01",
   "origen": "coevolución",
-  "acierto": 0.6175,
-  "errorEnJuego": 0.020815272356090663,
+  "acierto": 0.6375,
+  "errorEnJuego": 0.02065480961930069,
   "calibracion": [
     {
-      "n": 43,
-      "predicho": 0.07182239877519025,
-      "real": 0.1497684537643186
-    },
-    {
-      "n": 110,
-      "predicho": 0.15474851894073122,
-      "real": 0.19951303142727173
-    },
-    {
-      "n": 61,
-      "predicho": 0.23594880926527617,
-      "real": 0.254256164433651
+      "n": 52,
+      "predicho": 0.06542968393833236,
+      "real": 0.1120659476750664
     },
     {
       "n": 66,
-      "predicho": 0.35180263390940897,
-      "real": 0.371689750590126
+      "predicho": 0.16352111627390445,
+      "real": 0.1414539123540598
+    },
+    {
+      "n": 72,
+      "predicho": 0.2606415669027482,
+      "real": 0.23988731098889085
+    },
+    {
+      "n": 102,
+      "predicho": 0.3511305695726965,
+      "real": 0.3306781381656249
     },
     {
       "n": 12,
-      "predicho": 0.42243538065943936,
-      "real": 0.5513477006359732
+      "predicho": 0.4187212767515742,
+      "real": 0.28094668565637565
     },
     {
-      "n": 133,
-      "predicho": 0.5872049096200143,
-      "real": 0.5582614848170938
+      "n": 108,
+      "predicho": 0.5879846653373358,
+      "real": 0.5528728049159162
     },
     {
-      "n": 775,
-      "predicho": 0.6074955303450195,
-      "real": 0.5763761705466903
+      "n": 788,
+      "predicho": 0.6074014779853623,
+      "real": 0.5956738013729581
     }
   ]
 }
