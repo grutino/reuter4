@@ -321,10 +321,15 @@ export async function paginaDeRed(cual) {
       <div class="ficha"><dt>R² de la mejor recta</dt><dd>${l.r2.toFixed(4)}</dd></div>
       <div class="ficha"><dt>ordena como una recta</dt><dd>${(l.ordenIgual * 100).toFixed(1)}%</dd></div>
     </dl>
-    <p class="nota">Si ordena como una recta el 100% de las veces, las capas ocultas no están
-    comprando nada: la red podría ser una suma ponderada de sus entradas y nadie notaría la
-    diferencia. Medido sobre ${vectores.length} entradas, pocas para que esta página abra al
-    momento; la medida fina está en el informe completo.</p>`;
+    <p class="nota"><b>Ordenar como una recta NO significa que las capas ocultas sobren.</b> Se
+    comprobó construyendo la red lineal equivalente y haciéndola jugar: la de despliegue sí sobra
+    —90,0% contra 90,4%, indistinguible— pero la de jugada ordena igual que una recta el 95% de
+    los pares y aun así juega cuarenta puntos peor al sustituirla. Ese 5% no está repartido: está
+    justo donde se decide, porque elegir jugada es coger el máximo de unas cincuenta opciones y
+    basta con equivocarse en las de arriba.<br>
+    Lo que sí se sostiene es que sobra TAMAÑO: apagando neuronas de la menos útil a la más útil,
+    la red de jugada llega al 90,4% con solo 6 de sus 28.<br>
+    Medido sobre ${vectores.length} entradas, pocas para que esta página abra al momento.</p>`;
   } catch {
     uso = `<p class="nota">No se ha podido medir el uso de la red.</p>`;
   }

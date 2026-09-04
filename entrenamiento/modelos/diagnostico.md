@@ -1,37 +1,34 @@
 # Diagnóstico del entrenamiento nocturno
 
-_2026-09-04 04:20:21_
+_2026-09-04 23:38:02_
 
-**el aprendizaje se ha congelado.** Mejor marca de la noche: **90.3%** contra el panel.
+**el aprendizaje se ha congelado.** Mejor marca de la noche: **90.5%** contra el panel.
 
-Confirmada en **85.9%** ±2 sobre partidas que no ha visto ninguna sesión. Esta es la cifra que vale: la marca de la noche es el máximo de muchas medidas ruidosas y está sesgada al alza. Peor rival: `humana-08` (38%).
+Confirmada en **90.6%** ±2 sobre partidas que no ha visto ninguna sesión. Esta es la cifra que vale: la marca de la noche es el máximo de muchas medidas ruidosas y está sesgada al alza. Peor rival: `humana-02~1` (67%).
 
 ## Cómo fue la noche
 
 | sesión | veredicto | rondas adoptadas | mejor hasta ahí |
 |---|---|---|---|
-| 1 | 84.8% | 1/6 | 84.8% ← |
-| 2 | 85.8% | 0/6 | 84.8% |
-| 3 | 85.1% | 0/6 | 84.8% |
-| 4 | 90.3% | 2/6 | 90.3% ← |
-| 5 | 87.0% | 2/6 | 90.3% |
-| 6 | 85.5% | 1/6 | 90.3% |
-| 7 | 85.6% | 0/6 | 90.3% |
-| 8 | 85.7% | 1/6 | 90.3% |
-| 9 | 88.6% | 1/6 | 90.3% |
+| 1 | 90.5% | 0/6 | 90.5% ← |
+| 2 | 89.9% | 0/6 | 90.5% |
+| 3 | 90.0% | 0/6 | 90.5% |
+| 4 | 89.9% | 0/6 | 90.5% |
+| 5 | 88.7% | 0/6 | 90.5% |
+| 6 | 91.5% | 0/6 | 90.5% |
 
 ## Rivales que siguen ganando
 
 | rival | clase | victorias |
 |---|---|---|
-| humana-08 | humana | 38% |
-| humana-08~1 | variante | 38% |
-| humana-09 | humana | 52% |
-| humana-02 | humana | 67% |
-| humana-07 | humana | 68% |
-| humana-02~1 | variante | 76% |
-| humana-03~2 | variante | 76% |
-| humana-11~1 | variante | 78% |
+| humana-02~1 | variante | 67% |
+| humana-11~1 | variante | 71% |
+| humana-08 | humana | 74% |
+| humana-08~1 | variante | 74% |
+| humana-09~2 | variante | 74% |
+| humana-02 | humana | 77% |
+| humana-07 | humana | 82% |
+| humana-02~2 | variante | 86% |
 
 Si uno solo destaca por abajo, el problema es una formación concreta y no el nivel general.
 
@@ -62,24 +59,24 @@ Si uno solo destaca por abajo, el problema es una formación concreta y no el ni
 
 | rasgo | efecto | sentido |
 |---|---|---|
-| posición · banderaEnemigaAlCastillo | -0.1629 | menos es mejor |
-| jugada · seAcerca | 0.1496 | más es mejor |
-| jugada · seAleja | -0.0955 | menos es mejor |
-| jugada · amenazasQueDejo | 0.0855 | más es mejor |
-| posición · miPiezaMasCerca | 0.0564 | más es mejor |
-| jugada · salgoDePeligro | 0.0558 | más es mejor |
-| jugada · riesgoDeCanonEnDestino | -0.0492 | menos es mejor |
-| jugada · tapaLineaAlAnillo | 0.0483 | más es mejor |
-| jugada · pisaBanderaSuelta | 0.0466 | más es mejor |
-| posición · banderaDelSocioAlCastillo | 0.0451 | más es mejor |
-| jugada · anilloCubiertoTrasJugar | 0.0402 | más es mejor |
-| posición · avanceDeLaPartida | 0.0310 | más es mejor |
-| jugada · canonHaciaElTiro | 0.0306 | más es mejor |
-| jugada · miRango | 0.0275 | más es mejor |
+| posición · banderaEnemigaAlCastillo | -0.1198 | menos es mejor |
+| jugada · seAcerca | 0.1075 | más es mejor |
+| jugada · seAleja | -0.0605 | menos es mejor |
+| jugada · amenazasQueDejo | 0.0550 | más es mejor |
+| jugada · tapaLineaAlAnillo | 0.0460 | más es mejor |
+| posición · miPiezaMasCerca | 0.0444 | más es mejor |
+| jugada · salgoDePeligro | 0.0441 | más es mejor |
+| posición · banderaDelSocioAlCastillo | 0.0384 | más es mejor |
+| jugada · miRango | 0.0380 | más es mejor |
+| jugada · valorEsperadoDelDuelo | 0.0331 | más es mejor |
+| jugada · dueloPerdido | -0.0331 | menos es mejor |
+| posición · rangosQueLesHeVisto | -0.0312 | menos es mejor |
+| jugada · riesgoDeCanonEnDestino | -0.0299 | menos es mejor |
+| jugada · canonHaciaElTiro | 0.0283 | más es mejor |
 
-### Rasgos planos: 1 de 75
+### Rasgos planos: 4 de 75
 
-`posición · miEspiaVivo`
+`jugada · disparoAlCoronador`, `jugada · recapturaAlQueMato`, `jugada · delatoParaSondear`, `jugada · espiaContraMariscal`
 
 ## Qué decidir
 

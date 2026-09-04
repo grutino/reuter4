@@ -106,9 +106,69 @@ export function accionConRed(estado, color, red, { candidatas = 12, azar = Math.
 // compañero, que tenga una buena jugada es bueno para mí, así que suma en vez de
 // restar — y suma menos, porque su turno me ayuda menos de lo que me perjudica
 // el de un rival.
+// LA LÍNEA PRINCIPAL, no el árbol entero. Se mira la mejor respuesta del
+// siguiente, se juega, se mira la mejor del siguiente, y así `profundidad`
+// turnos. Solo se baja por la jugada que cada uno prefiere: un árbol completo
+// con doce candidatas y cuatro jugadores es 12^4 hojas por turno, y esto es
+// 12 x anchura x profundidad.
+//
+// Es una aproximación y conviene saber en qué falla: si el rival tiene dos
+// respuestas casi igual de buenas y la segunda es la que de verdad duele, no se
+// ve. A cambio cuesta lo que cuesta.
+function ajusteDeLaLinea(estado, colorRaiz, red, cfg, profundidad) {
+  // Una decisión pendiente congela el turno y no se sabe quién movería: se corta
+  // en vez de inventarse una continuación.
+  if (profundidad <= 0 || estado.fin || estado.pendiente) return 0;
+  const otro = estado.turno;
+  const suyas = puntuarAcciones(estado, otro, { pesos: cfg.pesos, azar: cfg.azar })
+    .slice(0, cfg.respuestas)
+    .map((x) => x.accion);
+  if (!suyas.length) return 0;
+
+  const contexto = contextoDeTurno(estado, otro, analizarTurno(estado, otro, DISTANCIA));
+  let mejorValor = -Infinity;
+  let mejorAccion = null;
+  for (const a of suyas) {
+    const v = evaluar(red, rasgosDeJugada(estado, otro, a, contexto));
+    if (v > mejorValor) { mejorValor = v; mejorAccion = a; }
+  }
+
+  // En un juego de cuatro el siguiente no siempre es un enemigo. Si es el
+  // compañero, que tenga una buena jugada es bueno para mí, así que suma en vez
+  // de restar — y suma menos, porque su turno me ayuda menos de lo que me
+  // perjudica el de un rival.
+  const aliado = sonAliados(estado, otro, colorRaiz);
+  let ajuste = (aliado ? cfg.pesoAliado : -cfg.peso) * mejorValor;
+
+  if (profundidad > 1) {
+    try {
+      // Cada turno que se aleja pesa menos: lo que pase dentro de tres jugadas
+      // depende de tres decisiones que aún no se han tomado, y la red no es lo
+      // bastante buena como para fiarse de esa cadena.
+      const despues = aplicar(estado, mejorAccion);
+      ajuste += cfg.descuento * ajusteDeLaLinea(despues, colorRaiz, red, cfg, profundidad - 1);
+    } catch {
+      // Si la respuesta no se puede aplicar, esta línea vale lo que ya lleva.
+    }
+  }
+  return ajuste;
+}
+
+// EL BOT NO MIRABA NADA. `aplicar` no aparecía ni una vez en bot.js, bot-red.js
+// ni rasgos-jugada.js: se puntuaba el par (posición, jugada) desde el estado
+// actual y se cogía el máximo. Medio ply, sin ver el tablero resultante ni la
+// respuesta de nadie.
+//
+// Como la red evalúa pares (posición, jugada) y no posiciones sueltas, no se
+// puede "evaluar el tablero resultante": lo que se hace es preguntarle a la
+// MISMA red cuánto le gusta al siguiente en turno su mejor jugada desde ahí.
 export function accionConRedProfunda(
   estado, color, red,
-  { candidatas = 12, respuestas = 6, peso = 0.6, pesoAliado = 0.3, azar = Math.random, pesos = PESOS_BASE } = {}
+  {
+    candidatas = 12, respuestas = 6, peso = 0.6, pesoAliado = 0.3,
+    profundidad = 1, descuento = 0.6,
+    azar = Math.random, pesos = PESOS_BASE,
+  } = {}
 ) {
   const puntuadas = puntuarAcciones(estado, color, { pesos, azar });
   if (!puntuadas.length) return null;
@@ -116,37 +176,18 @@ export function accionConRedProfunda(
   if (finalistas.length === 1) return finalistas[0].accion;
 
   const contexto = contextoDeTurno(estado, color, analizarTurno(estado, color, DISTANCIA));
+  const cfg = { respuestas, peso, pesoAliado, descuento, azar, pesos };
   let mejor = finalistas[0].accion;
   let mejorValor = -Infinity;
 
   for (const { accion } of finalistas) {
     const mio = evaluar(red, rasgosDeJugada(estado, color, accion, contexto));
-
     let ajuste = 0;
     try {
-      const despues = aplicar(estado, accion);
-      // Una decisión pendiente congela el turno y no se sabe quién movería: se
-      // deja la jugada con su valor a secas en vez de inventarse una respuesta.
-      if (!despues.fin && !despues.pendiente) {
-        const otro = despues.turno;
-        const suyas = puntuarAcciones(despues, otro, { pesos, azar })
-          .slice(0, respuestas)
-          .map((x) => x.accion);
-        if (suyas.length) {
-          const suContexto = contextoDeTurno(despues, otro, analizarTurno(despues, otro, DISTANCIA));
-          let suMejor = -Infinity;
-          for (const a of suyas) {
-            const v = evaluar(red, rasgosDeJugada(despues, otro, a, suContexto));
-            if (v > suMejor) suMejor = v;
-          }
-          const aliado = sonAliados(estado, otro, color);
-          ajuste = (aliado ? pesoAliado : -peso) * suMejor;
-        }
-      }
+      ajuste = ajusteDeLaLinea(aplicar(estado, accion), color, red, cfg, profundidad);
     } catch {
       // Si la jugada no se puede aplicar por lo que sea, vale su nota a secas.
     }
-
     const valor = mio + ajuste;
     if (valor > mejorValor) {
       mejorValor = valor;

@@ -56,5 +56,64 @@
       "cuando": "2026-09-04 23:35:30"
     }
   ],
-  "mejor": 0.905
+  "mejor": 0.905,
+  "confirmado": {
+    "semillaBase": 999331,
+    "parejas": 12,
+    "camino": "criba",
+    "candidatas": 12,
+    "candidatos": 30,
+    "escalada": 200,
+    "tasa": 0.9059633027522935,
+    "error": 0.01693213653696491,
+    "gana": 790,
+    "pierde": 82,
+    "tablas": 40,
+    "peor": {
+      "rival": "humana-02~1",
+      "tasa": 0.6666666666666666
+    },
+    "porRival": [
+      {
+        "rival": "humana-02~1",
+        "clase": "variante",
+        "tasa": 0.6666666666666666
+      },
+      {
+        "rival": "humana-11~1",
+        "clase": "variante",
+        "tasa": 0.7142857142857143
+      },
+      {
+        "rival": "humana-08",
+        "clase": "humana",
+        "tasa": 0.7391304347826086
+      },
+      {
+        "rival": "humana-08~1",
+        "clase": "variante",
+        "tasa": 0.7391304347826086
+      },
+      {
+        "rival": "humana-09~2",
+        "clase": "variante",
+        "tasa": 0.7391304347826086
+      },
+      {
+        "rival": "humana-02",
+        "clase": "humana",
+        "tasa": 0.7727272727272727
+      },
+      {
+        "rival": "humana-07",
+        "clase": "humana",
+        "tasa": 0.8181818181818182
+      },
+      {
+        "rival": "humana-02~2",
+        "clase": "variante",
+        "tasa": 0.8571428571428571
+      }
+    ]
+  }
 }
