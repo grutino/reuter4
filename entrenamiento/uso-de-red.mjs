@@ -112,5 +112,14 @@ export function linealidad(red, entradas, { pares = 20000, semilla = 7 } = {}) {
     mirados++;
     if ((z[i] > z[j]) === (zl[i] > zl[j])) iguales++;
   }
-  return { r2: st ? 1 - sr / st : 1, ordenIgual: mirados ? iguales / mirados : 1, pares: mirados };
+  // Los pesos salen también, para poder CONSTRUIR la red lineal equivalente y
+  // hacerla jugar. Que dos funciones ordenen igual sobre unas muestras es un
+  // indicio; que jueguen igual una tanda entera es la prueba.
+  return {
+    r2: st ? 1 - sr / st : 1,
+    ordenIgual: mirados ? iguales / mirados : 1,
+    pares: mirados,
+    pesos: Array.from(w.slice(0, d)),
+    sesgo: w[d],
+  };
 }

@@ -256,38 +256,51 @@ diagnóstico del nocturno **escribe siempre por qué camino midió** y `medir.mj
 lo guarda en su salida junto al número de candidatas. Un porcentaje sin el camino
 al lado no significa nada.
 
-### 2. Las redes son casi lineales, y eso explica la meseta
+### 2. Una red es lineal y la otra no, y lo parecían las dos
 
-**El hallazgo que reordena el resto.** Medido por ablación —poner a cero la salida de cada
-neurona oculta y ver cuánto se mueve la predicción, que es la única prueba que no depende de la
-escala de los pesos:
+**Corregido lo que decía este punto.** Ponía que las dos redes eran «casi
+lineales» y que por eso no mejoraban, apoyándose en el ajuste de la mejor recta a
+sus propias salidas: R² 1,000 en despliegue y 0,97 en jugada, ordenando igual el
+99,9% y el 95% de los pares.
 
-```
-red de jugada     72-28-1    24 de 28 no mueven NADA apreciable · la mayor vale 0,382
-red de despliegue 83-16-1    11 de 16                           · la mayor vale 0,412
-```
-
-Cuentan tres o cuatro según dónde pongas el corte —hay una justo en la frontera—, pero el fondo
-no depende del umbral: en las dos redes **una sola neurona** hace casi todo el trabajo.
-
-Y ajustando la mejor función **lineal** a la propia red sobre 1.440 entradas de partidas reales:
+La forma de saberlo no es esa. Se construye la red lineal equivalente y **se la
+hace jugar**:
 
 ```
-red de jugada       R² 0,916   ordena igual que ella en el 92% de los pares
-red de despliegue   R² 1,000   ordena igual en el 100%
+las dos con capa oculta        90,4% ±1,2
+DESPLIEGUE lineal, jugada no   90,0% ±1,2     sin diferencia
+JUGADA lineal, despliegue no   50,1% ±1,4     se hunde
+las dos lineales               53,3% ±1,4
 ```
 
-La red de despliegue **es** una función lineal: sus dieciséis neuronas ocultas no cambian ni una
-decisión, y podría sustituirse por 83 pesos y un sesgo sin que nadie lo notara. La de jugada está
-al 92% del camino.
+**La red de despliegue sí es lineal.** Sus dieciséis neuronas ocultas no cambian
+ni una partida: se puede sustituir por 83 pesos y un sesgo y nadie lo nota.
 
-Esto explica el barrido de capacidad que salió plano —2, 8, 28 y 64 ocultas daban el mismo
-59,6%— sin recurrir a neuronas muertas, que ya di por explicación una vez y era falso. **No falta
-capacidad: falta una señal que no sea lineal.** Y no lo es por casualidad: la heurística es una
-suma ponderada de rasgos, o sea lineal por construcción, y destilar su orden enseña justamente
-eso. La red converge a la mejor recta y ahí se queda.
+**La de jugada no lo es, ni de lejos.** Ordena igual que una recta el 95% de los
+pares y aun así juega 40 puntos peor al sustituirla. Ese 5% restante no está
+repartido: está concentrado justo donde se decide, porque elegir jugada es coger
+el máximo de unas cincuenta opciones y basta con equivocarse en las de arriba.
 
-De ahí que los dos puntos siguientes sean los que valen la pena.
+**La lección es de método**: R² y concordancia media engañan cuando lo que
+importa es el argmax. Una aproximación que acierta el 95% del orden puede ser
+inservible para elegir. La única medida que vale es jugar.
+
+#### Qué hacer con cada una
+
+**Despliegue** — no le falta capacidad, le falta señal. Su pérdida de validación
+ronda 0,63-0,69 cuando adivinar a ciegas es 0,693: apenas predice, porque un
+despliegue explica poco del resultado de una partida de cuatrocientos turnos. Más
+neuronas no van a arreglar eso; mejores etiquetas sí, y por ahí van los juicios,
+que la llevaron de coincidir con Patxi el 52% al 92%.
+
+Y hay una consecuencia práctica: si es lineal, evaluar un candidato es un
+producto escalar. Se podrían mirar **diez veces más candidatos** por el mismo
+coste al desplegar, que hoy son 30.
+
+**Jugada** — aquí la capacidad sí cuenta, así que el barrido que salió plano
+(2, 8, 28 y 64 neuronas dando el mismo 59,6%) hay que repetirlo midiendo en
+juego y no por acierto de clasificación. Con lo que ahora sabemos, ese 59,6%
+medía algo que no distingue lo que importa.
 
 ### 3. El ancla de la heurística NO se suelta
 
