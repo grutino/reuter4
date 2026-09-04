@@ -21,14 +21,25 @@ npm run destilar       # mete el orden de la heurística en la red, sin jugar pa
 npm run coevolucion    # bucle red contra red + genético de formaciones
 npm run nocturno       # sesiones encadenadas hasta que deje de mejorar; deja diagnóstico
 npm run escenarios     # llena el banco de posiciones decisivas y las etiqueta jugando
-npm run juzgar         # sala de juicios: marcar candidatas buena/mala/indefinida
 npm run publicar-redes # lleva los modelos entrenados a los que usan los bots
+
+# Valorar (el taller, también en http://localhost:8080/juicios con el servidor puesto)
+npm run cosechar            # saca material de las partidas archivadas en partidas/
+npm run juzgar              # jugadas: marcar candidatas buena/mala/indefinida
+npm run juzgar-despliegues  # posiciones de salida: cuál de dos es mejor
+npm run juicios             # resumen por terminal de lo valorado
 
 # Mirar
 npm run informe-redes  # rehace la página de seguimiento desde los modelos guardados
 npm run mirar          # sirve esa página en el 8099
 npm run panel          # mide los modelos contra el panel, rival a rival
 npm run analizar       # qué jugadas decidieron una partida
+
+# node herramientas/medir.mjs [semilla] [parejas] [carpeta] [camino] [candidatas] [candidatos]
+#   mide una carpeta de modelos con semillas que se le pidan. `camino` es "criba"
+#   (como juega el servidor), "solo" (la red puntúa todas) o "profundo" (criba
+#   mirando la respuesta del siguiente). LOS TRES DAN NÚMEROS DISTINTOS DEL MISMO
+#   MODELO y no son comparables entre sí.
 
 # Jugar
 npm run build          # compila el cliente a dist/
@@ -420,9 +431,63 @@ ahora siempre los ataques y disparos disponibles, y tiene motivos que buscan pos
 combate (`combate-conocido`, `hay-disparo`, `hay-combate`). Con eso, la proporción de ataques
 entre las candidatas etiquetadas pasa del 2,1% al 12,6%.
 
-### Medir sin engañarse (lo que ha costado tres veces)
+### El taller: de una partida jugada a las redes
 
-`medirContraPanel` es determinista: misma semilla, mismas partidas. De ahí salen tres errores
+El circuito que cierra jugar con aprender. Vive en el servidor del juego, en
+`/juicios`, y no en una herramienta suelta: en cuanto un tramo exige abrir un
+terminal, el circuito se rompe — hay que acordarse de dos comandos con la partida
+ya cerrada y olvidada, que es cuando menos se acuerda uno.
+
+```
+partida con ganador
+   -> servidor/servidor.mjs la archiva sola en partidas/   (darPorTerminada)
+   -> herramientas/cosechar-partidas.mjs saca dos cosas:
+        · los 4 despliegues -> pozo despliegues-jugados.json
+        · las posiciones donde la red discrepa -> banco de escenarios
+   -> se valoran en /juicios
+   -> entrenamiento/juicios.mjs los convierte en PARES de orden
+   -> entrenar-despliegue.mjs y coevolucion.mjs los usan con entrenarPares
+```
+
+**Por qué pasa por el juicio y no se aprende del resultado directamente.** En una
+partida el resultado está confundido con todo lo demás: un despliegue que ganó
+pudo ganar a pesar de sí mismo, y la jugada que precedió a la derrota pudo ser la
+única buena de la posición. Con unas pocas partidas al día no hay volumen que
+compense ese ruido. El juicio corta el nudo porque no pregunta qué pasó, sino qué
+era mejor. Por eso el pozo guarda quién ganó pero **no se lo enseña a quien
+juzga**: sabiéndolo, el juicio deja de ser una opinión y pasa a ser una
+racionalización.
+
+**Los dos tipos de juicio no valen lo mismo.** Un despliegue es un objeto
+completo: se juzga en abstracto, no depende de ninguna posición, y por eso dos
+despliegues del mismo ejército juzgados en parejas distintas SÍ son comparables
+entre sí. Una jugada solo existe dentro de su posición y ahí no se puede cruzar
+nada. Además cien posiciones no pueden gobernar una política de cuatrocientas
+decisiones por partida, mientras que un despliegue se juzga una vez y su efecto
+se reparte por toda la partida.
+
+**«Los dos igual» no es una sola cosa.** Empatados arriba dice «los dos por
+encima de la media»; empatados abajo, lo contrario. Un empate sin signo no genera
+par y se pierde entero — eran el 17% de lo valorado. Con signo, un «los dos
+flojos» se pone por debajo de cualquier ganador y un «los dos buenos» por encima
+de cualquier perdedor: de 99 pares directos salen 1.117. Los cruzados pesan un
+tercio, porque comparar dentro de una pareja es lo que la persona vio y decidió,
+mientras que cruzarlos es una deducción nuestra.
+
+**La dosis va aparte y es FIJA.** Intercalando los juicios con los lotes de
+valor, su exposición crece con el tamaño de los datos: al llenarse el depósito,
+los mismos juicios reciben el triple de pasos y la red se deja gobernar por unas
+decenas de opiniones. Ya colapsó así una vez, del 80% al 4%. Barrido de dosis en
+despliegue: 0 pasadas aciertan el 73% de los juicios apartados, 1 el 77%, 8 el
+92% sin perder victorias, y 30 no suben el acierto pero hunden el juego al 58%.
+
+Y **se aparta un tercio de los juicios sin entrenar con ellos**: con 99 pares
+vistos 300 veces, una red de 16 ocultas los memoriza, y el acierto sobre los que
+ha visto no distingue memorizar de aprender.
+
+### Medir sin engañarse (la lista de lo que ya ha salido mal)
+
+`medirContraPanel` es determinista: misma semilla, mismas partidas. De ahí salen los errores
 que ya se han cometido y no conviene repetir:
 
 1. **El máximo de una tanda de medidas ruidosas está sesgado al alza.** Un 73% se anunció como
@@ -434,6 +499,28 @@ que ya se han cometido y no conviene repetir:
 3. **Lo mismo una capa más arriba**: si todas las sesiones de una noche se miden en las mismas
    partidas, quedarse con la mejor sesión es el mismo sesgo. Cada sesión mide con
    `--veredictoBase` distinto y al final se confirma en partidas vírgenes.
+4. **Ganar la medida que te elige no es mejorar.** Una noche adoptó ocho rondas y acabó 3,2
+   puntos POR DEBAJO del punto de partida: con ±3 de error y 54 oportunidades, acaba colándose
+   quien solo tuvo suerte, y desde ahí se entrena todo lo demás. Ahora cada candidata se
+   **revalida en partidas distintas** de las que la eligieron. Se vio de inmediato: una ronda que
+   ganaba 92% contra 85% pasó a 89% contra 88% al remedirla.
+5. **Y el mismo ruido, al revés.** El listón se calculaba sobre el titular remedido cada ronda,
+   que fluctuaba entre 88% y 94% siendo la misma red; cuando le tocaba una medida afortunada el
+   listón subía al 96% y ninguna mejora razonable podía pasarlo. Ahora se pone sobre la MEDIA de
+   todas sus medidas desde que se adoptó, que baja el error como la raíz de cuántas van.
+6. **UN PORCENTAJE SIN EL CAMINO AL LADO NO SIGNIFICA NADA.** El mismo modelo da 89,8% por
+   `solo` y 83,4% por `criba`. Tres conclusiones falsas salieron de mezclarlos: «la noche empeoró
+   el modelo», «el 90,3% no se reproduce» y «`humana-08` es un agujero» —ese último rival gana el
+   38% por solo y pierde el 76% por criba—. El diagnóstico del nocturno y `medir.mjs` escriben
+   siempre el camino y el número de candidatas.
+7. **R² y concordancia media engañan cuando lo que importa es el argmax.** La aproximación lineal
+   de la red de jugada ordena igual que ella el 95% de los pares y juega cuarenta puntos peor: ese
+   5% está concentrado en las jugadas de arriba, que son las únicas que se eligen. Lo mismo con el
+   acierto de clasificación, que dio 59% plano con 2 y con 64 neuronas. **La única medida que vale
+   es jugar.**
+8. **Un parámetro medido caduca cuando cambia aquello sobre lo que se midió.** `CANDIDATAS_UTILES`
+   era 4 con una medida correcta de su época; con la red de ahora, cribar a 4 pierde seis puntos
+   contra cribar a 12. Estuvo costándolos en cada partida hasta que alguien lo preguntó.
 
 Y la distinción que sostiene todo lo demás: **el PANEL es la vara y no se mueve** (38 rivales,
 semilla 2024); **la LIGA es el gimnasio** y se endurece a propósito. Las formaciones duras van a
@@ -446,12 +533,32 @@ cliente, y esa separación es lo que permite probar las reglas sin levantar nada
 
 ```
 src/motor/    reglas puras: estado y transiciones, sin E/S ni gráficos
-src/motor/bot.js  heurística de los bots, compartida por servidor y simulación
-src/siluetas.js   pinta las siluetas de rango; los datos vienen de siluetas-datos.js
-src/siluetas-datos.js  GENERADO por herramientas/extraer-siluetas.py; no editar a mano
-src/ficha.js      pinta una ficha (disco + silueta); lo comparten el 3D y la ventana de combate
 servidor/     autoridad: guarda el estado completo, reparte vistas recortadas, mueve bots
 src/          cliente React; Tablero3D.jsx pinta con three.js
+entrenamiento/  fuera de las tres capas: nadie de dentro lo importa
+herramientas/   lanzadores y utilidades sueltas
+```
+
+Dentro del motor, por si hay que buscar algo:
+
+```
+tablero.js         geometría, constantes derivadas al cargar
+motor.js           nuevaPartida / movimientosLegales / aplicar
+bot.js             la heurística, compartida por servidor y simulación
+bot-red.js         decidir con la red: accionConRed, jugadaSoloRed, accionConRedProfunda
+red.js             inferencia (el entrenamiento vive en entrenamiento/red.mjs)
+modelos.js         carga los modelos publicados; rechaza los que no cuadran
+modelos/           los publicados, que son los que juegan
+rasgos-jugada.js   los 75 rasgos de (posición, jugada) · FIRMA
+rasgos-despliegue.js  los 83 rasgos de una colocación · FIRMA
+rasgos-posicion.js    rasgos de una posición suelta
+valoracion.js      cuánto vale cada rango, compartido
+analisis.js        amenazas y distancias de un turno
+analisis-partida.js  qué jugadas decidieron una partida terminada
+replay.js          reproduce una partida desde despliegues + historia
+dificultad.js      los cinco niveles · CANDIDATAS_UTILES
+pesos-vara.js      copia CONGELADA de los pesos; el panel juega con ella
+firma.js           la huella que impide cargar un modelo con otros rasgos
 ```
 
 ### El motor (`src/motor/`)
