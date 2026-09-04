@@ -615,6 +615,9 @@ async function main() {
   };
 
   const partida = await medir(redD, redJ);
+  // Lo que se sabe del titular, acumulado desde que se adoptó. Empieza con la
+  // medida del punto de partida, que es una medida suya como cualquier otra.
+  let titularVisto = { suma: partida.tasa, n: 1 };
   console.log(`  Punto de partida contra el panel: ${(partida.tasa * 100).toFixed(0)}% ±${Math.round(partida.error * 100)} (semilla de referencia)\n`);
   historia.push({ ronda: 0, panel: partida.tasa, error: partida.error, segundos: Math.round((Date.now() - arranque) / 1000) });
   await publicar(historia, o);
@@ -720,7 +723,23 @@ async function main() {
     // adaptan la una a la otra y se alejan de jugar bien contra cualquier otra
     // cosa. Sin la segunda se adopta ruido, que es igual de malo porque cada
     // adopción mueve el punto de partida de la siguiente ronda.
-    const listón = titular.tasa + o.margen * medida.error;
+    // EL LISTÓN NO SE PONE SOBRE LA ÚLTIMA MEDIDA DEL TITULAR, SINO SOBRE TODAS.
+    //
+    // El titular es el MISMO modelo hasta que se adopta otro, y cada ronda se
+    // vuelve a medir con semillas distintas. Son medidas independientes de la
+    // misma cosa, así que promediarlas baja el error como la raíz de cuántas
+    // van: con cuatro rondas, de ±2 a ±1.
+    //
+    // Usando solo la última, el listón se movía con la suerte del titular en vez
+    // de con el mérito del aspirante. Se vio en una prueba de cuatro rondas: el
+    // titular midió 88, 90 y 94 siendo la misma red, y en la ronda del 94 el
+    // listón subió al 96%, donde ninguna mejora razonable puede llegar. El ruido
+    // decidía quién entraba, unas veces de más y otras de menos.
+    titularVisto.suma += titular.tasa;
+    titularVisto.n += 1;
+    const tasaTitular = titularVisto.suma / titularVisto.n;
+    const errorTitular = titular.error / Math.sqrt(titularVisto.n);
+    const listón = tasaTitular + o.margen * Math.hypot(medida.error, errorTitular);
     const candidata = medida.tasa > listón;
 
     // SEGUNDA OPINIÓN, EN PARTIDAS QUE NO DECIDIERON NADA.
@@ -748,11 +767,23 @@ async function main() {
       mejora = otraMedida.tasa >= otroTitular.tasa;
       reválida = { medida: otraMedida.tasa, titular: otroTitular.tasa, pasa: mejora };
     }
-    if (mejora) { redD = nuevaD.red; redJ = nuevaJ.red; }
+    const vistasDelTitular = titularVisto.n;
+    if (mejora) {
+      redD = nuevaD.red;
+      redJ = nuevaJ.red;
+      // Titular nuevo: lo medido antes era de otra red y ya no cuenta. Pero el
+      // recién llegado no empieza a ciegas — se le acaba de medir. Se arranca
+      // con la RE VÁLIDA si la hubo, que es la medida limpia; la primera está
+      // sesgada al alza precisamente por ser la que le hizo ganar.
+      const suya = reválida ? reválida.medida : medida.tasa;
+      titularVisto = { suma: suya, n: 1 };
+    }
 
     console.log(
       `  ronda ${ronda}  ${todosJ.length} jugadas (${tanda.deLiga}/${o.partidas} de liga, expl ${oRonda.exploracion.toFixed(2)}) · decididas ${tanda.decididas} · ` +
-        `panel ${(medida.tasa * 100).toFixed(0)}% vs titular ${(titular.tasa * 100).toFixed(0)}% ±${Math.round(medida.error * 100)} · ` +
+        `panel ${(medida.tasa * 100).toFixed(0)}% vs titular ${(titular.tasa * 100).toFixed(0)}%` +
+        (vistasDelTitular > 1 ? ` (media de ${vistasDelTitular}: ${(tasaTitular * 100).toFixed(0)}%)` : "") +
+        ` ±${Math.round(medida.error * 100)} · ` +
         `peor ${medida.peor.rival} (${(medida.peor.tasa * 100).toFixed(0)}%)` +
         (reválida
           ? ` · reválida ${(reválida.medida * 100).toFixed(0)}% vs ${(reválida.titular * 100).toFixed(0)}%`
