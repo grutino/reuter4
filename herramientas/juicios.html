@@ -169,20 +169,33 @@ las partidas terminadas y se valora — no «qué pasó», sino <b>qué era mejo
 //
 //   se juega   ->   se cosecha   ->   se valora   ->   entrena
 //
+// Y cada fila en UNA sola unidad de principio a fin: los despliegues se cuentan
+// por comparaciones y las jugadas por candidatas juzgadas. Mezclarlas -"342
+// escenarios" junto a "837 jugadas"- obligaba a saber que un escenario tiene
+// cuatro candidatas para poder comparar dos casillas de la misma fila.
+//
+// Las columnas 3 y 4 suman todo lo valorado en la vida del proyecto; la 2 es lo
+// que queda por hacer AHORA. No suman entre sí a propósito, y por eso la 2 lleva
+// su propio denominador: la tanda y el banco se rehacen al cosechar, y lo
+// valorado sobre lo anterior sigue contando aunque ya no se ofrezca.
+//
 // La última columna es la que faltaba y la que de verdad importa: valorar sin
 // entrenar no cambia cómo juegan los bots. Sale de comparar los juicios que hay
 // ahora con los que había cuando se entrenó el modelo publicado, que quedan
 // anotados dentro del propio modelo.
 const F = [
   ["partidas archivadas", (e) => e.archivadas, false],
-  ["despliegues sin valorar", (e) => (e.pendientes || {}).posiciones || 0, true],
+  ["despliegues sin valorar", (e) => {
+    const p = e.pendientes || {};
+    return `${p.posiciones || 0}<small>de ${p.parejas || 0} en la tanda</small>`;
+  }, true],
   ["despliegues valorados sin entrenar", (e) => Math.max(0, (e.juzgados || 0) - (e.entrenadosDespliegue || 0)), true],
   ["despliegues ya entrenados", (e) => e.entrenadosDespliegue || 0, false],
 
   ["partidas sin cosechar", (e) => e.sinCosechar, true],
   ["jugadas sin valorar", (e) => {
     const p = e.pendientes || {};
-    return `${p.jugadas || 0}<small>escenarios de ${p.escenarios || 0}</small>`;
+    return `${p.jugadas || 0}<small>de ${p.candidatas || 0} en el banco</small>`;
   }, true],
   ["jugadas valoradas sin entrenar", (e) => Math.max(0, (e.jugadasJuzgadas || 0) - (e.entrenadosJugada || 0)), true],
   ["jugadas ya entrenadas", (e) => e.entrenadosJugada || 0, false],

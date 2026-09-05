@@ -391,10 +391,19 @@ function pendientes(red, redJugada) {
   // Un caso sigue pendiente mientras le quede alguna candidata sin juzgar: el
   // valor está en el contraste entre ellas, y con la mitad juzgada no hay orden
   // completo que aprender.
-  const jugadas = cache.casos.filter((c) => c.claves.some((k) => !deJugada[k])).length;
+  // TODO EN JUGADAS, no en escenarios. Mezclar las dos unidades en la misma fila
+  // -"342 escenarios sin valorar" junto a "837 jugadas valoradas"- obliga a
+  // saber que un escenario tiene cuatro candidatas para poder comparar los dos
+  // números. Se cuenta en candidatas, que es lo que de verdad se juzga.
+  let candidatas = 0;
+  let candidatasSinJuzgar = 0;
+  for (const c of cache.casos) {
+    candidatas += c.claves.length;
+    candidatasSinJuzgar += c.claves.filter((k) => !deJugada[k]).length;
+  }
 
   return {
-    posiciones, jugadas,
+    posiciones, jugadas: candidatasSinJuzgar, candidatas,
     // Los totales de los que salen esos pendientes. Sin ellos, "111 sin valorar"
     // no se puede comparar con nada: no son 111 de los 8 despliegues del pozo ni
     // de los 132 juicios guardados, son 111 de las 120 PAREJAS que se ofrecen.
