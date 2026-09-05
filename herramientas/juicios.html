@@ -144,22 +144,14 @@ entrenado; sobre lo ya entrenado no se puede deshacer nada, porque está dentro 
     <a class="boton" href="/juicios/informe" target="_blank">ver el informe completo</a>
     <span class="nota" style="border:0;padding:0" id="avisoInforme"></span>
   </div>
+  <p class="nota" style="margin-top:12px">Publicar es llevar la del taller a donde la cogen los
+  bots, y es el icono <b>↑</b> de cada red: solo publica lo que mejora. El nocturno entrena solo
+  pero <b>nunca publica</b> — un proceso que corre de madrugada sin nadie mirando no debería
+  cambiar cómo juegan tus partidas.<br>
+  Entrenar sigue siendo cosa del terminal, que son horas de CPU y no pueden colgar del servidor que
+  reparte las partidas: <code>npm run nocturno</code></p>
 </section>
 
-<section>
-  <h2>Publicar</h2>
-  <p>Publicar es llevar lo del taller a donde lo cogen los bots. El nocturno entrena solo pero
-  <b>nunca publica</b>: un proceso que corre de madrugada sin nadie mirando no debería cambiar cómo
-  juegan tus partidas. Esa decisión es tuya y es este botón.</p>
-  <div class="barra">
-    <button id="publicar">publicar las redes del taller</button>
-    <span class="nota" style="border:0;padding:0">solo publica lo que mejora, y rechaza lo que tenga otra firma de rasgos</span>
-  </div>
-  <pre id="salidaPublicar" hidden></pre>
-  <p class="nota" style="margin-top:12px">Entrenar sigue siendo cosa del terminal — son horas de CPU
-  y no pueden colgar del servidor que reparte las partidas:
-  <code>npm run nocturno -- --anclaPares 0</code></p>
-</section>
 
 <script type="module">
 // DOS FILAS DE TRES, y cada columna cuenta una historia de arriba abajo: el
@@ -399,24 +391,6 @@ async function reiniciar(cual, etiqueta, cuantas) {
   alert(`Listo: ${r.apartados} valoraciones de ${etiqueta} apartadas.`);
 }
 
-document.getElementById("publicar").onclick = async (ev) => {
-  if (!confirm("Publicar cambia con qué juegan los bots en las partidas de verdad.\n\n" +
-               "Solo se publica lo que mejora, y lo que tenga otra firma de rasgos se rechaza.\n\n¿Seguir?")) return;
-  ev.target.disabled = true;
-  ev.target.textContent = "publicando...";
-  const r = await (await fetch("/juicios/api/publicar", { method: "POST" })).json();
-  const pre = document.getElementById("salidaPublicar");
-  pre.hidden = false;
-  // El script dice "los bots los cogen al reiniciar el servidor" porque también
-  // se usa desde el terminal. Desde aquí no hace falta: el servidor los recarga
-  // en caliente, y decir lo contrario haría reiniciar partidas para nada.
-  pre.textContent = (r.salida || "(sin salida)").replace(
-    "Los bots los cogen al reiniciar el servidor.",
-    "Ya están activas: el servidor las ha recargado sin reiniciar.");
-  ev.target.disabled = false;
-  ev.target.textContent = "publicar las redes del taller";
-  await pintaRedes();
-};
 
 
 pinta();
