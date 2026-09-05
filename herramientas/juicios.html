@@ -12,8 +12,9 @@
     una, y rompía el emparejamiento de arriba abajo que es lo que hace legible
     esta tabla. En pantalla estrecha baja a dos columnas, que mantiene el orden
     aunque pierda el emparejamiento. */
- .fichas { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin:0 0 22px; }
- @media (max-width:560px) { .fichas { grid-template-columns:repeat(2,1fr); } }
+ .fichas { display:grid; grid-template-columns:repeat(4,1fr); gap:9px; margin:0 0 22px; }
+ @media (max-width:900px) { .fichas { grid-template-columns:repeat(2,1fr); } }
+ .ficha dt { min-height:2.4em; }
  .ficha { border:1px solid var(--linea); border-radius:6px; padding:11px 13px; background:#fff; }
  .ficha dt { font:500 10px/1.3 ui-monospace,monospace; letter-spacing:.08em;
              text-transform:uppercase; color:var(--tenue); }
@@ -163,28 +164,28 @@ las partidas terminadas y se valora — no «qué pasó», sino <b>qué era mejo
 // Leído por columnas: cuántas partidas hay y cuántas faltan por cosechar; cuántos
 // despliegues se han sacado y cuántos se han valorado; cuántos escenarios hay y
 // cuántas jugadas se han juzgado en ellos.
-// CADA COLUMNA TIENE QUE HABLAR DE LO MISMO. Antes no: arriba iban despliegues
-// sueltos del pozo (8) y abajo juicios acumulados de todas las tandas (132), que
-// ni son la misma unidad ni salen unos de otros — las parejas se forman de cinco
-// fuentes y solo unas pocas vienen del pozo. Así el emparejamiento engañaba.
+// EL CICLO ENTERO, LEÍDO POR COLUMNAS. Cada fila es un tipo de material
+// —despliegues arriba, jugadas abajo— y cada columna una etapa de su viaje:
 //
-// Ahora abajo va el AVANCE sobre lo que hay ahora mismo delante, con su
-// denominador, y el total histórico queda como apunte pequeño.
+//   se juega   ->   se cosecha   ->   se valora   ->   entrena
+//
+// La última columna es la que faltaba y la que de verdad importa: valorar sin
+// entrenar no cambia cómo juegan los bots. Sale de comparar los juicios que hay
+// ahora con los que había cuando se entrenó el modelo publicado, que quedan
+// anotados dentro del propio modelo.
 const F = [
   ["partidas archivadas", (e) => e.archivadas, false],
-  ["despliegues en el pozo", (e) => `${e.enElPozo}<small> de partidas reales</small>`, false],
-  ["escenarios en el banco", (e) => e.enElBanco, false],
-  ["sin cosechar", (e) => e.sinCosechar, true],
-  ["parejas valoradas", (e) => {
+  ["despliegues sin valorar", (e) => (e.pendientes || {}).posiciones || 0, true],
+  ["despliegues valorados sin entrenar", (e) => Math.max(0, (e.juzgados || 0) - (e.entrenadosDespliegue || 0)), true],
+  ["despliegues ya entrenados", (e) => e.entrenadosDespliegue || 0, false],
+
+  ["partidas sin cosechar", (e) => e.sinCosechar, true],
+  ["jugadas sin valorar", (e) => {
     const p = e.pendientes || {};
-    const hechas = (p.parejas || 0) - (p.posiciones || 0);
-    return `${hechas}<small> de ${p.parejas || 0} · ${e.juzgados} en total</small>`;
-  }, false],
-  ["escenarios completos", (e) => {
-    const p = e.pendientes || {};
-    const hechos = (p.escenarios || 0) - (p.jugadas || 0);
-    return `${hechos}<small> de ${p.escenarios || 0} · ${e.jugadasJuzgadas} jugadas</small>`;
-  }, false],
+    return `${p.jugadas || 0}<small>escenarios de ${p.escenarios || 0}</small>`;
+  }, true],
+  ["jugadas valoradas sin entrenar", (e) => Math.max(0, (e.jugadasJuzgadas || 0) - (e.entrenadosJugada || 0)), true],
+  ["jugadas ya entrenadas", (e) => e.entrenadosJugada || 0, false],
 ];
 
 const pct = (v) => (v === null || v === undefined ? "—" : `${Math.round(v * 100)}%`);

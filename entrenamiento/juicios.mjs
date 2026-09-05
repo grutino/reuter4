@@ -200,3 +200,13 @@ export function paresDeDespliegue({ peso = 300, pesoCruzado = 0.35 } = {}) {
     firma: FIRMA_DESPLIEGUE,
   };
 }
+
+// CUÁNTOS JUICIOS HABÍA AL ENTRENAR. Se guarda dentro del modelo para poder
+// decir después cuántos se han hecho desde entonces, que es lo que de verdad
+// interesa: valorar sin entrenar no cambia cómo juegan los bots.
+export function juiciosAlDia() {
+  return {
+    despliegue: Object.keys(leerJuiciosDeDespliegue()).length,
+    jugada: Object.keys(leerJuicios()).length,
+  };
+}

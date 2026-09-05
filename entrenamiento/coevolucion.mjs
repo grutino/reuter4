@@ -57,7 +57,7 @@ import { jugadaSoloRed } from "../src/motor/bot-red.js";
 import { movimientosLegales } from "../src/motor/motor.js";
 import { generarInforme } from "./informe-redes.mjs";
 import { CARPETA as CARPETA_ESCENARIOS } from "./escenarios.mjs";
-import { paresDeJuicios, resumenDeJuicios, paresDeDespliegue } from "./juicios.mjs";
+import { paresDeJuicios, resumenDeJuicios, paresDeDespliegue, juiciosAlDia } from "./juicios.mjs";
 
 const AQUI = path.dirname(fileURLToPath(import.meta.url));
 const MODELOS = path.join(AQUI, "modelos");
@@ -876,6 +876,7 @@ function guardar(nombre, previo, entrenada, o, medida) {
     creado: new Date().toISOString(),
     origen: "coevolución",
     opciones: o,
+    juiciosAlEntrenar: juiciosAlDia(),
     perdidaValidacion: entrenada.perdida,
     acierto: entrenada.acierto,
     victoriasEnJuego: medida.tasa,

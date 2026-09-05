@@ -3,7 +3,7 @@
 // semillas convierte cualquier selección en sesgo del máximo, y hace falta poder
 // pedir un juego de partidas que no haya visto nadie.
 //
-//   node herramientas/medir.mjs [semillaBase] [parejas] [carpeta] [camino] [candidatas] [candidatos] [escalada]
+//   node herramientas/medir.mjs [semillaBase] [parejas] [carpeta] [camino] [candidatas] [candidatos] [escalada] [profundidad]
 //
 // `camino` es "solo" (la red puntúa todas las jugadas legales) o "criba" (la
 // heurística preselecciona y la red las ordena, que es como juega el servidor).
@@ -39,6 +39,9 @@ const candidatas = Number(process.argv[6] || CANDIDATAS_UTILES);
 // casi gratis.
 const candidatos = Number(process.argv[7] || 30);
 const escalada = Number(process.argv[8] || 200);
+// Cuántos turnos por delante mira el camino "profundo": 1 es la respuesta del
+// siguiente, 2 añade la del siguiente, y así.
+const profundidad = Number(process.argv[9] || 1);
 
 const leer = (f) => {
   const r = path.join(carpeta, f);
@@ -57,7 +60,7 @@ const r = medirContraPanel(
       !rj ? null
         : camino === "solo" ? jugadaSoloRed(e, c, rj, { azar: az })
         // "profundo" es criba pero mirando la respuesta del siguiente en turno.
-        : camino === "profundo" ? accionConRedProfunda(e, c, rj, { candidatas, azar: az })
+        : camino === "profundo" ? accionConRedProfunda(e, c, rj, { candidatas, profundidad, azar: az })
         : accionConRed(e, c, rj, { candidatas, azar: az }),
   },
   panel,
@@ -68,6 +71,7 @@ console.log(JSON.stringify({
   semillaBase, parejas, camino,
   candidatas: camino === "criba" ? candidatas : null,
   candidatos, escalada,
+  profundidad: camino === "profundo" ? profundidad : null,
   tasa: r.tasa, error: r.error, gana: r.gana, pierde: r.pierde, tablas: r.tablas,
   peor: { rival: r.peor.rival, tasa: r.peor.tasa },
   porRival: r.porRival.slice().sort((a, b) => a.tasa - b.tasa).slice(0, 8).map((x) => ({ rival: x.rival, clase: x.clase, tasa: x.tasa })),

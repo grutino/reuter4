@@ -215,6 +215,7 @@ function leerModelo(carpeta, fichero, firmaEsperada) {
       firma: d.firmaRasgos || null,
       activacion: d.activacion || null,
       creado: d.creado || null,
+      juiciosAlEntrenar: d.juiciosAlEntrenar || null,
       juiciosUsados: d.juiciosUsados ?? null,
       aciertoEnJuiciosApartados: d.aciertoEnJuiciosApartados ?? null,
     };
@@ -414,9 +415,23 @@ export function estado(red, redJugada) {
   const juicios = leerJuicios();
   const pozo = leerPozo();
   const deJugada = leerJuiciosJugada();
+
+  // CUÁNTO DE LO VALORADO YA HA ENTRENADO. Cada modelo publicado guarda cuántos
+  // juicios había cuando se entrenó; lo hecho después todavía no ha cambiado
+  // cómo juegan los bots. Valorar sin entrenar no sirve de nada, y sin este
+  // número no había forma de verlo.
+  const entrenados = (fichero, firma) => {
+    const m = leerModelo(path.join("src", "motor", "modelos"), fichero, firma);
+    return (m && m.juiciosAlEntrenar) || null;
+  };
+  const conDespliegue = entrenados("red-despliegue.json", FIRMA_DESPLIEGUE);
+  const conJugada = entrenados("red-jugada.json", FIRMA_JUGADA);
+
   return {
     archivadas,
     cosechadas,
+    entrenadosDespliegue: conDespliegue ? conDespliegue.despliegue : 0,
+    entrenadosJugada: conJugada ? conJugada.jugada : 0,
     jugadasJuzgadas: Object.keys(deJugada).length,
     enElBanco: leerBanco().length,
     sinCosechar: Math.max(0, archivadas - cosechadas),

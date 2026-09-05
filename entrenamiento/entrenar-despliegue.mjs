@@ -26,7 +26,7 @@ export { despliegueGuiado };
 import { fuenteDeDespliegues } from "./aperturas.mjs";
 import { cargarAperturas } from "./panel.mjs";
 import { crearRed, entrenarLote, entrenarPares, evaluar, aObjeto, ACTIVACION } from "./red.mjs";
-import { paresDeDespliegue } from "./juicios.mjs";
+import { paresDeDespliegue, juiciosAlDia } from "./juicios.mjs";
 
 const AQUI = path.dirname(fileURLToPath(import.meta.url));
 const [EQUIPO_A] = EQUIPOS;
@@ -309,7 +309,7 @@ async function main() {
   fs.writeFileSync(
     salida,
     JSON.stringify(
-      { firmaRasgos: FIRMA, activacion: ACTIVACION, creado: new Date().toISOString(), opciones: o, perdidaValidacion: mejorValidacion, victoriasEnJuego: medida.tasa, juiciosUsados: juicios.pares.length, aciertoEnJuicios: aciertoFinalJuicios, aciertoEnJuiciosApartados: aciertoApartados, curva, red: mejorPesos },
+      { firmaRasgos: FIRMA, activacion: ACTIVACION, creado: new Date().toISOString(), opciones: o, perdidaValidacion: mejorValidacion, victoriasEnJuego: medida.tasa, juiciosUsados: juicios.pares.length, juiciosAlEntrenar: juiciosAlDia(), aciertoEnJuicios: aciertoFinalJuicios, aciertoEnJuiciosApartados: aciertoApartados, curva, red: mejorPesos },
       null,
       2
     )
