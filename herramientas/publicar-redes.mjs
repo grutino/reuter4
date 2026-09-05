@@ -19,6 +19,10 @@ const AQUI = path.dirname(fileURLToPath(import.meta.url));
 const ORIGEN = path.join(AQUI, "..", "entrenamiento", "modelos");
 const DESTINO = path.join(AQUI, "..", "src", "motor", "modelos");
 const forzar = process.argv.includes("--forzar");
+// `--solo jugada` o `--solo despliegue` publica una sola. Sin él van las dos,
+// que es como se ha usado siempre desde el terminal.
+const iSolo = process.argv.indexOf("--solo");
+const solo = iSolo > 0 ? process.argv[iSolo + 1] : null;
 
 const PIEZAS = [
   { fichero: "red-despliegue.json", tamano: TAMANO_DESPLIEGUE, firma: FIRMA_DESPLIEGUE, etiqueta: "despliegue" },
@@ -29,7 +33,7 @@ fs.mkdirSync(DESTINO, { recursive: true });
 let publicados = 0;
 let bloqueados = 0;
 
-for (const { fichero, tamano, firma, etiqueta } of PIEZAS) {
+for (const { fichero, tamano, firma, etiqueta } of PIEZAS.filter((x) => !solo || x.etiqueta === solo)) {
   const rutaO = path.join(ORIGEN, fichero);
   const rutaD = path.join(DESTINO, fichero);
   if (!fs.existsSync(rutaO)) {

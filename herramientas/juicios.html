@@ -93,6 +93,17 @@
  .red { border-top:1px solid var(--linea); padding:12px 0 4px; }
  .red-nombre { font-size:14px; font-weight:600; margin-bottom:7px;
                 display:flex; align-items:baseline; gap:12px; }
+ h2 { display:flex; align-items:center; gap:9px; }
+ .simboloRed { width:30px; height:22px; color:var(--laton); flex:none; }
+ .iconos { display:inline-flex; gap:4px; margin-left:6px; vertical-align:middle; }
+ /* Los iconos van pegados al título de SU columna: lo que se puede hacer con la
+    red publicada no es lo mismo que con la del taller, y separarlos evitaba
+    tener que leer un rótulo para saber sobre cuál actúa cada botón. */
+ .icono { border:1px solid var(--linea); background:#fff; color:var(--tenue);
+          border-radius:4px; padding:1px 6px; font-size:12px; line-height:1.35;
+          cursor:pointer; font-family:ui-monospace,monospace; }
+ .icono:hover { border-color:var(--laton); color:var(--laton); background:#fffdf6; }
+ .icono[data-hacer="reset"]:hover { border-color:var(--mal); color:var(--mal); }
  .verplot { font-size:12px; font-weight:400; color:var(--laton); text-decoration:none;
             margin-left:auto; border-bottom:1px solid transparent; }
  .verplot:hover { border-bottom-color:var(--laton); }
@@ -117,7 +128,17 @@ entrenado; sobre lo ya entrenado no se puede deshacer nada, porque está dentro 
 <pre id="salida" hidden></pre>
 
 <section>
-  <h2>Cómo están las redes</h2>
+  <h2><svg class="simboloRed" viewBox="0 0 34 24" aria-hidden="true">
+    <g fill="none" stroke="currentColor" stroke-width="0.9" opacity="0.5">
+      <path d="M6 5 L17 5 M6 5 L17 12 M6 5 L17 19 M6 12 L17 5 M6 12 L17 12 M6 12 L17 19 M6 19 L17 5 M6 19 L17 12 M6 19 L17 19"/>
+      <path d="M17 5 L28 12 M17 12 L28 12 M17 19 L28 12"/>
+    </g>
+    <g fill="currentColor">
+      <circle cx="6" cy="5" r="2"/><circle cx="6" cy="12" r="2"/><circle cx="6" cy="19" r="2"/>
+      <circle cx="17" cy="5" r="2"/><circle cx="17" cy="12" r="2.6"/><circle cx="17" cy="19" r="2"/>
+      <circle cx="28" cy="12" r="2.6"/>
+    </g>
+  </svg>Cómo están las redes</h2>
   <div id="redes"></div>
   <div class="barra" style="margin-top:12px">
     <a class="boton" href="/juicios/informe" target="_blank">ver el informe completo</a>
@@ -205,15 +226,74 @@ function celda(m, siFalta) {
   return `<dd>${pct(m.victorias)} · ${m.capas.join("-")}</dd><small>${fecha(m.creado)}${juicios}</small>`;
 }
 
+// Cada columna lleva lo que se puede hacer con SU copia, y solo eso. Sobre la
+// del taller: resetearla o publicarla. Sobre la publicada: guardarse una copia.
+// Publicar la del taller no tiene sentido al revés, y resetear la publicada
+// dejaría a los bots jugando con pesos al azar sin querer.
 function filaDeRed(nombre, pub, taller, cual) {
+  const acciones = (lista) => `<span class="iconos">${lista.join("")}</span>`;
+  const icono = (accion, titulo, dibujo) =>
+    `<button class="icono" data-red="${cual}" data-hacer="${accion}" title="${titulo}">${dibujo}</button>`;
+
   return `<div class="red">
     <div class="red-nombre">${nombre}
       <a class="verplot" href="/juicios/red/${cual}" target="_blank">ver su dibujo →</a></div>
     <div class="red-cols">
-      <div><dt>publicada — la que juega</dt>${celda(pub, "no hay ninguna: los bots juegan con la heurística")}</div>
-      <div><dt>en el taller — la que se entrena</dt>${celda(taller, "nada entrenado todavía")}</div>
+      <div>
+        <dt>publicada — la que juega ${acciones([
+          icono("copia", "guardar una copia de la red publicada", "⤓"),
+        ])}</dt>
+        ${celda(pub, "no hay ninguna: los bots juegan con la heurística")}
+      </div>
+      <div>
+        <dt>en el taller — la que se entrena ${acciones([
+          icono("reset", "borrarle lo aprendido: pesos al azar, sin entrenar", "↺"),
+          icono("publicar", "llevar esta al juego", "↑"),
+        ])}</dt>
+        ${celda(taller, "nada entrenado todavía")}
+      </div>
     </div>
   </div>`;
+}
+
+async function accionDeRed(cual, hacer) {
+  const nombre = cual === "jugada" ? "jugada" : "despliegue";
+  if (hacer === "copia") { location.href = `/juicios/api/copia/${cual}`; return; }
+
+  if (hacer === "reset") {
+    if (!confirm(`Se le borra a la red de ${nombre} todo lo aprendido y se queda con pesos al AZAR.\n\n` +
+                 `Así juega fatal: sirve para que el siguiente entrenamiento empiece limpio, no para jugar.\n` +
+                 `No toca la publicada — los bots siguen con la de siempre hasta que publiques.\n\n` +
+                 `Queda una copia con la fecha. ¿Seguir?`)) return;
+    const r = await (await fetch(`/juicios/api/reset/${cual}`, { method: "POST" })).json();
+    muestra(r.salida);
+    await pintaRedes();
+    return;
+  }
+
+  if (!confirm(`Publicar la red de ${nombre} cambia con qué juegan los bots en las partidas de verdad.\n\n¿Seguir?`)) return;
+  let r = await (await fetch(`/juicios/api/publicar/${cual}`, { method: "POST" })).json();
+  // El script rechaza lo que no mejora, que es lo que se quiere casi siempre.
+  // Pero tras un reset la del taller es peor a propósito, así que hay que poder
+  // insistir — diciendo claramente lo que se va a hacer.
+  if (/no mejora|RECHAZADO|se queda/i.test(r.salida || "")) {
+    muestra(r.salida);
+    if (confirm(`No se ha publicado porque no mejora a la que ya está jugando.\n\n` +
+                `¿Publicarla igualmente? Los bots pasarían a jugar con una red PEOR.`)) {
+      r = await (await fetch(`/juicios/api/publicar/${cual}/forzar`, { method: "POST" })).json();
+    }
+  }
+  muestra(r.salida);
+  await pintaRedes();
+}
+
+function muestra(texto) {
+  const pre = document.getElementById("salida");
+  pre.hidden = false;
+  pre.textContent = (texto || "(sin salida)").replace(
+    "Los bots los cogen al reiniciar el servidor.",
+    "Ya están activas: el servidor las ha recargado sin reiniciar.");
+  pre.scrollIntoView({ block: "nearest" });
 }
 
 async function pintaRedes() {
@@ -263,6 +343,9 @@ async function pintaRedes() {
   document.getElementById("redes").innerHTML = cabecera +
     filaDeRed("jugada — decide cada movimiento", r.publicadas.jugada, r.taller.jugada, "jugada") +
     filaDeRed("despliegue — elige la posición de salida", r.publicadas.despliegue, r.taller.despliegue, "despliegue");
+  for (const b of document.querySelectorAll(".icono")) {
+    b.onclick = () => accionDeRed(b.dataset.red, b.dataset.hacer);
+  }
   document.getElementById("avisoInforme").textContent = r.hayInforme
     ? "" : "aún no hay informe: npm run informe-redes";
 }

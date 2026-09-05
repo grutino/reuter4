@@ -469,14 +469,57 @@ export async function cosechar() {
 // EXPLÍCITO -el nocturno entrena solo pero no publica nunca-, solo que ahora se
 // puede pedir desde aquí en vez de desde un terminal. El script decide: rechaza
 // un modelo con otra firma de rasgos y no publica si no mejora.
-export async function publicar() {
+export async function publicar({ solo = null, forzar = false } = {}) {
+  const args = [path.join(RAIZ, "herramientas", "publicar-redes.mjs")];
+  if (solo) args.push("--solo", solo);
+  if (forzar) args.push("--forzar");
   try {
-    const r = await ejecutar("node", [path.join(RAIZ, "herramientas", "publicar-redes.mjs")], {
+    const r = await ejecutar("node", args, {
       cwd: RAIZ, maxBuffer: 8 * 1024 * 1024,
     });
     return { ok: true, salida: r.stdout.trim() };
   } catch (e) {
     return { ok: false, salida: String(e.stdout || e.message).trim() };
+  }
+}
+
+// RESET: dejar la red del taller como recién nacida, con pesos al azar. No es
+// "entrenarla de cero" —eso lo hace el entrenamiento— sino borrarle lo aprendido
+// para que el siguiente entrenamiento no arrastre nada. Recién reseteada juega
+// fatal, así que publicarla es sustituir la buena por una que no sabe jugar; se
+// avisa antes y hace falta forzar.
+export async function resetear(cual) {
+  const REDES = {
+    jugada: { fichero: "red-jugada.json", firma: FIRMA_JUGADA },
+    despliegue: { fichero: "red-despliegue.json", firma: FIRMA_DESPLIEGUE },
+  };
+  const cfg = REDES[cual];
+  if (!cfg) return { ok: false, salida: `no hay ninguna red que se llame ${cual}` };
+  const ruta = path.join(RAIZ, "entrenamiento", "modelos", cfg.fichero);
+  if (!fs.existsSync(ruta)) return { ok: false, salida: "no hay nada en el taller que resetear" };
+
+  try {
+    const { crearRed, aObjeto, ACTIVACION } = await import("../entrenamiento/red.mjs");
+    const viejo = JSON.parse(fs.readFileSync(ruta, "utf8"));
+    const capas = viejo.red.capas;
+    // Copia con fecha: un modelo se rehace entrenando, pero si el reset fue un
+    // resbalón conviene poder volver sin esperar una noche.
+    const sello = new Date().toISOString().replace(/[:.]/g, "-").slice(0, 19);
+    fs.copyFileSync(ruta, ruta.replace(/\.json$/, `-antes-del-reset-${sello}.json`));
+
+    let semilla = Date.now() >>> 0;
+    const azar = () => ((semilla = (semilla * 1664525 + 1013904223) >>> 0) / 4294967296);
+    fs.writeFileSync(ruta, JSON.stringify({
+      firmaRasgos: cfg.firma,
+      activacion: ACTIVACION,
+      creado: new Date().toISOString(),
+      origen: "reset: pesos al azar, sin entrenar",
+      victoriasEnJuego: null,
+      red: aObjeto(crearRed(capas, azar)),
+    }, null, 1));
+    return { ok: true, salida: `Red de ${cual} reseteada: ${capas.join("-")} con pesos al azar.\nEl anterior queda copiado con la fecha en entrenamiento/modelos/.` };
+  } catch (e) {
+    return { ok: false, salida: String(e.message) };
   }
 }
 
@@ -606,8 +649,35 @@ export function atender(peticion, respuesta, url, red, redJugada, alPublicar) {
     return true;
   }
 
-  if (url === "/juicios/api/publicar" && peticion.method === "POST") {
-    publicar().then((r) => {
+  if (url.startsWith("/juicios/api/reset/") && peticion.method === "POST") {
+    resetear(url.slice("/juicios/api/reset/".length)).then((r) => {
+      cache.parejas = null;
+      cache.casos = null;
+      enviarJson(r);
+    });
+    return true;
+  }
+
+  // BACKUP: el modelo publicado tal cual, para guardarlo fuera. Solo el
+  // publicado: el del taller cambia con cada entrenamiento y no vale como copia.
+  if (url.startsWith("/juicios/api/copia/")) {
+    const cual = url.slice("/juicios/api/copia/".length);
+    const fichero = cual === "jugada" ? "red-jugada.json" : cual === "despliegue" ? "red-despliegue.json" : null;
+    const ruta = fichero && path.join(RAIZ, "src", "motor", "modelos", fichero);
+    if (!ruta || !fs.existsSync(ruta)) { respuesta.writeHead(404).end("no hay nada publicado"); return true; }
+    const sello = new Date().toISOString().slice(0, 10);
+    respuesta.writeHead(200, {
+      "Content-Type": "application/json; charset=utf-8",
+      "Content-Disposition": `attachment; filename="reuter4-${cual}-${sello}.json"`,
+    });
+    fs.createReadStream(ruta).pipe(respuesta);
+    return true;
+  }
+
+  if (url.startsWith("/juicios/api/publicar") && peticion.method === "POST") {
+    const resto = url.slice("/juicios/api/publicar".length).replace(/^\//, "");
+    const [cual, modo] = resto.split("/");
+    publicar({ solo: cual || null, forzar: modo === "forzar" }).then((r) => {
       // Que los bots cojan las redes nuevas SIN reiniciar. Sin esto el botón
       // mentiría: diría "publicado" y las partidas seguirían jugándose con lo
       // de antes hasta el siguiente arranque.
