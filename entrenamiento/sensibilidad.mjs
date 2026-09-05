@@ -79,7 +79,21 @@ export function entradasDeJugada({ partidas = 24, semilla = 5150, cadaTurnos = 7
       if (turnos % cadaTurnos === 0) {
         const color = estado.turno;
         const contexto = contextoDeTurno(estado, color, analizarTurno(estado, color, DISTANCIA));
-        for (const accion of movimientosLegales(estado, color).slice(0, porTurno)) {
+        // SIEMPRE LOS ATAQUES Y DISPAROS, y luego se rellena con movimientos.
+        // Cogiendo las seis primeras legales tal cual, el combate no salía casi
+        // nunca -en las partidas es el 2% de las jugadas y encima suele ir al
+        // final de la lista-, y con esa muestra media docena de rasgos parecían
+        // constantes: `valorEsperadoDelDuelo` salía siempre en 0,5, que es su
+        // valor neutro cuando no hay a quién atacar.
+        //
+        // Importa más de lo que parece: estas entradas son las que miden la
+        // ablación y la linealidad de la red, así que una muestra sin combate
+        // estaba juzgando a la red solo en el régimen fácil.
+        const legales = movimientosLegales(estado, color);
+        const combate = legales.filter((a) => a.tipo === "atacar" || a.tipo === "disparar");
+        const resto = legales.filter((a) => a.tipo !== "atacar" && a.tipo !== "disparar");
+        const elegidas = combate.concat(resto).slice(0, porTurno);
+        for (const accion of elegidas) {
           vectores.push(rasgosDeJugada(estado, color, accion, contexto));
         }
       }
