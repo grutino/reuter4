@@ -15,6 +15,19 @@
  .fichas { display:grid; grid-template-columns:repeat(4,1fr); gap:9px; margin:0 0 22px; }
  @media (max-width:900px) { .fichas { grid-template-columns:repeat(2,1fr); } }
  .ficha dt { min-height:2.4em; }
+ /* Las cifras SON el botón. Antes había que leerlas arriba y bajar a buscar el
+    botón correspondiente en otra sección; ahora se pulsa lo que se está mirando. */
+ .ficha { position:relative; }
+ .ficha.pulsable { cursor:pointer; }
+ .ficha.pulsable:hover, .ficha.pulsable:focus-visible {
+   border-color:var(--laton); background:#fffdf6; outline:none;
+   box-shadow:0 1px 0 var(--laton) inset, 0 0 0 1px rgba(138,100,32,.18); }
+ .ficha .pista { display:block; margin-top:6px; font:11px ui-monospace,monospace; color:var(--laton); }
+ .ficha.pulsable:hover .pista { text-decoration:underline; }
+ .aspaFicha { position:absolute; top:6px; right:6px; border:1px solid var(--linea);
+   background:#fff; color:#b9b0a0; border-radius:4px; padding:2px 6px; font-size:11px;
+   line-height:1; cursor:pointer; }
+ .aspaFicha:hover { background:var(--mal); color:var(--papel); border-color:var(--mal); }
  .ficha { border:1px solid var(--linea); border-radius:6px; padding:11px 13px; background:#fff; }
  .ficha dt { font:500 10px/1.3 ui-monospace,monospace; letter-spacing:.08em;
              text-transform:uppercase; color:var(--tenue); }
@@ -97,38 +110,11 @@ etiqueta mal: un despliegue que ganó pudo ganar a pesar de sí mismo. Aquí se 
 las partidas terminadas y se valora — no «qué pasó», sino <b>qué era mejor</b>.</p>
 
 <dl class="fichas" id="fichas"></dl>
-
-<section>
-  <h2>1 · Traer lo nuevo</h2>
-  <p>Cada partida que acaba con ganador se archiva sola. Cosecharla saca sus cuatro despliegues y
-  las posiciones donde la red discrepa más de lo que se jugó.</p>
-  <div class="barra">
-    <button id="cosechar">cosechar las partidas nuevas</button>
-    <span id="avisoCosecha" class="nota" style="border:0;padding:0"></span>
-  </div>
-  <pre id="salida" hidden></pre>
-</section>
-
-<section>
-  <h2>2 · Valorar</h2>
-  <p>Dos cosas distintas que valorar. Una <b>posición de salida</b> es un objeto completo: se juzga
-  en abstracto y su efecto se reparte por toda la partida. Una <b>jugada</b> solo existe dentro de
-  su posición, así que enseña menos por unidad — pero es donde se decide la partida.</p>
-  <div class="barra">
-    <span class="grupo">
-      <a class="boton" id="irPosiciones" href="/juicios/despliegues">valorar posiciones de salida</a>
-      <button class="aspa" id="reiniciarPosiciones" title="borrar mis valoraciones de posiciones">✕</button>
-    </span>
-    <span class="grupo">
-      <a class="boton" id="irJugadas" href="/juicios/jugadas">valorar jugadas</a>
-      <button class="aspa" id="reiniciarJugadas" title="borrar mis valoraciones de jugadas">✕</button>
-    </span>
-  </div>
-  <p class="nota" style="margin-top:12px">El aspa borra <b>tus valoraciones</b> de ese tipo, no las
-  redes. Antes de borrar deja una copia con la fecha: un modelo se rehace entrenando otra vez, una
-  tarde de valorar no.</p>
-  <p class="nota" id="avisoBanco" style="margin-top:12px"></p>
-</section>
+<p class="nota" id="pieFichas">Se lee por filas el material —despliegues arriba, jugadas abajo— y
+por columnas su viaje: <b>se juega → se cosecha → se valora → entrena</b>. Las cifras en color son
+botones: pulsa para cosechar o para ponerte a valorar. El aspa descarta valoraciones que aún no han
+entrenado; sobre lo ya entrenado no se puede deshacer nada, porque está dentro de los pesos.</p>
+<pre id="salida" hidden></pre>
 
 <section>
   <h2>Cómo están las redes</h2>
@@ -140,7 +126,7 @@ las partidas terminadas y se valora — no «qué pasó», sino <b>qué era mejo
 </section>
 
 <section>
-  <h2>3 · Publicar</h2>
+  <h2>Publicar</h2>
   <p>Publicar es llevar lo del taller a donde lo cogen los bots. El nocturno entrena solo pero
   <b>nunca publica</b>: un proceso que corre de madrugada sin nadie mirando no debería cambiar cómo
   juegan tus partidas. Esa decisión es tuya y es este botón.</p>
@@ -184,21 +170,25 @@ las partidas terminadas y se valora — no «qué pasó», sino <b>qué era mejo
 // ahora con los que había cuando se entrenó el modelo publicado, que quedan
 // anotados dentro del propio modelo.
 const F = [
-  ["partidas archivadas", (e) => e.archivadas, false],
+  ["partidas archivadas", (e) => e.archivadas, false, null],
   ["despliegues sin valorar", (e) => {
     const p = e.pendientes || {};
     return `${p.posiciones || 0}<small>de ${p.parejas || 0} en la tanda</small>`;
-  }, true],
-  ["despliegues valorados sin entrenar", (e) => Math.max(0, (e.juzgados || 0) - (e.entrenadosDespliegue || 0)), true],
-  ["despliegues ya entrenados", (e) => e.entrenadosDespliegue || 0, false],
+  }, true, { ir: "/juicios/despliegues", hay: (e) => (e.pendientes || {}).posiciones }],
+  ["despliegues valorados sin entrenar", (e) => Math.max(0, (e.juzgados || 0) - (e.entrenadosDespliegue || 0)), true,
+    { descartar: "posiciones", hay: (e) => Math.max(0, (e.juzgados || 0) - (e.entrenadosDespliegue || 0)) }],
+  // Sobre lo ya entrenado no hay nada que deshacer: está dentro de los pesos, y
+  // quitarlo exigiría reentrenar desde cero. Así que esta caja no es un botón.
+  ["despliegues ya entrenados", (e) => e.entrenadosDespliegue || 0, false, null],
 
-  ["partidas sin cosechar", (e) => e.sinCosechar, true],
+  ["partidas sin cosechar", (e) => e.sinCosechar, true, { cosechar: true, hay: (e) => e.sinCosechar }],
   ["jugadas sin valorar", (e) => {
     const p = e.pendientes || {};
     return `${p.jugadas || 0}<small>de ${p.candidatas || 0} en el banco</small>`;
-  }, true],
-  ["jugadas valoradas sin entrenar", (e) => Math.max(0, (e.jugadasJuzgadas || 0) - (e.entrenadosJugada || 0)), true],
-  ["jugadas ya entrenadas", (e) => e.entrenadosJugada || 0, false],
+  }, true, { ir: "/juicios/jugadas", hay: (e) => (e.pendientes || {}).jugadas }],
+  ["jugadas valoradas sin entrenar", (e) => Math.max(0, (e.jugadasJuzgadas || 0) - (e.entrenadosJugada || 0)), true,
+    { descartar: "jugadas", hay: (e) => Math.max(0, (e.jugadasJuzgadas || 0) - (e.entrenadosJugada || 0)) }],
+  ["jugadas ya entrenadas", (e) => e.entrenadosJugada || 0, false, null],
 ];
 
 const pct = (v) => (v === null || v === undefined ? "—" : `${Math.round(v * 100)}%`);
@@ -279,41 +269,43 @@ async function pintaRedes() {
 
 async function pinta() {
   const e = await (await fetch("/juicios/api/estado")).json();
-  document.getElementById("fichas").innerHTML = F.map(([k, v, urge]) =>
-    `<div class="ficha${urge && v(e) ? " urge" : ""}"><dt>${k}</dt><dd>${v(e)}</dd></div>`).join("");
-  // Los botones solo se encienden si hay algo que valorar de verdad, y dicen
-  // cuánto: entrar a una tanda ya terminada y tener que buscar el hueco a mano
-  // es la forma más rápida de dejar de valorar.
-  const p = e.pendientes || { posiciones: 0, jugadas: 0 };
-  const pon = (id, cuantas, etiqueta) => {
-    const a = document.getElementById(id);
-    a.classList.toggle("apagado", !cuantas);
-    a.innerHTML = cuantas
-      ? `${etiqueta} <span class="cuantas">· ${cuantas} sin valorar</span>`
-      : `${etiqueta} <span class="cuantas">· todo valorado</span>`;
-  };
-  pon("irPosiciones", p.posiciones, "valorar posiciones de salida");
-  pon("irJugadas", p.jugadas, "valorar jugadas");
+  document.getElementById("fichas").innerHTML = F.map(([k, v, urge, accion], i) => {
+    const activa = accion && accion.hay(e) > 0;
+    const aspa = activa && accion.descartar
+      ? `<button class="aspaFicha" data-descartar="${accion.descartar}" title="descartar estas valoraciones para que no entren en el próximo entrenamiento">✕</button>`
+      : "";
+    return `<div class="ficha${urge && v(e) ? " urge" : ""}${activa ? " pulsable" : ""}"
+      ${activa && !accion.descartar ? `data-accion="${i}" role="button" tabindex="0"` : ""}>
+      <dt>${k}</dt><dd>${v(e)}</dd>${aspa}
+      ${activa && !accion.descartar ? `<span class="pista">${accion.cosechar ? "pulsa para cosechar" : "pulsa para valorar"}</span>` : ""}
+    </div>`;
+  }).join("");
 
-  document.getElementById("cosechar").disabled = !e.sinCosechar;
-  document.getElementById("avisoBanco").textContent = e.enElBanco
-    ? "" : "El banco de escenarios está vacío, así que no hay jugadas que valorar. Se llena con: npm run escenarios";
-  document.getElementById("avisoCosecha").textContent = e.sinCosechar
-    ? `${e.sinCosechar} partida(s) por cosechar`
-    : e.archivadas ? "todo cosechado" : "aún no hay partidas archivadas: se archivan al terminar una con ganador";
+  for (const nodo of document.querySelectorAll(".ficha[data-accion]")) {
+    const accion = F[Number(nodo.dataset.accion)][3];
+    const hazlo = () => (accion.cosechar ? cosechar() : (location.href = accion.ir));
+    nodo.onclick = hazlo;
+    nodo.onkeydown = (ev) => { if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); hazlo(); } };
+  }
+  for (const nodo of document.querySelectorAll(".aspaFicha")) {
+    nodo.onclick = (ev) => {
+      ev.stopPropagation();
+      const cual = nodo.dataset.descartar;
+      reiniciar(cual, cual === "posiciones" ? "posiciones" : "jugadas",
+        cual === "posiciones" ? e.juzgados : e.jugadasJuzgadas);
+    };
+  }
   return e;
 }
 
-document.getElementById("cosechar").onclick = async (ev) => {
-  ev.target.disabled = true;
-  ev.target.textContent = "cosechando...";
-  const r = await (await fetch("/juicios/api/cosechar", { method: "POST" })).json();
+async function cosechar() {
   const pre = document.getElementById("salida");
   pre.hidden = false;
+  pre.textContent = "cosechando...";
+  const r = await (await fetch("/juicios/api/cosechar", { method: "POST" })).json();
   pre.textContent = r.salida || "(sin salida)";
-  ev.target.textContent = "cosechar las partidas nuevas";
   await pinta();
-};
+}
 
 async function reiniciar(cual, etiqueta, cuantas) {
   if (!cuantas) { alert(`No hay ninguna valoración de ${etiqueta} que reiniciar.`); return; }
@@ -343,14 +335,6 @@ document.getElementById("publicar").onclick = async (ev) => {
   await pintaRedes();
 };
 
-document.getElementById("reiniciarPosiciones").onclick = async () => {
-  const e = await (await fetch("/juicios/api/estado")).json();
-  reiniciar("posiciones", "posiciones", e.juzgados);
-};
-document.getElementById("reiniciarJugadas").onclick = async () => {
-  const e = await (await fetch("/juicios/api/estado")).json();
-  reiniciar("jugadas", "jugadas", e.jugadasJuzgadas);
-};
 
 pinta();
 pintaRedes();
