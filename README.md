@@ -205,7 +205,45 @@ suelta es ruidoso y sin ese aviso el listado parece decir cosas que no dice.
 En el orden en que conviene retomarlo. Cada punto dice qué hay hecho, qué falta y por qué está
 en ese sitio.
 
-### 0. Entrenar, medir y jugar el mismo juego — MEDIO HECHO
+### 0. La búsqueda: el primer nivel lo vale todo — HECHO
+
+**El bot no miraba nada.** `aplicar` no aparecía ni una vez en `bot.js`,
+`bot-red.js` ni `rasgos-jugada.js`: se puntuaba el par (posición, jugada) desde el
+estado actual y se cogía el máximo. Medio ply, sin ver el tablero resultante ni la
+respuesta de nadie. Llevábamos semanas afinando el evaluador de un jugador ciego.
+
+Ahora se juega la jugada y se mira qué puede hacer el siguiente. Como la red
+evalúa pares (posición, jugada) y no posiciones sueltas, no se puede «evaluar el
+tablero resultante»: se le pregunta a la MISMA red cuánto le gusta al siguiente en
+turno su mejor jugada desde ahí. Y en un juego de cuatro el siguiente no siempre
+es un enemigo — si es el compañero, suma en vez de restar, y suma menos.
+
+```
+                        victorias      coste por turno
+sin mirar (medio ply)   90,4% ±1,2        1,8 ms
+profundidad 1           94,6% ±2,4         19 ms     <- puesto en el juego
+profundidad 2           93,8% ±2,4         39 ms
+profundidad 3           93,6% ±2,4         55 ms
+```
+
+**Todo el salto está en el primer nivel.** A partir de ahí la curva se aplana y
+hasta baja un poco, dentro del ruido. La explicación encaja con el resto: la
+búsqueda profunda solo sirve si el evaluador de las hojas es bueno, y el nuestro
+predice regular; al bajar tres turnos su error se acumula en cada nivel y se come
+lo que aporta ver más lejos. Es el mismo patrón que con los 500 candidatos de
+despliegue — **más búsqueda con un evaluador mediocre no compra nada**.
+
+La búsqueda baja por la LÍNEA PRINCIPAL, no por el árbol entero: con doce
+candidatas y cuatro jugadores el árbol completo son 12⁴ hojas por turno. Por eso
+el coste crece lineal (19, 39, 55) y no exponencial. Falla donde cabe esperar: si
+el rival tiene dos respuestas casi igual de buenas y la segunda es la que duele,
+no se ve.
+
+**Pendiente**: entrenar también con búsqueda, o volvemos al desajuste del punto
+siguiente. Cuesta once veces más por partida, así que es una decisión cara y hay
+que medir antes si el modelo entrenado así se comporta distinto.
+
+### 1. Entrenar, medir y jugar el mismo juego — MEDIO HECHO
 
 **Hecho y publicado: el servidor cribaba a 4 y ahora criba a 12.** Valían seis
 puntos. El 4 estaba medido, pero con una red que apenas distinguía entre
@@ -238,7 +276,7 @@ Se calcula sobre el titular remedido cada ronda, que fluctúa entre 88% y 94% co
 ±2 de error; cuando al titular le toca una medida afortunada el listón sube a 96%
 y ninguna mejora razonable lo pasa. El listón depende del ruido de una medida.
 
-### 1. `humana-08` NO era un agujero — era el camino de medida
+### 2. `humana-08` NO era un agujero — era el camino de medida
 
 Durante varias noches `humana-08` salió como el peor rival del panel, hasta el
 38%, y el algoritmo de formaciones encontró una variante suya que ganaba el 100%.
@@ -256,7 +294,7 @@ diagnóstico del nocturno **escribe siempre por qué camino midió** y `medir.mj
 lo guarda en su salida junto al número de candidatas. Un porcentaje sin el camino
 al lado no significa nada.
 
-### 2. Una red es lineal y la otra no, y lo parecían las dos
+### 3. Una red es lineal y la otra no, y lo parecían las dos
 
 **Corregido lo que decía este punto.** Ponía que las dos redes eran «casi
 lineales» y que por eso no mejoraban, apoyándose en el ajuste de la mejor recta a
@@ -335,7 +373,7 @@ O sea: la no linealidad es imprescindible y **con muy poca basta**. Buscar
 mejoras agrandando la red está descartado con datos; hay que buscarlas en la
 señal y en la búsqueda.
 
-### 3. El ancla de la heurística NO se suelta
+### 4. El ancla de la heurística NO se suelta
 
 **Resuelto, y al revés de lo que decía este punto.** Aquí ponía que la heurística
 «ya no aporta a la decisión» porque decidir con la red sola (90,3% ±1,0) y con la
@@ -360,7 +398,7 @@ no basta.
 Queda una pregunta abierta y más fina: si el ancla se puede **aflojar** por
 rondas —empezar con ella y bajarla— en vez de quitarla de golpe.
 
-### 4. Juzgar despliegues — HECHO, y ya entran
+### 5. Juzgar despliegues — HECHO, y ya entran
 
 **Hecho de punta a punta.** El taller vive en el propio juego (`/juicios`): se
 cosechan las partidas terminadas, se comparan dos colocaciones del mismo ejército
@@ -387,7 +425,7 @@ el 92% sobre pares que no ha visto.
 **Falta**: nada para que funcionen. Más juicios siempre suman, sobre todo de
 partidas jugadas de verdad, que son los que se sirven primero.
 
-### 5. Los tres rasgos de defensa — HECHO
+### 6. Los tres rasgos de defensa — HECHO
 
 Escritos y medidos. La firma de rasgos pasa a `94ad006f` y el tamaño a **75**, así que **todo
 modelo anterior queda invalidado** y hay que reentrenar de cero: es justo por eso que este punto
@@ -410,7 +448,7 @@ error: `DISTANCIA` mide al **castillo**, no entre dos casillas, y `coord()` devu
 no `{columna, fila}`. Hay ahora una prueba que falla si cualquiera de los tres baja del 1% de
 activación o pasa del 95%.
 
-### 6. El desacuerdo sobre el precio de la información
+### 7. El desacuerdo sobre el precio de la información
 
 **Sigue sin respuesta**, y es la pregunta más interesante abierta. La red da signo **positivo** a
 `delatarmeAhora`: cree que delatarse pronto compensa. Sabe lo que cuesta —las piezas que se
@@ -421,7 +459,7 @@ Tres lecturas posibles: que el entorno siga sin castigar bastante la fuga, que s
 —esas piezas mueren por exponerse, no por estar identificadas— o que la red tenga razón dentro de
 este juego y el consejo humano valga para partidas entre personas.
 
-### 7. Pulir el visor 3D — HECHO
+### 8. Pulir el visor 3D — HECHO
 
 - **La última casilla queda iluminada**: emisión blanca con la propia textura como mapa, para que
   se vea *piedra iluminada* y no un cilindro blanco, y latiendo despacio (2,2 Hz, para no competir
@@ -434,7 +472,7 @@ este juego y el consejo humano valga para partidas entre personas.
   su ejército.
 - Las siluetas van en **blanco** en informes y herramientas y en **negro** en el visor.
 
-### 8. El informe de las redes — HECHO
+### 9. El informe de las redes — HECHO
 
 Pérdida y acierto de entrenamiento y validación en cada punto de la curva —la distancia entre las
 dos líneas de acierto *es* el sobreajuste—, separación entre **entre rondas** y **dentro de la
@@ -443,7 +481,7 @@ la mayor, R² del ajuste lineal y en qué porcentaje de pares ordena como una re
 cada `npm run informe-redes` sobre los mismos vectores que la sensibilidad, sin volver a jugar las
 partidas.
 
-### 9. Los juicios de jugada, segunda versión
+### 10. Los juicios de jugada, segunda versión
 
 **Apagados** (`pasadasJuicios: 0`). Los primeros 740 enseñaban a **no terminar la partida**: 0 de
 12 decididas contra 12 de 12. Las jugadas marcadas como malas eran las que delatan, que son las
@@ -452,7 +490,7 @@ rápidas, y la red generalizó «no te delates» a los 400 turnos.
 Hacen falta **muchas más y repartidas por toda la partida**. `npm run cosechar` ya mete en el
 banco las posiciones donde la red discrepa de lo que se jugó, que es donde un juicio vale más.
 
-### 10. La renuncia a la bandera del compañero — HECHO
+### 11. La renuncia a la bandera del compañero — HECHO
 
 Por defecto no se carga, porque cargarla la congela. El matiz nuevo: renunciar solo la protege
 **mientras el que la tapa aguante**. Si ahí me matan, quien gana el duelo avanza a mi casilla, cae
@@ -462,7 +500,7 @@ Se carga entonces si un enemigo **conocido** que me gana está al lado, o si hay
 más de la mitad de su bolsa oculta me ganaría. Solo cuerpo a cuerpo: un cañonazo me mata pero deja
 la bandera donde está y el que disparó sigue lejos.
 
-### 11. Siluetas: hace falta una foto tuya
+### 12. Siluetas: hace falta una foto tuya
 
 `src/siluetas-datos.js` está generado por `herramientas/extraer-siluetas.py` a partir de una foto
 que **no está en el repositorio**, así que esto no lo puede hacer nadie más.
