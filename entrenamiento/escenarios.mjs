@@ -107,29 +107,44 @@ export function recolectar({ partidas = 200, semilla = 1, limite = 400, jugar = 
     for (const color of COLORES) despliegues[color] = despliegueAleatorio(color, azar);
     let estado = nuevaPartida(despliegues, { primero: COLORES[Math.floor(azar() * 4)] });
     let turnos = 0;
-    let deEsta = 0;
+    // TODAS las interesantes de la partida, y al final se eligen unas cuantas
+    // REPARTIDAS. Antes se cogían las `porPartida` primeras y se dejaba de
+    // mirar: como las primeras aparecen enseguida, el banco entero salía de la
+    // apertura —mediana en el turno 9, ninguna pasado el 77— y eso tuvo
+    // consecuencias. Los juicios humanos sobre ese banco enseñaron a la red "no
+    // te delates" en la apertura y la red lo generalizó a los cuatrocientos
+    // turnos: se quedó sin velocidad y dejó de terminar partidas.
+    const deEstaPartida = [];
 
     while (!estado.fin && turnos < limite) {
       if (estado.pendiente) { estado = resolver(estado); continue; }
       const color = estado.turno;
-      if (deEsta < porPartida) {
-        const analisis = analizarTurno(estado, color, DISTANCIA);
-        const motivo = motivoDeInteres(estado, color, analisis);
-        if (motivo) {
-          const f = firmaDePosicion(estado) + "#" + color;
-          if (!vistas.has(f)) {
-            vistas.add(f);
-            // El estado se guarda entero: es JSON puro por invariante del motor,
-            // así que el banco se puede escribir y volver a leer sin más.
-            encontrados.push({ motivo, color, estado: JSON.parse(JSON.stringify(estado)) });
-            deEsta++;
-          }
+      const analisis = analizarTurno(estado, color, DISTANCIA);
+      const motivo = motivoDeInteres(estado, color, analisis);
+      if (motivo) {
+        const f = firmaDePosicion(estado) + "#" + color;
+        if (!vistas.has(f)) {
+          // El estado se guarda entero: es JSON puro por invariante del motor,
+          // así que el banco se puede escribir y volver a leer sin más.
+          deEstaPartida.push({ motivo, color, turno: turnos, firma: f, estado: JSON.parse(JSON.stringify(estado)) });
         }
       }
       const accion = mover(estado, color, azar);
       if (!accion) break;
       estado = aplicar(estado, accion);
       turnos++;
+    }
+
+    // Índices equiespaciados y no al azar: con pocas tomas por partida, el azar
+    // deja huecos, y lo que se quiere garantizar es justo la cobertura — una de
+    // la apertura, una del medio y una del final.
+    const cuantas = Math.min(porPartida, deEstaPartida.length);
+    for (let k = 0; k < cuantas; k++) {
+      const idx = Math.floor(((k + 0.5) * deEstaPartida.length) / cuantas);
+      const elegido = deEstaPartida[idx];
+      if (vistas.has(elegido.firma)) continue;
+      vistas.add(elegido.firma);
+      encontrados.push({ motivo: elegido.motivo, color: elegido.color, turno: elegido.turno, estado: elegido.estado });
     }
   }
   return encontrados;
